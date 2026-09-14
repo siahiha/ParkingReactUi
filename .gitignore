@@ -1,0 +1,17 @@
+# Local configuration and secrets
+**/.env.local
+**/.env.*.local
+
+# Dependencies and generated output
+**/node_modules/
+**/dist/
+**/test-results/
+**/playwright-report/
+**/coverage/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+*.user
+Thumbs.db
+.DS_Store
