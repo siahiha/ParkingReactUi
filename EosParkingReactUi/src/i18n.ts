@@ -28,7 +28,7 @@ export const translations = {
     showPassword: 'نمایش رمز عبور',
     hidePassword: 'پنهان کردن رمز عبور',
     loginSuccess: 'ورود با موفقیت انجام شد.',
-    authenticatedArea: 'احراز هویت انجام شد؛ محیط اصلی سامانه در مرحله بعد اضافه می‌شود.',
+    authenticatedArea: 'احراز هویت با موفقیت انجام شد.',
     backToLogin: 'بازگشت به ورود',
     selectAllRows: 'انتخاب همهٔ ردیف‌ها',
     selectRow: 'انتخاب ردیف',

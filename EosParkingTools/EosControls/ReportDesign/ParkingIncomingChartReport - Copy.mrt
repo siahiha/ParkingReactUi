@@ -1,0 +1,586 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<StiSerializer version="1.02" type="Net" application="StiReport">
+  <Culture>Fa-IR</Culture>
+  <Dictionary Ref="1" type="Dictionary" isKey="true">
+    <BusinessObjects isList="true" count="0" />
+    <Databases isList="true" count="0" />
+    <DataSources isList="true" count="2">
+      <MainTable Ref="2" type="Stimulsoft.Report.Dictionary.StiBusinessObjectSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="10">
+          <value>Number,System.Int32</value>
+          <value>Lable,System.String</value>
+          <value>TariffTitle,System.String</value>
+          <value>TariffNumber,System.String</value>
+          <value>MemberRegisterTitle,System.String</value>
+          <value>MemberRegisterNumber,System.String</value>
+          <value>SolarPersistOn,System.String</value>
+          <value>Amount,System.Int64</value>
+          <value>Id,System.Int64</value>
+          <value>PersistOn,System.DateTime</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable</Name>
+        <NameInSource>DB</NameInSource>
+      </MainTable>
+      <MainTable2 Ref="3" type="DataTableSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="12">
+          <value>Number,System.Int32</value>
+          <value>Lable,System.String</value>
+          <value>TariffTitle,System.String</value>
+          <value>TariffNumber,System.Int32</value>
+          <value>MemberRegisterTitle,System.String</value>
+          <value>MemberRegisterNumber,System.Int32</value>
+          <value>SolarPersistOn,System.String</value>
+          <value>Amount,System.Int64</value>
+          <value>Id,System.Int64</value>
+          <value>PersistOn,System.DateTime</value>
+          <value>ParkingId,System.Int64</value>
+          <value>ParkingTitle,System.String</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable2</Name>
+        <NameInSource>DB.MainTable</NameInSource>
+      </MainTable2>
+    </DataSources>
+    <Relations isList="true" count="0" />
+    <Report isRef="0" />
+    <Resources isList="true" count="0" />
+    <Variables isList="true" count="1">
+      <value>,ReportDateTime,تاریخ_x0020_و_x0020_زمان_x0020_گزارش,,System.String,_x0031_398_x002F_08_x002F_11_x0020_09:44,False,False,False,False</value>
+    </Variables>
+  </Dictionary>
+  <EngineVersion>EngineV2</EngineVersion>
+  <GlobalizationStrings isList="true" count="0" />
+  <MetaTags isList="true" count="0" />
+  <Pages isList="true" count="1">
+    <Page1 Ref="4" type="Page" isKey="true">
+      <Border>None;Black;2;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <Components isList="true" count="6">
+        <PageHeaderBand1 Ref="5" type="PageHeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,4,277,23.11</ClientRectangle>
+          <Components isList="true" count="5">
+            <Text3 Ref="6" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>18.75,5.08,240.54,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text3</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>نمودار درآمد پارکینگ</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text3>
+            <Text4 Ref="7" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>18.75,14.73,46.47,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12</Font>
+              <HideZeros>True</HideZeros>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text4</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>{ReportDateTime}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+            </Text4>
+            <Text13 Ref="8" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>66.18,13.96,20.64,6.01</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12</Font>
+              <Guid>36fe0d5093e7489097d43b0bd99cfc5b</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text13</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>تاریخ گزارش</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text13>
+            <EndPointPrimitive1 Ref="9" type="Stimulsoft.Report.Components.StiEndPointPrimitive" isKey="true">
+              <ClientRectangle>276.31,21.34,0,0</ClientRectangle>
+              <Name>EndPointPrimitive1</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <ReferenceToGuid>ab770334c5e94b85a93b5c37b9d7ea22</ReferenceToGuid>
+            </EndPointPrimitive1>
+            <StartPointPrimitive1 Ref="10" type="Stimulsoft.Report.Components.StiStartPointPrimitive" isKey="true">
+              <ClientRectangle>0.26,2.03,0,0</ClientRectangle>
+              <Name>StartPointPrimitive1</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <ReferenceToGuid>ab770334c5e94b85a93b5c37b9d7ea22</ReferenceToGuid>
+            </StartPointPrimitive1>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>PageHeaderBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </PageHeaderBand1>
+        <PageFooterBand1 Ref="11" type="PageFooterBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,253.05,277,12.95</ClientRectangle>
+          <Components isList="true" count="0" />
+          <Conditions isList="true" count="0" />
+          <Name>PageFooterBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </PageFooterBand1>
+        <HeaderBand1 Ref="12" type="HeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,35.11,277,146.6</ClientRectangle>
+          <Components isList="true" count="12">
+            <Chart3 Ref="13" type="Stimulsoft.Report.Chart.StiChart" isKey="true">
+              <Area Ref="14" type="Stimulsoft.Report.Chart.StiPieArea" isKey="true">
+                <BorderColor>171, 172, 173</BorderColor>
+                <Brush>White</Brush>
+                <Chart isRef="13" />
+              </Area>
+              <Brush>[255:255:255]</Brush>
+              <ClientRectangle>142.97,14.62,122.15,105.59</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <ConstantLines isList="true" count="0" />
+              <CustomStyleName />
+              <Filters isList="true" count="0" />
+              <Guid>fa30e21ce3cf4defa1aa95b6c4c48b38</Guid>
+              <Legend Ref="15" type="Stimulsoft.Report.Chart.StiLegend" isKey="true">
+                <BorderColor>225, 225, 225</BorderColor>
+                <Brush>[255:255:255]</Brush>
+                <Chart isRef="13" />
+                <Font>Arial,8</Font>
+                <LabelsColor>140, 140, 140</LabelsColor>
+                <MarkerSize>10, 10</MarkerSize>
+                <ShowShadow>False</ShowShadow>
+                <TitleColor>105, 105, 105</TitleColor>
+                <TitleFont>Arial,14,Bold</TitleFont>
+              </Legend>
+              <Name>Chart3</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Series isList="true" count="1">
+                <Item13 Ref="16" type="Stimulsoft.Report.Chart.StiPieSeries" isKey="true">
+                  <ArgumentDataColumn>MainTable.MemberRegisterTitle</ArgumentDataColumn>
+                  <AutoSeriesTitleDataColumn>MainTable.MemberRegisterTitle</AutoSeriesTitleDataColumn>
+                  <BorderColor>255, 255, 255</BorderColor>
+                  <Brush>[112:173:71]</Brush>
+                  <Chart isRef="13" />
+                  <Conditions isList="true" count="0" />
+                  <Filters isList="true" count="1">
+                    <value>Argument,String,NotEqualTo,</value>
+                  </Filters>
+                  <Lighting>False</Lighting>
+                  <SeriesLabels Ref="17" type="Stimulsoft.Report.Chart.StiInsideEndPieLabels" isKey="true">
+                    <BorderColor>Transparent</BorderColor>
+                    <Brush>Transparent</Brush>
+                    <Chart isRef="13" />
+                    <Font>Arial,10</Font>
+                    <LabelColor>51, 71, 91</LabelColor>
+                    <LegendValueType>Argument</LegendValueType>
+                    <MarkerSize>8, 6</MarkerSize>
+                    <ValueTypeSeparator>-</ValueTypeSeparator>
+                    <Width>0</Width>
+                  </SeriesLabels>
+                  <ShowSeriesLabels>FromSeries</ShowSeriesLabels>
+                  <ShowShadow>False</ShowShadow>
+                  <Title>Series 1</Title>
+                  <TopN Ref="18" type="Stimulsoft.Report.Chart.StiSeriesTopN" isKey="true" />
+                  <ValueDataColumn>MainTable.Amount</ValueDataColumn>
+                </Item13>
+              </Series>
+              <SeriesLabels Ref="19" type="Stimulsoft.Report.Chart.StiCenterAxisLabels" isKey="true">
+                <BorderColor>Transparent</BorderColor>
+                <Brush>Transparent</Brush>
+                <Chart isRef="13" />
+                <Font>Arial,10</Font>
+                <LabelColor>51, 71, 91</LabelColor>
+                <LegendValueType>Argument</LegendValueType>
+                <MarkerSize>8, 6</MarkerSize>
+                <ValueTypeSeparator>-</ValueTypeSeparator>
+                <Width>0</Width>
+              </SeriesLabels>
+              <SeriesLabelsConditions isList="true" count="0" />
+              <Sort isList="true" count="0" />
+              <Strips isList="true" count="0" />
+              <Style Ref="20" type="Stimulsoft.Report.Chart.StiStyle25" isKey="true">
+                <Conditions isList="true" count="0" />
+                <Name />
+              </Style>
+              <Table Ref="21" type="Stimulsoft.Report.Chart.StiChartTable" isKey="true">
+                <DataCells Ref="22" type="Stimulsoft.Report.Chart.StiChartTableDataCells" isKey="true">
+                  <Font>Arial,8</Font>
+                  <ShrinkFontToFit>False</ShrinkFontToFit>
+                  <TextColor>140, 140, 140</TextColor>
+                </DataCells>
+                <GridLineColor>225, 225, 225</GridLineColor>
+                <Header Ref="23" type="Stimulsoft.Report.Chart.StiChartTableHeader" isKey="true">
+                  <Brush>White</Brush>
+                  <Font>Arial,8</Font>
+                  <TextColor>DarkGray</TextColor>
+                </Header>
+              </Table>
+              <Title Ref="24" type="Stimulsoft.Report.Chart.StiChartTitle" isKey="true">
+                <Brush>[140:140:140]</Brush>
+                <Font>Tahoma,12,Bold</Font>
+              </Title>
+            </Chart3>
+            <Chart2 Ref="25" type="Stimulsoft.Report.Chart.StiChart" isKey="true">
+              <Area Ref="26" type="Stimulsoft.Report.Chart.StiPieArea" isKey="true">
+                <BorderColor>171, 172, 173</BorderColor>
+                <Brush>White</Brush>
+                <Chart isRef="25" />
+              </Area>
+              <Brush>[255:255:255]</Brush>
+              <ClientRectangle>12.22,14.62,122.15,105.59</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <ConstantLines isList="true" count="0" />
+              <CustomStyleName />
+              <Filters isList="true" count="0" />
+              <Guid>69745bdca2bd4b6e901a9f237b6d8c9b</Guid>
+              <Legend Ref="27" type="Stimulsoft.Report.Chart.StiLegend" isKey="true">
+                <BorderColor>225, 225, 225</BorderColor>
+                <Brush>[255:255:255]</Brush>
+                <Chart isRef="25" />
+                <Font>Arial,8</Font>
+                <LabelsColor>140, 140, 140</LabelsColor>
+                <MarkerSize>10, 10</MarkerSize>
+                <ShowShadow>False</ShowShadow>
+                <TitleColor>105, 105, 105</TitleColor>
+                <TitleFont>Arial,14,Bold</TitleFont>
+              </Legend>
+              <Name>Chart2</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Series isList="true" count="1">
+                <Item15 Ref="28" type="Stimulsoft.Report.Chart.StiPieSeries" isKey="true">
+                  <ArgumentDataColumn>MainTable.TariffTitle</ArgumentDataColumn>
+                  <AutoSeriesTitleDataColumn>MainTable.TariffTitle</AutoSeriesTitleDataColumn>
+                  <BorderColor>255, 255, 255</BorderColor>
+                  <Brush>[112:173:71]</Brush>
+                  <Chart isRef="25" />
+                  <Conditions isList="true" count="0" />
+                  <Filters isList="true" count="1">
+                    <value>Argument,String,NotEqualTo,</value>
+                  </Filters>
+                  <Lighting>False</Lighting>
+                  <SeriesLabels Ref="29" type="Stimulsoft.Report.Chart.StiInsideEndPieLabels" isKey="true">
+                    <BorderColor>Transparent</BorderColor>
+                    <Brush>Transparent</Brush>
+                    <Chart isRef="25" />
+                    <Font>Arial,10</Font>
+                    <LabelColor>51, 71, 91</LabelColor>
+                    <LegendValueType>Argument</LegendValueType>
+                    <MarkerSize>8, 6</MarkerSize>
+                    <ValueTypeSeparator>-</ValueTypeSeparator>
+                    <Width>0</Width>
+                  </SeriesLabels>
+                  <ShowSeriesLabels>FromSeries</ShowSeriesLabels>
+                  <ShowShadow>False</ShowShadow>
+                  <Title>Series 1</Title>
+                  <TopN Ref="30" type="Stimulsoft.Report.Chart.StiSeriesTopN" isKey="true" />
+                  <ValueDataColumn>MainTable.Amount</ValueDataColumn>
+                </Item15>
+              </Series>
+              <SeriesLabels Ref="31" type="Stimulsoft.Report.Chart.StiNoneLabels" isKey="true">
+                <Chart isRef="25" />
+                <LegendValueType>Argument</LegendValueType>
+                <MarkerSize>8, 6</MarkerSize>
+                <ValueTypeSeparator>-</ValueTypeSeparator>
+                <Width>0</Width>
+              </SeriesLabels>
+              <SeriesLabelsConditions isList="true" count="0" />
+              <Sort isList="true" count="0" />
+              <Strips isList="true" count="0" />
+              <Style Ref="32" type="Stimulsoft.Report.Chart.StiStyle25" isKey="true">
+                <Conditions isList="true" count="0" />
+                <Name />
+              </Style>
+              <Table Ref="33" type="Stimulsoft.Report.Chart.StiChartTable" isKey="true">
+                <DataCells Ref="34" type="Stimulsoft.Report.Chart.StiChartTableDataCells" isKey="true">
+                  <Font>Arial,8</Font>
+                  <ShrinkFontToFit>False</ShrinkFontToFit>
+                  <TextColor>140, 140, 140</TextColor>
+                </DataCells>
+                <GridLineColor>225, 225, 225</GridLineColor>
+                <Header Ref="35" type="Stimulsoft.Report.Chart.StiChartTableHeader" isKey="true">
+                  <Brush>White</Brush>
+                  <Font>Arial,8</Font>
+                  <TextColor>DarkGray</TextColor>
+                </Header>
+              </Table>
+              <Title Ref="36" type="Stimulsoft.Report.Chart.StiChartTitle" isKey="true">
+                <Brush>[140:140:140]</Brush>
+                <Font>Tahoma,12,Bold</Font>
+              </Title>
+            </Chart2>
+            <Text2 Ref="37" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>142.86,122.31,76.69,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text2</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>{Sum(IIF(MainTable.Lable!="پارک خودرو",MainTable.Amount,0))}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="38" type="CurrencyFormat" isKey="true">
+                <DecimalDigits>0</DecimalDigits>
+                <DecimalSeparator>/</DecimalSeparator>
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>6</NegativePattern>
+                <PositivePattern>1</PositivePattern>
+                <Symbol>ريال</Symbol>
+                <UseLocalSetting>False</UseLocalSetting>
+              </TextFormat>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text2>
+            <Text1 Ref="39" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>219.7,122.03,48.29,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text1</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>مجموع درامد از عضویت اعضا:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text1>
+            <Text6 Ref="40" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>87.78,122.58,48.29,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>a9a23bff31274b83a9251e50a9ad11bc</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text6</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>مجموع درامد از پارک خودرو ها:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text6>
+            <Text8 Ref="41" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>75.24,137.69,63.58,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>8c28b95e0318467eab4fefccbe172213</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text8</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>{Sum(MainTable.Amount)}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="42" type="CurrencyFormat" isKey="true">
+                <DecimalDigits>0</DecimalDigits>
+                <DecimalSeparator>/</DecimalSeparator>
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>6</NegativePattern>
+                <PositivePattern>1</PositivePattern>
+                <Symbol>ريال</Symbol>
+                <UseLocalSetting>False</UseLocalSetting>
+              </TextFormat>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text8>
+            <Text9 Ref="43" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>151.44,137.68,36,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>4b43e3c093b44396abf5d86520f937cc</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text9</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>درآمد کل پارکینگ:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text9>
+            <Text7 Ref="44" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>12.03,122.59,75.87,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>790aff81702c450f8e753d3d6652e460</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text7</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>{Sum(IIF(MainTable.Lable=="پارک خودرو",MainTable.Amount,0))}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="45" type="CurrencyFormat" isKey="true">
+                <DecimalDigits>0</DecimalDigits>
+                <DecimalSeparator>/</DecimalSeparator>
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>6</NegativePattern>
+                <PositivePattern>1</PositivePattern>
+                <Symbol>ريال</Symbol>
+                <UseLocalSetting>False</UseLocalSetting>
+              </TextFormat>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text7>
+            <Text10 Ref="46" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>86.24,7.41,48.29,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>4d69c6f3d9f048679495e1dec4724029</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text10</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>نمودار درامد برحسب تعرفه</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text10>
+            <Text11 Ref="47" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>217.07,7.41,48.29,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>c7e6b9fad7e349f0bcdfe530a7617adc</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text11</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <Text>نمودار درامد برحسب نوع عضویت</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text11>
+            <StartPointPrimitive2 Ref="48" type="Stimulsoft.Report.Components.StiStartPointPrimitive" isKey="true">
+              <ClientRectangle>14.58,137.33,0,0</ClientRectangle>
+              <Name>StartPointPrimitive2</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <ReferenceToGuid>7919de0adc1940bc8a5262060b82f407</ReferenceToGuid>
+            </StartPointPrimitive2>
+            <EndPointPrimitive2 Ref="49" type="Stimulsoft.Report.Components.StiEndPointPrimitive" isKey="true">
+              <ClientRectangle>262.3,144.16,0,0</ClientRectangle>
+              <Name>EndPointPrimitive2</Name>
+              <Page isRef="4" />
+              <Parent isRef="12" />
+              <ReferenceToGuid>7919de0adc1940bc8a5262060b82f407</ReferenceToGuid>
+            </EndPointPrimitive2>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>HeaderBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </HeaderBand1>
+        <DataBand1 Ref="50" type="DataBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,189.71,277,0</ClientRectangle>
+          <Components isList="true" count="0" />
+          <Conditions isList="true" count="0" />
+          <DataRelationName isNull="true" />
+          <DataSourceName>MainTable</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+          <Sort isList="true" count="0" />
+        </DataBand1>
+        <RoundedRectanglePrimitive1 Ref="51" type="Stimulsoft.Report.Components.StiRoundedRectanglePrimitive" isKey="true">
+          <ClientRectangle>0.26,6.03,276.05,19.31</ClientRectangle>
+          <Color>Black</Color>
+          <Guid>ab770334c5e94b85a93b5c37b9d7ea22</Guid>
+          <Name>RoundedRectanglePrimitive1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+          <Round>0.1</Round>
+          <Size>1.5</Size>
+        </RoundedRectanglePrimitive1>
+        <RectanglePrimitive1 Ref="52" type="RectanglePrimitive" isKey="true">
+          <ClientRectangle>14.58,172.44,247.72,6.83</ClientRectangle>
+          <Color>Black</Color>
+          <Guid>7919de0adc1940bc8a5262060b82f407</Guid>
+          <Name>RectanglePrimitive1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </RectanglePrimitive1>
+      </Components>
+      <Conditions isList="true" count="0" />
+      <Guid>8d3311040f254de099e87dc0b7bfa4fa</Guid>
+      <Margins>10,10,10,10</Margins>
+      <Name>Page1</Name>
+      <Orientation>Landscape</Orientation>
+      <PageHeight>210</PageHeight>
+      <PageWidth>297</PageWidth>
+      <PaperSize>A4</PaperSize>
+      <Report isRef="0" />
+      <Watermark Ref="53" type="Stimulsoft.Report.Components.StiWatermark" isKey="true">
+        <Font>Arial,100</Font>
+        <TextBrush>[50:0:0:0]</TextBrush>
+      </Watermark>
+    </Page1>
+  </Pages>
+  <PrinterSettings Ref="54" type="Stimulsoft.Report.Print.StiPrinterSettings" isKey="true" />
+  <ReferencedAssemblies isList="true" count="10">
+    <value>System.Dll</value>
+    <value>System.Drawing.Dll</value>
+    <value>System.Windows.Forms.Dll</value>
+    <value>System.Data.Dll</value>
+    <value>System.Xml.Dll</value>
+    <value>Stimulsoft.Controls.Dll</value>
+    <value>Stimulsoft.Base.Dll</value>
+    <value>Stimulsoft.Report.Dll</value>
+    <value>EosParking.Data.dll</value>
+    <value>EosParking.Core.dll</value>
+  </ReferencedAssemblies>
+  <ReportAlias>Report</ReportAlias>
+  <ReportChanged>11/2/2019 12:46:14 PM</ReportChanged>
+  <ReportCreated>8/19/2019 3:43:14 PM</ReportCreated>
+  <ReportGuid>df25047b87fa44f5a037c4fd1ddc9866</ReportGuid>
+  <ReportName>Report</ReportName>
+  <ReportUnit>Millimeters</ReportUnit>
+  <ReportVersion>2018.2.2.0</ReportVersion>
+  <Script>using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Data;
+using Stimulsoft.Controls;
+using Stimulsoft.Base.Drawing;
+using Stimulsoft.Report;
+using Stimulsoft.Report.Dialogs;
+using Stimulsoft.Report.Components; 
+
+namespace Reports
+{
+    public class Report : Stimulsoft.Report.StiReport
+    {
+        public Report()        {
+            this.InitializeComponent();
+        }
+
+        #region StiReport Designer generated code - do not modify
+		#endregion StiReport Designer generated code - do not modify
+    }
+}
+</Script>
+  <ScriptLanguage>CSharp</ScriptLanguage>
+  <Styles isList="true" count="0" />
+</StiSerializer>

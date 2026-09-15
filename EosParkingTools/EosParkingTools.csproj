@@ -1,0 +1,544 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BFE795F2-4F19-4FAC-9F4F-C8EF19C4A83E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EosParkingTools</RootNamespace>
+    <AssemblyName>EosParkingTools</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+    <SccProjectName>%24/ParkingProject/NewParkingSystem/ParkingSystem/Persentation/EosParkingTools</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
+    <SccAuxPath>http://teamserver/defaultcollection</SccAuxPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AForge">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Imaging">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.Imaging.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Imaging.Formats">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.Imaging.Formats.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Vision">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.Vision.dll</HintPath>
+    </Reference>
+    <Reference Include="DateTimeSelector, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\DateTimeSelector.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Data.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Printing.v17.1.Core, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Sparkline.v17.1.Core, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Utils.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraBars.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraEditors.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraGrid.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraLayout.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraNavBar.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraPrinting.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="EosClocks">
+      <HintPath>..\..\ShareBinary\EosClocks.dll</HintPath>
+    </Reference>
+    <Reference Include="EosSolarDateTimePicker">
+      <HintPath>..\..\ShareBinary\EosSolarDateTimePicker.dll</HintPath>
+    </Reference>
+    <Reference Include="FarsiLibrary.Win">
+      <HintPath>..\..\ShareBinary\FarsiLibrary.Win.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.2.2.7\lib\net40\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Infrastructure\EosParking.Core\bin\Debug\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql, Version=2.2.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.2.2.7\lib\net40\Npgsql.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Net.Http.2.0.20710.0\lib\net40\System.Net.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Net.Http.2.0.20710.0\lib\net40\System.Net.Http.WebRequest.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VideoGrabberNET, Version=4.0.0.0, Culture=neutral, PublicKeyToken=d93ef1322474eeda, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ShareBinary\VideoGrabberNET.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EosComponents\GlassDesigner.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosComponents\GlassDesigner.Designer.cs">
+      <DependentUpon>GlassDesigner.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\BillCheckerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\BillCheckerControl.Designer.cs">
+      <DependentUpon>BillCheckerControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosBaseView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosBaseView.Designer.cs">
+      <DependentUpon>EosBaseView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosActionRibbonPageGroup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosActionRibbonPageGroup.Designer.cs">
+      <DependentUpon>EosActionRibbonPageGroup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosComboBoxEdit.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosComboBoxEdit.Designer.cs">
+      <DependentUpon>EosComboBoxEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosDateTimePicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosDateTimePicker.Designer.cs">
+      <DependentUpon>EosDateTimePicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosEntityModifyToolsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosEntityModifyToolsControl.Designer.cs">
+      <DependentUpon>EosEntityModifyToolsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosGridControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosGroupGridControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosGroupGridControl.Designer.cs">
+      <DependentUpon>EosGroupGridControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosLogin.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosLogin.Designer.cs">
+      <DependentUpon>EosLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosParkingInfoControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosParkingInfoControl.Designer.cs">
+      <DependentUpon>EosParkingInfoControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosPlateControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosPlateControl.Designer.cs">
+      <DependentUpon>EosPlateControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosPlateSelector.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosPlateSelector.Designer.cs">
+      <DependentUpon>EosPlateSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosTabControl.Designer.cs">
+      <DependentUpon>EosTabControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosTextBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosTextBox.Designer.cs">
+      <DependentUpon>EosTextBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosWaitPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosWaitPanel.Designer.cs">
+      <DependentUpon>EosWaitPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\EosPagingToolsGridControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\EosPagingToolsGridControl.Designer.cs">
+      <DependentUpon>EosPagingToolsGridControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\PopupAttribute.cs" />
+    <Compile Include="EosControls\PopupWinControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\PopupWinControl.Designer.cs">
+      <DependentUpon>PopupWinControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\CargoDetailsFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\CargoDetailsFilterPanel.Designer.cs">
+      <DependentUpon>CargoDetailsFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\IncomeFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\IncomeFilterPanel.Designer.cs">
+      <DependentUpon>IncomeFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MemberCashFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MemberCashFilterPanel.Designer.cs">
+      <DependentUpon>MemberCashFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MemberRegisterHistoryFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MemberRegisterHistoryFilterPanel.Designer.cs">
+      <DependentUpon>MemberRegisterHistoryFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MembersFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MembersFilterPanel.Designer.cs">
+      <DependentUpon>MembersFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MembershipFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\MembershipFilterPanel.Designer.cs">
+      <DependentUpon>MembershipFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\TrafficDetailsFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\TrafficDetailsFilterPanel.Designer.cs">
+      <DependentUpon>TrafficDetailsFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\TrafficFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\TrafficFilterPanel.Designer.cs">
+      <DependentUpon>TrafficFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\UserFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\ReportFilterPanel\UserFilterPanel.Designer.cs">
+      <DependentUpon>UserFilterPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosControls\Views\EosIpCamView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EosControls\Views\UsersView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EosControls\Views\UsersView.Designer.cs">
+      <DependentUpon>UsersView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\EosBaseDialogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\EosBaseDialogForm.Designer.cs">
+      <DependentUpon>EosBaseDialogForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\EosBaseForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\EosBaseForm.Designer.cs">
+      <DependentUpon>EosBaseForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\EosBaseRibbonForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\EosBaseRibbonForm.Designer.cs">
+      <DependentUpon>EosBaseRibbonForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\EosDialogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\EosDialogForm.Designer.cs">
+      <DependentUpon>EosDialogForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\EosControlListDialogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\EosControlListDialogForm.Designer.cs">
+      <DependentUpon>EosControlListDialogForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Interfaces\IBaseView.cs" />
+    <Compile Include="Interfaces\IEosSendRecivedForm.cs" />
+    <Compile Include="Interfaces\IFilterPanel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\ApiHelper.cs" />
+    <Compile Include="Utils\FlagEnumUIEditor.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EosControls\BillCheckerControl.resx">
+      <DependentUpon>BillCheckerControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportDesign\MembersReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\EntrancFishPrinter.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ExitFishPrinter.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\TrafficReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\TrafficWithImageReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\TrafficStatisticChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\MemberRegisterReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\MemberCashReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingIncomingChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\TotalHourParkingReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\UserCashReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingMonthlyIncomingChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyComparIncomingChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyOccupacyAverageParkChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyOccupacyPercentageParkChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyOccupacyRotationRatioParkChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyOccupiedParkChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyTotalParkChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\ParkingYearlyDistanceChartReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\TrafficIncomingDetailsReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\MembershipInfoIncomingDetailsReport.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\EntrancControlFishPrinter.mrt" />
+    <EmbeddedResource Include="EosControls\ReportDesign\CargoIoReport.mrt" />
+    <None Include="EosControls\ReportDesign\EntrancFishPrinterFace.mrt" />
+    <None Include="packages.config" />
+    <None Include="Resources\Add40.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EosControls\EosBaseView.resx">
+      <DependentUpon>EosBaseView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosActionRibbonPageGroup.resx">
+      <DependentUpon>EosActionRibbonPageGroup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosComboBoxEdit.resx">
+      <DependentUpon>EosComboBoxEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosDateTimePicker.resx">
+      <DependentUpon>EosDateTimePicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosEntityModifyToolsControl.resx">
+      <DependentUpon>EosEntityModifyToolsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosGroupGridControl.resx">
+      <DependentUpon>EosGroupGridControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosLogin.resx">
+      <DependentUpon>EosLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosParkingInfoControl.resx">
+      <DependentUpon>EosParkingInfoControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosPlateControl.resx">
+      <DependentUpon>EosPlateControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosPlateSelector.resx">
+      <DependentUpon>EosPlateSelector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosTextBox.resx">
+      <DependentUpon>EosTextBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosWaitPanel.resx">
+      <DependentUpon>EosWaitPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\EosPagingToolsGridControl.resx">
+      <DependentUpon>EosPagingToolsGridControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\PopupWinControl.resx">
+      <DependentUpon>PopupWinControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\CargoDetailsFilterPanel.resx">
+      <DependentUpon>CargoDetailsFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\IncomeFilterPanel.resx">
+      <DependentUpon>IncomeFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\MemberCashFilterPanel.resx">
+      <DependentUpon>MemberCashFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\MemberRegisterHistoryFilterPanel.resx">
+      <DependentUpon>MemberRegisterHistoryFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\MembersFilterPanel.resx">
+      <DependentUpon>MembersFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\MembershipFilterPanel.resx">
+      <DependentUpon>MembershipFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\TrafficDetailsFilterPanel.resx">
+      <DependentUpon>TrafficDetailsFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\TrafficFilterPanel.resx">
+      <DependentUpon>TrafficFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\ReportFilterPanel\UserFilterPanel.resx">
+      <DependentUpon>UserFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\Views\EosIpCamView.resx">
+      <DependentUpon>EosIpCamView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosControls\Views\UsersView.resx">
+      <DependentUpon>UsersView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\EosBaseDialogForm.resx">
+      <DependentUpon>EosBaseDialogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\EosBaseForm.resx">
+      <DependentUpon>EosBaseForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\EosDialogForm.resx">
+      <DependentUpon>EosDialogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\EosControlListDialogForm.resx">
+      <DependentUpon>EosControlListDialogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Resources\Caution80.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Information80.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Question80.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Error80.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ok21.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Cancel21.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\No21.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataPersistance\EosParking.Data\EosParking.Data.csproj">
+      <Project>{5e3903ef-d45d-4ce6-ad57-3d91787fac5b}</Project>
+      <Name>EosParking.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Infrastructure\EosParking.Controllers\EosParking.Controllers.csproj">
+      <Project>{883dacbc-666c-47c9-882c-8dcc2729634a}</Project>
+      <Name>EosParking.Controllers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Infrastructure\EosParking.Core\EosParking.Core.csproj">
+      <Project>{1ceb21fc-5198-4c52-ac0a-bebb0cb75be3}</Project>
+      <Name>EosParking.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Delete40.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Edit40.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pagenext.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pagepreview.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Add21.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Edit21.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DateTimeSelector.dll" />
+    <None Include="Resources\CarPlateDetection.png" />
+    <None Include="Resources\Bus21.png" />
+    <None Include="Resources\Truck21.png" />
+    <None Include="Resources\Minibus15.png" />
+    <None Include="Resources\Truck15.png" />
+    <None Include="Resources\Bus15.png" />
+    <None Include="Resources\Minibus21.png" />
+    <None Include="Resources\Motorcycle21.png" />
+    <None Include="Resources\Car21.png" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

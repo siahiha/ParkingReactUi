@@ -7,7 +7,7 @@ import { HomeFormRoutes } from './HomeFormRoutes';
 import { HomeHeader } from './HomeHeader';
 import { HomeSidebar } from './HomeSidebar';
 import { homeCopy } from './homeCopy';
-import { createManagementItems, createParkingMenuGroups, parkingCrudItems, visibleManagementItems as filterManagementItems, visibleParkingGroups, type ManagementSection } from './homeMenuModel';
+import { createManagementItems, createParkingMenuGroups, visibleManagementItems as filterManagementItems, visibleParkingGroups, type ManagementSection } from './homeMenuModel';
 import type { HomeUser, ThemeMode } from './homeTypes';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -54,7 +54,7 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, onT
     <Box className={`home-body ${!hasSidebar ? 'home-body-no-sidebar' : ''}`}>
       {hasSidebar && <HomeSidebar appName={t.app} systemMenu={t.systemMenu} currentParkingSectionTitle={language === 'fa' ? 'تعاریف و تنظیمات پارکینگ جاری' : 'Current parking definitions and settings'} reportsSectionTitle={language === 'fa' ? 'گزارش‌ها' : 'Reports'} direction={language === 'fa' ? 'rtl' : 'ltr'} collapseLabel={t.collapseNavigation} expandLabel={t.expandNavigation} visibleManagementItems={visibleManagement} visibleParkingMenuGroups={visibleParking} activeParkingMenu={activeParkingMenu} managementSection={managementSection} onNavigate={navigate} canManageDashboard={user.canManageDashboard} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} mobileOpen={mobileNavigationOpen} onMobileClose={() => setMobileNavigationOpen(false)} />}
       <Box component="main" className="home-main">
-        {!showManagement && !(activeParkingMenuItem && parkingCrudItems.has(activeParkingMenuItem.key)) && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{activeParkingMenuItem?.label ?? t.homeTitle}</h1><p className="home-page-description">{activeParkingMenuItem ? t.placeholder : t.homeDescription}</p></Box></Box>}
+        {!showManagement && !activeParkingMenu && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{t.homeTitle}</h1><p className="home-page-description">{t.homeDescription}</p></Box></Box>}
         {(showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} visibleParkingMenuItems={visibleParking.flatMap((group) => group.items)} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParkingId} />}
       </Box>
     </Box>

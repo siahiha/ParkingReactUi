@@ -5,6 +5,7 @@ import type { HomeUser } from './Home';
 import { ParkingDefinitionsCrudWorkspace } from '../components/ParkingDefinitionsCrudWorkspace';
 import { ParkingManagementWorkspace } from '../components/ParkingManagementWorkspace';
 import { ExitPermissionWorkspace } from '../components/ExitPermissionWorkspace';
+import { TariffListWorkspace } from '../features/tariffs/TariffListWorkspace';
 
 type MenuItem = { key: string; label: string };
 type Labels = { parkingManagement: string; listMenu: string; placeholder: string };
@@ -41,6 +42,9 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
   if (!item) return <Navigate to="/home" replace />;
   if (crudKinds.has(item.key)) {
     return <ParkingDefinitionsCrudWorkspace kind={item.key as 'space-types' | 'floors' | 'zones' | 'member-kinds'} title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} canEdit={item.key !== 'member-kinds' || user.canManageDashboard || hasPart1(1n << 48n)} canDelete={item.key !== 'member-kinds' || user.canManageDashboard || hasPart1(1n << 49n)} />;
+  }
+  if (item.key === 'tariffs') {
+    return <TariffListWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }
   return <ParkingManagementWorkspace itemKey={item.key} title={item.label} parkingId={selectedParkingId} language={language} />;
 }
