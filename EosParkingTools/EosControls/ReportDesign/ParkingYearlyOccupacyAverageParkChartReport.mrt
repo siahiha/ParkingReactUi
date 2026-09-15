@@ -1,0 +1,628 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<StiSerializer version="1.02" type="Net" application="StiReport">
+  <Culture>Fa-IR</Culture>
+  <Dictionary Ref="1" type="Dictionary" isKey="true">
+    <BusinessObjects isList="true" count="0" />
+    <Databases isList="true" count="0" />
+    <DataSources isList="true" count="2">
+      <MainTable Ref="2" type="Stimulsoft.Report.Dictionary.StiBusinessObjectSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="15">
+          <value>Distance,System.Int32</value>
+          <value>Id,System.Int64</value>
+          <value>Label,System.String</value>
+          <value>OccupiedCount,System.Int32</value>
+          <value>ParkingId,System.Int64</value>
+          <value>ParkingTitle,System.String</value>
+          <value>ParkspaceOccupancyAverage,System.Double</value>
+          <value>ParkspaceOccupancyPercentage,System.Double</value>
+          <value>ParkspaceRotationRatio,System.Double</value>
+          <value>PersistOn,System.DateTime</value>
+          <value>SolarPersistOn,System.String</value>
+          <value>TotalExitOnPark,System.Int32</value>
+          <value>TotalHourlyPark,System.Int32</value>
+          <value>TotalParkCount,System.Int32</value>
+          <value>TotalParkSpaces,System.Int32</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable</Name>
+        <NameInSource>DB</NameInSource>
+      </MainTable>
+      <MainTable2 Ref="3" type="DataTableSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="15">
+          <value>TotalParkSpaces,System.Int32</value>
+          <value>OccupiedCount,System.Int32</value>
+          <value>TotalHourlyPark,System.Int32</value>
+          <value>TotalParkCount,System.Int32</value>
+          <value>TotalExitOnPark,System.Int32</value>
+          <value>Distance,System.Int32</value>
+          <value>ParkspaceOccupancyPercentage,System.Double</value>
+          <value>ParkspaceOccupancyAverage,System.Double</value>
+          <value>ParkspaceRotationRatio,System.Double</value>
+          <value>SolarPersistOn,System.String</value>
+          <value>Id,System.Int64</value>
+          <value>PersistOn,System.DateTime</value>
+          <value>Label,System.String</value>
+          <value>ParkingTitle,System.String</value>
+          <value>ParkingId,System.Int64</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable2</Name>
+        <NameInSource>DB.MainTable</NameInSource>
+      </MainTable2>
+    </DataSources>
+    <Relations isList="true" count="0" />
+    <Report isRef="0" />
+    <Resources isList="true" count="0" />
+    <Variables isList="true" count="1">
+      <value>,ReportDateTime,تاریخ_x0020_و_x0020_زمان_x0020_گزارش,,System.String,_x0031_398_x002F_08_x002F_09_x0020_08:37,False,False,False,False</value>
+    </Variables>
+  </Dictionary>
+  <EngineVersion>EngineV2</EngineVersion>
+  <GlobalizationStrings isList="true" count="0" />
+  <MetaTags isList="true" count="0" />
+  <Pages isList="true" count="1">
+    <Page1 Ref="4" type="Page" isKey="true">
+      <Border>None;Black;2;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <Components isList="true" count="7">
+        <PageHeaderBand1 Ref="5" type="PageHeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,4,277,23.11</ClientRectangle>
+          <Components isList="true" count="7">
+            <Text3 Ref="6" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>18.75,5.08,240.54,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text3</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>متوسط مدت پارک خودرو</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text3>
+            <Text4 Ref="7" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>18.75,14.73,46.47,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12</Font>
+              <HideZeros>True</HideZeros>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text4</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>{ReportDateTime}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+            </Text4>
+            <Text13 Ref="8" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>66.18,13.96,20.64,6.01</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12</Font>
+              <Guid>36fe0d5093e7489097d43b0bd99cfc5b</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text13</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>تاریخ گزارش</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text13>
+            <Text8 Ref="9" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>234.72,14.26,20.64,6.01</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12</Font>
+              <Guid>319eeaf928c041ea809aa967ed1f1317</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text8</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>پارکینگ </Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text8>
+            <Text9 Ref="10" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>131.94,14.09,102.8,6.28</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,12</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text9</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>{MainTable2.ParkingTitle}</Text>
+              <TextBrush>Black</TextBrush>
+            </Text9>
+            <EndPointPrimitive1 Ref="11" type="Stimulsoft.Report.Components.StiEndPointPrimitive" isKey="true">
+              <ClientRectangle>276.31,21.34,0,0</ClientRectangle>
+              <Name>EndPointPrimitive1</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <ReferenceToGuid>ab770334c5e94b85a93b5c37b9d7ea22</ReferenceToGuid>
+            </EndPointPrimitive1>
+            <StartPointPrimitive1 Ref="12" type="Stimulsoft.Report.Components.StiStartPointPrimitive" isKey="true">
+              <ClientRectangle>0.26,2.03,0,0</ClientRectangle>
+              <Name>StartPointPrimitive1</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <ReferenceToGuid>ab770334c5e94b85a93b5c37b9d7ea22</ReferenceToGuid>
+            </StartPointPrimitive1>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>PageHeaderBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </PageHeaderBand1>
+        <PageFooterBand1 Ref="13" type="PageFooterBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,253.05,277,12.95</ClientRectangle>
+          <Components isList="true" count="0" />
+          <Conditions isList="true" count="0" />
+          <Name>PageFooterBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </PageFooterBand1>
+        <HeaderBand1 Ref="14" type="HeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,35.11,277,138.49</ClientRectangle>
+          <Components isList="true" count="2">
+            <Chart1 Ref="15" type="Stimulsoft.Report.Chart.StiChart" isKey="true">
+              <Area Ref="16" type="Stimulsoft.Report.Chart.StiClusteredColumnArea" isKey="true">
+                <BorderColor>171, 172, 173</BorderColor>
+                <Brush>White</Brush>
+                <Chart isRef="15" />
+                <GridLinesHor Ref="17" type="Stimulsoft.Report.Chart.StiGridLinesHor" isKey="true">
+                  <Area isRef="16" />
+                  <Color>100, 105, 105, 105</Color>
+                  <MinorColor>100, 105, 105, 105</MinorColor>
+                </GridLinesHor>
+                <GridLinesHorRight Ref="18" type="Stimulsoft.Report.Chart.StiGridLinesHor" isKey="true">
+                  <Area isRef="16" />
+                  <Color>Silver</Color>
+                  <MinorColor>Gainsboro</MinorColor>
+                  <Visible>False</Visible>
+                </GridLinesHorRight>
+                <GridLinesVert Ref="19" type="Stimulsoft.Report.Chart.StiGridLinesVert" isKey="true">
+                  <Area isRef="16" />
+                  <Color>100, 105, 105, 105</Color>
+                  <MinorColor>100, 105, 105, 105</MinorColor>
+                </GridLinesVert>
+                <InterlacingHor Ref="20" type="Stimulsoft.Report.Chart.StiInterlacingHor" isKey="true">
+                  <Area isRef="16" />
+                  <InterlacedBrush>[10:155:155:155]</InterlacedBrush>
+                </InterlacingHor>
+                <InterlacingVert Ref="21" type="Stimulsoft.Report.Chart.StiInterlacingVert" isKey="true">
+                  <Area isRef="16" />
+                  <InterlacedBrush>[10:155:155:155]</InterlacedBrush>
+                </InterlacingVert>
+                <XAxis Ref="22" type="Stimulsoft.Report.Chart.StiXBottomAxis" isKey="true">
+                  <Area isRef="16" />
+                  <DateTimeStep Ref="23" type="Stimulsoft.Report.Chart.StiAxisDateTimeStep" isKey="true" />
+                  <Interaction Ref="24" type="Stimulsoft.Report.Chart.StiAxisInteraction" isKey="true" />
+                  <Labels Ref="25" type="Stimulsoft.Report.Chart.StiAxisLabels" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Font>Tahoma,8</Font>
+                  </Labels>
+                  <LineColor>140, 140, 140</LineColor>
+                  <Range Ref="26" type="Stimulsoft.Report.Chart.StiAxisRange" isKey="true" />
+                  <Ticks Ref="27" type="Stimulsoft.Report.Chart.StiAxisTicks" isKey="true" />
+                  <Title Ref="28" type="Stimulsoft.Report.Chart.StiAxisTitle" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Font>Tahoma,12,Bold</Font>
+                  </Title>
+                </XAxis>
+                <XTopAxis Ref="29" type="Stimulsoft.Report.Chart.StiXTopAxis" isKey="true">
+                  <Area isRef="16" />
+                  <Interaction Ref="30" type="Stimulsoft.Report.Chart.StiAxisInteraction" isKey="true" />
+                  <Labels Ref="31" type="Stimulsoft.Report.Chart.StiAxisLabels" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Font>Tahoma,8</Font>
+                  </Labels>
+                  <LineColor>140, 140, 140</LineColor>
+                  <Ticks Ref="32" type="Stimulsoft.Report.Chart.StiAxisTicks" isKey="true" />
+                  <Title Ref="33" type="Stimulsoft.Report.Chart.StiAxisTitle" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Font>Tahoma,12,Bold</Font>
+                  </Title>
+                </XTopAxis>
+                <YAxis Ref="34" type="Stimulsoft.Report.Chart.StiYLeftAxis" isKey="true">
+                  <Area isRef="16" />
+                  <Interaction Ref="35" type="Stimulsoft.Report.Chart.StiAxisInteraction" isKey="true" />
+                  <Labels Ref="36" type="Stimulsoft.Report.Chart.StiAxisLabels" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Font>Tahoma,8</Font>
+                  </Labels>
+                  <LineColor>140, 140, 140</LineColor>
+                  <Range Ref="37" type="Stimulsoft.Report.Chart.StiAxisRange" isKey="true" />
+                  <Ticks Ref="38" type="Stimulsoft.Report.Chart.StiAxisTicks" isKey="true" />
+                  <Title Ref="39" type="Stimulsoft.Report.Chart.StiAxisTitle" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Direction>BottomToTop</Direction>
+                    <Font>Tahoma,12,Bold</Font>
+                  </Title>
+                </YAxis>
+                <YRightAxis Ref="40" type="Stimulsoft.Report.Chart.StiYRightAxis" isKey="true">
+                  <Area isRef="16" />
+                  <Interaction Ref="41" type="Stimulsoft.Report.Chart.StiAxisInteraction" isKey="true" />
+                  <Labels Ref="42" type="Stimulsoft.Report.Chart.StiAxisLabels" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Font>Tahoma,8</Font>
+                    <TextAlignment>Left</TextAlignment>
+                  </Labels>
+                  <LineColor>140, 140, 140</LineColor>
+                  <Range Ref="43" type="Stimulsoft.Report.Chart.StiAxisRange" isKey="true" />
+                  <Ticks Ref="44" type="Stimulsoft.Report.Chart.StiAxisTicks" isKey="true" />
+                  <Title Ref="45" type="Stimulsoft.Report.Chart.StiAxisTitle" isKey="true">
+                    <Color>140, 140, 140</Color>
+                    <Direction>TopToBottom</Direction>
+                    <Font>Tahoma,12,Bold</Font>
+                  </Title>
+                </YRightAxis>
+              </Area>
+              <Brush>[255:255:255]</Brush>
+              <ClientRectangle>0,0,277,138.21</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <ConstantLines isList="true" count="0" />
+              <CustomStyleName />
+              <DockStyle>Top</DockStyle>
+              <Filters isList="true" count="0" />
+              <Legend Ref="46" type="Stimulsoft.Report.Chart.StiLegend" isKey="true">
+                <BorderColor>225, 225, 225</BorderColor>
+                <Brush>[255:255:255]</Brush>
+                <Chart isRef="15" />
+                <Font>Arial,8</Font>
+                <LabelsColor>140, 140, 140</LabelsColor>
+                <MarkerSize>10, 10</MarkerSize>
+                <ShowShadow>False</ShowShadow>
+                <TitleColor>105, 105, 105</TitleColor>
+                <TitleFont>Arial,14,Bold</TitleFont>
+              </Legend>
+              <Name>Chart1</Name>
+              <Page isRef="4" />
+              <Parent isRef="14" />
+              <Series isList="true" count="1">
+                <Item15 Ref="47" type="Stimulsoft.Report.Chart.StiClusteredColumnSeries" isKey="true">
+                  <ArgumentDataColumn>MainTable.Label</ArgumentDataColumn>
+                  <BorderColor>255, 255, 255</BorderColor>
+                  <Brush>[112:173:71]</Brush>
+                  <BrushNegative>Firebrick</BrushNegative>
+                  <Chart isRef="15" />
+                  <Conditions isList="true" count="0" />
+                  <Filters isList="true" count="0" />
+                  <SeriesLabels Ref="48" type="Stimulsoft.Report.Chart.StiCenterAxisLabels" isKey="true">
+                    <BorderColor>Transparent</BorderColor>
+                    <Brush>Transparent</Brush>
+                    <Chart isRef="15" />
+                    <Font>Arial,10</Font>
+                    <LabelColor>51, 71, 91</LabelColor>
+                    <MarkerSize>8, 6</MarkerSize>
+                    <ValueTypeSeparator>-</ValueTypeSeparator>
+                    <Width>0</Width>
+                  </SeriesLabels>
+                  <ShowInLegend>False</ShowInLegend>
+                  <ShowShadow>False</ShowShadow>
+                  <Title>Series 1</Title>
+                  <TopN Ref="49" type="Stimulsoft.Report.Chart.StiSeriesTopN" isKey="true" />
+                  <TrendLine Ref="50" type="Stimulsoft.Report.Chart.StiTrendLineNone" isKey="true">
+                    <LineColor>105, 105, 105</LineColor>
+                    <ShowShadow>False</ShowShadow>
+                  </TrendLine>
+                  <ValueDataColumn>MainTable.ParkspaceOccupancyAverage</ValueDataColumn>
+                </Item15>
+              </Series>
+              <SeriesLabels Ref="51" type="Stimulsoft.Report.Chart.StiCenterAxisLabels" isKey="true">
+                <BorderColor>Transparent</BorderColor>
+                <Brush>Transparent</Brush>
+                <Chart isRef="15" />
+                <Font>Arial,10</Font>
+                <LabelColor>51, 71, 91</LabelColor>
+                <MarkerSize>8, 6</MarkerSize>
+                <ValueTypeSeparator>-</ValueTypeSeparator>
+                <Width>0</Width>
+              </SeriesLabels>
+              <SeriesLabelsConditions isList="true" count="0" />
+              <Sort isList="true" count="0" />
+              <Strips isList="true" count="0" />
+              <Style Ref="52" type="Stimulsoft.Report.Chart.StiStyle25" isKey="true">
+                <Conditions isList="true" count="0" />
+                <Name />
+              </Style>
+              <Table Ref="53" type="Stimulsoft.Report.Chart.StiChartTable" isKey="true">
+                <DataCells Ref="54" type="Stimulsoft.Report.Chart.StiChartTableDataCells" isKey="true">
+                  <Font>Arial,8</Font>
+                  <ShrinkFontToFit>False</ShrinkFontToFit>
+                  <TextColor>140, 140, 140</TextColor>
+                </DataCells>
+                <GridLineColor>225, 225, 225</GridLineColor>
+                <Header Ref="55" type="Stimulsoft.Report.Chart.StiChartTableHeader" isKey="true">
+                  <Brush>White</Brush>
+                  <Font>Arial,8</Font>
+                  <TextColor>DarkGray</TextColor>
+                </Header>
+              </Table>
+              <Title Ref="56" type="Stimulsoft.Report.Chart.StiChartTitle" isKey="true">
+                <Brush>[140:140:140]</Brush>
+                <Font>Tahoma,12,Bold</Font>
+              </Title>
+            </Chart1>
+            <StartPointPrimitive2 Ref="57" type="Stimulsoft.Report.Components.StiStartPointPrimitive" isKey="true">
+              <ClientRectangle>0.17,-0.07,0,0</ClientRectangle>
+              <Name>StartPointPrimitive2</Name>
+              <Page isRef="4" />
+              <Parent isRef="14" />
+              <ReferenceToGuid>0e142dfd89e849e2a8b2cf1b86474d6f</ReferenceToGuid>
+            </StartPointPrimitive2>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>HeaderBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </HeaderBand1>
+        <DataBand1 Ref="58" type="DataBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,181.6,277,0</ClientRectangle>
+          <Components isList="true" count="7">
+            <Text2 Ref="59" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>231.04,0,45.96,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text2</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.SolarPersistOn}</Text>
+              <TextBrush>Black</TextBrush>
+              <VertAlignment>Center</VertAlignment>
+            </Text2>
+            <Text5 Ref="60" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>190.57,0,40.47,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text5</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.TotalHourlyPark}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="61" type="NumberFormat" isKey="true">
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>1</NegativePattern>
+              </TextFormat>
+              <VertAlignment>Center</VertAlignment>
+            </Text5>
+            <Text6 Ref="62" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>150.07,0,40.5,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text6</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.OccupiedCount}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="63" type="NumberFormat" isKey="true">
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>1</NegativePattern>
+              </TextFormat>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text6>
+            <Text7 Ref="64" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>112.13,0,37.94,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text7</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.ParkspaceOccupancyPercentage}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="65" type="NumberFormat" isKey="true">
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>1</NegativePattern>
+              </TextFormat>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text7>
+            <Text1 Ref="66" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>74.69,0,37.44,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text1</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.ParkspaceOccupancyAverage}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="67" type="NumberFormat" isKey="true">
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>1</NegativePattern>
+              </TextFormat>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text1>
+            <Text15 Ref="68" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>38.14,0,36.55,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>6c8f6c8c1e1143a1ae3bf10389b3e3cf</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text15</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.Distance}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="69" type="NumberFormat" isKey="true">
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>1</NegativePattern>
+              </TextFormat>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text15>
+            <Text17 Ref="70" type="Text" isKey="true">
+              <Border>All;Black;1;Solid;False;4;Black</Border>
+              <Brush>White</Brush>
+              <ClientRectangle>0.16,0,37.98,0</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Right</DockStyle>
+              <Font>B Nazanin,12,Bold</Font>
+              <Guid>f34b24bad400436a9926afa43c4d57dc</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text17</Name>
+              <Page isRef="4" />
+              <Parent isRef="58" />
+              <Text>{MainTable.ParkspaceRotationRatio}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="71" type="NumberFormat" isKey="true">
+                <GroupSeparator>,</GroupSeparator>
+                <NegativePattern>1</NegativePattern>
+              </TextFormat>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text17>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <DataRelationName isNull="true" />
+          <DataSourceName>MainTable</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+          <Sort isList="true" count="0" />
+        </DataBand1>
+        <FooterBand1 Ref="72" type="FooterBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,189.6,277,7.89</ClientRectangle>
+          <Components isList="true" count="1">
+            <EndPointPrimitive2 Ref="73" type="Stimulsoft.Report.Components.StiEndPointPrimitive" isKey="true">
+              <ClientRectangle>277.04,6.59,0,0</ClientRectangle>
+              <Name>EndPointPrimitive2</Name>
+              <Page isRef="4" />
+              <Parent isRef="72" />
+              <ReferenceToGuid>0e142dfd89e849e2a8b2cf1b86474d6f</ReferenceToGuid>
+            </EndPointPrimitive2>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>FooterBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </FooterBand1>
+        <RoundedRectanglePrimitive1 Ref="74" type="Stimulsoft.Report.Components.StiRoundedRectanglePrimitive" isKey="true">
+          <ClientRectangle>0.26,6.03,276.05,19.31</ClientRectangle>
+          <Color>Black</Color>
+          <Guid>ab770334c5e94b85a93b5c37b9d7ea22</Guid>
+          <Name>RoundedRectanglePrimitive1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+          <Round>0.1</Round>
+          <Size>1.5</Size>
+        </RoundedRectanglePrimitive1>
+        <RoundedRectanglePrimitive2 Ref="75" type="Stimulsoft.Report.Components.StiRoundedRectanglePrimitive" isKey="true">
+          <ClientRectangle>0.17,35.04,276.87,161.15</ClientRectangle>
+          <Color>Black</Color>
+          <Guid>0e142dfd89e849e2a8b2cf1b86474d6f</Guid>
+          <Name>RoundedRectanglePrimitive2</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+          <Round>0.1</Round>
+          <Size>1.5</Size>
+        </RoundedRectanglePrimitive2>
+      </Components>
+      <Conditions isList="true" count="0" />
+      <Guid>8d3311040f254de099e87dc0b7bfa4fa</Guid>
+      <Margins>10,10,10,10</Margins>
+      <Name>Page1</Name>
+      <Orientation>Landscape</Orientation>
+      <PageHeight>210</PageHeight>
+      <PageWidth>297</PageWidth>
+      <PaperSize>A4</PaperSize>
+      <Report isRef="0" />
+      <Watermark Ref="76" type="Stimulsoft.Report.Components.StiWatermark" isKey="true">
+        <Font>Arial,100</Font>
+        <TextBrush>[50:0:0:0]</TextBrush>
+      </Watermark>
+    </Page1>
+  </Pages>
+  <PrinterSettings Ref="77" type="Stimulsoft.Report.Print.StiPrinterSettings" isKey="true" />
+  <ReferencedAssemblies isList="true" count="10">
+    <value>System.Dll</value>
+    <value>System.Drawing.Dll</value>
+    <value>System.Windows.Forms.Dll</value>
+    <value>System.Data.Dll</value>
+    <value>System.Xml.Dll</value>
+    <value>Stimulsoft.Controls.Dll</value>
+    <value>Stimulsoft.Base.Dll</value>
+    <value>Stimulsoft.Report.Dll</value>
+    <value>EosParking.Data.dll</value>
+    <value>EosParking.Core.dll</value>
+  </ReferencedAssemblies>
+  <ReportAlias>Report</ReportAlias>
+  <ReportChanged>10/31/2019 9:02:48 AM</ReportChanged>
+  <ReportCreated>8/19/2019 3:43:14 PM</ReportCreated>
+  <ReportFile>D:\WorkSpace\ParkingProject\NewParkingSystem\ParkingSystem\Persentation\EosParkingTools\EosControls\ReportDesign\ParkingYearlyOccupacyAverageParkChartReport.mrt</ReportFile>
+  <ReportGuid>1d43af14727c41f9a0d8a5578a8a18b1</ReportGuid>
+  <ReportName>Report</ReportName>
+  <ReportUnit>Millimeters</ReportUnit>
+  <ReportVersion>2018.2.2.0</ReportVersion>
+  <Script>using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Data;
+using Stimulsoft.Controls;
+using Stimulsoft.Base.Drawing;
+using Stimulsoft.Report;
+using Stimulsoft.Report.Dialogs;
+using Stimulsoft.Report.Components; 
+
+namespace Reports
+{
+    public class Report : Stimulsoft.Report.StiReport
+    {
+        public Report()        {
+            this.InitializeComponent();
+        }
+
+        #region StiReport Designer generated code - do not modify
+		#endregion StiReport Designer generated code - do not modify
+    }
+}
+</Script>
+  <ScriptLanguage>CSharp</ScriptLanguage>
+  <Styles isList="true" count="0" />
+</StiSerializer>

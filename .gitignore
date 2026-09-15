@@ -4,14 +4,47 @@
 
 # Dependencies and generated output
 **/node_modules/
+**/packages/
 **/dist/
 **/test-results/
 **/playwright-report/
 **/coverage/
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/.vs/
+**/TestResults/
+**/.pytest_cache/
+**/__pycache__/
+*.userprefs
+*.pdb
+*.cache
+*.tmp
+*.log
+*.nupkg
+*.snupkg
+
+# Local backups and archives
+Backup/
+*.rar
+*.zip
+*.7z
+*.bak
+
+# Compiled binaries and native build artifacts
+*.dll
+*.exe
+*.msi
+*.so
+*.dylib
 
 # Editor and operating-system files
 .vscode/
 .idea/
 *.user
+*.suo
+*.userosscache
+*.sln.docstates
 Thumbs.db
 .DS_Store

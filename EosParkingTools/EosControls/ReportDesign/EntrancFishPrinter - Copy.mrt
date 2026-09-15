@@ -1,0 +1,317 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<StiSerializer version="1.02" type="Net" application="StiReport">
+  <Culture>Fa-IR</Culture>
+  <Dictionary Ref="1" type="Dictionary" isKey="true">
+    <BusinessObjects isList="true" count="0" />
+    <Databases isList="true" count="0" />
+    <DataSources isList="true" count="2">
+      <MainTable Ref="2" type="Stimulsoft.Report.Dictionary.StiBusinessObjectSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="23">
+          <value>CarPlate,System.String</value>
+          <value>MemberCode,System.String</value>
+          <value>CardNumber,System.String</value>
+          <value>DumpId,System.Int64</value>
+          <value>PayType,EosParking.Core.Enums.PayTypes</value>
+          <value>ParkingId,System.Int64</value>
+          <value>MemberCost,System.Int64</value>
+          <value>CommonCost,System.Int64</value>
+          <value>TotalCost,System.Int64</value>
+          <value>TotalDuration,System.Int32</value>
+          <value>MemberDuration,System.Int32</value>
+          <value>CommonDuration,System.Int32</value>
+          <value>EnterDateTime,System.DateTime</value>
+          <value>ExitDateTime,System.Nullable`1[System.DateTime]</value>
+          <value>SolarEnterDateTime,System.String</value>
+          <value>SolarExitDateTime,System.String</value>
+          <value>QrCode,System.Drawing.Bitmap</value>
+          <value>TarrifIds,System.Collections.Generic.List`1[System.Int64]</value>
+          <value>DoSave,System.Boolean</value>
+          <value>SourceType,EosParking.Core.Enums.DumpSourceTypes</value>
+          <value>CarType,EosParking.Core.Enums.CarTypes</value>
+          <value>Id,System.Int64</value>
+          <value>PersistOn,System.DateTime</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable</Name>
+        <NameInSource>DB</NameInSource>
+      </MainTable>
+      <MainTable2 Ref="3" type="DataTableSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="28">
+          <value>CarPlate,System.String</value>
+          <value>AbsolutCarPlate,System.String</value>
+          <value>MemberCode,System.String</value>
+          <value>CardNumber,System.String</value>
+          <value>DumpId,System.Int64</value>
+          <value>PayType,EosParking.Core.Enums.PayTypes</value>
+          <value>ParkingId,System.Int64</value>
+          <value>MemberCost,System.Int64</value>
+          <value>CommonCost,System.Int64</value>
+          <value>TotalCost,System.Int64</value>
+          <value>TotalDuration,System.Int32</value>
+          <value>MemberDuration,System.Int32</value>
+          <value>CommonDuration,System.Int32</value>
+          <value>EnterDateTime,System.DateTime</value>
+          <value>ExitDateTime,System.DateTime</value>
+          <value>SolarEnterDateTime,System.String</value>
+          <value>SolarExitDateTime,System.String</value>
+          <value>QrCode,System.Drawing.Bitmap</value>
+          <value>TarrifIds,System.Collections.Generic.List`1[System.Int64]</value>
+          <value>DoSave,System.Boolean</value>
+          <value>SourceType,EosParking.Core.Enums.DumpSourceTypes</value>
+          <value>CarType,EosParking.Core.Enums.CarTypes</value>
+          <value>EnterImage,System.Byte[]</value>
+          <value>FormatedDuration,System.String</value>
+          <value>EnterDoorTitle,System.String</value>
+          <value>ExitDoorTitle,System.String</value>
+          <value>Id,System.Int64</value>
+          <value>PersistOn,System.DateTime</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable2</Name>
+        <NameInSource>DB.MainTable</NameInSource>
+      </MainTable2>
+    </DataSources>
+    <Relations isList="true" count="0" />
+    <Report isRef="0" />
+    <Resources isList="true" count="0" />
+    <Variables isList="true" count="1">
+      <value>,ReportDateTime,تاریخ_x0020_و_x0020_زمان_x0020_گزارش,,System.String,_x0031_398_x002F_07_x002F_09_x0020_09:17,False,False,False,False</value>
+    </Variables>
+  </Dictionary>
+  <EngineVersion>EngineV2</EngineVersion>
+  <GlobalizationStrings isList="true" count="0" />
+  <MetaTags isList="true" count="0" />
+  <Pages isList="true" count="1">
+    <Page1 Ref="4" type="Page" isKey="true">
+      <Border>None;Black;2;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <Components isList="true" count="3">
+        <HeaderBand1 Ref="5" type="HeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,4,60,4.31</ClientRectangle>
+          <Components isList="true" count="2">
+            <Text1 Ref="6" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>2.95,3.24,53.48,0.44</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Enabled>False</Enabled>
+              <Font>B Nazanin,11</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text1</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <Text>{"پارکینگ"+MainTable.CardNumber}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text1>
+            <HorizontalLinePrimitive1 Ref="7" type="HorizontalLinePrimitive" isKey="true">
+              <ClientRectangle>1.68,1.88,54.9,0.254</ClientRectangle>
+              <Color>Black</Color>
+              <EndCap Ref="8" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </EndCap>
+              <Name>HorizontalLinePrimitive1</Name>
+              <Page isRef="4" />
+              <Parent isRef="5" />
+              <StartCap Ref="9" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </StartCap>
+            </HorizontalLinePrimitive1>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>HeaderBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </HeaderBand1>
+        <DataBand1 Ref="10" type="DataBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,16.31,60,40.15</ClientRectangle>
+          <Components isList="true" count="5">
+            <Text5 Ref="11" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>39.32,6.39,15.24,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>a4c0c48ee5e5400f882a5e37aec2d011</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text5</Name>
+              <Page isRef="4" />
+              <Parent isRef="10" />
+              <Text>شناسه:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text5>
+            <Text6 Ref="12" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>5.99,6.39,32.72,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text6</Name>
+              <Page isRef="4" />
+              <Parent isRef="10" />
+              <Text>{MainTable.CardNumber}</Text>
+              <TextBrush>Black</TextBrush>
+            </Text6>
+            <Image1 Ref="13" type="Image" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>13.48,11.99,33.05,24.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DataColumn>MainTable.QrCode</DataColumn>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Image1</Name>
+              <Page isRef="4" />
+              <Parent isRef="10" />
+              <Stretch>True</Stretch>
+            </Image1>
+            <Text2 Ref="14" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>39.32,0.93,15.24,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>e00ab544d7a148d9b68387b19ecb670c</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text2</Name>
+              <Page isRef="4" />
+              <Parent isRef="10" />
+              <Text>تاریخ:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text2>
+            <Text3 Ref="15" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>5.99,0.93,32.72,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>a03749608d484fe291c94dbf8b29662f</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text3</Name>
+              <Page isRef="4" />
+              <Parent isRef="10" />
+              <Text>{MainTable.SolarEnterDateTime}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>DataColumn</Type>
+            </Text3>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <DataRelationName isNull="true" />
+          <DataSourceName>MainTable</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+          <Sort isList="true" count="0" />
+        </DataBand1>
+        <FooterBand1 Ref="16" type="FooterBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,64.46,60,7.62</ClientRectangle>
+          <Components isList="true" count="2">
+            <Text9 Ref="17" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>1.82,1.49,40.69,4.82</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,9</Font>
+              <Guid>b6cb27055a3844e4a57a61eea4045a56</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text9</Name>
+              <Page isRef="4" />
+              <Parent isRef="16" />
+              <Text>www.elmosanat.com</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text9>
+            <HorizontalLinePrimitive2 Ref="18" type="HorizontalLinePrimitive" isKey="true">
+              <ClientRectangle>2.41,0.85,54.9,0.254</ClientRectangle>
+              <Color>Black</Color>
+              <EndCap Ref="19" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </EndCap>
+              <Guid>d01f7ee535564a529ee9007433bd2745</Guid>
+              <Name>HorizontalLinePrimitive2</Name>
+              <Page isRef="4" />
+              <Parent isRef="16" />
+              <StartCap Ref="20" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </StartCap>
+            </HorizontalLinePrimitive2>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>FooterBand1</Name>
+          <Page isRef="4" />
+          <Parent isRef="4" />
+        </FooterBand1>
+      </Components>
+      <Conditions isList="true" count="0" />
+      <Guid>8d3311040f254de099e87dc0b7bfa4fa</Guid>
+      <Margins>10,10,10,10</Margins>
+      <Name>Page1</Name>
+      <PageHeight>90</PageHeight>
+      <PageWidth>80</PageWidth>
+      <Report isRef="0" />
+      <Watermark Ref="21" type="Stimulsoft.Report.Components.StiWatermark" isKey="true">
+        <Font>Arial,100</Font>
+        <TextBrush>[50:0:0:0]</TextBrush>
+      </Watermark>
+    </Page1>
+  </Pages>
+  <PrinterSettings Ref="22" type="Stimulsoft.Report.Print.StiPrinterSettings" isKey="true" />
+  <ReferencedAssemblies isList="true" count="10">
+    <value>System.Dll</value>
+    <value>System.Drawing.Dll</value>
+    <value>System.Windows.Forms.Dll</value>
+    <value>System.Data.Dll</value>
+    <value>System.Xml.Dll</value>
+    <value>Stimulsoft.Controls.Dll</value>
+    <value>Stimulsoft.Base.Dll</value>
+    <value>Stimulsoft.Report.Dll</value>
+    <value>EosParking.Data.dll</value>
+    <value>EosParking.Core.dll</value>
+  </ReferencedAssemblies>
+  <ReportAlias>Report</ReportAlias>
+  <ReportChanged>10/1/2019 9:28:28 AM</ReportChanged>
+  <ReportCreated>8/19/2019 3:43:14 PM</ReportCreated>
+  <ReportFile>D:\WorkSpace\ParkingProject\NewParkingSystem\ParkingSystem\Persentation\EosParkingTools\EosControls\ReportDesign\EntrancFishPrinter.mrt</ReportFile>
+  <ReportGuid>c871b5d978ee47ebb8b2a1d799d9e083</ReportGuid>
+  <ReportName>Report</ReportName>
+  <ReportUnit>Millimeters</ReportUnit>
+  <ReportVersion>2018.2.2.0</ReportVersion>
+  <Script>using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Data;
+using Stimulsoft.Controls;
+using Stimulsoft.Base.Drawing;
+using Stimulsoft.Report;
+using Stimulsoft.Report.Dialogs;
+using Stimulsoft.Report.Components; 
+
+namespace Reports
+{
+    public class Report : Stimulsoft.Report.StiReport
+    {
+        public Report()        {
+            this.InitializeComponent();
+        }
+
+        #region StiReport Designer generated code - do not modify
+		#endregion StiReport Designer generated code - do not modify
+    }
+}
+</Script>
+  <ScriptLanguage>CSharp</ScriptLanguage>
+  <Styles isList="true" count="0" />
+</StiSerializer>

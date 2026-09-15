@@ -57,7 +57,7 @@ export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalet
         <ChangePasswordDialog open={profileDialog === 'password'} labels={t} values={values} setValues={setValues} message={message} messageSeverity={messageSeverity} saving={saving} onSave={() => void save()} onClose={() => setProfileDialog(null)} />
         <ThemeSettingsDialog open={profileDialog === 'theme'} labels={t} lightPalette={lightPalette} darkPalette={darkPalette} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onClose={() => setProfileDialog(null)} />
       </Box>
-      <Tooltip title={navigationLabel} arrow><Button className="home-header-navigation-button" variant="outlined" color="primary" size="small" startIcon={<MenuRoundedIcon />} onClick={onNavigationOpen} aria-label={navigationLabel}><span className="home-header-navigation-label">{navigationLabel}</span></Button></Tooltip>
+      <Tooltip title={navigationLabel} arrow><IconButton className="home-header-navigation-button" onClick={onNavigationOpen} aria-label={navigationLabel}><MenuRoundedIcon /></IconButton></Tooltip>
     </Toolbar>
   </AppBar>;
 }

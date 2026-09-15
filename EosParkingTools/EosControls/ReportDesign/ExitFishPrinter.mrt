@@ -1,0 +1,383 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<StiSerializer version="1.02" type="Net" application="StiReport">
+  <Dictionary Ref="1" type="Dictionary" isKey="true">
+    <BusinessObjects isList="true" count="0" />
+    <Databases isList="true" count="0" />
+    <DataSources isList="true" count="1">
+      <MainTable Ref="2" type="Stimulsoft.Report.Dictionary.StiBusinessObjectSource" isKey="true">
+        <Alias>MainTable</Alias>
+        <Columns isList="true" count="24">
+          <value>CarPlate,System.String</value>
+          <value>MemberCode,System.String</value>
+          <value>CardNumber,System.String</value>
+          <value>DumpId,System.Int64</value>
+          <value>PayType,EosParking.Core.Enums.PayTypes</value>
+          <value>ParkingId,System.Int64</value>
+          <value>MemberCost,System.Int64</value>
+          <value>CommonCost,System.Int64</value>
+          <value>TotalCost,System.Int64</value>
+          <value>TotalDuration,System.Int32</value>
+          <value>MemberDuration,System.Int32</value>
+          <value>CommonDuration,System.Int32</value>
+          <value>EnterDateTime,System.DateTime</value>
+          <value>ExitDateTime,System.Nullable`1[System.DateTime]</value>
+          <value>SolarEnterDateTime,System.String</value>
+          <value>SolarExitDateTime,System.String</value>
+          <value>QrCode,System.Drawing.Bitmap</value>
+          <value>TarrifIds,System.Collections.Generic.List`1[System.Int64]</value>
+          <value>DoSave,System.Boolean</value>
+          <value>SourceType,EosParking.Core.Enums.DumpSourceTypes</value>
+          <value>CarType,EosParking.Core.Enums.CarTypes</value>
+          <value>FormatedDuration,System.String</value>
+          <value>Id,System.Int64</value>
+          <value>PersistOn,System.DateTime</value>
+        </Columns>
+        <Dictionary isRef="1" />
+        <Name>MainTable</Name>
+        <NameInSource>DB</NameInSource>
+      </MainTable>
+    </DataSources>
+    <Relations isList="true" count="0" />
+    <Report isRef="0" />
+    <Resources isList="true" count="0" />
+    <Variables isList="true" count="3">
+      <value>,ReportDateTime,تاریخ_x0020_و_x0020_زمان_x0020_گزارش,,System.String,,False,False,False,False</value>
+      <value>,ParkingName,ParkingName,پارکینگ,System.String,,False,False,False,False</value>
+      <value>,Receipt,Receipt,,System.String,,False,False,False,False</value>
+    </Variables>
+  </Dictionary>
+  <EngineVersion>EngineV2</EngineVersion>
+  <GlobalizationStrings isList="true" count="0" />
+  <MetaTags isList="true" count="0" />
+  <Pages isList="true" count="1">
+    <Page1 Ref="3" type="Page" isKey="true">
+      <Border>None;Black;2;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <Components isList="true" count="3">
+        <HeaderBand1 Ref="4" type="HeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,4,60,9.23</ClientRectangle>
+          <Components isList="true" count="2">
+            <Text1 Ref="5" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>0.89,2,57.03,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text1</Name>
+              <Page isRef="3" />
+              <Parent isRef="4" />
+              <Text>پارکینگ {ParkingName}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text1>
+            <HorizontalLinePrimitive1 Ref="6" type="HorizontalLinePrimitive" isKey="true">
+              <ClientRectangle>1.68,7.88,54.9,0.254</ClientRectangle>
+              <Color>Black</Color>
+              <EndCap Ref="7" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </EndCap>
+              <Name>HorizontalLinePrimitive1</Name>
+              <Page isRef="3" />
+              <Parent isRef="4" />
+              <StartCap Ref="8" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </StartCap>
+            </HorizontalLinePrimitive1>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>HeaderBand1</Name>
+          <Page isRef="3" />
+          <Parent isRef="3" />
+        </HeaderBand1>
+        <DataBand1 Ref="9" type="DataBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,21.23,60,35.78</ClientRectangle>
+          <Components isList="true" count="12">
+            <Text10 Ref="10" type="Text" isKey="true">
+              <Brush>[0:0:0]</Brush>
+              <ClientRectangle>40.74,24.63,18.5,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>6b48bd630eb24339abd64a2fa8b1dd85</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text10</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>مبلغ پرداختی:</Text>
+              <TextBrush>[255:255:255]</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text10>
+            <Text3 Ref="11" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>41.83,7.32,17.41,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>2881b4d6fa9d4374bdc0c06e90d356fd</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text3</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>ورود:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text3>
+            <Text4 Ref="12" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>2.76,7.32,38.45,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text4</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{MainTable.SolarEnterDateTime}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>DataColumn</Type>
+            </Text4>
+            <Text5 Ref="13" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>41.69,0.94,17.42,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>a4c0c48ee5e5400f882a5e37aec2d011</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text5</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{MainTable.MemberCode!=""?"کد عضو:":(MainTable.CarPlate!=""?"پلاک:":"شماره کارت")}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text5>
+            <Text6 Ref="14" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>2.16,0.94,38.73,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text6</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{MainTable.MemberCode!=""?MainTable.MemberCode:(MainTable.CarPlate!=""?MainTable.CarPlate:MainTable.CardNumber)}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text6>
+            <Text2 Ref="15" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>41.83,12.89,17.41,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>d4d88198e92f46c59cc37e1fbb36dd07</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text2</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>خروج:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text2>
+            <Text8 Ref="16" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>2.44,12.62,38.45,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>e2e6cc32fb9c44ee8e2ff6e854f79d4c</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text8</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{MainTable.SolarExitDateTime}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>DataColumn</Type>
+            </Text8>
+            <Text11 Ref="17" type="Text" isKey="true">
+              <Brush>[0:0:0]</Brush>
+              <ClientRectangle>2.68,24.63,38.45,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>77aab80be4ae4b878df7bbe9f7fdff6c</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text11</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{MainTable.CommonCost}</Text>
+              <TextBrush>[255:255:255]</TextBrush>
+              <Type>DataColumn</Type>
+            </Text11>
+            <Text7 Ref="18" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>2.52,18.47,38.73,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text7</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{MainTable.FormatedDuration}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>DataColumn</Type>
+            </Text7>
+            <Text12 Ref="19" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>42,18.63,17.41,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>dee5380abf024695a77cc4c0e228caf9</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text12</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>مدت حضور:</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text12>
+            <Text13 Ref="20" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>2.45,29.73,38.73,5.08</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,10</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text13</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>{Receipt}</Text>
+              <TextBrush>Black</TextBrush>
+            </Text13>
+            <Text14 Ref="21" type="Text" isKey="true">
+              <Brush>[255:255:255]</Brush>
+              <ClientRectangle>40.91,29.84,18.5,4.86</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,11</Font>
+              <Guid>c63a44e48d80464b87e5fe403d5666d3</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text14</Name>
+              <Page isRef="3" />
+              <Parent isRef="9" />
+              <Text>رسید پرداختی:</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+            </Text14>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <DataRelationName isNull="true" />
+          <DataSourceName>MainTable</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataBand1</Name>
+          <Page isRef="3" />
+          <Parent isRef="3" />
+          <Sort isList="true" count="0" />
+        </DataBand1>
+        <FooterBand1 Ref="22" type="FooterBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,65.01,60,7.62</ClientRectangle>
+          <Components isList="true" count="2">
+            <Text9 Ref="23" type="Text" isKey="true">
+              <Brush>White</Brush>
+              <ClientRectangle>1.82,1.05,40.69,4.82</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>B Nazanin,8,Bold</Font>
+              <Guid>b6cb27055a3844e4a57a61eea4045a56</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text9</Name>
+              <Page isRef="3" />
+              <Parent isRef="22" />
+              <Text>www.elmosanat.com</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text9>
+            <HorizontalLinePrimitive2 Ref="24" type="HorizontalLinePrimitive" isKey="true">
+              <ClientRectangle>2.41,0.41,54.9,0.254</ClientRectangle>
+              <Color>Black</Color>
+              <EndCap Ref="25" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </EndCap>
+              <Guid>d01f7ee535564a529ee9007433bd2745</Guid>
+              <Name>HorizontalLinePrimitive2</Name>
+              <Page isRef="3" />
+              <Parent isRef="22" />
+              <StartCap Ref="26" type="Cap" isKey="true">
+                <Color>Black</Color>
+              </StartCap>
+            </HorizontalLinePrimitive2>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>FooterBand1</Name>
+          <Page isRef="3" />
+          <Parent isRef="3" />
+        </FooterBand1>
+      </Components>
+      <Conditions isList="true" count="0" />
+      <Guid>8d3311040f254de099e87dc0b7bfa4fa</Guid>
+      <Margins>10,10,10,10</Margins>
+      <Name>Page1</Name>
+      <PageHeight>90</PageHeight>
+      <PageWidth>80</PageWidth>
+      <Report isRef="0" />
+      <Watermark Ref="27" type="Stimulsoft.Report.Components.StiWatermark" isKey="true">
+        <Font>Arial,100</Font>
+        <TextBrush>[50:0:0:0]</TextBrush>
+      </Watermark>
+    </Page1>
+  </Pages>
+  <PrinterSettings Ref="28" type="Stimulsoft.Report.Print.StiPrinterSettings" isKey="true" />
+  <ReferencedAssemblies isList="true" count="10">
+    <value>System.Dll</value>
+    <value>System.Drawing.Dll</value>
+    <value>System.Windows.Forms.Dll</value>
+    <value>System.Data.Dll</value>
+    <value>System.Xml.Dll</value>
+    <value>Stimulsoft.Controls.Dll</value>
+    <value>Stimulsoft.Base.Dll</value>
+    <value>Stimulsoft.Report.Dll</value>
+    <value>EosParking.Data.dll</value>
+    <value>EosParking.Core.dll</value>
+  </ReferencedAssemblies>
+  <ReportAlias>Report</ReportAlias>
+  <ReportChanged>9/2/2019 5:49:07 PM</ReportChanged>
+  <ReportCreated>8/19/2019 3:43:14 PM</ReportCreated>
+  <ReportFile>D:\WorkSpace\ParkingProject\NewParkingSystem\ParkingSystem\Persentation\EosParkingTools\EosControls\ReportDesign\ExitFishPrinter.mrt</ReportFile>
+  <ReportGuid>5d6cfef3c78745b28c5d08ce2b37fe23</ReportGuid>
+  <ReportName>Report</ReportName>
+  <ReportUnit>Millimeters</ReportUnit>
+  <ReportVersion>2018.2.2.0</ReportVersion>
+  <Script>using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Data;
+using Stimulsoft.Controls;
+using Stimulsoft.Base.Drawing;
+using Stimulsoft.Report;
+using Stimulsoft.Report.Dialogs;
+using Stimulsoft.Report.Components; 
+
+namespace Reports
+{
+    public class Report : Stimulsoft.Report.StiReport
+    {
+        public Report()        {
+            this.InitializeComponent();
+        }
+
+        #region StiReport Designer generated code - do not modify
+		#endregion StiReport Designer generated code - do not modify
+    }
+}
+</Script>
+  <ScriptLanguage>CSharp</ScriptLanguage>
+  <Styles isList="true" count="0" />
+</StiSerializer>

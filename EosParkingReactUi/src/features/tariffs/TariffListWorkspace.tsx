@@ -1,0 +1,68 @@
+import { useEffect, useMemo, useState } from 'react';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import { Box, Chip, FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip } from '@mui/material';
+import { ApiError } from '../../api/client';
+import { AppDataGrid } from '../../components/AppDataGrid';
+import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
+import { ResourceState } from '../../components/management/ResourceState';
+import type { Language } from '../../i18n';
+import { formatDateTime } from '../../utils/formatters';
+import { tariffService, type TariffListRow } from './tariffService';
+import { TariffEditorDialog } from './TariffEditorDialog';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+
+type Filter = 'all' | 'public' | 'member';
+type Props = { title: string; pageTitle: string; parkingId: number; language: Language };
+
+export function TariffListWorkspace({ title, pageTitle, parkingId, language }: Props) {
+  const [rows, setRows] = useState<TariffListRow[]>([]);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
+  const [editorMode, setEditorMode] = useState<'create' | 'edit' | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const copy = language === 'fa'
+    ? { count: 'تعرفه', loading: 'در حال دریافت تعرفه‌ها...', empty: 'تعرفه‌ای برای این پارکینگ ثبت نشده است.', error: 'دریافت تعرفه‌ها ناموفق بود.', forbidden: 'دسترسی مشاهدهٔ تعرفه‌ها برای کاربر فعلی مجاز نیست.', filter: 'نمایش', all: 'همه تعرفه‌ها', public: 'تعرفه عمومی', member: 'تعرفه اعضا', type: 'نوع', status: 'وضعیت', current: 'پیش‌فرض', date: 'تاریخ اجرا', active: 'فعال', inactive: 'غیرفعال', yes: 'بله', no: '—' }
+    : { count: 'tariffs', loading: 'Loading tariffs...', empty: 'No tariffs are registered for this parking.', error: 'Loading tariffs failed.', forbidden: 'You are not allowed to view tariffs.', filter: 'Show', all: 'All tariffs', public: 'Public tariffs', member: 'Member tariffs', type: 'Type', status: 'Status', current: 'Default', date: 'Effective date', active: 'Active', inactive: 'Inactive', yes: 'Yes', no: '—' };
+
+  const load = async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError('');
+    try {
+      setRows(await tariffService.list(parkingId, signal));
+    } catch (cause) {
+      if (!signal?.aborted) setError(cause instanceof ApiError && cause.status === 403 ? copy.forbidden : copy.error);
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [parkingId, language]);
+
+  const filteredRows = useMemo(() => rows.filter((row) => filter === 'all' || (filter === 'member' ? row.isMemberTariff : !row.isMemberTariff)), [filter, rows]);
+  const selectedTariff = rows.find((row) => row.id === selectedTariffId) ?? null;
+  const direction = language === 'fa' ? 'rtl' : 'ltr';
+
+  const actionCopy = language === 'fa' ? { add: 'ایجاد تعرفه', edit: 'ویرایش تعرفه', remove: 'حذف تعرفه' } : { add: 'Create tariff', edit: 'Edit tariff', remove: 'Delete tariff' };
+
+  return <><ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${filteredRows.length} ${copy.count}`} language={language} loading={loading} onRefresh={() => void load()} toolbar={<><Tooltip title={actionCopy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={actionCopy.add} onClick={() => setEditorMode('create')}><AddRoundedIcon /></IconButton></Tooltip><Tooltip title={actionCopy.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={actionCopy.edit} disabled={!selectedTariff} onClick={() => setEditorMode('edit')}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={actionCopy.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={actionCopy.remove} disabled={!selectedTariff} onClick={() => setDeleteOpen(true)}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip><FormControl size="small" sx={{ minWidth: 180 }}><InputLabel id="tariff-filter-label">{copy.filter}</InputLabel><Select labelId="tariff-filter-label" label={copy.filter} value={filter} onChange={(event) => setFilter(event.target.value as Filter)}>{[['all', copy.all], ['public', copy.public], ['member', copy.member]].map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl></>}>
+    <Box className="workspace-resource-content">
+      <ResourceState loading={loading} error={error} empty={filteredRows.length === 0} loadingLabel={copy.loading} emptyLabel={copy.empty}>
+        <AppDataGrid direction={direction} rows={filteredRows} rowKey={(row) => row.id} selectedKey={selectedTariffId} onRowClick={(row) => setSelectedTariffId(row.id)} columns={[
+          { key: 'title', label: language === 'fa' ? 'عنوان تعرفه' : 'Tariff title', render: (row) => row.title || '—' },
+          { key: 'type', label: copy.type, render: (row) => row.isMemberTariff ? copy.member : copy.public },
+          { key: 'isActive', label: copy.status, compact: true, render: (row) => <Chip size="small" color={row.isActive ? 'success' : 'default'} label={row.isActive ? copy.active : copy.inactive} /> },
+          { key: 'isCurrent', label: copy.current, compact: true, render: (row) => row.isCurrent ? <Chip size="small" color="primary" label={copy.yes} /> : copy.no },
+          { key: 'persistedOn', label: copy.date, render: (row) => row.persistedOn ? formatDateTime(new Date(row.persistedOn), language) : '—' },
+        ]} />
+      </ResourceState>
+    </Box>
+  </ManagementWorkspaceFrame><TariffEditorDialog open={editorMode !== null} mode={editorMode ?? 'create'} row={selectedTariff} parkingId={parkingId} language={language} onClose={() => setEditorMode(null)} /><ConfirmDialog open={deleteOpen} title={language === 'fa' ? 'حذف تعرفه' : 'Delete tariff'} message={language === 'fa' ? `آیا از حذف «${selectedTariff?.title ?? ''}» مطمئن هستید؟` : `Delete “${selectedTariff?.title ?? ''}”?`} cancelLabel={language === 'fa' ? 'انصراف' : 'Cancel'} confirmLabel={language === 'fa' ? 'حذف' : 'Delete'} onClose={() => setDeleteOpen(false)} onConfirm={() => setDeleteOpen(false)} /></>;
+}

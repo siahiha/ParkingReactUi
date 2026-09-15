@@ -1,0 +1,654 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.props" Condition="Exists('..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BF62856A-304A-44E7-B514-40A600A4287A}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>EosParkingProfessional</RootNamespace>
+    <AssemblyName>EosParkingProfessional</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <SccProjectName>%24/ParkingProject/NewParkingSystem/ParkingSystem/Persentation/EosParkingProfessional</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
+    <SccAuxPath>http://teamserver/defaultcollection</SccAuxPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>parking.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AForge">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Imaging">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.Imaging.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Imaging.Formats">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.Imaging.Formats.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Vision">
+      <HintPath>..\..\ShareBinary\Aforge\AForge.Vision.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Data.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>C:\Program Files (x86)\DevExpress 17.1\Components\Bin\Framework\DevExpress.Data.v17.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Printing.v17.1.Core, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Sparkline.v17.1.Core, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Utils.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraBars.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraEditors.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraGrid.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraLayout.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraNavBar.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraPrinting.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraTreeList.v17.1, Version=17.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.1.1\lib\net40\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.1.1\lib\net40\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Eos.LockAdaptor, Version=1401.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ShareBinary\LockAddopter\Eos.LockAdaptor.dll</HintPath>
+    </Reference>
+    <Reference Include="EosClocks, Version=1404.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\ShareBinary\EosClocks.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="EosSolarDateTimePicker">
+      <HintPath>..\..\ShareBinary\EosSolarDateTimePicker.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.2.2.7\lib\net40\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.4.5.6\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql, Version=2.2.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.2.2.7\lib\net40\Npgsql.dll</HintPath>
+    </Reference>
+    <Reference Include="pec.pcpos">
+      <HintPath>..\..\ShareBinary\pec.pcpos.dll</HintPath>
+    </Reference>
+    <Reference Include="PosInterface">
+      <HintPath>..\..\ShareBinary\PosInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Base, Version=2018.2.2.0, Culture=neutral, PublicKeyToken=ebe6666cba19647a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ShareBinary\StimulSoft\Stimulsoft.Base.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Design">
+      <HintPath>..\..\ShareBinary\StimulSoft\Stimulsoft.Design.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Report">
+      <HintPath>..\..\ShareBinary\StimulSoft\Stimulsoft.Report.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Report.Win">
+      <HintPath>..\..\ShareBinary\StimulSoft\Stimulsoft.Report.Win.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Net.Http.2.0.20710.0\lib\net40\System.Net.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Net.Http.2.0.20710.0\lib\net40\System.Net.Http.WebRequest.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VideoGrabberNET">
+      <HintPath>..\..\ShareBinary\VideoGrabberNET.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EosForms\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\AccessLevelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\AccessLevelForm.Designer.cs">
+      <DependentUpon>AccessLevelForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\AnprHoliday.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\AnprHoliday.Designer.cs">
+      <DependentUpon>AnprHoliday.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ControlListForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ControlListForm.Designer.cs">
+      <DependentUpon>ControlListForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\EquipmentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\EquipmentForm.Designer.cs">
+      <DependentUpon>EquipmentForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ExitPermissionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ExitPermissionForm.Designer.cs">
+      <DependentUpon>ExitPermissionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ImportDataConfigurationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ImportDataConfigurationForm.Designer.cs">
+      <DependentUpon>ImportDataConfigurationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ImportMembersForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ImportMembersForm.Designer.cs">
+      <DependentUpon>ImportMembersForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ManualTrafficControlForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ManualTrafficControlForm.Designer.cs">
+      <DependentUpon>ManualTrafficControlForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\MemberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\MemberForm.Designer.cs">
+      <DependentUpon>MemberForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\MemberKindForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\MemberKindForm.Designer.cs">
+      <DependentUpon>MemberKindForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ManageTrafficRecordForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ManageTrafficRecordForm.Designer.cs">
+      <DependentUpon>ManageTrafficRecordForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\MonitoringAnprForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\MonitoringAnprForm.Designer.cs">
+      <DependentUpon>MonitoringAnprForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\MonitoringForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\MonitoringForm.Designer.cs">
+      <DependentUpon>MonitoringForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\NewCargoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\NewCargoForm.Designer.cs">
+      <DependentUpon>NewCargoForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingCardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingCardForm.Designer.cs">
+      <DependentUpon>ParkingCardForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingDoorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingDoorForm.Designer.cs">
+      <DependentUpon>ParkingDoorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingFloorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingFloorForm.Designer.cs">
+      <DependentUpon>ParkingFloorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingForm.Designer.cs">
+      <DependentUpon>ParkingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\DashboardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\DashboardForm.Designer.cs">
+      <DependentUpon>DashboardForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingParkSpaceKindForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingParkSpaceKindForm.Designer.cs">
+      <DependentUpon>ParkingParkSpaceKindForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingSectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingSectionForm.Designer.cs">
+      <DependentUpon>ParkingSectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingTariffForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingTariffForm.Designer.cs">
+      <DependentUpon>ParkingTariffForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\ParkingUserShiftForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\ParkingUserShiftForm.Designer.cs">
+      <DependentUpon>ParkingUserShiftForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\PayForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\PayForm.Designer.cs">
+      <DependentUpon>PayForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\PlateDetectedList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\PlateDetectedList.Designer.cs">
+      <DependentUpon>PlateDetectedList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EosForms\UsersForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EosForms\UsersForm.Designer.cs">
+      <DependentUpon>UsersForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PublicVariables.cs" />
+    <Compile Include="Splash.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Splash.Designer.cs">
+      <DependentUpon>Splash.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="EosForms\AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\AccessLevelForm.resx">
+      <DependentUpon>AccessLevelForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\AnprHoliday.resx">
+      <DependentUpon>AnprHoliday.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ControlListForm.resx">
+      <DependentUpon>ControlListForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\EquipmentForm.resx">
+      <DependentUpon>EquipmentForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ExitPermissionForm.resx">
+      <DependentUpon>ExitPermissionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ImportDataConfigurationForm.resx">
+      <DependentUpon>ImportDataConfigurationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ImportMembersForm.resx">
+      <DependentUpon>ImportMembersForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ManualTrafficControlForm.resx">
+      <DependentUpon>ManualTrafficControlForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\MemberForm.resx">
+      <DependentUpon>MemberForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\MemberKindForm.resx">
+      <DependentUpon>MemberKindForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ManageTrafficRecordForm.resx">
+      <DependentUpon>ManageTrafficRecordForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\MonitoringAnprForm.resx">
+      <DependentUpon>MonitoringAnprForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\MonitoringForm.resx">
+      <DependentUpon>MonitoringForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\NewCargoForm.resx">
+      <DependentUpon>NewCargoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingCardForm.resx">
+      <DependentUpon>ParkingCardForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingDoorForm.resx">
+      <DependentUpon>ParkingDoorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingFloorForm.resx">
+      <DependentUpon>ParkingFloorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingForm.resx">
+      <DependentUpon>ParkingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\DashboardForm.resx">
+      <DependentUpon>DashboardForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingParkSpaceKindForm.resx">
+      <DependentUpon>ParkingParkSpaceKindForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingSectionForm.resx">
+      <DependentUpon>ParkingSectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingTariffForm.resx">
+      <DependentUpon>ParkingTariffForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\ParkingUserShiftForm.resx">
+      <DependentUpon>ParkingUserShiftForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\PayForm.resx">
+      <DependentUpon>PayForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\PlateDetectedList.resx">
+      <DependentUpon>PlateDetectedList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EosForms\UsersForm.resx">
+      <DependentUpon>UsersForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\licenses.licx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="Splash.resx">
+      <DependentUpon>Splash.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Font\EntezarC3_v2.0.1.ttf" />
+    <None Include="Font\EntezarD5_v2.0.1.ttf" />
+    <None Include="Font\EntezarD8_v2.0.1.ttf" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataPersistance\EosParking.Data\EosParking.Data.csproj">
+      <Project>{5e3903ef-d45d-4ce6-ad57-3d91787fac5b}</Project>
+      <Name>EosParking.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\EosParking.Devices\EosParking.Devices.csproj">
+      <Project>{AB9D429F-E9C5-4D1D-BA24-848E1A2560B0}</Project>
+      <Name>EosParking.Devices</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Infrastructure\EosParking.Controllers\EosParking.Controllers.csproj">
+      <Project>{883dacbc-666c-47c9-882c-8dcc2729634a}</Project>
+      <Name>EosParking.Controllers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Infrastructure\EosParking.Core\EosParking.Core.csproj">
+      <Project>{1ceb21fc-5198-4c52-ac0a-bebb0cb75be3}</Project>
+      <Name>EosParking.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Infrastructure\Utility\ImportData\EosParking.ImportData.csproj">
+      <Project>{b649d646-19bf-459f-8c8d-110bf519a426}</Project>
+      <Name>EosParking.ImportData</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EosParkingTools\EosParkingTools.csproj">
+      <Project>{bfe795f2-4f19-4fac-9f4f-c8ef19c4a83e}</Project>
+      <Name>EosParkingTools</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SplashParking.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\UserPermissions.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Member.png" />
+    <None Include="Resources\settings.png" />
+    <None Include="Resources\database.png" />
+    <None Include="Resources\merchandise-med.png" />
+    <None Include="Resources\Company-Med.png" />
+    <None Include="Resources\Driverinfo-Med.png" />
+    <None Include="Resources\deliver-48.png" />
+    <None Include="Resources\CargoIos.png" />
+    <None Include="Resources\add-16.png" />
+    <None Include="Resources\SpecificationCar.png" />
+    <None Include="Resources\deliver-16.png" />
+    <None Include="Resources\deliver-21.png" />
+    <None Include="Resources\OpenAttachment.png" />
+    <None Include="Resources\find-21.png" />
+    <None Include="Resources\find-16.png" />
+    <None Include="Resources\inCargo-16.png" />
+    <None Include="Resources\outCargo-16.png" />
+    <None Include="Resources\importFromOtherSystem.png" />
+    <None Include="Resources\ConfigConnectionSync40.png" />
+    <None Include="Resources\ConfigConnectionSync80.png" />
+    <None Include="Resources\connected16.png" />
+    <None Include="Resources\UpdateEts.png" />
+    <None Include="Resources\Update32.png" />
+    <None Include="Resources\icons8-update-24.png" />
+    <None Include="Resources\GetInfo-24.png" />
+    <None Include="Resources\GetInfo-16.png" />
+    <None Include="Resources\etsUpdate.png" />
+    <None Include="Resources\exit-21.png" />
+    <Content Include="Sounds\Bell.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\unlock21.png" />
+    <None Include="Resources\WorkShift40.png" />
+    <None Include="Resources\WorkShift21.png" />
+    <None Include="Resources\UserAccount100.png" />
+    <None Include="Resources\UsersAccount50.png" />
+    <None Include="Resources\User40.png" />
+    <None Include="Resources\Delete40.png" />
+    <None Include="Resources\Edit40.png" />
+    <None Include="Resources\icons8-plus-40.png" />
+    <None Include="Resources\Add40.png" />
+    <None Include="Resources\ChangeUser40.png" />
+    <None Include="Resources\Access40.png" />
+    <None Include="Resources\Report21.png" />
+    <None Include="Resources\Report40.png" />
+    <None Include="Resources\Setting40.png" />
+    <None Include="Resources\Parking40.png" />
+    <None Include="Resources\SplashParking_transparent.png" />
+    <None Include="Resources\Parking_Building.png" />
+    <None Include="Resources\Add21.png" />
+    <None Include="Resources\Edit21.png" />
+    <None Include="Resources\Delete21.png" />
+    <None Include="Resources\Delete211.png" />
+    <None Include="Resources\Ok21.png" />
+    <None Include="Resources\Floor21.png" />
+    <None Include="Resources\Floor40.png" />
+    <None Include="Resources\Equipment40.png" />
+    <None Include="Resources\MemberRegister21.png" />
+    <None Include="Resources\MemberRegister40.png" />
+    <None Include="Resources\Door21.png" />
+    <None Include="Resources\Door40.png" />
+    <None Include="Resources\Door200.png" />
+    <None Include="Resources\Parking_Section200.png" />
+    <None Include="Resources\ParkingZoon40.png" />
+    <None Include="Resources\Tariff21.png" />
+    <None Include="Resources\Tariff40.png" />
+    <None Include="Resources\Tariff100.png" />
+    <None Include="Resources\Copy21.png" />
+    <None Include="Resources\Copy40.png" />
+    <None Include="Resources\Cancel21.png" />
+    <None Include="Resources\MemberType21.png" />
+    <None Include="Resources\MemberType100.png" />
+    <None Include="Resources\CardManage21.png" />
+    <None Include="Resources\CardManage100.png" />
+    <None Include="Resources\CardManage40.png" />
+    <None Include="Resources\Equipment100.png" />
+    <None Include="Resources\ParkSpaceType21.png" />
+    <None Include="Resources\ParkSpaceType40.png" />
+    <None Include="Resources\previous26.png" />
+    <None Include="Resources\BlackList40.png" />
+    <None Include="Resources\CarEnter.png" />
+    <None Include="Resources\CarExit.png" />
+    <None Include="Resources\CarPlateDetection.png" />
+    <None Include="Resources\CarTraffic40.png" />
+    <None Include="Resources\CarEnter41.png" />
+    <None Include="Resources\CarExit41.png" />
+    <None Include="Resources\Cost21.png" />
+    <None Include="Resources\Pos21.png" />
+    <None Include="Resources\Pos40.png" />
+    <None Include="Resources\ManageTraffic21.png" />
+    <None Include="Resources\ManageTraffic40.png" />
+    <None Include="Resources\BlackControlList21.png" />
+    <None Include="Resources\ObservationControlList21.png" />
+    <None Include="Resources\StealControlList21.png" />
+    <None Include="Resources\lock21.png" />
+    <Content Include="parking.ico" />
+    <None Include="Resources\EosLogo.png" />
+    <None Include="Resources\Disconnected-21.png" />
+    <None Include="Resources\Connected-21.png" />
+    <Content Include="Resources\Tiklogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Reports\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(SolutionDir)\ShareBinary\DevExpress_fa_Resource" "$(TargetDir)" /e /y /i /r
+</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>RD /S /Q "$(SolutionDir)\Persentation\EosParkingProfessional\Properties\licenses.licx_"
+del "$(SolutionDir)\Persentation\EosParkingProfessional\Properties\licenses.licx_"
+
+</PreBuildEvent>
+  </PropertyGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.props'))" />
+    <Error Condition="!Exists('..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.targets'))" />
+  </Target>
+  <Import Project="..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.targets" Condition="Exists('..\..\packages\VsixTesting.Xunit.0.1.78\build\VsixTesting.Xunit.targets')" />
+</Project>

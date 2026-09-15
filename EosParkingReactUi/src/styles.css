@@ -134,6 +134,21 @@ button, input { font-family: inherit; }
 .home-quick-actions-inline { justify-content: flex-start; }
 .form-field-column { display: grid; gap: 16px; }
 .form-section-column { display: grid; gap: 16px; }
+.tariff-editor-body { display: flex; flex-direction: column; gap: 12px; padding-block: 12px 4px; }
+.tariff-general-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.tariff-inline-checks { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.tariff-member-kind-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding: 6px 8px; border: 1px solid var(--divider-color, #d8e0e5); }
+.tariff-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tariff-rate-header { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 8px; overflow-x: auto; }
+.tariff-rate-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tariff-range-grid { overflow-x: auto; }
+.tariff-range-grid-header, .tariff-range-grid-row { display: grid; grid-template-columns: 110px 110px repeat(5, minmax(125px, 1fr)) 40px; gap: 8px; align-items: center; min-width: 920px; }
+.tariff-range-grid-header { padding: 0 8px 6px; color: var(--text-secondary, #647481); font-size: .75rem; }
+.tariff-range-grid-row { margin-block-end: 8px; }
+@media (max-width: 800px) {
+  .tariff-general-layout { grid-template-columns: 1fr; }
+  .tariff-rate-header { grid-template-columns: repeat(5, minmax(140px, 1fr)); }
+}
 .inline-status-row { display: flex; align-items: center; gap: 8px; }
 .exit-permission-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .home-header-action {
@@ -2203,4 +2218,232 @@ html[data-theme='dark'] .home-sidebar-collapsed .home-sidebar-collapse-button { 
 
 @media (prefers-reduced-motion: reduce) {
   .home-sidebar, .home-body, .home-header, .home-nav-item, .home-menu-group-button .MuiButton-endIcon, .home-sidebar-icon-rail .MuiIconButton-root, .home-header-navigation-button { transition: none !important; }
+}
+
+/* Navigation controls: compact, tactile and deliberately quiet beside operational content. */
+.home-shell-with-sidebar .home-header-navigation-button {
+  order: -1;
+  inline-size: 34px;
+  min-inline-size: 34px;
+  block-size: 34px;
+  min-block-size: 34px;
+  padding: 0 !important;
+  border: 1px solid var(--app-primary) !important;
+  border-radius: 4px !important;
+  color: var(--app-primary) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.home-shell-with-sidebar .home-header-navigation-button svg {
+  font-size: 20px;
+}
+
+.home-shell-with-sidebar .home-header-navigation-button:hover {
+  color: #ffffff !important;
+  background: var(--app-primary) !important;
+  box-shadow: none !important;
+}
+
+.home-shell-with-sidebar .home-header-navigation-button:focus-visible,
+.home-sidebar-collapse-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-primary) 42%, transparent);
+  outline-offset: 2px;
+}
+
+.home-sidebar-collapse-button,
+.home-shell-with-sidebar .home-sidebar-collapsed .home-sidebar-collapse-button {
+  inline-size: 32px !important;
+  min-inline-size: 32px !important;
+  block-size: 32px !important;
+  min-block-size: 32px !important;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 4px !important;
+  color: #536372 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.home-sidebar-collapse-button:hover,
+.home-sidebar-collapse-button:focus-visible,
+.home-shell-with-sidebar .home-sidebar-collapsed .home-sidebar-collapse-button:hover,
+.home-shell-with-sidebar .home-sidebar-collapsed .home-sidebar-collapse-button:focus-visible {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  border-color: var(--app-primary) !important;
+  box-shadow: none !important;
+}
+
+.home-sidebar-collapsed .home-sidebar-brand-box {
+  justify-content: center;
+  block-size: 64px;
+  min-block-size: 64px;
+  padding-block: 8px;
+}
+
+.home-sidebar-collapsed .home-sidebar-brand-image {
+  inline-size: 30px;
+  block-size: 30px;
+}
+
+.home-sidebar-collapsed .home-sidebar-brand-divider {
+  margin: 0 -10px 8px !important;
+}
+
+.home-sidebar-brand-menu-button {
+  inline-size: 40px;
+  block-size: 40px;
+  padding: 4px !important;
+  border: 1px solid transparent !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.home-sidebar-brand-menu-button:hover,
+.home-sidebar-brand-menu-button:focus-visible {
+  background: var(--app-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 28%, transparent) !important;
+}
+
+.home-sidebar-brand-menu-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-primary) 42%, transparent);
+  outline-offset: 2px;
+}
+
+.home-sidebar-drawer .home-sidebar-collapse-button {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 30%, transparent) !important;
+}
+
+/* The menu reads as a quiet control panel: clear group anchors, lighter leaves. */
+.home-shell-with-sidebar .home-top-level-section {
+  padding-block: 6px !important;
+}
+
+.home-shell-with-sidebar .home-top-level-heading {
+  min-height: 36px !important;
+  padding-inline: 10px !important;
+  border: 1px solid transparent !important;
+  color: #334657 !important;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.home-shell-with-sidebar .home-top-level-heading .MuiButton-startIcon {
+  min-width: 20px;
+  margin-inline-end: 8px;
+  color: var(--app-primary);
+}
+
+.home-shell-with-sidebar .home-top-level-heading:hover {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 18%, transparent) !important;
+}
+
+.home-shell-with-sidebar .home-top-level-heading.active {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 28%, transparent) !important;
+}
+
+.home-shell-with-sidebar .home-top-level-heading.active::after {
+  top: 7px;
+  bottom: 7px;
+  width: 2px;
+  background: var(--app-primary);
+}
+
+.home-shell-with-sidebar .home-top-level-subnav,
+.home-shell-with-sidebar .home-nested-subnav {
+  gap: 1px !important;
+}
+
+.home-shell-with-sidebar .home-leaf-item,
+.home-shell-with-sidebar .home-nested-leaf-item {
+  min-height: 32px !important;
+  padding-inline: 10px !important;
+  color: #536372 !important;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.home-shell-with-sidebar .home-leaf-item:hover,
+.home-shell-with-sidebar .home-nested-leaf-item:hover {
+  color: var(--app-primary) !important;
+  background: color-mix(in srgb, var(--app-primary) 7%, transparent) !important;
+}
+
+.home-shell-with-sidebar .home-leaf-item.active,
+.home-shell-with-sidebar .home-nested-leaf-item.active {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  font-weight: 800 !important;
+}
+
+.home-shell-with-sidebar .home-leaf-item.active::after,
+.home-shell-with-sidebar .home-nested-leaf-item.active::after {
+  top: 7px;
+  bottom: 7px;
+  width: 2px;
+  background: var(--app-primary);
+}
+
+.home-shell-with-sidebar .home-branch-heading {
+  min-height: 34px !important;
+  margin-block: 4px !important;
+  color: #536372 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.home-shell-with-sidebar .home-branch-heading:hover,
+.home-shell-with-sidebar .home-branch-heading.active {
+  color: var(--app-primary) !important;
+  background: color-mix(in srgb, var(--app-primary) 7%, transparent) !important;
+  border-color: transparent !important;
+}
+
+html[data-theme='dark'] .home-shell-with-sidebar .home-top-level-heading,
+html[data-theme='dark'] .home-shell-with-sidebar .home-leaf-item,
+html[data-theme='dark'] .home-shell-with-sidebar .home-nested-leaf-item,
+html[data-theme='dark'] .home-shell-with-sidebar .home-branch-heading {
+  color: #dce6ed !important;
+  background: transparent !important;
+}
+
+html[data-theme='dark'] .home-shell-with-sidebar .home-top-level-heading:hover,
+html[data-theme='dark'] .home-shell-with-sidebar .home-top-level-heading.active,
+html[data-theme='dark'] .home-shell-with-sidebar .home-leaf-item:hover,
+html[data-theme='dark'] .home-shell-with-sidebar .home-leaf-item.active,
+html[data-theme='dark'] .home-shell-with-sidebar .home-nested-leaf-item:hover,
+html[data-theme='dark'] .home-shell-with-sidebar .home-nested-leaf-item.active,
+html[data-theme='dark'] .home-shell-with-sidebar .home-branch-heading:hover,
+html[data-theme='dark'] .home-shell-with-sidebar .home-branch-heading.active {
+  color: #ffffff !important;
+  background: color-mix(in srgb, var(--app-primary) 38%, transparent) !important;
+}
+
+@media (max-width: 899px) {
+  .home-shell-with-sidebar .home-header-navigation-button {
+    display: inline-flex !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-sidebar-drawer .home-sidebar-parking-menu {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .home-sidebar-drawer .home-menu-section {
+    min-width: 0;
+  }
+
+  .home-sidebar-drawer .home-section-items {
+    flex-direction: column !important;
+  }
 }
