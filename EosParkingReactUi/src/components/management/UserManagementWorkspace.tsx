@@ -3,8 +3,6 @@ import { Alert, IconButton, Tooltip } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { encryptLegacyPassword } from '../../api/client';
 import { userApi } from '../../api/management';
 import { CrudDialog } from '../CrudDialog';
@@ -178,7 +176,7 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
           { key: 'Name', label: language === 'fa' ? 'نام و نام خانوادگی' : 'Name', render: (row) => `${String(recordValue(row, 'FirstName') ?? '')} ${String(recordValue(row, 'LastName') ?? '')}`.trim() || '—' },
           { key: 'AccessLevel', label: labels.accessLevel, render: (row) => { const levelId = String(recordValue(row, 'UserAccessLevelId') ?? ''); const level = accessLevels.find((item) => String(recordValue(item, 'Id') ?? '') === levelId); return String(recordValue(level ?? {}, 'Name') ?? recordValue(level ?? {}, 'Title') ?? '—'); } },
           { key: 'UserType', label: labels.userType, render: (row) => { const option = userTypeOptions.find((item) => item.value === String(recordValue(row, 'UserType') ?? '')); return option ? (language === 'fa' ? option.fa : option.en) : '—'; } },
-          { key: 'IsActive', label: language === 'fa' ? 'وضعیت' : 'Status', render: (row) => { const active = Boolean(recordValue(row, 'IsActive')); const label = active ? (language === 'fa' ? 'فعال' : 'Active') : (language === 'fa' ? 'غیرفعال' : 'Inactive'); return <Tooltip title={label} arrow>{active ? <CheckCircleOutlineRoundedIcon className="status-grid-icon status-grid-icon-active" aria-label={label} fontSize="small" /> : <CloseRoundedIcon className="status-grid-icon status-grid-icon-inactive" aria-label={label} fontSize="small" />}</Tooltip>; } },
+          { key: 'IsActive', label: language === 'fa' ? 'وضعیت' : 'Status', trueLabel: language === 'fa' ? 'فعال' : 'Active', falseLabel: language === 'fa' ? 'غیرفعال' : 'Inactive' },
         ]} />
       </ResourceState>
     </ManagementWorkspaceFrame>

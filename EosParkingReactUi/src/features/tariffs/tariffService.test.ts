@@ -4,8 +4,8 @@ import { parseTariffList } from './tariffService';
 describe('parseTariffList', () => {
   it('normalizes the Windows tariff list response used by the menu', () => {
     expect(parseTariffList({ Values: [{ Id: 7, Title: 'عمومی', IsActive: true, IsCurrent: false, IsMemberRegisterKindTariff: false }, { Id: 8, Title: 'کارکنان', IsActive: 'true', IsCurrent: 1, IsMemberRegisterKindTariff: 'true', PersistOn: '2026-09-14T10:30:00' }] })).toEqual([
-      { id: 7, title: 'عمومی', isActive: true, isCurrent: false, isMemberTariff: false, persistedOn: null },
-      { id: 8, title: 'کارکنان', isActive: true, isCurrent: true, isMemberTariff: true, persistedOn: '2026-09-14T10:30:00' },
+      expect.objectContaining({ id: 7, title: 'عمومی', isActive: true, isCurrent: false, isMemberTariff: false, persistedOn: null, raw: expect.any(Object) }),
+      expect.objectContaining({ id: 8, title: 'کارکنان', isActive: true, isCurrent: true, isMemberTariff: true, persistedOn: '2026-09-14T10:30:00', raw: expect.any(Object) }),
     ]);
   });
 

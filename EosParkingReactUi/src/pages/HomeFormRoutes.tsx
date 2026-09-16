@@ -6,6 +6,7 @@ import { ParkingDefinitionsCrudWorkspace } from '../components/ParkingDefinition
 import { ParkingManagementWorkspace } from '../components/ParkingManagementWorkspace';
 import { ExitPermissionWorkspace } from '../components/ExitPermissionWorkspace';
 import { TariffListWorkspace } from '../features/tariffs/TariffListWorkspace';
+import { MemberManagementWorkspace } from '../features/members/MemberManagementWorkspace';
 
 type MenuItem = { key: string; label: string };
 type Labels = { parkingManagement: string; listMenu: string; placeholder: string };
@@ -45,6 +46,9 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
   }
   if (item.key === 'tariffs') {
     return <TariffListWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
+  }
+  if (item.key === 'members') {
+    return <MemberManagementWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }
   return <ParkingManagementWorkspace itemKey={item.key} title={item.label} parkingId={selectedParkingId} language={language} />;
 }

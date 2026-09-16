@@ -36,7 +36,7 @@ Splash
 | کاربران و دسترسی | تحلیل اولیه | [04-users-and-access.md](04-users-and-access.md) |
 | تعریف سطح دسترسی | مستندات جزئی فرم | [04-1-access-level-form.md](04-1-access-level-form.md) |
 | مدیریت کاربران | مستندات جزئی فرم | [04-2-users-form.md](04-2-users-form.md) |
-| اعضا و کارت‌ها | تحلیل اولیه | [05-members-and-cards.md](05-members-and-cards.md) |
+| اعضا و کارت‌ها | فرم کارت با Grid و عملیات بالای صفحه؛ API ناقص | [05-members-and-cards.md](05-members-and-cards.md) |
 | ورود، خروج و پرداخت | تحلیل اولیه | [06-traffic-and-payment.md](06-traffic-and-payment.md) |
 | مانیتورینگ و تجهیزات | تحلیل اولیه | [07-monitoring-and-devices.md](07-monitoring-and-devices.md) |
 | گزارش‌ها | تحلیل اولیه | [08-reports.md](08-reports.md) |
