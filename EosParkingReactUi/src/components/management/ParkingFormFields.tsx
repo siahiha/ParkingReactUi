@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Alert, Box, Checkbox, FormControlLabel, TextField, Typography } from '@mui/material';
 import { AppGroupBox } from '../AppGroupBox';
+import { MoneyTextField } from '../MoneyTextField';
 
 export type ParkingFormState = {
   ParkingName: string; Address: string; PhonNumber: string; TaxRate: string; CostOfCard: string;
@@ -29,11 +30,11 @@ export function ParkingFormFields({ form, setForm, copy, saveMessage, language }
     <AppGroupBox title={language === 'fa' ? 'تنظیمات' : 'Settings'}>
       <Box className="parking-form-fields">
         <TextField label={copy.tax} type="number" value={form.TaxRate} onChange={(event) => setForm({ ...form, TaxRate: event.target.value })} slotProps={{ htmlInput: { maxLength: 3, min: 0 } }} />
-        <TextField label={copy.cardCost} type="number" value={form.CostOfCard} onChange={(event) => setForm({ ...form, CostOfCard: event.target.value })} />
-        <TextField label={copy.credit} type="number" value={form.MaxTransferCredit} onChange={(event) => setForm({ ...form, MaxTransferCredit: event.target.value })} />
-        <TextField label={copy.minUnknown} type="number" value={form.MinOfNotFoundEnterCar} onChange={(event) => setForm({ ...form, MinOfNotFoundEnterCar: event.target.value })} />
-        <TextField label={copy.roundingBorder} type="number" value={form.RoundingMoneyBorder} onChange={(event) => setForm({ ...form, RoundingMoneyBorder: event.target.value })} />
-        <TextField label={copy.roundingValue} type="number" value={form.RoundingMoneyValue} onChange={(event) => setForm({ ...form, RoundingMoneyValue: event.target.value })} />
+        <MoneyTextField label={copy.cardCost} value={form.CostOfCard} onValueChange={(value) => setForm({ ...form, CostOfCard: value })} />
+        <MoneyTextField label={copy.credit} value={form.MaxTransferCredit} onValueChange={(value) => setForm({ ...form, MaxTransferCredit: value })} />
+        <MoneyTextField label={copy.minUnknown} value={form.MinOfNotFoundEnterCar} onValueChange={(value) => setForm({ ...form, MinOfNotFoundEnterCar: value })} />
+        <MoneyTextField label={copy.roundingBorder} value={form.RoundingMoneyBorder} onValueChange={(value) => setForm({ ...form, RoundingMoneyBorder: value })} />
+        <MoneyTextField label={copy.roundingValue} value={form.RoundingMoneyValue} onValueChange={(value) => setForm({ ...form, RoundingMoneyValue: value })} />
         <FormControlLabel control={<Checkbox checked={form.HasHostelryTariff} onChange={(event) => setForm({ ...form, HasHostelryTariff: event.target.checked })} />} label={copy.hostelry} />
         <TextField label={copy.minHostelry} type="number" disabled={!form.HasHostelryTariff} value={form.MinOfHostelryHours} onChange={(event) => setForm({ ...form, MinOfHostelryHours: event.target.value })} />
         <FormControlLabel control={<Checkbox checked={form.HasBillControl} onChange={(event) => setForm({ ...form, HasBillControl: event.target.checked })} />} label={copy.billControl} />

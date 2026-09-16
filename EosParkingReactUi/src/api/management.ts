@@ -12,6 +12,8 @@ export const parkingApi = {
   save: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/Save', { method: 'POST', body: JSON.stringify(payload) }),
   remove: (parkingId: number) => apiRequest<unknown>(`api/Parking/Delete?id=${parkingId}`),
   getDoors: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoors?parkingId=${parkingId}`),
+  /** Returns only parking spaces that are not currently assigned to a member. */
+  listAvailableParkSpaces: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingParkSpacesById?parkingId=${parkingId}`),
 };
 
 export const userApi = {
@@ -49,7 +51,24 @@ export const definitionApi = {
   checkUsedParkingSpaces: (spaces: ApiPayload[]) => apiRequest<unknown>('api/Parking/CheckUsedParkingSpace', { method: 'POST', body: JSON.stringify(spaces) }),
 };
 
+export const cardApi = {
+  list: (parkingId: number) => apiRequest<unknown>(`api/Card/GetByParkingId?parkingId=${parkingId}`),
+  saveAll: (cards: ApiPayload[]) => apiRequest<unknown>('api/Card/SaveAll', { method: 'POST', body: JSON.stringify(cards) }),
+};
+
+/** Membership endpoints mirrored from the Windows MemberForm workflow. */
+export const memberApi = {
+  list: (parkingId: number) => apiRequest<unknown>(`api/Member/GetByParkingId?parkingId=${parkingId}`),
+  save: (payload: ApiPayload) => apiRequest<unknown>('api/Member/Save', { method: 'POST', body: JSON.stringify(payload) }),
+  remove: (memberId: number) => apiRequest<unknown>(`api/Member/Delete?id=${memberId}`),
+  listRegisterKinds: (parkingId: number) => apiRequest<unknown>(`api/Member/GetMemberRegisterKindsByParkingId?parkingId=${parkingId}`),
+  previewRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/AddMemberRegister', { method: 'POST', body: JSON.stringify({ ...payload, DoSave: false }) }),
+  saveRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/AddMemberRegister', { method: 'POST', body: JSON.stringify({ ...payload, DoSave: true }) }),
+  cancelRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/MembershipCreditCancellation', { method: 'POST', body: JSON.stringify(payload) }),
+};
+
 export const trafficApi = {
+  getMemberCurrentCreditInfo: (memberId: number) => apiRequest<unknown>(`api/traffic/GetMemberCurrentCreditInfo?memberId=${memberId}`),
   getExitPermissions: (doorId: number, options: { status: 'pending' | 'approved' | 'all'; startDate: string; endDate: string }) => {
     const setPermission = options.status === 'all' ? '' : `&setPermission=${options.status === 'approved'}`;
     const dateFilter = `${options.startDate ? `&beginDateTime=${encodeURIComponent(`${options.startDate}T00:00:00`)}` : ''}${options.endDate ? `&endDateTime=${encodeURIComponent(`${options.endDate}T23:59:59`)}` : ''}`;

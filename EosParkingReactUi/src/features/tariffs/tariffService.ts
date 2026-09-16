@@ -8,6 +8,7 @@ export type TariffListRow = {
   isCurrent: boolean;
   isMemberTariff: boolean;
   persistedOn: string | null;
+  raw: Record<string, unknown>;
 };
 export type MemberKindOption = { id: number; title: string };
 
@@ -47,6 +48,7 @@ export function parseTariffList(input: unknown): TariffListRow[] {
       isCurrent: asBoolean(valueOf(record.data, 'IsCurrent')),
       isMemberTariff: asBoolean(valueOf(record.data, 'IsMemberRegisterKindTariff')),
       persistedOn: valueOf(record.data, 'PersistOn') ? String(valueOf(record.data, 'PersistOn')) : null,
+      raw: record.data,
     }];
   });
 }
@@ -67,5 +69,11 @@ export const tariffService = {
       const title = String(valueOf(record.data, 'Title') ?? '');
       return Number.isFinite(id) && title ? [{ id, title }] : [];
     });
+  },
+  save(payload: Record<string, unknown>) {
+    return apiRequest<unknown>('api/Tariff/Save', { method: 'POST', body: JSON.stringify(payload) });
+  },
+  remove(id: number) {
+    return apiRequest<unknown>(`api/Tariff/Delete?id=${id}`);
   },
 };

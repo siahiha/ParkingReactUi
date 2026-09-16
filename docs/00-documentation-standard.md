@@ -177,6 +177,15 @@
   sorting، filtering، pagination، انتخاب ردیف، bulk action، sticky header، actionها
   و حالت‌های loading/empty/error را داشته باشند. برای دادهٔ بزرگ، عملیات سمت API و
   virtualization فقط با نیاز مشخص به‌کار رود.
+- همهٔ Gridهای قابل فیلتر باید از قرارداد مشترک فیلتر ستونی استفاده کنند: منوی سه‌نقطه
+  در هر سرستون، بازشدن گزینه‌ها در یک منوی شناور متصل به همان ستون و ورودی جستجو داخل
+  همان سرستون و زیر عنوان. ورودی جستجو در حالت پیش‌فرض مخفی است و از منوی همان ستون
+  فعال می‌شود؛ ردیف جداگانه یا نوار ابزار جداگانه برای فیلتر و گزینه‌های آن مجاز نیست.
+  فیلترها در حالت معمول روی رکوردهای موجود در UI با منطق AND بین ستون‌ها
+  اعمال می‌شوند و باید گزینه‌های `contains`، `startsWith`، `equals`، حساسیت به حروف و
+  پاک‌کردن همهٔ فیلترها را ارائه کنند. فرم‌هایی که نیاز عملیاتی به نمایش فوری فیلتر
+  دارند می‌توانند `defaultFilterOpen` را فعال کنند؛ پیاده‌سازی جداگانهٔ فیلتر در
+  featureها مجاز نیست.
 - buttonها hierarchy روشن داشته باشند: فقط عمل اصلی dominant است، label باید عمل را
   توضیح دهد و destructive styling متمایز باشد.
 - فرم‌ها label روشن، گروه‌بندی منطقی، required field مشخص، input type مناسب و خطای
@@ -276,3 +285,42 @@
 - `console.log`، debug UI، credential mock و endpoint موقت در production code باقی
   نماند. دادهٔ حساس هرگز log نشود؛ diagnostics در utility متمرکز و قابل غیرفعال‌سازی
   قرار گیرد.
+
+### ۱۰.۱۰. خطوط قرمزِ اجباری در React و مدیریت state
+
+موارد این بخش الزام مطلق هستند و رعایت کامل آن‌ها در تمام کدهای جدید و تغییرات
+اجباری است. هیچ feature، component، hook یا workaround نباید بدون بررسی صریح این
+قواعد وارد کد production شود.
+
+- **JavaScript خام بدون اجازه ممنوع است.** کد منبع پروژه باید TypeScript/TSX و تا
+  حد امکان مبتنی بر React، stateهای React، hookها، Context و componentهای MUI باشد.
+  استفاده از فایل یا منطق مستقل JavaScript/JSX، یا افزودن dependency جاوااسکریپتی
+  برای کاری که با React، TypeScript، پلتفرم وب یا componentهای مشترک قابل انجام است،
+  بدون تصمیم ثبت‌شده و تأیید صریح مجاز نیست. TypeScript پس از build به JavaScript
+  تبدیل می‌شود و این تبدیل، مجوز استفاده از JavaScript خام در source نیست.
+- **دورزدن React برای مدیریت UI ممنوع است.** تغییر مستقیم DOM، attribute، class،
+  style یا state ظاهری برنامه با `document`، `window`، `innerHTML`،
+  `dataset`، دستکاری دستی eventها یا الگوهای imperative نباید برای مدیریت theme،
+  زبان، layout، navigation، فرم، dialog، loading یا سایر stateهای UI استفاده شود.
+  این stateها باید از React state/props/context و ThemeProvider، به‌همراه CSS و
+  componentهای مشترک، مدیریت شوند. دسترسی مستقیم به DOM فقط برای نیاز فنی اجتناب‌ناپذیر
+  مانند focus/selection یا اتصال کنترل‌شده به API مرورگر مجاز است؛ باید در hook یا
+  component ایزوله، با دلیل ثبت‌شده و بدون جایگزین React انجام شود.
+- **اصل‌های React نباید نقض شوند.** componentها باید declarative، قابل پیش‌بینی و
+  تک‌مسئولیتی باشند؛ state و side effect باید در محل درست React قرار گیرد؛ از
+  mutation مستقیم props/state، منطق کسب‌وکار در render، وابستگی پنهان به DOM و
+  lifecycleهای خارج از الگوی hookها پرهیز شود.
+- **اصول SOLID باید به‌طور کامل رعایت شوند.** هر component، hook، service و utility
+  مسئولیت واحد و مرز روشن داشته باشد؛ وابستگی‌ها از abstraction مناسب عبور کنند؛
+  coupling و تکرار غیرضروری ایجاد نشود؛ و توسعهٔ feature جدید بدون شکستن قرارداد
+  واحدهای موجود ممکن باشد. هر استثنا باید با دلیل و مالک تصمیم مستند شود.
+- **ذخیرهٔ password مطلقاً ممنوع است.** password، رمز عبور فعلی/جدید، PIN، secret
+  معادل یا هر مقدار قابل‌بازسازی آن نباید در `localStorage` یا `sessionStorage`،
+  cookie، URL، source، log، cache یا state ماندگار مرورگر ذخیره شود. این ممنوعیت
+  شامل remember-me و refresh نیز است؛ فقط token/session غیرحساس طبق قرارداد امنیتی
+  مجاز است. password باید فقط در حافظهٔ کوتاه‌عمر فرم و تا زمان ارسال امن باقی بماند
+  و پس از submit، success، خطا یا unmount پاک شود.
+- **کنترل تحویل:** هر Pull Request یا تغییر feature باید صریحاً بررسی کند که هیچ
+  JavaScript خام بدون مجوز، دستکاری imperative رابط، ذخیرهٔ password یا نقض اصول
+  React/SOLID ندارد. وجود هر مورد، حتی اگر عملکردی باشد، مانع تأیید و تحویل feature
+  است تا اصلاح یا استثنای رسمی ثبت شود.

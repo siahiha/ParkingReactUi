@@ -1332,6 +1332,11 @@ html[data-theme='dark'] .home-shell-with-sidebar .home-nested-subnav::before {
   box-shadow: 0 1px 4px rgba(35, 55, 70, .06);
 }
 
+.app-data-grid-filter-input .MuiInputBase-root {
+  height: 28px;
+  font-size: .72rem;
+}
+
 .app-data-grid {
   width: 100%;
   min-width: 100%;
@@ -1365,6 +1370,131 @@ html[data-theme='dark'] .home-shell-with-sidebar .home-nested-subnav::before {
   color: #3e596b;
   font-size: .7rem;
   font-weight: 800;
+}
+
+.app-data-grid .MuiTableHead-root > .MuiTableRow:first-child .MuiTableCell-root {
+  border-bottom-color: transparent;
+}
+
+.app-data-grid .MuiTableHead-root .app-data-grid-header-cell-root {
+  height: auto;
+  min-height: 0;
+  padding-block: 2px 3px;
+  padding-inline-end: 2px;
+  vertical-align: top;
+}
+
+.app-data-grid-header-cell-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.app-data-grid-header-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.app-data-grid-header-content > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-inline-end: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-data-grid-column-menu-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: .72;
+}
+
+.app-data-grid-column-menu-button:hover,
+.app-data-grid-column-menu-button:focus-visible,
+.app-data-grid-column-menu-button.is-active {
+  background: rgba(72, 112, 135, .16);
+  opacity: 1;
+  outline: none;
+}
+
+.app-data-grid-column-menu .MuiPaper-root {
+  min-width: 218px;
+  border: 1px solid #c4d0d8;
+  border-radius: 4px;
+  box-shadow: 0 8px 22px rgba(35, 55, 70, .18);
+}
+
+.app-data-grid-column-menu .MuiMenuItem-root {
+  min-height: 32px;
+  padding-block: 4px;
+  font-size: .75rem;
+}
+
+.app-data-grid-column-menu .MuiListItemIcon-root {
+  min-width: 29px;
+  color: #607887;
+}
+
+.app-data-grid-filter-input {
+  display: block;
+  width: 100%;
+  min-width: 70px;
+  height: 18px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+}
+
+.app-data-grid .app-data-grid-filter-input .MuiOutlinedInput-root {
+  height: 18px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 4px;
+  background: #e5edf1;
+  font-size: .62rem;
+  line-height: 1;
+}
+
+.app-data-grid .app-data-grid-filter-input .MuiOutlinedInput-input {
+  height: 18px !important;
+  min-height: 0 !important;
+  box-sizing: border-box;
+  padding: 0 5px !important;
+  font-size: .62rem;
+  line-height: 18px !important;
+}
+
+.app-data-grid-filter-input .MuiInputBase-input::placeholder {
+  font-size: .6rem;
+  opacity: .7;
+}
+
+.app-data-grid-filter-input .MuiOutlinedInput-notchedOutline {
+  border-color: #b9c8d1;
+}
+
+.app-data-grid-no-results {
+  padding: 9px 12px;
+  color: #617683;
+  font-size: .74rem;
+  text-align: center;
 }
 
 .app-data-grid .app-data-grid-compact-cell {
@@ -1427,6 +1557,27 @@ html[data-theme='dark'] .app-data-grid .MuiTableHead-root .MuiTableCell-root {
   background: #2b3943;
   color: #c8dbe4;
   border-bottom-color: #5a6b76;
+}
+
+html[data-theme='dark'] .app-data-grid-filter-input .MuiInputBase-root {
+  background: #2b3943;
+}
+
+html[data-theme='dark'] .app-data-grid-filter-input .MuiOutlinedInput-notchedOutline {
+  border-color: #5a6b76;
+}
+
+html[data-theme='dark'] .app-data-grid-no-results {
+  color: #afc3cc;
+}
+
+html[data-theme='dark'] .app-data-grid-column-menu .MuiPaper-root {
+  border-color: #526773;
+  background: #293740;
+}
+
+html[data-theme='dark'] .app-data-grid-column-menu .MuiListItemIcon-root {
+  color: #afc3cc;
 }
 
 html[data-theme='dark'] .app-data-grid .MuiTableBody-root .MuiTableRow-root:hover {
@@ -2032,6 +2183,160 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
   height: 28px;
 }
 
+/* Member workspace preserves the Windows form's list-plus-details hierarchy,
+   while keeping the operational form usable at narrower browser widths. */
+.member-management-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, .9fr) minmax(0, 1.6fr);
+  gap: 16px;
+  min-block-size: 420px;
+  align-items: stretch;
+}
+
+.member-management-list,
+.member-management-detail {
+  min-width: 0;
+  border: 1px solid #d8e1e6;
+  border-radius: 4px;
+  padding: 12px;
+  background: #fff;
+}
+
+.member-management-detail { display: flex; min-block-size: 0; flex-direction: column; }
+
+.member-management-list { display: flex; flex-direction: column; }
+.member-management-list > .MuiTypography-root { margin-bottom: 8px; }
+.member-management-list-grid { flex: 1 1 auto; min-block-size: 0; }
+.member-management-list-grid .app-data-grid-wrapper { height: 100%; overflow: auto; }
+.member-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; }
+.member-form-grid,
+.member-dialog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-top: 16px; }
+.member-address-field { grid-column: 1 / -1; }
+.member-tab-content { display: grid; gap: 12px; min-block-size: 0; padding-top: 14px; }
+.member-membership-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.member-parking-space-grids { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-block-size: 0; block-size: clamp(260px, calc(100vh - 420px), 560px); align-items: stretch; }
+.member-parking-space-group { display: flex; min-width: 0; min-block-size: 0; flex-direction: column; }
+.member-parking-space-toolbar { display: flex; flex: 0 0 auto; align-items: center; min-block-size: 32px; gap: 8px; padding-block-end: 8px; }
+.member-parking-space-group .app-data-grid-wrapper { max-inline-size: 100%; min-block-size: 0; flex: 1 1 auto; overflow: auto; }
+.member-registration-dialog,
+.member-payment-summary,
+.member-cancellation-dialog { display: grid; gap: 12px; padding-top: 16px; }
+.member-payment-summary .MuiAlert-root { margin-top: 4px; }
+
+.iranian-plate-field { display: grid; gap: 6px; min-width: 0; }
+.iranian-plate-control { display: grid; grid-template-rows: 15px 34px; width: min(100%, 237px); height: 51px; overflow: hidden; border: 1px solid #c8c8e6; border-radius: 5px; background: #fff; }
+.iranian-plate-control:focus-within { border-color: #1565c0; box-shadow: 0 0 0 2px rgb(21 101 192 / 16%); }
+.iranian-plate-control-error { border-color: #d32f2f; }
+.iranian-plate-toolbar { display: flex; align-items: center; height: 15px; padding-inline: 2px; direction: ltr; background: #d1d1d1; }
+.iranian-plate-title { flex: 1 1 auto; min-width: 0; color: #8a2020; font-size: 10px !important; line-height: 1 !important; text-align: start; }
+.iranian-plate-type-actions { display: flex; flex: 0 0 auto; height: 100%; direction: ltr; }
+.iranian-plate-type-actions .MuiIconButton-root { width: 18px; height: 15px; padding: 1px; border-radius: 0; color: #111; font-size: 12px; }
+.iranian-plate-type-actions .MuiIconButton-root.is-selected { border: 1px solid #858585; border-radius: 2px; background: #f4f4f4; }
+.iranian-plate-input { display: flex; min-width: 0; height: 34px; background: #fff; }
+.iranian-plate-flag { position: relative; display: grid; grid-template-rows: 2px 7px 2px 1fr; width: 24px; padding-top: 2px; color: #fff; background: #003399; text-align: center; }
+.iranian-plate-flag-stripe { display: block; width: 12px; height: 2px; margin: 0 auto; }
+.iranian-plate-flag-green { background: #20a653; }
+.iranian-plate-flag-red { background: #e02020; }
+.iranian-plate-flag-emblem { color: #fff; font-size: 5px; line-height: 7px; }
+.iranian-plate-flag small { align-self: end; padding-bottom: 2px; font-size: 4px; font-weight: 700; line-height: 4px; }
+.iranian-plate-main { display: flex; align-items: center; flex: 1 1 auto; min-width: 0; padding-inline: 5px; gap: 4px; }
+.iranian-car-plate { gap: 8px; }
+.iranian-car-plate > :nth-child(1) { flex: 0 1 19%; }
+.iranian-car-plate > :nth-child(2) { flex: 0 1 33%; }
+.iranian-car-plate > :nth-child(3) { flex: 0 1 28%; }
+.iranian-motor-plate > :nth-child(1) { flex: 0 1 56%; }
+.iranian-motor-plate > :nth-child(2) { flex: 0 1 44%; }
+.iranian-plate-main .MuiInputBase-root,
+.iranian-plate-main .MuiAutocomplete-root { min-width: 0; }
+.iranian-plate-main .MuiInputBase-input,
+.iranian-plate-region .MuiInputBase-input { box-sizing: border-box; width: 100%; height: 22px; padding: 0 2px; color: #111; border-bottom: 2px solid #888; text-align: center; font-family: Vazirmatn, Tahoma, Arial, sans-serif; font-size: 13px; font-weight: 600; }
+.iranian-plate-main .MuiAutocomplete-root .MuiInputBase-root { height: 22px; }
+.iranian-plate-main .MuiAutocomplete-root .MuiInputBase-input { min-width: 0; }
+/* MUI reserves 30px for Autocomplete's end adornment in RTL. The plate's
+   compact letter field only needs 10px, preserving room for the character. */
+.iranian-car-plate > .MuiAutocomplete-root .MuiInputBase-root.MuiInput-root.MuiInputBase-adornedEnd { padding-left: 10px !important; }
+.iranian-car-plate > :nth-child(2) .MuiInputBase-input { padding-inline-start: 10px; }
+.iranian-plate-main .MuiAutocomplete-endAdornment { transform: scale(.68); transform-origin: center; }
+.iranian-plate-divider { flex: 0 0 3px; align-self: stretch; background: #111; }
+.iranian-plate-region { display: grid; grid-template-rows: 9px 1fr; flex: 0 0 16%; min-width: 0; padding-inline: 3px; }
+.iranian-plate-region > span { color: #7d2525; font-size: 8px; font-weight: 700; line-height: 9px; text-align: center; }
+.iranian-plate-region .MuiInputBase-root { min-width: 0; }
+
+html[data-theme='dark'] .iranian-plate-control,
+html[data-theme='dark'] .iranian-plate-input { border-color: #6d8290; background: #25313d; }
+html[data-theme='dark'] .iranian-plate-toolbar { background: #394952; }
+html[data-theme='dark'] .iranian-plate-main .MuiInputBase-input,
+html[data-theme='dark'] .iranian-plate-region .MuiInputBase-input { color: #f1f5f7; border-bottom-color: #91a5b0; }
+
+html[data-theme='dark'] .member-management-list,
+html[data-theme='dark'] .member-management-detail { border-color: #465862; background: #25313d; }
+
+@media (max-width: 900px) {
+  .member-management-layout { grid-template-columns: 1fr; }
+  .member-parking-space-grids { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .member-form-grid,
+  .member-dialog-grid { grid-template-columns: 1fr; }
+  .member-detail-heading { align-items: flex-start; flex-direction: column; }
+  .member-membership-toolbar { align-items: flex-start; flex-direction: column; }
+  .iranian-plate-control { width: 100%; }
+}
+
+.card-management-toolbar {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d8e1e6;
+}
+
+.card-management-command-row,
+.card-management-status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-management-status-row {
+  min-height: 20px;
+}
+
+.card-management-command-row .MuiTextField-root {
+  min-width: 150px;
+  flex: 0 1 190px;
+}
+
+.card-management-command-row .MuiTextField-root:nth-child(2) {
+  flex-basis: 220px;
+}
+
+.card-management-command-spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+}
+
+html[data-theme='dark'] .card-management-toolbar {
+  border-bottom-color: #465862;
+}
+
+@media (max-width: 760px) {
+  .card-management-command-row,
+  .card-management-status-row {
+    align-items: stretch;
+  }
+
+  .card-management-command-row .MuiTextField-root {
+    flex: 1 1 180px;
+  }
+
+  .card-management-command-spacer {
+    display: none;
+  }
+}
+
 .app-data-grid-selection-cell {
   width: 36px;
   min-width: 36px;
@@ -2446,4 +2751,21 @@ html[data-theme='dark'] .home-shell-with-sidebar .home-branch-heading.active {
   .home-sidebar-drawer .home-section-items {
     flex-direction: column !important;
   }
+}
+
+/* Home content owns every remaining pixel below the fixed header. Individual
+   workspaces may be taller, but scrolling must stay inside this region. */
+.home-main {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 760px) {
+  .home-body { overflow: hidden; }
+  .home-main { height: 100%; overflow-y: auto; }
 }

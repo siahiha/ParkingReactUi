@@ -12,6 +12,7 @@ import { setAuthToken } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
+import { useNavigationGuard } from './pages/NavigationGuardContext';
 import { createAppTheme } from './theme';
 
 type ThemeMode = 'light' | 'dark';
@@ -57,6 +58,7 @@ export function App() {
   const [authenticated, setAuthenticated] = useState(Boolean(initialAuthSession));
   const [homeUser, setHomeUser] = useState<HomeUser | null>(initialAuthSession?.user ?? null);
   const navigate = useNavigate();
+  const { requestNavigation } = useNavigationGuard();
   const direction = translations[language].direction;
   const theme = useMemo(() => createAppTheme(direction), [direction]);
 
@@ -78,9 +80,9 @@ export function App() {
     window.sessionStorage.setItem(authSessionStorageKey, JSON.stringify({ token, user }));
     setAuthenticated(true);
     setHomeUser(user);
-    navigate('/home');
+    requestNavigation(() => navigate('/home'));
   };
-  const logout = () => { setAuthenticated(false); setHomeUser(null); setAuthToken(null); window.sessionStorage.removeItem(authSessionStorageKey); navigate('/'); };
+  const logout = () => requestNavigation(() => { setAuthenticated(false); setHomeUser(null); setAuthToken(null); window.sessionStorage.removeItem(authSessionStorageKey); navigate('/'); });
   const toggleLanguage = () => setLanguage((current) => current === 'fa' ? 'en' : 'fa');
 
   return <RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>

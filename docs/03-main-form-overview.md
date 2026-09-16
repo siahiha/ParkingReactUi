@@ -120,7 +120,7 @@ Ribbon راست‌به‌چپ است، نوار دسترسی سریع آن مخ�
 |---|---|---|
 | `eosLabel1` | «دسترسی سریع» | عنوان بخش Tileها |
 | `tileControl1` | گروه Tileهای عملیاتی | نمایش میانبر قابلیت‌های پرکاربرد |
-| `memberShipTileItem` | «عضویت و ثبت نام» | رویداد `ItemPress` به `MemberForm(_parking)` می‌رود؛ handler `ItemClick` خالی است |
+| `memberShipTileItem` | «عضویت و ثبت نام» | مدیریت اعضای پارکینگ و ثبت/لغو عضویت؛ نه ساخت حساب کاربری. رویداد `ItemPress` به `MemberForm(_parking)` می‌رود؛ handler `ItemClick` خالی است |
 | `manualTrafficTileItem` | «ورود و خروج دستی» | همان handler کنترل ورود و خروج دستی را اجرا می‌کند |
 | `assignShiftTileItem` | «اختصاص شیفت» | `ParkingUserShiftForm(_parking)` را باز می‌کند |
 | `cardManagerTileItem` | «مدیریت کارت ها» | `ParkingCardForm(_parking)` را باز می‌کند |
