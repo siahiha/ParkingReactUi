@@ -59,6 +59,12 @@ describe('member membership registration', () => {
 
     await user.click(screen.getByRole('button', { name: 'تأیید پرداخت و ثبت عضویت' }));
     await waitFor(() => expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('AddMemberRegister') && JSON.parse(String(init?.body)).DoSave === true)).toBe(true));
+    const finalPayload = fetchMock.mock.calls
+      .filter(([input, init]) => String(input).includes('AddMemberRegister') && JSON.parse(String(init?.body)).DoSave === true)
+      .map(([, init]) => JSON.parse(String(init?.body)))[0];
+    expect(finalPayload.TransferCreditAmount).toBe(80_000);
+    expect(finalPayload.StartDate).toMatch(/T00:00:00(?:\.000)?Z$/);
+    expect(finalPayload.EndDate).toMatch(/T00:00:00(?:\.000)?Z$/);
   });
 
   it('checks current credit before sending a selected cancellation reason', async () => {
@@ -114,8 +120,8 @@ describe('member membership registration', () => {
 
     await user.dblClick((await screen.findAllByText('علی رضایی'))[0]);
     await user.click(screen.getByRole('tab', { name: 'جای پارک‌های عضو' }));
-    await user.click((await screen.findAllByRole('checkbox', { name: 'انتخاب ردیف' }))[0]);
-    await user.click(await screen.findByRole('button', { name: 'تخصیص جای پارک' }));
+    expect(screen.getAllByRole('checkbox', { name: 'انتخاب ردیف' })).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'تخصیص جای پارک: ۱-۰۲' }));
     await user.click((await screen.findAllByRole('checkbox', { name: 'انتخاب ردیف' }))[0]);
     await user.click(await screen.findByRole('button', { name: 'آزادسازی جای پارک' }));
     await user.click(screen.getByRole('button', { name: 'ذخیره عضو' }));

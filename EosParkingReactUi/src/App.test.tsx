@@ -99,6 +99,6 @@ describe('login', () => {
     await user.click(await screen.findByRole('button', { name: 'پارکینگ‌ها' }));
 
     expect(window.location.pathname).toBe('/home/management/list');
-    expect(await screen.findByText('مدیریت پارکینگ‌ها')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'پارکینگ‌ها' })).toBeVisible();
   });
 });

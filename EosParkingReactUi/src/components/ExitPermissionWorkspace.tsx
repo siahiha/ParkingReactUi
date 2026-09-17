@@ -114,7 +114,7 @@ function DatePickerField({ language, label, value, onChange }: { language: Langu
   </>;
 }
 
-export function ExitPermissionWorkspace({ parkingId, language, userId, pageTitle }: { parkingId: number; language: Language; userId: number; pageTitle: string }) {
+export function ExitPermissionWorkspace({ parkingId, language, userId }: { parkingId: number; language: Language; userId: number; pageTitle: string }) {
   const [rows, setRows] = useState<ExitPermissionRow[]>([]);
   const [doors, setDoors] = useState<number[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -164,8 +164,8 @@ export function ExitPermissionWorkspace({ parkingId, language, userId, pageTitle
   };
 
   return <Paper className="home-workspace parking-management-workspace exit-permission-workspace" elevation={0}>
-    <Box className="workspace-heading workspace-heading-unified">
-      <Box className="workspace-page-context"><Typography component="h1" variant="h1">{pageTitle}</Typography><Typography component="span" className="workspace-heading-separator">-</Typography><Typography variant="h6">{copy.title}</Typography><Typography variant="body2" color="text.secondary">{rows.length} {language === 'fa' ? 'رکورد' : 'records'}</Typography></Box>
+    <Box className="workspace-heading">
+      <Box className="workspace-resource-heading"><Typography variant="h6">{copy.title}</Typography><Typography variant="body2" color="text.secondary">{rows.length} {language === 'fa' ? 'رکورد' : 'records'}</Typography></Box>
       <Tooltip title={copy.refresh} arrow><IconButton className="workspace-refresh-button" aria-label={copy.refresh} disabled={loading} onClick={() => void load()}><RefreshRoundedIcon /></IconButton></Tooltip>
     </Box>
     <WorkspaceToolbar ariaLabel={language === 'fa' ? 'ابزارهای مجوز خروج' : 'Exit permission actions'}>

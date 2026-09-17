@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
-import { CssBaseline } from '@mui/material';
+import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
@@ -60,17 +60,11 @@ export function App() {
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
   const direction = translations[language].direction;
-  const theme = useMemo(() => createAppTheme(direction), [direction]);
+  const theme = useMemo(() => createAppTheme(direction, themeMode), [direction, themeMode]);
 
-  useLayoutEffect(() => { document.documentElement.lang = language; document.documentElement.dir = direction; }, [language, direction]);
   useLayoutEffect(() => {
     const activePalette = themeMode === 'light' ? lightPalette : darkPalette;
     const tokens = paletteTokens[themeMode][activePalette];
-    document.documentElement.dataset.theme = themeMode;
-    document.documentElement.dataset.palette = `${themeMode}-${activePalette}`;
-    document.documentElement.style.setProperty('--app-primary', tokens.primary);
-    document.documentElement.style.setProperty('--app-primary-hover', tokens.hover);
-    document.documentElement.style.setProperty('--app-primary-soft', tokens.soft);
     window.localStorage.setItem(themeStorageKey, themeMode);
     window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
     window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
@@ -85,9 +79,9 @@ export function App() {
   const logout = () => requestNavigation(() => { setAuthenticated(false); setHomeUser(null); setAuthToken(null); window.sessionStorage.removeItem(authSessionStorageKey); navigate('/'); });
   const toggleLanguage = () => setLanguage((current) => current === 'fa' ? 'en' : 'fa');
 
-  return <RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>
+  return <Box className={`app-root app-theme-${themeMode}`} data-palette={`${themeMode}-${themeMode === 'light' ? lightPalette : darkPalette}`} dir={direction} lang={language}><RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>
     <Route path="/home/*" element={authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} /> : <Navigate to="/" replace />} />
     <Route path="/" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="*" element={<Navigate to={authenticated ? '/home' : '/'} replace />} />
-  </Routes></ThemeProvider></RTL>;
+  </Routes></ThemeProvider></RTL></Box>;
 }
