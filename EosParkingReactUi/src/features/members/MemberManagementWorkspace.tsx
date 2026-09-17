@@ -107,6 +107,8 @@ type RegistrationDraft = {
   MemberRegisterKindId: number;
   MemberRegisterKindTitle: string;
   CreditAmount: number;
+  /** Calculated by AddMemberRegister preview and required by the Windows final-save workflow. */
+  TransferCreditAmount: number;
   TaxValue: number;
   StartDate: string;
   EndDate: string | null;
@@ -331,6 +333,11 @@ const addDays = (dateValue: string, days: number) => {
   date.setDate(date.getDate() + days);
   return date.toISOString();
 };
+const startOfDay = (dateValue: string) => {
+  const date = new Date(dateValue);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.toISOString();
+};
 const copy = (language: Language) => language === 'fa'
   ? {
       subtitle: 'مدیریت عضو، خودرو، عضویت و جای پارک', new: 'عضو جدید', edit: 'ویرایش', save: 'ذخیره عضو', remove: 'حذف عضو', details: 'مشخصات عضو', cars: 'خودروهای عضو', membership: 'عضویت', spaces: 'جای پارک‌های عضو', availableSpaces: 'جای‌پارک‌های آزاد', assignedSpaces: 'جای‌پارک‌های عضو', floor: 'طبقه/قسمت', parkingSpace: 'جای پارک', assignSpace: 'تخصیص جای پارک', releaseSpace: 'آزادسازی جای پارک', spacesLoading: 'در حال دریافت جای‌پارک‌های آزاد...', availableSpacesEmpty: 'جای‌پارک آزادی برای تخصیص وجود ندارد.', editMemberSpaces: 'برای تخصیص یا آزادسازی جای پارک، ویرایش عضو را انتخاب کنید.', saveMemberSpaces: 'ابتدا عضو را ذخیره کنید.', spacesRequireActiveMembership: 'تخصیص جای پارک فقط برای عضویت فعالِ دارای جای پارک مشخص امکان‌پذیر است.', spacesKindUnavailable: 'نوع عضویت فعال برای بررسی تخصیص جای پارک یافت نشد.', spacesLoadError: 'دریافت جای‌پارک‌های آزاد ناموفق بود.', retry: 'تلاش مجدد', name: 'نام', fullName: 'نام و نام خانوادگی', family: 'نام خانوادگی', code: 'کد عضویت', national: 'کد ملی', phone: 'تلفن', address: 'نشانی', card: 'کارت عضو', face: 'کد چهره', exit: 'تأییدکننده خروج', inactive: 'غیرفعال است', carsEmpty: 'خودرویی ثبت نشده است.', membershipEmpty: 'سابقه عضویتی ثبت نشده است.', spacesEmpty: 'جای پارکی تخصیص داده نشده است.', type: 'نوع عضویت', credit: 'حق عضویت', start: 'زمان شروع', end: 'زمان اتمام', status: 'وضعیت', active: 'فعال', addCar: 'افزودن خودرو', addMembership: 'ثبت عضویت', balance: 'مانده اعتبار عضویت فعال', rial: 'ریال', tax: 'مالیات ارزش افزوده', transfer: 'مبلغ انتقال اعتبار', payable: 'مبلغ قابل پرداخت', payment: 'تأیید پرداخت', confirmPayment: 'تأیید پرداخت و ثبت عضویت', paymentDescription: 'پس از تأیید، ثبت عضویت و سند مالی آن ایجاد می‌شود.', replacementTitle: 'عضویت فعال موجود است', replacementMessage: 'عضویت فعال قبلی لغو و اعتبار آن طبق محاسبهٔ سامانه منتقل شود؟', makeReservation: 'ثبت به‌صورت رزرو', replaceMembership: 'لغو عضویت قبلی و ادامه', saveFirstTitle: 'ثبت مشخصات عضو', saveFirstMessage: 'برای ثبت عضویت، ابتدا مشخصات عضو ذخیره شود؟', saveAndContinue: 'ذخیره و ادامه', saveMemberFirst: 'ابتدا مشخصات عضو را ذخیره کنید.', reservedMembership: 'هر عضو فقط می‌تواند یک عضویت رزرو داشته باشد.', noMembershipKinds: 'نوع عضویتی برای این پارکینگ تعریف نشده است.', registrationError: 'ثبت عضویت انجام نشد.', registrationSaved: 'عضویت با موفقیت ثبت شد.', cancellation: 'لغو عضویت', cancelMembership: 'لغو عضویت', cancellationType: 'نوع لغو عضویت', cancellationUnavailable: 'لغو عضویت برای اعتبارهای به‌اتمام‌رسیده ممکن نیست.', cancellationSaved: 'عضویت مورد نظر لغو شد.', cancellationError: 'لغو عضویت انجام نشد.', refund: 'عودت وجه', settlement: 'تسویه اعتبار', terminate: 'سوختن اعتبار', creditStatus: 'وضعیت اعتبار', creditType: 'نوع اعتبار', creditTypeCredit: 'اعتباری', creditTypeLongTime: 'مدت‌دار', creditTypeLongTimeCredit: 'اعتباری و مدت‌دار', actions: 'عملیات', listLoading: 'در حال دریافت اعضا...', listEmpty: 'عضوی برای نمایش وجود ندارد.', loadError: 'دریافت اعضا ناموفق بود.', saveError: 'ذخیره عضو ناموفق بود.', saved: 'اطلاعات عضو ذخیره شد.', required: 'نام و کد عضویت الزامی هستند.', nationalInvalid: 'کد ملی باید ۱۰ رقم باشد.', plateInvalid: 'پلاک را با فرمت کامل ایرانی وارد کنید.', deleteTitle: 'حذف عضو', deleteMessage: 'آیا از حذف این عضو مطمئن هستید؟', cancel: 'انصراف', confirm: 'حذف', add: 'افزودن', plate: 'پلاک', carName: 'نام خودرو', model: 'مدل', color: 'رنگ', forbidden: 'دسترسی به اطلاعات اعضا مجاز نیست.', kindRequired: 'نوع عضویت را انتخاب کنید.', creditInvalid: 'مبلغ حق عضویت نمی‌تواند منفی باشد.', memberKindSpaceMessage: 'با ثبت این نوع عضویت، همهٔ جای پارک‌های عضو آزاد می‌شود. ادامه می‌دهید؟', confirmSpaceRelease: 'ادامه و آزادسازی جای پارک‌ها',
@@ -359,7 +366,6 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
   const [cancellationOpen, setCancellationOpen] = useState(false);
   const [registerKinds, setRegisterKinds] = useState<RegisterKind[]>([]);
   const [availableParkingSpaces, setAvailableParkingSpaces] = useState<ParkingSpace[]>([]);
-  const [selectedAvailableParkingSpaces, setSelectedAvailableParkingSpaces] = useState<string[]>([]);
   const [selectedMemberParkingSpaces, setSelectedMemberParkingSpaces] = useState<string[]>([]);
   const [parkingSpacesLoading, setParkingSpacesLoading] = useState(false);
   const [parkingSpacesError, setParkingSpacesError] = useState('');
@@ -409,8 +415,8 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
   useEffect(() => { void load(); }, [parkingId, language]);
 
   const update = <K extends keyof Member>(key: K, value: Member[K]) => setDraft((member) => member ? { ...member, [key]: value } : member);
-  const startNew = () => { setDraft({ ...emptyMember(), Code: String(1001 + rows.length) }); setSelectedAvailableParkingSpaces([]); setSelectedMemberParkingSpaces([]); setTab(0); setMessage(''); setError(''); };
-  const startEdit = (member = selected) => { if (!member) return; setDraft(structuredClone(member)); setSelectedAvailableParkingSpaces([]); setSelectedMemberParkingSpaces([]); setTab(0); setMessage(''); setError(''); };
+  const startNew = () => { setDraft({ ...emptyMember(), Code: String(1001 + rows.length) }); setSelectedMemberParkingSpaces([]); setTab(0); setMessage(''); setError(''); };
+  const startEdit = (member = selected) => { if (!member) return; setDraft(structuredClone(member)); setSelectedMemberParkingSpaces([]); setTab(0); setMessage(''); setError(''); };
 
   const memberPayload = (member: Member) => ({
     ...member.raw,
@@ -495,7 +501,6 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
         getRegisterKinds(),
       ]);
       setAvailableParkingSpaces(sortParkingSpaces(parseParkingSpaces(spaces)));
-      setSelectedAvailableParkingSpaces([]);
       setSelectedMemberParkingSpaces([]);
     } catch (cause) {
       setAvailableParkingSpaces([]);
@@ -514,7 +519,6 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
     if (!draft || !canManageParkingSpaces || draft.MemberParkSpaces.some((item) => item.ParkSpaceId === space.ParkSpaceId)) return;
     update('MemberParkSpaces', sortParkingSpaces([...draft.MemberParkSpaces, space]));
     setAvailableParkingSpaces((items) => items.filter((item) => item.ParkSpaceId !== space.ParkSpaceId));
-    setSelectedAvailableParkingSpaces((keys) => keys.filter((key) => key !== parkingSpaceKey(space)));
   };
 
   const releaseParkingSpace = (space: ParkingSpace) => {
@@ -522,17 +526,6 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
     update('MemberParkSpaces', draft.MemberParkSpaces.filter((item) => item.ParkSpaceId !== space.ParkSpaceId));
     setAvailableParkingSpaces((items) => items.some((item) => item.ParkSpaceId === space.ParkSpaceId) ? items : sortParkingSpaces([...items, space]));
     setSelectedMemberParkingSpaces((keys) => keys.filter((key) => key !== parkingSpaceKey(space)));
-  };
-
-  const assignSelectedParkingSpaces = () => {
-    if (!draft || !canManageParkingSpaces || selectedAvailableParkingSpaces.length === 0) return;
-    const selected = availableParkingSpaces.filter((space) => selectedAvailableParkingSpaces.includes(parkingSpaceKey(space)));
-    const existing = new Set(draft.MemberParkSpaces.map((space) => space.ParkSpaceId));
-    const additions = selected.filter((space) => !existing.has(space.ParkSpaceId));
-    if (!additions.length) return;
-    update('MemberParkSpaces', sortParkingSpaces([...draft.MemberParkSpaces, ...additions]));
-    setAvailableParkingSpaces((items) => items.filter((space) => !selectedAvailableParkingSpaces.includes(parkingSpaceKey(space))));
-    setSelectedAvailableParkingSpaces([]);
   };
 
   const releaseSelectedParkingSpaces = () => {
@@ -557,6 +550,7 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
         MemberRegisterKindId: 0,
         MemberRegisterKindTitle: '',
         CreditAmount: 0,
+        TransferCreditAmount: 0,
         TaxValue: 0,
         StartDate: startDate,
         EndDate: null,
@@ -596,21 +590,28 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
       MemberRegisterKindTitle: kind.Title,
       CreditAmount: kind.MembershipFee,
       TaxValue: kind.TaxValue,
-      EndDate: addDays(current.StartDate, kind.DurationDays),
+      StartDate: kind.MembershipCreditType === 0 ? startOfDay(current.StartDate) : current.StartDate,
+      EndDate: kind.MembershipCreditType === 0
+        ? startOfDay(addDays(current.StartDate, kind.DurationDays))
+        : addDays(current.StartDate, kind.DurationDays),
     } : current);
   };
 
   const registrationPayload = () => {
     if (!registration || !selectedRegisterKind) throw new Error(t.kindRequired);
     if (registration.CreditAmount < 0) throw new Error(t.creditInvalid);
+    const isCredit = selectedRegisterKind.MembershipCreditType === 0;
+    const startDate = isCredit ? startOfDay(registration.StartDate) : registration.StartDate;
+    const endDate = registration.EndDate === null ? null : isCredit ? startOfDay(registration.EndDate) : registration.EndDate;
     return {
       MemberId: registration.MemberId,
       MemberRegisterKindId: registration.MemberRegisterKindId,
       MemberRegisterKindTitle: registration.MemberRegisterKindTitle,
       CreditAmount: registration.CreditAmount,
+      TransferCreditAmount: registration.TransferCreditAmount,
       TaxValue: registration.TaxValue,
-      StartDate: registration.StartDate,
-      EndDate: registration.EndDate,
+      StartDate: startDate,
+      EndDate: endDate,
       IsActive: registration.IsActive,
       PersistOn: new Date().toISOString(),
     };
@@ -623,6 +624,7 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
       setSaving(true);
       setError('');
       const preview = parseRegistrationPreview(await memberApi.previewRegistration(payload));
+      setRegistration((current) => current ? { ...current, TransferCreditAmount: preview.TransferAmount } : current);
       setPaymentPreview(preview);
       setRegistrationOpen(false);
       setPaymentOpen(true);
@@ -639,6 +641,7 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
       setSaving(true);
       setError('');
       const preview = parseRegistrationPreview(await memberApi.previewRegistration(payload));
+      setRegistration((current) => current ? { ...current, TransferCreditAmount: preview.TransferAmount } : current);
       setSpaceReleaseOpen(false);
       setPaymentPreview(preview);
       setRegistrationOpen(false);
@@ -756,7 +759,7 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
             </Box>}
             {tab === 1 && <MemberCars rows={content.Cars} t={t} editable={Boolean(draft)} onAdd={() => setCarOpen(true)} />}
             {tab === 2 && <Memberships rows={content.MemberRegisters} cashAmount={content.CashAmount} t={t} language={language} editable={Boolean(draft)} onAdd={() => void openRegistration()} onCancel={(membership) => void openCancellation(membership)} />}
-            {tab === 3 && <ParkingSpaces rows={content.MemberParkSpaces} availableRows={availableParkingSpaces} t={t} language={language} editable={Boolean(draft)} canManage={canManageParkingSpaces} loading={parkingSpacesLoading} error={parkingSpacesError} notice={parkingSpaceNotice} selectedAvailableKeys={selectedAvailableParkingSpaces} selectedAssignedKeys={selectedMemberParkingSpaces} onAvailableSelectionChange={setSelectedAvailableParkingSpaces} onAssignedSelectionChange={setSelectedMemberParkingSpaces} onAssign={assignParkingSpace} onRelease={releaseParkingSpace} onAssignSelected={assignSelectedParkingSpaces} onReleaseSelected={releaseSelectedParkingSpaces} onRetry={() => void loadAvailableParkingSpaces()} />}
+            {tab === 3 && <ParkingSpaces rows={content.MemberParkSpaces} availableRows={availableParkingSpaces} t={t} language={language} editable={Boolean(draft)} canManage={canManageParkingSpaces} loading={parkingSpacesLoading} error={parkingSpacesError} notice={parkingSpaceNotice} selectedAssignedKeys={selectedMemberParkingSpaces} onAssignedSelectionChange={setSelectedMemberParkingSpaces} onAssign={assignParkingSpace} onRelease={releaseParkingSpace} onReleaseSelected={releaseSelectedParkingSpaces} onRetry={() => void loadAvailableParkingSpaces()} />}
           </> : <Alert severity="info">{t.listEmpty}</Alert>}
         </Box>
       </Box>
@@ -781,7 +784,7 @@ function Memberships({ rows, cashAmount, t, language, editable, onAdd, onCancel 
   return <Box className="member-tab-content"><Box className="member-membership-toolbar">{editable && <Button size="small" variant="outlined" startIcon={<AddRoundedIcon />} onClick={onAdd}>{t.addMembership}</Button>}<Typography variant="body2" color="text.secondary">{t.balance}: <strong dir="ltr">{formatMoney(cashAmount)} {t.rial}</strong></Typography></Box>{rows.length ? <AppDataGrid rows={rows} direction={language === 'fa' ? 'rtl' : 'ltr'} rowKey={(row, index) => row.Id || index} columns={[{ key: 'MemberRegisterKindTitle', label: t.type, render: (row) => row.MemberRegisterKindTitle || '—' }, { key: 'CreditAmount', label: t.credit, render: (row) => <span dir="ltr">{formatMoney(row.CreditAmount)} {t.rial}</span> }, { key: 'StartDate', label: t.start, render: (row) => formatDateTime(row.StartDate, language) }, { key: 'EndDate', label: t.end, render: (row) => formatDateTime(row.EndDate, language) }, { key: 'IsActive', label: t.status, compact: true, trueLabel: t.active, falseLabel: t.makeReservation }, { key: 'actions', label: t.actions, compact: true, filterable: false, render: (row) => <Tooltip title={t.cancellation}><span><IconButton size="small" color="error" aria-label={`${t.cancellation}: ${row.MemberRegisterKindTitle}`} onClick={() => onCancel(row)} disabled={!row.Id}><CancelOutlinedIcon fontSize="small" /></IconButton></span></Tooltip> }]} /> : <Typography variant="body2" color="text.secondary">{t.membershipEmpty}</Typography>}</Box>;
 }
 
-function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, loading, error, notice, selectedAvailableKeys, selectedAssignedKeys, onAvailableSelectionChange, onAssignedSelectionChange, onAssign, onRelease, onAssignSelected, onReleaseSelected, onRetry }: {
+function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, loading, error, notice, selectedAssignedKeys, onAssignedSelectionChange, onAssign, onRelease, onReleaseSelected, onRetry }: {
   rows: ParkingSpace[];
   availableRows: ParkingSpace[];
   t: ReturnType<typeof copy>;
@@ -791,13 +794,10 @@ function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, 
   loading: boolean;
   error: string;
   notice: string;
-  selectedAvailableKeys: string[];
   selectedAssignedKeys: string[];
-  onAvailableSelectionChange: (keys: string[]) => void;
   onAssignedSelectionChange: (keys: string[]) => void;
   onAssign: (space: ParkingSpace) => void;
   onRelease: (space: ParkingSpace) => void;
-  onAssignSelected: () => void;
   onReleaseSelected: () => void;
   onRetry: () => void;
 }) {
@@ -823,11 +823,10 @@ function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, 
     {notice && <Alert severity="info">{notice}</Alert>}
     <Box className="member-parking-space-grids">
       <AppGroupBox title={`${t.availableSpaces} (${availableRows.length})`} className="member-parking-space-group">
-        {selectionEnabled && <Box className="member-parking-space-toolbar"><Button size="small" variant="outlined" startIcon={<AddRoundedIcon />} onClick={onAssignSelected} disabled={!selectedAvailableKeys.length || loading}>{t.assignSpace}</Button></Box>}
         {loading
           ? <Typography variant="body2" color="text.secondary">{t.spacesLoading}</Typography>
           : availableRows.length
-            ? <AppDataGrid rows={availableRows} direction={direction} rowKey={rowKey} selectedKeys={selectionEnabled ? selectedAvailableKeys : []} onSelectionChange={selectionEnabled ? (keys) => onAvailableSelectionChange(keys.map(String)) : undefined} columns={gridColumns('assign')} />
+            ? <AppDataGrid rows={availableRows} direction={direction} rowKey={rowKey} columns={gridColumns('assign')} />
             : <Typography variant="body2" color="text.secondary">{t.availableSpacesEmpty}</Typography>}
       </AppGroupBox>
       <AppGroupBox title={`${t.assignedSpaces} (${rows.length})`} className="member-parking-space-group">

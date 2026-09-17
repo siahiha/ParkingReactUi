@@ -4,6 +4,7 @@ import { ParkingDetailsWorkspace } from './management/ParkingDetailsWorkspace';
 import { ParkingDirectoryWorkspace } from './management/ParkingDirectoryWorkspace';
 import { ReadOnlyModuleWorkspace } from './management/ReadOnlyModuleWorkspace';
 import { UserManagementWorkspace } from './management/UserManagementWorkspace';
+import { CameraEquipmentWorkspace } from './management/CameraEquipmentWorkspace';
 import type { Language } from './management/managementTypes';
 
 type Props = {
@@ -21,5 +22,6 @@ export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingI
   if (itemKey === 'users') return <UserManagementWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'access') return <AccessLevelWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'cards') return <CardManagementWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'equipment') return <CameraEquipmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   return <ReadOnlyModuleWorkspace itemKey={itemKey} title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
 }

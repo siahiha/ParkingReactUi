@@ -52,6 +52,7 @@ Splash
 | استاندارد تست UI با عامل هوش مصنوعی | دستورات، مرز لایه‌های تست، fixtureها، سناریوهای پذیرش و موارد وابسته به Backend | [20-ai-testing-standard.md](20-ai-testing-standard.md) |
 | وضعیت پیاده‌سازی و سیاست Regression | تغییرات انجام‌شده، regressionهای اصلاح‌شده و الزام حفظ قابلیت‌های قبلی | [21-implementation-progress-and-regression-policy.md](21-implementation-progress-and-regression-policy.md) |
 | زون‌های پارکینگ | تطبیق کامل Windows، Backend و React؛ workflow گرید، تیک‌ها، مدل داده، API و موارد باز | [23-parking-zones.md](23-parking-zones.md) |
+| یکپارچه‌سازی UI دوربین RTSP | قرارداد WebRTC/HLS، کامپوننت `CameraStreamPreview`، وضعیت اتصال، lifecycle، viewer و ROI | [24-rtsp-camera-ui-integration.md](24-rtsp-camera-ui-integration.md) |
 
 ## Pipeline پیشنهادی محصول
 

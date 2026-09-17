@@ -2,11 +2,11 @@ import { createTheme } from '@mui/material/styles';
 
 export type AppDirection = 'rtl' | 'ltr';
 
-export function createAppTheme(direction: AppDirection = 'rtl') {
+export function createAppTheme(direction: AppDirection = 'rtl', mode: 'light' | 'dark' = 'light') {
   return createTheme({
   direction,
   palette: {
-    mode: 'light',
+    mode,
     primary: { main: '#234b78', dark: '#193a60', contrastText: '#ffffff' },
     secondary: { main: '#687482' },
     success: { main: '#2e7d32' },

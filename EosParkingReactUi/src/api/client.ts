@@ -5,11 +5,15 @@ let authToken: string | null = null;
 
 // Compatibility with the existing Windows Login contract.
 // The Backend expects UserPassEncrypted=true and this exact legacy AES setup.
-const legacyEncryptionPassword = '!Pe56kin01gPar?';
-const legacyEncryptionIv = CryptoJS.enc.Hex.parse('410D0D345025252F020278783B766161');
+const legacyEncryptionPassword = import.meta.env.VITE_LEGACY_ENCRYPTION_PASSWORD;
+const legacyEncryptionIvHex = import.meta.env.VITE_LEGACY_ENCRYPTION_IV;
 
 export function encryptLegacyPassword(password: string) {
+  if (!legacyEncryptionPassword || !legacyEncryptionIvHex) {
+    throw new Error('Legacy password encryption is not configured.');
+  }
   const key = CryptoJS.MD5(legacyEncryptionPassword);
+  const legacyEncryptionIv = CryptoJS.enc.Hex.parse(legacyEncryptionIvHex);
   return CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(password), key, {
     iv: legacyEncryptionIv,
     mode: CryptoJS.mode.CBC,

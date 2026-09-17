@@ -14,6 +14,24 @@ export const parkingApi = {
   getDoors: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoors?parkingId=${parkingId}`),
   /** Returns only parking spaces that are not currently assigned to a member. */
   listAvailableParkSpaces: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingParkSpacesById?parkingId=${parkingId}`),
+  getEquipments: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingEquipments?parkingId=${parkingId}`),
+  saveEquipment: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/SaveParkingEquipment', { method: 'POST', body: JSON.stringify(payload) }),
+  deleteEquipment: (equipmentId: number) => apiRequest<unknown>(`api/Parking/DeleteEquipmentById?id=${equipmentId}`),
+};
+
+export type CameraStatusState = 'Disconnected' | 'Connecting' | 'Connected' | 'Failed' | 'Stopping';
+export type CameraStatus = { cameraId: string; state: CameraStatusState; error: string | null; viewerCount: number; streamUrl: string; webRtcUrl?: string; lastStateChangeUtc: string };
+export type Camera = { cameraId: string; name: string; rtspUrl: string; enabled?: boolean };
+export type CameraRoi = { id: string; cameraId: string; viewerId: string; text: string; color: string; x: number; y: number; width: number; height: number };
+
+export const cameraApi = {
+  connect: (camera: Camera, viewerId: string, streamMode: 'Hls' | 'WebRTC') => apiRequest<unknown>('api/rtspcamera/connect', { method: 'POST', body: JSON.stringify({ ...camera, viewerId, streamMode }) }),
+  disconnect: (cameraId: string, viewerId: string) => apiRequest<void>(`api/rtspcamera/disconnect?cameraId=${encodeURIComponent(cameraId)}&viewerId=${encodeURIComponent(viewerId)}`, { method: 'POST' }),
+  getStatus: (cameraId: string) => apiRequest<CameraStatus>(`api/rtspcamera/status?cameraId=${encodeURIComponent(cameraId)}`),
+  getAllStatuses: () => apiRequest<CameraStatus[]>('api/rtspcamera/allstatuses'),
+  getRois: (cameraId: string, viewerId: string) => apiRequest<CameraRoi[]>(`api/rtspcamera/rois?cameraId=${encodeURIComponent(cameraId)}&viewerId=${encodeURIComponent(viewerId)}`),
+  saveRoi: (roi: Omit<CameraRoi, 'id'> & { id?: string }) => apiRequest<CameraRoi>('api/rtspcamera/roi', { method: 'POST', body: JSON.stringify(roi) }),
+  deleteRoi: (cameraId: string, roiId: string, viewerId: string) => apiRequest<void>(`api/rtspcamera/deleteroi?cameraId=${encodeURIComponent(cameraId)}&roiId=${encodeURIComponent(roiId)}&viewerId=${encodeURIComponent(viewerId)}`, { method: 'POST' }),
 };
 
 export const userApi = {

@@ -1,12 +1,13 @@
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, CircularProgress, Paper, Typography } from '@mui/material';
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import type { Language } from '../i18n';
 import type { HomeUser } from './Home';
-import { ParkingDefinitionsCrudWorkspace } from '../components/ParkingDefinitionsCrudWorkspace';
-import { ParkingManagementWorkspace } from '../components/ParkingManagementWorkspace';
-import { ExitPermissionWorkspace } from '../components/ExitPermissionWorkspace';
-import { TariffListWorkspace } from '../features/tariffs/TariffListWorkspace';
-import { MemberManagementWorkspace } from '../features/members/MemberManagementWorkspace';
+const ParkingDefinitionsCrudWorkspace = lazy(() => import('../components/ParkingDefinitionsCrudWorkspace').then((module) => ({ default: module.ParkingDefinitionsCrudWorkspace })));
+const ParkingManagementWorkspace = lazy(() => import('../components/ParkingManagementWorkspace').then((module) => ({ default: module.ParkingManagementWorkspace })));
+const ExitPermissionWorkspace = lazy(() => import('../components/ExitPermissionWorkspace').then((module) => ({ default: module.ExitPermissionWorkspace })));
+const TariffListWorkspace = lazy(() => import('../features/tariffs/TariffListWorkspace').then((module) => ({ default: module.TariffListWorkspace })));
+const MemberManagementWorkspace = lazy(() => import('../features/members/MemberManagementWorkspace').then((module) => ({ default: module.MemberManagementWorkspace })));
 
 type MenuItem = { key: string; label: string };
 type Labels = { parkingManagement: string; listMenu: string; placeholder: string };
@@ -55,9 +56,9 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
 
 export function HomeFormRoutes(props: Props) {
   return (
-    <Routes>
+    <Suspense fallback={<Box className="inline-status-row"><CircularProgress size={20} /><Typography variant="body2">{props.language === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}</Typography></Box>}><Routes>
       <Route path="management/:section" element={<ManagementPage {...props} />} />
       <Route path="parking/:itemKey" element={<ParkingPage {...props} />} />
-    </Routes>
+    </Routes></Suspense>
   );
 }
