@@ -3175,3 +3175,23 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
 .app-root .MuiDialog-paper,
 .app-root .MuiMenu-paper,
 .app-root .MuiPopover-paper { border-radius: var(--app-popup-radius, 5px); }
+
+/* The application contains feature CSS with intentionally strong surface rules.
+   Keep the theme switch visible there as well as in MUI components. */
+.app-root .home-shell,
+.app-root .login-page { background: var(--app-shell, #f3f5f7); color: var(--app-text, #18212b); }
+.app-root .home-header,
+.app-root .home-sidebar,
+.app-root .home-workspace,
+.app-root .home-user-area,
+.app-root .home-top-navigation,
+.app-root .login-card { background-color: var(--app-surface, #fff) !important; border-color: var(--app-divider, #d7dce2) !important; }
+.app-root .home-sidebar .home-nav-item,
+.app-root .home-sidebar .home-parking-nav-item,
+.app-root .home-top-navigation .home-parking-group-button { color: var(--app-text, #18212b) !important; }
+.app-root .home-sidebar .home-sidebar-caption,
+.app-root .home-sidebar .home-menu-section-title,
+.app-root .home-sidebar .home-sidebar-context-label { color: var(--app-muted-text, #687482) !important; }
+.app-root .MuiTextField-root,
+.app-root .MuiFormControl-root .MuiOutlinedInput-root { background-color: var(--app-input, #fbfcfd); }
+.app-root .MuiInputLabel-root.MuiInputLabel-shrink { background: var(--app-input, #fbfcfd); color: var(--app-muted-text, #687482); }
