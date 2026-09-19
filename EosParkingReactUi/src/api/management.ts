@@ -12,6 +12,12 @@ export const parkingApi = {
   save: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/Save', { method: 'POST', body: JSON.stringify(payload) }),
   remove: (parkingId: number) => apiRequest<unknown>(`api/Parking/Delete?id=${parkingId}`),
   getDoors: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoors?parkingId=${parkingId}`),
+  getDoorsLive: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoorsLive?parkingId=${parkingId}`),
+  getMonitoringTraffics: (parkingId: number, count: number, trafficType: number, doorIds: number[], startDateTime = '') => {
+    const params = new URLSearchParams({ parkingId: String(parkingId), Count: String(count), trafficType: String(trafficType), startDateTime });
+    doorIds.forEach((doorId) => params.append('doorIds', String(doorId)));
+    return apiRequest<unknown>(`api/Traffic/GetMonitoringTraffics?${params.toString()}`);
+  },
   /** Returns only parking spaces that are not currently assigned to a member. */
   listAvailableParkSpaces: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingParkSpacesById?parkingId=${parkingId}`),
   getEquipments: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingEquipments?parkingId=${parkingId}`),
@@ -19,23 +25,40 @@ export const parkingApi = {
   deleteEquipment: (equipmentId: number) => apiRequest<unknown>(`api/Parking/DeleteEquipmentById?id=${equipmentId}`),
 };
 
+/** ANPR operations mirrored from MonitoringAnprForm. The response DTO is still
+ * owned by Backend, therefore the feature validates/normalizes it at its UI boundary. */
+export const anprApi = {
+  listRecent: (isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/GetAnprRecordWithPicTop20LastHour?isEosAnpr=${isEosAnpr}`),
+  getLastId: (isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/GetLastMaxAnprId?isEosAnpr=${isEosAnpr}`),
+  deleteOldPictures: (isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/DeleteOldAnprPics?isEosAnpr=${isEosAnpr}`),
+  listMemberPlates: () => apiRequest<unknown>('api/Member/GetAllMembersPlates', { method: 'POST', body: 'null' }),
+};
+
 export type CameraStatusState = 'Disconnected' | 'Connecting' | 'Connected' | 'Failed' | 'Stopping';
 export type CameraStatus = { cameraId: string; state: CameraStatusState; error: string | null; viewerCount: number; streamUrl: string; webRtcUrl?: string; lastStateChangeUtc: string };
-export type Camera = { cameraId: string; name: string; rtspUrl: string; enabled?: boolean };
+export type Camera = { cameraId: string; name: string; rtspUrl?: string; enabled?: boolean };
 export type CameraRoi = { id: string; cameraId: string; viewerId: string; text: string; color: string; x: number; y: number; width: number; height: number };
 
 export const cameraApi = {
-  connect: (camera: Camera, viewerId: string, streamMode: 'Hls' | 'WebRTC') => apiRequest<unknown>('api/rtspcamera/connect', { method: 'POST', body: JSON.stringify({ ...camera, viewerId, streamMode }) }),
+  connect: (camera: Camera, viewerId: string, streamMode: 'Hls' | 'WebRTC') => {
+    const payload: Record<string, unknown> = { cameraId: camera.cameraId, viewerId, streamMode };
+    // Keep backward compatibility for trusted callers that explicitly provide
+    // an endpoint, while the normal UI flow sends only the camera id.
+    if (camera.rtspUrl?.trim()) payload.rtspUrl = camera.rtspUrl.trim();
+    return apiRequest<unknown>('api/rtspcamera/connect', { method: 'POST', body: JSON.stringify(payload) });
+  },
   disconnect: (cameraId: string, viewerId: string) => apiRequest<void>(`api/rtspcamera/disconnect?cameraId=${encodeURIComponent(cameraId)}&viewerId=${encodeURIComponent(viewerId)}`, { method: 'POST' }),
   getStatus: (cameraId: string) => apiRequest<CameraStatus>(`api/rtspcamera/status?cameraId=${encodeURIComponent(cameraId)}`),
   getAllStatuses: () => apiRequest<CameraStatus[]>('api/rtspcamera/allstatuses'),
   getRois: (cameraId: string, viewerId: string) => apiRequest<CameraRoi[]>(`api/rtspcamera/rois?cameraId=${encodeURIComponent(cameraId)}&viewerId=${encodeURIComponent(viewerId)}`),
-  saveRoi: (roi: Omit<CameraRoi, 'id'> & { id?: string }) => apiRequest<CameraRoi>('api/rtspcamera/roi', { method: 'POST', body: JSON.stringify(roi) }),
+  saveRoi: (roi: Omit<CameraRoi, 'id'> & { id?: string }) => apiRequest<unknown>('api/rtspcamera/roi', { method: 'POST', body: JSON.stringify(roi) }),
   deleteRoi: (cameraId: string, roiId: string, viewerId: string) => apiRequest<void>(`api/rtspcamera/deleteroi?cameraId=${encodeURIComponent(cameraId)}&roiId=${encodeURIComponent(roiId)}&viewerId=${encodeURIComponent(viewerId)}`, { method: 'POST' }),
 };
 
 export const userApi = {
   list: () => apiRequest<unknown>('api/user/Get'),
+  getWorkShifts: (doorId: number, startDate: string, endDate: string) => apiRequest<unknown>(`api/user/GetUserWorkShifts?doorId=${doorId}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  saveWorkShifts: (payload: ApiPayload[]) => apiRequest<unknown>('api/user/SaveUserWorkShifts', { method: 'POST', body: JSON.stringify(payload) }),
   getAccessLevels: () => apiRequest<unknown>('api/AccessLevel/Get'),
   save: (payload: ApiPayload) => apiRequest<unknown>('api/user/Save', { method: 'POST', body: JSON.stringify(payload) }),
   remove: (userId: number) => apiRequest<unknown>(`api/user/Delete?id=${userId}`),
@@ -83,9 +106,19 @@ export const memberApi = {
   previewRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/AddMemberRegister', { method: 'POST', body: JSON.stringify({ ...payload, DoSave: false }) }),
   saveRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/AddMemberRegister', { method: 'POST', body: JSON.stringify({ ...payload, DoSave: true }) }),
   cancelRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/MembershipCreditCancellation', { method: 'POST', body: JSON.stringify(payload) }),
+  checkExternalMembers: (parkingId: number, members: ApiPayload[]) => apiRequest<unknown>(`api/Member/CheckingExternalMember/${parkingId}`, { method: 'POST', body: JSON.stringify(members) }),
+  importExternalMembers: (parkingId: number, members: ApiPayload[]) => apiRequest<unknown>(`api/Member/ImportMembersExternalSource/${parkingId}`, { method: 'POST', body: JSON.stringify(members) }),
 };
 
 export const trafficApi = {
+  getAllTraffics: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/GetAllTraffics', { method: 'POST', body: JSON.stringify(payload) }),
+  saveTraffic: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/Save', { method: 'POST', body: JSON.stringify(payload) }),
+  createManualDump: (params: { plate: string; parkingId: number; carType: number; enterDateTime: string | null; exitDateTime: string | null; doorId: number }) => {
+    const query = new URLSearchParams({ plate: params.plate, parkingId: String(params.parkingId), carType: String(params.carType), enterDateTime: params.enterDateTime ?? 'null', exitDateTime: params.exitDateTime ?? 'null', doorId: String(params.doorId) });
+    return apiRequest<unknown>(`api/traffic/CreateManualDump?${query.toString()}`);
+  },
+  getCarTrafficInfo: (parkingId: number, plate: string, memberCard: string, memberCode: string) => apiRequest<unknown>(`api/traffic/GetCarTrafficInfo?parkingId=${parkingId}&plate=${encodeURIComponent(plate)}&memberCard=${encodeURIComponent(memberCard)}&memberCode=${encodeURIComponent(memberCode)}`),
+  deleteTraffic: (dumpId: number) => apiRequest<unknown>(`api/traffic/DeleteById?id=${dumpId}`),
   getMemberCurrentCreditInfo: (memberId: number) => apiRequest<unknown>(`api/traffic/GetMemberCurrentCreditInfo?memberId=${memberId}`),
   getExitPermissions: (doorId: number, options: { status: 'pending' | 'approved' | 'all'; startDate: string; endDate: string }) => {
     const setPermission = options.status === 'all' ? '' : `&setPermission=${options.status === 'approved'}`;

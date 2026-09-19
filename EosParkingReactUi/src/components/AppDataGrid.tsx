@@ -11,6 +11,8 @@ import { BooleanStatusIcon } from './BooleanStatusIcon';
 export type AppDataGridColumn<T> = {
   key: string;
   label: string;
+  width?: number | string;
+  minWidth?: number | string;
   render?: (row: T, index: number) => ReactNode;
   /** Value used by the shared column filter when it differs from the row property. */
   getFilterValue?: (row: T, index: number) => unknown;
@@ -162,7 +164,8 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
     return value === true || value === 1 || value === '1' || String(value).toLowerCase() === 'true';
   };
   const booleanLabels = direction === 'rtl' ? { yes: 'بله', no: 'خیر' } : { yes: 'Yes', no: 'No' };
-  const headerCell = (column: AppDataGridColumn<T>) => <TableCell key={column.key} className={`app-data-grid-header-cell-root${isCompactColumn(column) ? ' app-data-grid-compact-cell' : ''}`}>
+  const columnCellSx = (column: AppDataGridColumn<T>) => column.width || column.minWidth ? { width: column.width, minWidth: column.minWidth ?? column.width } : undefined;
+  const headerCell = (column: AppDataGridColumn<T>) => <TableCell key={column.key} sx={columnCellSx(column)} className={`app-data-grid-header-cell-root${isCompactColumn(column) ? ' app-data-grid-compact-cell' : ''}`}>
     <Box className="app-data-grid-header-cell-content">
       <Box className="app-data-grid-header-content">
         <span>{column.label}</span>
@@ -190,7 +193,7 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
           };
           return <TableRow key={String(key)} hover selected={selectedKey === key || checked} onClick={activateRow} onDoubleClick={activateRowForEdit} onKeyDown={handleRowKeyDown} tabIndex={onRowClick ? 0 : undefined} className={onRowClick ? 'app-data-grid-row' : undefined}>
             {selectionEnabled && <TableCell className="app-data-grid-selection-cell" padding="checkbox"><Checkbox size="small" checked={checked} disabled={!selectable} onClick={(event) => event.stopPropagation()} onChange={(event) => toggleRow(key, event.target.checked)} slotProps={{ input: { 'aria-label': copy.selectRow } }} /></TableCell>}
-            {columns.map((column) => <TableCell key={column.key} className={isCompactColumn(column) ? 'app-data-grid-compact-cell' : undefined}>{booleanForColumn(column) ? <BooleanStatusIcon value={booleanValueForColumn(row, index, column)} trueLabel={column.trueLabel ?? booleanLabels.yes} falseLabel={column.falseLabel ?? booleanLabels.no} /> : column.render ? column.render(row, index) : '—'}</TableCell>)}
+            {columns.map((column) => <TableCell key={column.key} sx={columnCellSx(column)} className={isCompactColumn(column) ? 'app-data-grid-compact-cell' : undefined}>{booleanForColumn(column) ? <BooleanStatusIcon value={booleanValueForColumn(row, index, column)} trueLabel={column.trueLabel ?? booleanLabels.yes} falseLabel={column.falseLabel ?? booleanLabels.no} /> : column.render ? column.render(row, index) : '—'}</TableCell>)}
           </TableRow>;
         })}</TableBody>
       </Table>

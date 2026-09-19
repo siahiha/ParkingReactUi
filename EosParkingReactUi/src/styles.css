@@ -9,6 +9,7 @@
   --app-primary: #234b78;
   --app-primary-hover: #193a60;
   --app-primary-soft: #edf2f7;
+  --app-divider: #d7dce2;
 }
 
 * { box-sizing: border-box; }
@@ -20,6 +21,7 @@ body {
 }
 
 .app-root.app-theme-dark body { background: #18212b; color: #f3f5f7; }
+.app-root.app-theme-dark { --app-divider: #3d4b58; }
 .app-root.app-theme-dark .home-shell { background: #18212b; color: #f3f5f7; }
 .app-root.app-theme-dark .login-page { background: #18212b; color: #f3f5f7; }
 .app-root.app-theme-dark .login-card { background: #25313d; border-color: #3d4b58; }
@@ -2161,21 +2163,54 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
 
 .workspace-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 8px;
   min-height: 34px;
-  margin: 0 0 12px;
-  padding: 4px 0;
+  margin: 0;
+  padding: 0;
   border: 0;
-  border-bottom: 1px solid #d8e1e6;
   border-radius: 0;
   background: transparent;
 }
 
 .workspace-toolbar .MuiButton-root {
-  min-height: 28px !important;
+  flex: 0 0 auto;
+  min-height: 32px !important;
+  max-width: 100%;
+  white-space: nowrap;
   font-size: .7rem !important;
+}
+
+.workspace-toolbar > .MuiFormControl-root,
+.workspace-toolbar > .MuiTextField-root {
+  flex: 0 1 180px;
+  min-width: 0;
+}
+
+.shift-assignment-toolbar {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin: 8px 0 12px;
+  padding: 8px 0 4px;
+}
+
+.shift-assignment-toolbar > .MuiFormControl-root {
+  flex: 1 1 145px;
+  min-width: 135px;
+}
+
+.shift-assignment-toolbar > .MuiTextField-root {
+  flex: 1 1 130px;
+  min-width: 125px;
+}
+
+@media (max-width: 920px) {
+  .shift-assignment-toolbar {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
 }
 
 .workspace-toolbar .workspace-refresh-button {
@@ -2223,16 +2258,16 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
 .member-cancellation-dialog { display: grid; gap: 12px; padding-top: 16px; }
 .member-payment-summary .MuiAlert-root { margin-top: 4px; }
 
-.iranian-plate-field { display: grid; gap: 6px; min-width: 0; }
-.iranian-plate-control { display: grid; grid-template-rows: 15px 34px; width: min(100%, 237px); height: 51px; overflow: hidden; border: 1px solid #c8c8e6; border-radius: 5px; background: #fff; }
+.iranian-plate-field { display: grid; gap: 6px; width: 190px; max-width: 100%; min-width: 0; }
+.iranian-plate-control { display: grid; grid-template-rows: 17px 39px; width: 190px; max-width: 100%; height: 56px; overflow: hidden; border: 1px solid #c8c8e6; border-radius: 5px; background: #fff; }
 .iranian-plate-control:focus-within { border-color: #1565c0; box-shadow: 0 0 0 2px rgb(21 101 192 / 16%); }
 .iranian-plate-control-error { border-color: #d32f2f; }
-.iranian-plate-toolbar { display: flex; align-items: center; height: 15px; padding-inline: 2px; direction: ltr; background: #d1d1d1; }
+.iranian-plate-toolbar { display: flex; align-items: center; height: 17px; padding-inline: 2px; direction: ltr; background: #d1d1d1; }
 .iranian-plate-title { flex: 1 1 auto; min-width: 0; color: #8a2020; font-size: 10px !important; line-height: 1 !important; text-align: start; }
 .iranian-plate-type-actions { display: flex; flex: 0 0 auto; height: 100%; direction: ltr; }
-.iranian-plate-type-actions .MuiIconButton-root { width: 18px; height: 15px; padding: 1px; border-radius: 0; color: #111; font-size: 12px; }
+.iranian-plate-type-actions .MuiIconButton-root { width: 18px; height: 17px; padding: 1px; border-radius: 0; color: #111; font-size: 12px; }
 .iranian-plate-type-actions .MuiIconButton-root.is-selected { border: 1px solid #858585; border-radius: 2px; background: #f4f4f4; }
-.iranian-plate-input { display: flex; min-width: 0; height: 34px; background: #fff; }
+.iranian-plate-input { display: flex; min-width: 0; height: 39px; background: #fff; }
 .iranian-plate-flag { position: relative; display: grid; grid-template-rows: 2px 7px 2px 1fr; width: 24px; padding-top: 2px; color: #fff; background: #003399; text-align: center; }
 .iranian-plate-flag-stripe { display: block; width: 12px; height: 2px; margin: 0 auto; }
 .iranian-plate-flag-green { background: #20a653; }
@@ -2768,4 +2803,96 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
 @media (max-width: 760px) {
   .home-body { overflow: hidden; }
   .home-main { height: 100%; overflow-y: auto; }
+}
+
+/* Workspace content fills the complete area below the application header. */
+.home-body {
+  min-height: calc(100vh - 64px);
+}
+
+.home-main {
+  min-height: calc(100vh - 64px);
+}
+
+.home-content-section {
+  width: 100%;
+  min-height: 100%;
+  align-content: start;
+}
+
+.traffic-entry-section,
+.traffic-details-section {
+  display: grid;
+  gap: 12px;
+}
+
+.traffic-details-section {
+  margin-top: 20px;
+}
+
+.traffic-section-title {
+  padding-block-end: 8px;
+  border-block-end: 1px solid var(--app-divider);
+}
+
+.traffic-entry-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.traffic-entry-identity {
+  display: -webkit-inline-box;
+  gap: 8px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.traffic-entry-operation {
+  display: grid;
+  grid-template-columns: minmax(190px, 360px) minmax(120px, 180px);
+  gap: 8px;
+  align-items: end;
+  justify-content: start;
+  direction: ltr;
+}
+
+.traffic-entry-operation > :nth-child(1),
+.traffic-entry-operation > :nth-child(2),
+.traffic-entry-operation > :nth-child(3) { grid-column: 1; }
+.traffic-entry-operation > :nth-child(2),
+.traffic-entry-operation > :nth-child(3) { width: 360px; max-width: 100%; }
+.traffic-entry-operation > :nth-child(1) { width: 240px; max-width: 100%; }
+.traffic-entry-operation > :nth-child(4) { grid-column: 2; }
+
+.traffic-entry-identity > .MuiBox-root:first-child,
+.traffic-entry-identity .iranian-plate-field,
+.traffic-entry-identity .iranian-plate-control { width: 190px; max-width: 100%; }
+
+@media (max-width: 680px) {
+  .traffic-entry-identity,
+  .traffic-entry-operation { grid-template-columns: 1fr; }
+  .traffic-entry-operation > :nth-child(3),
+  .traffic-entry-operation > :nth-child(4) { grid-column: 1; }
+}
+
+.monitoring-door-grid .app-data-grid .MuiTableCell-root {
+  padding-inline: 6px;
+  font-size: .68rem;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.monitoring-door-grid .app-data-grid {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.monitoring-door-grid .app-data-grid .MuiTableHead-root .MuiTableCell-root {
+  font-size: .64rem;
 }

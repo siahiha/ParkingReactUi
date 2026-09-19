@@ -210,24 +210,9 @@ Request:
 
 نمونه‌ی TypeScript:
 
-```ts
-const response = await fetch(`${baseUrl}/api/rtspcamera/connect`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    cameraId: camera.cameraId,
-    rtspUrl: camera.rtspUrl,
-    viewerId,
-    streamMode: "WebRTC",
-  }),
-});
-
-if (!response.ok) {
-  throw new Error("Camera connection request failed");
-}
-
-const result = await response.json();
-```
+در کلاینت از `cameraApi.connect(camera, viewerId, streamMode)` استفاده شود؛
+پیاده‌سازی مستقیم `fetch` در page یا component feature مجاز نیست. پاسخ باید
+`status` و در صورت موجودبودن `streamUrl` و `webRtcUrl` را مصرف کند.
 
 Response:
 
@@ -361,75 +346,11 @@ type CameraStatus = {
 
 ## پخش HLS با React
 
-برای HLS نیز از `CameraStreamPreview` استفاده شود و نیازی به ساخت player موازی در هر صفحه نیست. اگر فقط player خام HLS لازم است، نمونه‌ی زیر به‌عنوان الگوی پایین‌سطح قابل استفاده است. حالت HLS با `hls.js` اجرا می‌شود و کنترل‌های native کامپوننت به‌صورت پیش‌فرض مخفی هستند؛ در صورت نیاز `showPlaybackControls` فعال شود.
-
-```tsx
-import { useEffect, useRef } from "react";
-import Hls from "hls.js";
-
-type Props = {
-  streamUrl: string;
-  baseUrl: string;
-  onError?: (error: unknown) => void;
-};
-
-export function RtspCameraPlayer({ streamUrl, baseUrl, onError }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const url = new URL(streamUrl, baseUrl).toString();
-    let hls: Hls | undefined;
-
-    const handleError = (_event: Event, data: unknown) => {
-      onError?.(data);
-    };
-
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = url;
-    } else if (Hls.isSupported()) {
-      hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-        liveSyncDurationCount: 3,
-      });
-      hls.on(Hls.Events.ERROR, handleError);
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    } else {
-      onError?.(new Error("HLS is not supported by this browser"));
-    }
-
-    return () => {
-      hls?.destroy();
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-    };
-  }, [streamUrl, baseUrl, onError]);
-
-  return (
-    <video
-      ref={videoRef}
-      autoPlay
-      muted
-      playsInline
-      controls
-      style={{ width: "100%", height: "100%", objectFit: "contain" }}
-    />
-  );
-}
-```
-
-کنترل‌های `play`, `pause`, `mute` و `volume` مستقیماً با API عنصر `<video>` انجام شوند:
-
-```ts
-videoRef.current?.pause();
-videoRef.current?.play();
-videoRef.current!.muted = true;
-```
+برای HLS نیز از `CameraStreamPreview` استفاده شود و player موازی در page ساخته
+نشود. کامپوننت فعلی با `hls.js` کار می‌کند، در Safari از پخش native استفاده می‌کند
+و کنترل‌های native با `showPlaybackControls` فعال می‌شوند. lifecycle player باید
+در همان component و با cleanup کامل مدیریت شود؛ دستکاری مستقیم video فقط برای
+اتصال فنی به API مرورگر مجاز است.
 
 ## معماری پیشنهادی UI
 
@@ -577,35 +498,11 @@ POST /api/rtspcamera/deleteroi?cameraId=gate-entrance-1&roiId=roi-1&viewerId=bro
 
 ## مدیریت lifecycle در React
 
-الگوی پیشنهادی:
-
-```tsx
-useEffect(() => {
-  let cancelled = false;
-
-  async function connect() {
-    setStatus("Connecting");
-    try {
-      const result = await cameraApi.connect(camera, viewerId, "WebRTC");
-      if (cancelled) return;
-      setStreamUrl(result.streamUrl);
-      setStatus(result.status.state);
-    } catch (error) {
-      if (!cancelled) {
-        setStatus("Failed");
-        setError(error);
-      }
-    }
-  }
-
-  connect();
-
-  return () => {
-    cancelled = true;
-    cameraApi.disconnect(camera.cameraId, viewerId).catch(() => undefined);
-  };
-}, [camera.cameraId]);
-```
+کامپوننت باید هنگام mount یا شروع اتصال، وضعیت `Connecting` را ثبت کند؛ نتیجه‌ی
+اتصال را فقط در صورت لغو‌نشدن effect اعمال کند؛ در خطا `Failed` و پیام محدودشده
+نمایش دهد؛ و در cleanup، polling، player، reader و session دوربین را آزاد کند.
+تغییر `cameraId` یا `viewerId` باید ابتدا session قبلی را disconnect کند. اتصال‌های
+هم‌زمان و retry بی‌نهایت مجاز نیستند.
 
 نکات:
 
