@@ -8,8 +8,12 @@ let authToken: string | null = null;
 const legacyEncryptionPassword = import.meta.env.VITE_LEGACY_ENCRYPTION_PASSWORD;
 const legacyEncryptionIvHex = import.meta.env.VITE_LEGACY_ENCRYPTION_IV;
 
+export function isLegacyPasswordEncryptionConfigured() {
+  return Boolean(legacyEncryptionPassword && legacyEncryptionIvHex);
+}
+
 export function encryptLegacyPassword(password: string) {
-  if (!legacyEncryptionPassword || !legacyEncryptionIvHex) {
+  if (!isLegacyPasswordEncryptionConfigured()) {
     throw new Error('Legacy password encryption is not configured.');
   }
   const key = CryptoJS.MD5(legacyEncryptionPassword);

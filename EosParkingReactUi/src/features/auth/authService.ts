@@ -1,13 +1,16 @@
-import { apiRequest, ApiError, encryptLegacyPassword } from '../../api/client';
+import { apiRequest, ApiError, encryptLegacyPassword, isLegacyPasswordEncryptionConfigured } from '../../api/client';
 import { isSuccessfulLegacyResponse, parseLoginResponse, readLoginPermissions, readLoginToken, readLoginUser, resolveCanManageDashboard } from '../../api/contracts';
 import type { HomeUser } from '../../pages/homeTypes';
 
 export type LoginResult = { token: string | null; user: HomeUser };
 
 export async function login(username: string, password: string): Promise<LoginResult> {
+  const passwordPayload = isLegacyPasswordEncryptionConfigured()
+    ? { UserPass: encryptLegacyPassword(password), UserPassEncrypted: true }
+    : { UserPass: password, UserPassEncrypted: false };
   const raw = await apiRequest<unknown>('api/user/Login', {
     method: 'POST',
-    body: JSON.stringify({ UserName: username, UserPass: encryptLegacyPassword(password), UserPassEncrypted: true }),
+    body: JSON.stringify({ UserName: username, ...passwordPayload }),
   });
   const response = parseLoginResponse(raw);
   const value = readLoginUser(response);

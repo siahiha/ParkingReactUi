@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { CacheProvider } from '@emotion/react';
@@ -13,18 +13,14 @@ import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
 import { useNavigationGuard } from './pages/NavigationGuardContext';
-import { createAppTheme } from './theme';
+import { createAppTheme, defaultThemeShape, getPaletteTokens, type ThemeMode, type ThemeShapeSettings } from './theme';
 
-type ThemeMode = 'light' | 'dark';
 type PaletteName = 'blue' | 'green' | 'slate';
 const themeStorageKey = 'eos-parking-theme';
 const authSessionStorageKey = 'eos-parking-auth-session';
 const lightPaletteStorageKey = 'eos-parking-light-palette';
 const darkPaletteStorageKey = 'eos-parking-dark-palette';
-const paletteTokens: Record<ThemeMode, Record<PaletteName, { primary: string; hover: string; soft: string }>> = {
-  light: { blue: { primary: '#234b78', hover: '#193a60', soft: '#edf2f7' }, green: { primary: '#286b5a', hover: '#1d5144', soft: '#eaf4f0' }, slate: { primary: '#4b5563', hover: '#374151', soft: '#eef0f2' } },
-  dark: { blue: { primary: '#8aa4bd', hover: '#b2c8da', soft: '#304252' }, green: { primary: '#79b9a5', hover: '#9bd1bf', soft: '#29453d' }, slate: { primary: '#b2bcc8', hover: '#d4dbe3', soft: '#39434d' } },
-};
+const shapeStorageKey = 'eos-parking-theme-shape';
 const cacheRtl = createCache({ key: 'muirtl', stylisPlugins: [prefixer, rtlPlugin] });
 
 type RTLProps = { locale: Language; children: ReactNode };
@@ -55,20 +51,24 @@ export function App() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => window.localStorage.getItem(themeStorageKey) === 'dark' ? 'dark' : 'light');
   const [lightPalette, setLightPalette] = useState<PaletteName>(() => (window.localStorage.getItem(lightPaletteStorageKey) as PaletteName | null) ?? 'blue');
   const [darkPalette, setDarkPalette] = useState<PaletteName>(() => (window.localStorage.getItem(darkPaletteStorageKey) as PaletteName | null) ?? 'blue');
+  const [shapeSettings, setShapeSettings] = useState<ThemeShapeSettings>(() => {
+    try { const stored = JSON.parse(window.localStorage.getItem(shapeStorageKey) ?? 'null'); return stored && typeof stored === 'object' ? { ...defaultThemeShape, ...stored } : defaultThemeShape; } catch { return defaultThemeShape; }
+  });
   const [authenticated, setAuthenticated] = useState(Boolean(initialAuthSession));
   const [homeUser, setHomeUser] = useState<HomeUser | null>(initialAuthSession?.user ?? null);
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
   const direction = translations[language].direction;
-  const theme = useMemo(() => createAppTheme(direction, themeMode), [direction, themeMode]);
+  const activePalette = themeMode === 'light' ? lightPalette : darkPalette;
+  const activeTokens = getPaletteTokens(themeMode, activePalette);
+  const theme = useMemo(() => createAppTheme(direction, themeMode, activePalette, shapeSettings), [direction, themeMode, activePalette, shapeSettings]);
 
   useLayoutEffect(() => {
-    const activePalette = themeMode === 'light' ? lightPalette : darkPalette;
-    const tokens = paletteTokens[themeMode][activePalette];
     window.localStorage.setItem(themeStorageKey, themeMode);
     window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
     window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
-  }, [themeMode, lightPalette, darkPalette]);
+    window.localStorage.setItem(shapeStorageKey, JSON.stringify(shapeSettings));
+  }, [themeMode, lightPalette, darkPalette, shapeSettings]);
   const authenticate = ({ token, user }: { token: string | null; user: HomeUser }) => {
     setAuthToken(token);
     window.sessionStorage.setItem(authSessionStorageKey, JSON.stringify({ token, user }));
@@ -79,8 +79,8 @@ export function App() {
   const logout = () => requestNavigation(() => { setAuthenticated(false); setHomeUser(null); setAuthToken(null); window.sessionStorage.removeItem(authSessionStorageKey); navigate('/'); });
   const toggleLanguage = () => setLanguage((current) => current === 'fa' ? 'en' : 'fa');
 
-  return <Box className={`app-root app-theme-${themeMode}`} data-palette={`${themeMode}-${themeMode === 'light' ? lightPalette : darkPalette}`} dir={direction} lang={language}><RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>
-    <Route path="/home/*" element={authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} /> : <Navigate to="/" replace />} />
+  return <Box className={`app-root app-theme-${themeMode}`} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>
+    <Route path="/home/*" element={authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} /> : <Navigate to="/" replace />} />
     <Route path="/" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="*" element={<Navigate to={authenticated ? '/home' : '/'} replace />} />
   </Routes></ThemeProvider></RTL></Box>;

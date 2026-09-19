@@ -16,6 +16,7 @@ import type { PaletteName } from '../components/homeProfileTypes';
 import { useChangePassword } from '../hooks/useChangePassword';
 import type { HomeLabels } from './homeCopy';
 import type { HomeUser, ThemeMode } from './homeTypes';
+import type { ThemeShapeSettings } from '../theme';
 
 type Props = {
   labels: HomeLabels;
@@ -23,6 +24,8 @@ type Props = {
   themeMode: ThemeMode;
   lightPalette: PaletteName;
   darkPalette: PaletteName;
+  shapeSettings: ThemeShapeSettings;
+  onShapeSettingsChange: (settings: ThemeShapeSettings) => void;
   onThemeToggle: () => void;
   onLightPaletteChange: (palette: PaletteName) => void;
   onDarkPaletteChange: (palette: PaletteName) => void;
@@ -36,7 +39,7 @@ type Props = {
   navigationLabel: string;
 };
 
-export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalette, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, onHome, onNavigationOpen, navigationLabel }: Props) {
+export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalette, shapeSettings, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, onHome, onNavigationOpen, navigationLabel }: Props) {
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [profileDialog, setProfileDialog] = useState<'password' | 'theme' | null>(null);
   const { values, setValues, message, messageSeverity, saving, save, resetMessage } = useChangePassword(user, t);
@@ -55,7 +58,7 @@ export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalet
           <MenuItem onClick={() => { setUserMenuAnchor(null); onLogout(); }}><ListItemIcon><LogoutRoundedIcon fontSize="small" /></ListItemIcon>{t.logout}</MenuItem>
         </Menu>
         <ChangePasswordDialog open={profileDialog === 'password'} labels={t} values={values} setValues={setValues} message={message} messageSeverity={messageSeverity} saving={saving} onSave={() => void save()} onClose={() => setProfileDialog(null)} />
-        <ThemeSettingsDialog open={profileDialog === 'theme'} labels={t} lightPalette={lightPalette} darkPalette={darkPalette} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onClose={() => setProfileDialog(null)} />
+        <ThemeSettingsDialog open={profileDialog === 'theme'} labels={t} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onClose={() => setProfileDialog(null)} />
       </Box>
       <Tooltip title={navigationLabel} arrow><IconButton className="home-header-navigation-button" onClick={onNavigationOpen} aria-label={navigationLabel}><MenuRoundedIcon /></IconButton></Tooltip>
     </Toolbar>
