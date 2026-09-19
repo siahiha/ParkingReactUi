@@ -24,13 +24,19 @@ export function HomeSidebar({ appName, systemMenu, currentParkingSectionTitle, r
   const definitionsGroup = visibleParkingMenuGroups.find((group) => group.key === 'definitions');
   const currentParkingSubgroups = visibleParkingMenuGroups.filter((group) => group.key === 'operations' || group.key === 'integrations');
   const reportsGroup = visibleParkingMenuGroups.find((group) => group.key === 'reports');
+  const activeParkingSubgroup = currentParkingSubgroups.find((group) => group.items.some((item) => item.key === activeParkingMenu));
   const parkingGroupIcons = { definitions: <SettingsRoundedIcon />, operations: <TrafficRoundedIcon />, integrations: <SyncRoundedIcon />, reports: <AssessmentRoundedIcon /> };
 
   useEffect(() => {
     if (managementSection) setExpandedMenuGroup('system');
     if (activeParkingMenu && reportsGroup?.items.some((item) => item.key === activeParkingMenu)) setExpandedMenuGroup('reports-root');
-    if (activeParkingMenu && !reportsGroup?.items.some((item) => item.key === activeParkingMenu)) setExpandedMenuGroup('definitions-root');
-  }, [activeParkingMenu, managementSection, reportsGroup]);
+    if (activeParkingMenu && !reportsGroup?.items.some((item) => item.key === activeParkingMenu)) {
+      setExpandedMenuGroup('definitions-root');
+      if (activeParkingSubgroup) {
+        setExpandedSubgroups((current) => ({ ...current, [activeParkingSubgroup.key]: true }));
+      }
+    }
+  }, [activeParkingMenu, activeParkingSubgroup?.key, managementSection, reportsGroup]);
 
   const navigate = (path: string) => { onNavigate(path); onMobileClose(); };
   const openCompactGroup = (group: string) => {

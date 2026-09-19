@@ -60,6 +60,22 @@ function asRois(input: unknown): CameraRoi[] {
   return Array.isArray(data) ? data.filter((item): item is CameraRoi => Boolean(item && typeof item === 'object')) : [];
 }
 
+function asRoi(input: unknown): CameraRoi | null {
+  const list = asRois(input);
+  if (list[0]) return list[0];
+  const root = input && typeof input === 'object' ? input as Record<string, unknown> : {};
+  const data = root.Values ?? root.values ?? root.Data ?? root.data ?? input;
+  if (!data || typeof data !== 'object') return null;
+  const item = data as Record<string, unknown>;
+  const cameraId = item.cameraId ?? item.CameraId;
+  if (cameraId == null) return null;
+  return {
+    id: String(item.id ?? item.Id ?? ''), cameraId: String(cameraId), viewerId: String(item.viewerId ?? item.ViewerId ?? ''),
+    text: String(item.text ?? item.Text ?? ''), color: String(item.color ?? item.Color ?? ''), x: Number(item.x ?? item.X ?? 0), y: Number(item.y ?? item.Y ?? 0),
+    width: Number(item.width ?? item.Width ?? 0), height: Number(item.height ?? item.Height ?? 0),
+  };
+}
+
 function normalizeStatus(input: unknown, fallback: CameraStatus): CameraStatus {
   const root = input && typeof input === 'object' ? input as Record<string, unknown> : {};
   const data = root.Values ?? root.values ?? root.Data ?? root.data ?? input;
@@ -293,8 +309,16 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   }, [language, status.state, streamMode, streamUrl]);
 
   const saveRoi = async () => {
-    const roi = await cameraApi.saveRoi({ cameraId: camera.cameraId, viewerId: viewer, id: '', text: text(language, 'محدوده تشخیص', 'Detection region'), color: '#2e7d32', x: 0.2, y: 0.2, width: 0.4, height: 0.3 }).catch(() => null);
-    if (roi) setRois((current) => [...current, roi]);
+    if (status.state !== 'Connected') return;
+    setError('');
+    try {
+      const response = await cameraApi.saveRoi({ cameraId: camera.cameraId, viewerId: viewer, id: '', text: text(language, 'محدوده تشخیص', 'Detection region'), color: '#2e7d32', x: 0.2, y: 0.2, width: 0.4, height: 0.3 });
+      const roi = asRoi(response);
+      if (!roi) throw new Error('ROI response did not contain a saved ROI.');
+      setRois((current) => [...current, roi]);
+    } catch (cause) {
+      setError(cause instanceof ApiError ? `HTTP ${cause.status}` : text(language, 'ثبت ROI انجام نشد.', 'ROI could not be saved.'));
+    }
   };
 
   const seekToLiveEdge = () => {
@@ -345,7 +369,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
       {showModeSwitcher && <Tooltip title={text(language, `تغییر به ${streamMode === 'WebRTC' ? 'HLS' : 'WebRTC'}`, `Switch to ${streamMode === 'WebRTC' ? 'HLS' : 'WebRTC'}`)} arrow>
         <span><IconButton size="small" aria-label="Switch stream protocol" onClick={switchMode} disabled={isBusy} sx={{ p: 0.35 }}><KeyboardArrowDownRoundedIcon sx={{ fontSize: 19 }} /></IconButton></span>
       </Tooltip>}
-      {showRoiAction && <Tooltip title={text(language, 'افزودن ROI', 'Add ROI')} arrow><span><IconButton size="small" aria-label="Add ROI" onClick={() => void saveRoi()} disabled={!activeStream} sx={{ p: 0.35 }}><TuneRoundedIcon sx={{ fontSize: 18 }} /></IconButton></span></Tooltip>}
+      {showRoiAction && <Tooltip title={text(language, 'تعریف ROI', 'Define ROI')} arrow><span><IconButton size="small" aria-label={text(language, 'تعریف ROI', 'Define ROI')} onClick={() => void saveRoi()} disabled={!isConnected} sx={{ p: 0.35 }}><TuneRoundedIcon sx={{ fontSize: 18 }} /></IconButton></span></Tooltip>}
     </Stack>}
   </Paper>;
 }

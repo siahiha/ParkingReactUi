@@ -206,11 +206,50 @@ endpointهای فعلاً شناسایی‌شده برای محتوای واقع
 Endpoint فهرست کارت `api/Card/GetByParkingId` است؛ قرارداد `SaveAll` و حذف با شناسه منفی باید
 پیش از اتصال production از Backend تأیید شود.
 
+### صفحه اختصاص شیفت
+
+**رفتار فعلی نسخه وب:**
+
+- مسیر صفحه `/home/parking/shifts` است و آیتم آن در زیرگروه «عملیات پارکینگ» قرار دارد.
+- صفحه با انتخاب درب پارکینگ، تاریخ شروع و تاریخ پایان، فهرست تخصیص‌های روزانه را نمایش می‌دهد.
+- هر ردیف شامل تاریخ و سه ستون «شیفت اول»، «شیفت دوم» و «شیفت سوم» است. کاربر هر شیفت را از فهرست کاربران انتخاب می‌کند.
+- ردیف انتخاب‌شده مبنای عملیات «رونوشت به دیگر روزها» است. این عملیات بازه مقصد و شیفت‌های موردنظر را دریافت می‌کند، تغییرات را ابتدا روی جدول اعمال می‌کند و ثبت نهایی با دکمه «ذخیره» انجام می‌شود.
+- تخصیص روزهای گذشته در UI قابل ویرایش یا رونوشت نیست. این کنترل سمت UI است و authorization نهایی بر عهده Backend است.
+- toolbar این صفحه از فاصله‌گذاری و حداقل ارتفاع مشترک buttonها استفاده می‌کند؛ در عرض معمول کنترل‌های فیلتر و عملیات در یک ردیف و در عرض باریک به‌شکل responsive چندردیفی نمایش داده می‌شوند.
+
+**APIهای مصرف‌شده و وضعیت پوشش API:**
+
+| عملیات | مسیر | وضعیت |
+|---|---|---|
+| دریافت درب‌ها | `api/Parking/GetParkingDoors?parkingId={id}` | نام endpoint مشخص؛ قرارداد کامل response/error و status code نیازمند تأیید |
+| دریافت کاربران | `api/user/Get` | نام endpoint مشخص؛ قرارداد کامل response/error و status code نیازمند تأیید |
+| دریافت تخصیص‌ها | `api/user/GetUserWorkShifts?doorId={doorId}&startDate={yyyy/MM/dd}&endDate={yyyy/MM/dd}` | نام endpoint مشخص؛ مدل response، قوانین تعارض و status code ناقص/نیازمند تأیید |
+| ذخیره تخصیص‌ها | `api/user/SaveUserWorkShifts` با `POST` و payload فهرست ردیف‌های تغییرکرده | نام endpoint مشخص؛ schema رسمی request/response، authorization، تراکنش و خطاهای 409/422 ناقص/نیازمند تأیید |
+
+**مدل مصرف‌شده در UI:** فیلدهای `ParkingDoorId`، `WorkDate`، `UserIdOnShift1`، `UserIdOnShift2` و `UserIdOnShift3` برای ذخیره استفاده می‌شوند؛ نام نمایشی کاربران از response فهرست کاربران خوانده می‌شود. نگاشت نهایی DTO و قواعد اعتبارسنجی باید با Backend تأیید شود.
+
+**منابع پیاده‌سازی:** `Persentation/EosParkingReactUi/src/components/management/ShiftAssignmentWorkspace.tsx`، `Persentation/EosParkingReactUi/src/api/management.ts` و رفتار مرجع `EosParkingProfessional/EosForms/ParkingUserShiftForm.cs`.
+
+**وضعیت سند این قابلیت:** API ناقص/نیازمند تأیید. UI و اتصال اولیه به endpointهای موجود پیاده‌سازی شده است، اما تا زمان تأیید قرارداد رسمی Backend، این قابلیت آمادهٔ مبنای نهایی پیاده‌سازی production تلقی نمی‌شود.
+
+### صفحه مدیریت ورودها و خروج‌ها
+
+- آیتم «مدیریت ورودها و خروج‌ها» با کلید `traffic-records` همچنان برگ زیرگروه «عملیات پارکینگ» است و به مسیر `/home/parking/traffic-records` می‌رود.
+- محتوای صفحه از `TrafficRecordsWorkspace` مصرف می‌شود و باید در همان ساختار منوی داخلی، بدون ایجاد بخش اصلی یا گروه تکراری جدید نمایش داده شود.
+- ساختار محتوای صفحه باید دو بخش هم‌زمان داشته باشد: بخش بالایی «ثبت تردد» با هویت خودرو و اطلاعات ثبت، و بخش پایینی «ریز تردد» با فیلترها و Grid. بخش ثبت تردد در دو ردیف چیده می‌شود: هویت خودرو/عضو در ردیف اول و درب/زمان‌ها/ثبت در ردیف دوم.
+- عمل اصلی صفحه نمایش/refresh فهرست تردد است؛ ثبت دستی، ویرایش و حذف عمل‌های ثانویه‌اند و حذف باید تأیید صریح داشته باشد.
+- صفحه باید از جدول مشترک، فیلتر ستونی، حالت‌های loading/empty/error/unauthorized و الگوی responsive مشترک استفاده کند.
+- ورودی پلاک باید فقط از `IranianPlateInput` و ورودی‌های تاریخ/زمان باید فقط از `EosDateTimePicker` مشترک استفاده کنند؛ ساختن ورودی خام برای این دو نوع داده در feature مجاز نیست.
+- endpointها و مدل‌های تردد طبق سند `06-traffic-and-payment.md` هنوز «نام endpoint مشخص» یا «ناقص/نیازمند تأیید» هستند؛ منو و UI نباید قرارداد Backend را حدس بزنند.
+
 ## ۱۰. فایل‌های مرجع پیاده‌سازی
 
 - ساختار و state منوها: `Persentation/EosParkingReactUi/src/pages/Home.tsx`
 - قوانین ظاهری و تم: `Persentation/EosParkingReactUi/src/styles.css`
 - محتوای APIمحور منوها: `Persentation/EosParkingReactUi/src/components/ParkingManagementWorkspace.tsx`
+- صفحه اختصاص شیفت: `Persentation/EosParkingReactUi/src/components/management/ShiftAssignmentWorkspace.tsx`
+- سرویس API کاربران و اختصاص شیفت: `Persentation/EosParkingReactUi/src/api/management.ts`
+- صفحه مدیریت ورودها و خروج‌ها: `Persentation/EosParkingReactUi/src/components/management/TrafficRecordsWorkspace.tsx`
 - پوسته‌ی مشترک Popup فرم‌های CRUD: `Persentation/EosParkingReactUi/src/components/CrudDialog.tsx`
 
 هر تغییر آینده در منو باید این سند را به‌عنوان قرارداد UI و معماری رعایت کند.

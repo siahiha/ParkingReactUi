@@ -100,6 +100,45 @@
 - workflow: دریافت آخرین شناسه و رکوردهای اخیر، refresh، فیلتر درب/منبع و حذف تصاویر قدیمی.
 - وضعیت پوشش: retention، مجوز حذف، حجم تصویر، امنیت تصویر، retry و قرارداد stream ناقص.
 
+### `ImportDataConfigurationForm`
+
+- هدف: تنظیم آدرس وب‌سرویس ETS برای پارکینگ جاری.
+- مسیر نسخه وب: آیتم `integration-settings` در زیرگروه «یکپارچه‌سازی سامانه‌ها» و workspace
+  `IntegrationSettingsWorkspace`.
+- UI نسخه وب: دریافت مقدار `EtsDataProviderURL`، ورودی URL با اعتبارسنجی سمت کلاینت، ذخیره،
+  لغو تغییرات و نمایش حالت‌های loading/error/success/unsaved changes. مقدار خالی برای حذف
+  تنظیم اتصال مجاز است.
+- API قابل اتکا: `GET api/Parking/Get?id={parkingId}` برای دریافت و `POST api/Parking/Save`
+  با payload پارکینگ جاری برای ذخیره.
+- رفتار Windows که مستقیماً منتقل نشده است: تست واقعی اتصال با `ETSData.TestConnection` و
+  `GetMembers` در Windows انجام می‌شود. endpoint رسمی معادل برای Backend وب در کد موجود نیست؛
+  اتصال مستقیم Browser به ETS نیز مجاز نیست. این بخش **ناقص/نیازمند تأیید Backend** است.
+- وضعیت پوشش API: فهرست و ذخیره endpoint مشخص هستند؛ schema کامل parking DTO، مجوز ذخیره،
+  status code و endpoint تست ارتباط نیازمند تأیید رسمی است.
+
+### `ImportMembersForm` در حالت Excel
+
+- هدف: خواندن اطلاعات پرسنلی از فایل و انتقال رکوردهای معتبر به اعضای پارکینگ جاری.
+- مسیر نسخه وب: آیتم `excel-import` در زیرگروه «یکپارچه‌سازی سامانه‌ها» و workspace
+  `ExcelPersonnelImportWorkspace`.
+- UI نسخه وب: انتخاب فایل، نمایش نام/حجم، preview و parsing سبک CSV/TSV، بررسی رکوردها،
+  جدول نتیجه با فیلتر ستونی مشترک، انتخاب رکوردهای معتبر و ثبت نهایی. رکوردهای دارای status
+  خطا قابل انتخاب نیستند و همه انتخاب‌ها پیش از import به Backend ارسال می‌شوند.
+- workflow مشاهده‌شده Windows: Excel با `ImportExcel` خوانده و هر ردیف به ترتیب
+  `MemberCode`, `CardNumber`, `FirstName`, `LastName`, `Address`, `NationalCode`,
+  `PhoneNumber` نگاشت می‌شود؛ سپس `CheckingExternalMember/{parkingId}` و بعد از انتخاب،
+  `ImportMembersExternalSource/{parkingId}` فراخوانی می‌شوند.
+- APIهای مصرف‌شده در نسخه وب: `POST api/Member/CheckingExternalMember/{parkingId}` و
+  `POST api/Member/ImportMembersExternalSource/{parkingId}`. نام مسیر از `ApiAddress` در
+  فرم Windows استخراج شده و schema رسمی request/response، status code، مجوز و audit
+  **ناقص/نیازمند تأیید** است.
+- پیاده‌سازی وب با parser محدود و feature-local `xlsx` فایل‌های `.xls`، `.xlsx`، `.csv` و
+  `.tsv` را در حافظه می‌خواند و فقط هفت ستون قراردادی فرم Windows را به مدل
+  `ExternalMember` نگاشت می‌کند؛ فایل به Browser storage یا log نوشته نمی‌شود. upload فایل
+  به Backend انجام نمی‌شود و فقط رکوردهای تبدیل‌شده به endpointهای JSON ارسال می‌شوند.
+- وضعیت این بخش: UI و parsing فایل آماده است؛ schema رسمی نتیجه‌ی بررسی، status code، مجوز،
+  audit و خطاهای ردیفی Backend همچنان **ناقص/نیازمند تأیید** است.
+
 ## ۵. اعضا و کارت
 
 ### `MemberKindForm`

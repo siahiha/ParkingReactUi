@@ -5,6 +5,12 @@ import { ParkingDirectoryWorkspace } from './management/ParkingDirectoryWorkspac
 import { ReadOnlyModuleWorkspace } from './management/ReadOnlyModuleWorkspace';
 import { UserManagementWorkspace } from './management/UserManagementWorkspace';
 import { CameraEquipmentWorkspace } from './management/CameraEquipmentWorkspace';
+import { MonitoringWorkspace } from './management/MonitoringWorkspace';
+import { ShiftAssignmentWorkspace } from './management/ShiftAssignmentWorkspace';
+import { TrafficRecordsWorkspace } from './management/TrafficRecordsWorkspace';
+import { AnprMonitoringWorkspace } from './management/AnprMonitoringWorkspace';
+import { IntegrationSettingsWorkspace } from './management/IntegrationSettingsWorkspace';
+import { ExcelPersonnelImportWorkspace } from './management/ExcelPersonnelImportWorkspace';
 import type { Language } from './management/managementTypes';
 
 type Props = {
@@ -23,5 +29,11 @@ export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingI
   if (itemKey === 'access') return <AccessLevelWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'cards') return <CardManagementWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'equipment') return <CameraEquipmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'monitoring') return <MonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'shifts') return <ShiftAssignmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'traffic-records') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'anpr-monitoring') return <AnprMonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'integration-settings') return <IntegrationSettingsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'excel-import') return <ExcelPersonnelImportWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   return <ReadOnlyModuleWorkspace itemKey={itemKey} title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
 }
