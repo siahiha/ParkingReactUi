@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Box } from '@mui/material';
 import type { Language } from '../i18n';
 import type { PaletteName } from '../components/homeProfileTypes';
+import type { ThemeShapeSettings } from '../theme';
 import { HomeDashboard } from './HomeDashboard';
 import { HomeFormRoutes } from './HomeFormRoutes';
 import { HomeHeader } from './HomeHeader';
@@ -15,13 +16,13 @@ import { useNavigationGuard } from './NavigationGuardContext';
 export type { HomeUser } from './homeTypes';
 export type { HomeLabels } from './homeCopy';
 
-type HomeProps = { language: Language; user: HomeUser; themeMode: ThemeMode; lightPalette: PaletteName; darkPalette: PaletteName; onThemeToggle: () => void; onLightPaletteChange: (palette: PaletteName) => void; onDarkPaletteChange: (palette: PaletteName) => void; onLogout: () => void; onToggleLanguage: () => void };
+type HomeProps = { language: Language; user: HomeUser; themeMode: ThemeMode; lightPalette: PaletteName; darkPalette: PaletteName; shapeSettings: ThemeShapeSettings; onShapeSettingsChange: (settings: ThemeShapeSettings) => void; onThemeToggle: () => void; onLightPaletteChange: (palette: PaletteName) => void; onDarkPaletteChange: (palette: PaletteName) => void; onLogout: () => void; onToggleLanguage: () => void };
 
 function hasBit(value: string | number | undefined, bit: bigint) {
   try { return (BigInt(String(value ?? 0)) & bit) === bit; } catch { return false; }
 }
 
-export function Home({ language, user, themeMode, lightPalette, darkPalette, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage }: HomeProps) {
+export function Home({ language, user, themeMode, lightPalette, darkPalette, shapeSettings, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage }: HomeProps) {
   const t = homeCopy[language];
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,7 +36,10 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, onT
   const initialParking = parkingOptions.some((parking) => parking.id === user.currentParking) ? user.currentParking : parkingOptions[0].id;
   const [selectedParkingId, setSelectedParkingId] = useState(initialParking);
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem('eos-parking-sidebar-collapsed') === 'true');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const storedValue = window.localStorage.getItem('eos-parking-sidebar-collapsed');
+    return storedValue === null ? true : storedValue === 'true';
+  });
   const hasPart1 = (bit: bigint, normalizedName?: string) => Boolean(normalizedName && user.permissions.includes(normalizedName)) || hasBit(user.permissionPart1, bit);
   const hasPart2 = (bit: bigint) => hasBit(user.permissionPart2, bit);
   const managementItems = createManagementItems(t);
@@ -53,7 +57,7 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, onT
   useEffect(() => { window.localStorage.setItem('eos-parking-sidebar-collapsed', String(sidebarCollapsed)); }, [sidebarCollapsed]);
 
   return <Box className={`home-shell ${hasSidebar ? 'home-shell-with-sidebar' : ''} ${sidebarCollapsed ? 'home-shell-sidebar-collapsed' : ''}`} dir={language === 'fa' ? 'rtl' : 'ltr'}>
-    <HomeHeader labels={t} user={user} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={setSelectedParkingId} onHome={() => guardedNavigate('/home')} onNavigationOpen={() => setMobileNavigationOpen(true)} navigationLabel={t.openNavigation} />
+    <HomeHeader labels={t} user={user} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={setSelectedParkingId} onHome={() => guardedNavigate('/home')} onNavigationOpen={() => setMobileNavigationOpen(true)} navigationLabel={t.openNavigation} />
     <Box className={`home-body ${!hasSidebar ? 'home-body-no-sidebar' : ''}`}>
       {hasSidebar && <HomeSidebar appName={t.app} systemMenu={t.systemMenu} currentParkingSectionTitle={language === 'fa' ? 'تعاریف و تنظیمات پارکینگ جاری' : 'Current parking definitions and settings'} reportsSectionTitle={language === 'fa' ? 'گزارش‌ها' : 'Reports'} direction={language === 'fa' ? 'rtl' : 'ltr'} collapseLabel={t.collapseNavigation} expandLabel={t.expandNavigation} visibleManagementItems={visibleManagement} visibleParkingMenuGroups={visibleParking} activeParkingMenu={activeParkingMenu} managementSection={managementSection} onNavigate={guardedNavigate} canManageDashboard={user.canManageDashboard} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} mobileOpen={mobileNavigationOpen} onMobileClose={() => setMobileNavigationOpen(false)} />}
       <Box component="main" className="home-main">

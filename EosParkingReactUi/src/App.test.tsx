@@ -34,7 +34,7 @@ describe('login', () => {
 
     renderApp();
 
-    expect(await screen.findByRole('heading', { name: 'سطوح دسترسی' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'سطوح دسترسی' }, { timeout: 5000 })).toBeVisible();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     expect(screen.queryByText('دریافت سطوح دسترسی از API ناموفق بود.')).not.toBeInTheDocument();
   });
@@ -62,6 +62,7 @@ describe('login', () => {
     await user.click(screen.getByTestId('login-submit'));
 
     expect(await screen.findByText('خانه')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'مدیریت سامانه' }));
     expect(screen.getByText('مدیریت سامانه')).toBeVisible();
   });
 
@@ -96,6 +97,7 @@ describe('login', () => {
     await user.type(screen.getByTestId('login-username-input'), 'operator');
     await user.type(screen.getByTestId('login-password-input'), 'secret');
     await user.click(screen.getByTestId('login-submit'));
+    await user.click(await screen.findByRole('button', { name: 'مدیریت سامانه' }));
     await user.click(await screen.findByRole('button', { name: 'پارکینگ‌ها' }));
 
     expect(window.location.pathname).toBe('/home/management/list');

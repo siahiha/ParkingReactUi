@@ -2805,6 +2805,258 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
   .home-main { height: 100%; overflow-y: auto; }
 }
 
+/* Reference shell: a continuous compact command rail on the logical right in RTL. */
+.home-shell-with-sidebar {
+  --home-sidebar-width: 300px;
+}
+
+.home-shell-with-sidebar.home-shell-sidebar-collapsed {
+  --home-sidebar-width: 72px;
+}
+
+.home-shell-with-sidebar .home-sidebar {
+  position: fixed !important;
+  inset-block: 0 !important;
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
+  z-index: 1000;
+  width: var(--home-sidebar-width) !important;
+  min-width: var(--home-sidebar-width) !important;
+  max-width: var(--home-sidebar-width) !important;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0 !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-inline-end: 1px solid var(--app-divider) !important;
+  background: #ffffff !important;
+  box-shadow: -3px 0 14px rgba(24, 33, 43, .06);
+}
+
+.home-shell-with-sidebar .home-body {
+  display: block !important;
+  width: calc(100% - var(--home-sidebar-width)) !important;
+  max-width: calc(100% - var(--home-sidebar-width)) !important;
+  margin-inline-start: var(--home-sidebar-width) !important;
+  margin-inline-end: 0 !important;
+}
+
+.home-shell-with-sidebar .home-header {
+  width: calc(100% - var(--home-sidebar-width));
+  margin-inline-start: var(--home-sidebar-width);
+  margin-inline-end: 0;
+  border-bottom: 1px solid var(--app-divider);
+  box-shadow: 0 2px 10px rgba(24, 33, 43, .06);
+}
+
+.home-shell-with-sidebar .home-sidebar-content {
+  height: 100%;
+  min-height: 100%;
+  padding: 0 8px;
+}
+
+.home-shell-with-sidebar .home-sidebar-brand-box {
+  height: 64px;
+  min-height: 64px;
+  justify-content: center;
+  gap: 0;
+  padding: 8px 0;
+  margin: 0 -8px;
+  border-bottom: 1px solid var(--app-divider);
+}
+
+.home-shell-with-sidebar .home-sidebar-brand-image {
+  width: 40px;
+  height: 40px;
+}
+
+.home-shell-with-sidebar.home-shell-sidebar-collapsed .home-sidebar-brand-title,
+.home-shell-with-sidebar.home-shell-sidebar-collapsed .home-sidebar-brand-divider,
+.home-shell-with-sidebar.home-shell-sidebar-collapsed .home-sidebar-collapse-button {
+  display: none;
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail {
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 8px;
+  padding: 12px 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail::-webkit-scrollbar { display: none; }
+
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 1px solid #cfd7df;
+  border-radius: 7px;
+  color: #536372;
+  background: #ffffff;
+  transition: transform 160ms ease, color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root svg {
+  font-size: 21px;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root:hover,
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root:focus-visible {
+  z-index: 1;
+  color: var(--app-primary);
+  background: var(--app-primary-soft);
+  border-color: var(--app-primary);
+  transform: translateX(-2px);
+  box-shadow: 0 4px 10px rgba(24, 33, 43, .12);
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root:hover svg,
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root:focus-visible svg {
+  transform: scale(1.08);
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root.active {
+  color: var(--app-primary);
+  background: var(--app-primary-soft);
+  border-color: var(--app-primary);
+  box-shadow: inset 3px 0 0 var(--app-primary), 0 3px 9px rgba(24, 33, 43, .10);
+}
+
+.home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root.active::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: -9px;
+  width: 3px;
+  height: 24px;
+  border-radius: 3px 0 0 3px;
+  background: var(--app-primary);
+}
+
+.home-shell-with-sidebar .home-toolbar {
+  min-height: 64px !important;
+  height: 64px;
+  padding-inline: 16px !important;
+  gap: 12px;
+}
+
+.home-shell-with-sidebar .home-header-navigation-button { display: none !important; }
+
+.home-shell-with-sidebar .home-header-parking-select {
+  order: 0;
+  min-width: 160px;
+}
+
+.home-shell-with-sidebar .home-header-parking-select .MuiOutlinedInput-root {
+  min-height: 38px;
+  border-radius: 7px;
+  background: #ffffff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.home-shell-with-sidebar .home-header-parking-select .MuiOutlinedInput-root:hover,
+.home-shell-with-sidebar .home-header-parking-select .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-primary) 12%, transparent);
+}
+
+.home-shell-with-sidebar .home-user-area {
+  order: 1;
+  margin-inline-start: auto;
+  gap: 6px !important;
+  padding: 4px 6px !important;
+  border: 1px solid var(--app-divider) !important;
+  border-radius: 8px;
+  background: #ffffff !important;
+}
+
+.home-shell-with-sidebar .home-user-area .home-header-action,
+.home-shell-with-sidebar .home-user-area .home-header-theme-toggle {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px !important;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  color: #536372 !important;
+  transition: transform 160ms ease, color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.home-shell-with-sidebar .home-user-area .home-header-action:hover,
+.home-shell-with-sidebar .home-user-area .home-header-action:focus-visible,
+.home-shell-with-sidebar .home-user-area .home-header-theme-toggle:hover,
+.home-shell-with-sidebar .home-user-area .home-header-theme-toggle:focus-visible {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 30%, transparent) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(24, 33, 43, .10);
+}
+
+.home-shell-with-sidebar .home-user-menu-trigger {
+  width: auto !important;
+  min-width: 64px !important;
+  padding-inline: 8px !important;
+}
+
+.home-shell-with-sidebar .home-user-menu-trigger .home-user-account-icon,
+.home-shell-with-sidebar .home-user-menu-trigger .home-user-menu-arrow {
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.home-shell-with-sidebar .home-user-menu-trigger:hover .home-user-account-icon { transform: scale(1.08); }
+
+.app-root.app-theme-dark .home-shell-with-sidebar .home-sidebar,
+.app-root.app-theme-dark .home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root,
+.app-root.app-theme-dark .home-shell-with-sidebar .home-user-area,
+.app-root.app-theme-dark .home-shell-with-sidebar .home-header-parking-select .MuiOutlinedInput-root {
+  background: #25313d !important;
+}
+
+@media (max-width: 899px) {
+  .home-shell-with-sidebar .home-sidebar {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: auto;
+    min-height: 0;
+    border: 0 !important;
+    box-shadow: none;
+  }
+
+  .home-shell-with-sidebar .home-body,
+  .home-shell-with-sidebar .home-header {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  .home-shell-with-sidebar .home-header-navigation-button { display: inline-flex !important; }
+}
+
+/* Physical placement follows the document direction: right rail in RTL, left rail in LTR. */
+[dir='rtl'] .home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root.active {
+  box-shadow: inset -3px 0 0 var(--app-primary), 0 3px 9px rgba(24, 33, 43, .10);
+}
+
+[dir='rtl'] .home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root:hover,
+[dir='rtl'] .home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root:focus-visible {
+  transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root,
+  .home-shell-with-sidebar .home-sidebar-icon-rail .MuiIconButton-root svg,
+  .home-shell-with-sidebar .home-user-area .home-header-action,
+  .home-shell-with-sidebar .home-user-area .home-header-theme-toggle,
+  .home-shell-with-sidebar .home-header-parking-select .MuiOutlinedInput-root { transition: none !important; }
+}
+
 /* Workspace content fills the complete area below the application header. */
 .home-body {
   min-height: calc(100vh - 64px);
@@ -2896,3 +3148,30 @@ html[dir='rtl'] .workspace-heading-unified .workspace-page-context {
 .monitoring-door-grid .app-data-grid .MuiTableHead-root .MuiTableCell-root {
   font-size: .64rem;
 }
+/* Theme settings dialog: paired palette swatches and a compact shape control grid. */
+.theme-palette-option {
+  position: relative;
+  display: inline-flex;
+  min-width: 92px;
+  flex: 1 1 92px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--app-divider, #d7dce2);
+  border-radius: var(--app-control-radius, 4px);
+  padding: 8px 6px;
+  color: var(--app-text-secondary, #687482);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.theme-palette-option:hover,
+.theme-palette-option:focus-within { border-color: var(--app-primary, #234b78); transform: translateY(-1px); }
+.theme-palette-option.is-selected { border-color: var(--app-primary, #234b78); box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary, #234b78) 16%, transparent); color: var(--app-primary, #234b78); }
+.theme-palette-swatches { display: flex; gap: 5px; }
+.theme-palette-swatch { width: 22px; height: 22px; border: 2px solid rgba(255,255,255,.78); border-radius: 50%; box-shadow: 0 1px 4px rgba(20,35,48,.18); }
+.app-root .MuiButton-root { border-radius: var(--app-button-radius, 3px); }
+.app-root .MuiOutlinedInput-root,
+.app-root .MuiSelect-select { border-radius: var(--app-control-radius, 4px); }
+.app-root .MuiDialog-paper,
+.app-root .MuiMenu-paper,
+.app-root .MuiPopover-paper { border-radius: var(--app-popup-radius, 5px); }
