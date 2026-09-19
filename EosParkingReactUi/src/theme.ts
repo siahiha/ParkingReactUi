@@ -28,7 +28,7 @@ export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode 
     info: { main: '#28658a' },
     background: { default: mode === 'dark' ? '#202830' : '#f3f5f7', paper: mode === 'dark' ? '#29333d' : '#ffffff' },
     divider: '#d7dce2',
-    text: { primary: '#18212b', secondary: '#687482' },
+    text: { primary: mode === 'dark' ? '#f3f5f7' : '#18212b', secondary: mode === 'dark' ? '#b7c1ca' : '#687482' },
   },
   shape: { borderRadius: shape.controlRadius },
   typography: {
