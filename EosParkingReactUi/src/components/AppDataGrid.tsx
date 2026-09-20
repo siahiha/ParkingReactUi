@@ -39,6 +39,7 @@ type AppDataGridProps<T> = {
   selectedKey?: string | number | null;
   selectedKeys?: Array<string | number>;
   onRowClick?: (row: T, index: number) => void;
+  onRowFocus?: (row: T, index: number) => void;
   onRowDoubleClick?: (row: T, index: number) => void;
   onSelectionChange?: (keys: Array<string | number>) => void;
   isRowSelectable?: (row: T, index: number) => boolean;
@@ -54,7 +55,7 @@ type AppDataGridProps<T> = {
 type ColumnMenuState = { key: string; anchor: HTMLElement } | null;
 
 /** Shared compact table/grid shell. Column actions belong in the header menu. */
-export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selectedKey = null, selectedKeys = [], onRowClick, onRowDoubleClick, onSelectionChange, isRowSelectable, filterable = true, defaultFilterOpen = false, defaultSearchMode = 'contains', defaultCaseSensitive = false, allowSearchOptions = true, allowCaseSensitive = true }: AppDataGridProps<T>) {
+export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selectedKey = null, selectedKeys = [], onRowClick, onRowFocus, onRowDoubleClick, onSelectionChange, isRowSelectable, filterable = true, defaultFilterOpen = false, defaultSearchMode = 'contains', defaultCaseSensitive = false, allowSearchOptions = true, allowCaseSensitive = true }: AppDataGridProps<T>) {
   const copy = translations[direction === 'rtl' ? 'fa' : 'en'];
   const menuId = useId();
   const [openFilterColumns, setOpenFilterColumns] = useState<string[]>(() => defaultFilterOpen ? columns.filter((column) => column.filterable !== false).map((column) => column.key) : []);
@@ -191,7 +192,7 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
             event.preventDefault();
             activateRow();
           };
-          return <TableRow key={String(key)} hover selected={selectedKey === key || checked} onClick={activateRow} onDoubleClick={activateRowForEdit} onKeyDown={handleRowKeyDown} tabIndex={onRowClick ? 0 : undefined} className={onRowClick ? 'app-data-grid-row' : undefined}>
+          return <TableRow key={String(key)} hover selected={selectedKey === key || checked} onClick={activateRow} onFocus={() => onRowFocus?.(row, index)} onDoubleClick={activateRowForEdit} onKeyDown={handleRowKeyDown} tabIndex={onRowClick || onRowFocus ? 0 : undefined} className={onRowClick || onRowFocus ? 'app-data-grid-row' : undefined}>
             {selectionEnabled && <TableCell className="app-data-grid-selection-cell" padding="checkbox"><Checkbox size="small" checked={checked} disabled={!selectable} onClick={(event) => event.stopPropagation()} onChange={(event) => toggleRow(key, event.target.checked)} slotProps={{ input: { 'aria-label': copy.selectRow } }} /></TableCell>}
             {columns.map((column) => <TableCell key={column.key} sx={columnCellSx(column)} className={isCompactColumn(column) ? 'app-data-grid-compact-cell' : undefined}>{booleanForColumn(column) ? <BooleanStatusIcon value={booleanValueForColumn(row, index, column)} trueLabel={column.trueLabel ?? booleanLabels.yes} falseLabel={column.falseLabel ?? booleanLabels.no} /> : column.render ? column.render(row, index) : '—'}</TableCell>)}
           </TableRow>;

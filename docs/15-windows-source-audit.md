@@ -56,7 +56,7 @@
 | تردد | `GetCarTrafficInfo`، `GetTrafficBill`، `PayDump` | GET / `CarTrafficInfoDto`، `ExitBillDto`، `string` |
 | تردد / تغییر | `CreateEnterDump`، `DoExitDump`، `Save`، `DeleteById` | POST / `EnterDumpRecordSavedDto`، `ExitBillDto`، `long`؛ GET / `bool` |
 | باربری | `CargoRequiredData`، `GetCarInfo`، `IsCargoRegistered`، `Save`، `SetCarInfo` | GET / `CargoRequiredData`، `CarInfoDto` یا `bool`؛ POST / `bool` |
-| ANPR | `GetLastMaxAnprId`، `DeleteOldAnprPics` | GET / `long` یا `bool` |
+| ANPR | `GetAnprRecordWithPicTop20LastHour`، `GetAnprPicById`، `GetLastMaxAnprId`، `DeleteOldAnprPics`، `GetAllMemberPlates` | GET / رکوردها، تصویر، `long` یا `bool`؛ POST / فهرست پلاک اعضا |
 
 عملیات‌های گزارش، list-loading و monitoring نیز در کد وجود دارند، ولی همه به‌دلیل generic تو در تو در جدول typed بالا ظاهر نشده‌اند. نام‌های قابل مشاهده شامل `ReportApi.GetTrafficReport`، `GetIncomingDetailsReport`، `GetMemberReport`، `GetMembershipIncomingDetails`، `GetMemberCach`، `GetUserActivity`، `GetCargoIOReport`، `GetParkingDailyIncomingReport`، `GetParkingMonthlyIncomingReport`، `GetParkingYearIncomingReport`، `GetTrafficStatisticReport` و `GetOccupedHourlyParkByParkingId` است.
 

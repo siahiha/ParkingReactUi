@@ -96,9 +96,16 @@
 
 - هدف: نمایش و مدیریت رکوردهای اخیر تشخیص پلاک و تصویر آن‌ها.
 - UI: فهرست رکورد، تصویر پلاک، انتخاب منبع ANPR و درب، فهرست پلاک اعضا و عملیات حذف تصاویر قدیمی.
-- APIها: `GetAnprRecordWithPicTop20LastHour`، `GetLastMaxAnprId`، `DeleteOldAnprPics`، `GetAllMembersPlates`، `GetParkingDoors`، `GetParkingDoor`.
-- workflow: دریافت آخرین شناسه و رکوردهای اخیر، refresh، فیلتر درب/منبع و حذف تصاویر قدیمی.
-- وضعیت پوشش: retention، مجوز حذف، حجم تصویر، امنیت تصویر، retry و قرارداد stream ناقص.
+- APIها: `GetAnprRecordWithPicTop20LastHour`، `GetAnprPicById`، `GetLastMaxAnprId`،
+  `DeleteOldAnprPics`، `GetAllMembersPlates`، `GetParkingDoors`، `GetParkingDoor`،
+  `GetParkingDoorDevices` و `GetParkingEquipments`.
+- workflow فعلی نسخه React: مسیر `/home/parking/anpr-monitoring` به
+  `AnprMonitoringWorkspace` وصل است؛ آخرین شناسه هر سه ثانیه بررسی می‌شود، رکوردها بدون
+  تکرار merge می‌شوند، حداکثر ۲۰ رکورد نگه داشته می‌شود، تصاویر رکورد انتخاب‌شده lazy
+  load می‌شوند، فهرست دوربین‌های درب نمایش داده می‌شود و حذف تصاویر قدیمی با تأیید کاربر
+  انجام می‌شود.
+- وضعیت پوشش: UI و workflow اصلی در کد موجود است؛ retention، مجوز حذف، schema تصویر،
+  retry، نگاشت رسمی دوربین به درب و قرارداد stream هنوز نیازمند تأیید Backend هستند.
 
 ### `ImportDataConfigurationForm`
 

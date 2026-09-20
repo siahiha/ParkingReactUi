@@ -14,7 +14,7 @@ import { appConfig } from '../../config';
 import type { Language } from './managementTypes';
 
 export type CameraStreamMode = 'Hls' | 'WebRTC';
-export type CameraStreamSize = number | { width: number | string; height: number | string };
+export type CameraStreamSize = number | { width: number | string; height?: number | string };
 
 export type CameraStreamPreviewProps = {
   camera: Camera;
@@ -342,6 +342,9 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   const hasToolbar = showConnectionButton || showModeSwitcher || showRoiAction;
   const switchMode = () => void connect(streamMode === 'WebRTC' ? 'Hls' : 'WebRTC');
 
+  const mediaFrameSize = previewSize.height === undefined ? { aspectRatio: '16 / 9' } : { height: previewSize.height };
+  const mediaSize = { width: '100%', height: '100%' };
+
   return <Paper variant="outlined" sx={{ mt: 1.5, width: previewSize.width, maxWidth: '100%', p: 0.75, borderRadius: 1.5, overflow: 'hidden' }}>
     <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minHeight: 24, overflow: 'hidden' }}>
       {showStatus && <Tooltip title={statusDetails} arrow>
@@ -354,11 +357,11 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
       </Box>
     </Stack>
 
-    {activeStream ? <Box sx={{ mt: 0.75, position: 'relative', width: previewSize.width, height: previewSize.height, maxWidth: '100%', bgcolor: 'common.black', borderRadius: 0.75, overflow: 'hidden' }}>
-      <video ref={videoRef} autoPlay muted controls={showPlaybackControls} playsInline onPlay={resumeLive} onPause={pauseLive} onLoadedData={() => setVideoReady(true)} onCanPlay={() => setVideoReady(true)} onPlaying={() => setVideoReady(true)} onDoubleClick={() => { void videoRef.current?.parentElement?.requestFullscreen?.(); }} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    {activeStream ? <Box sx={{ mt: 0.75, position: 'relative', width: previewSize.width, ...mediaFrameSize, maxWidth: '100%', bgcolor: 'common.black', borderRadius: 0.75, overflow: 'hidden' }}>
+      <video ref={videoRef} autoPlay muted controls={showPlaybackControls} playsInline onPlay={resumeLive} onPause={pauseLive} onLoadedData={() => setVideoReady(true)} onCanPlay={() => setVideoReady(true)} onPlaying={() => setVideoReady(true)} onDoubleClick={() => { void videoRef.current?.parentElement?.requestFullscreen?.(); }} style={{ ...mediaSize, objectFit: 'contain', display: 'block' }} />
       {!videoReady && <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }}><Typography variant="caption" color="common.white">{text(language, 'در حال دریافت تصویر...', 'Receiving video...')}</Typography></Box>}
       <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{rois.map((roi) => <Box key={roi.id} sx={{ position: 'absolute', left: `${roi.x * 100}%`, top: `${roi.y * 100}%`, width: `${roi.width * 100}%`, height: `${roi.height * 100}%`, border: `2px solid ${roi.color || '#2e7d32'}` }} />)}</Box>
-    </Box> : <Box sx={{ mt: 0.75, width: previewSize.width, height: previewSize.height, maxWidth: '100%', display: 'grid', placeItems: 'center', bgcolor: 'action.hover', borderRadius: 0.75 }}><Typography variant="caption" color="text.secondary" align="center">{text(language, 'پیش‌نمایش فعال نیست.', 'Preview is not running.')}</Typography></Box>}
+    </Box> : <Box sx={{ mt: 0.75, width: previewSize.width, ...mediaFrameSize, maxWidth: '100%', display: 'grid', placeItems: 'center', bgcolor: 'action.hover', borderRadius: 0.75 }}><Typography variant="caption" color="text.secondary" align="center">{text(language, 'پیش‌نمایش فعال نیست.', 'Preview is not running.')}</Typography></Box>}
 
     {hasToolbar && <Stack direction="row" spacing={0.25} sx={{ mt: 0.5, minHeight: 28, alignItems: 'center', justifyContent: 'center' }}>
       {showConnectionButton && <Tooltip title={isConnected ? text(language, 'قطع اتصال', 'Disconnect') : text(language, 'اتصال به دوربین', 'Connect to camera')} arrow>

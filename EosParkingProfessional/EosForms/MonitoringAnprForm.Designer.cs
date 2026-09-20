@@ -115,7 +115,9 @@ namespace EosParkingProfessional.EosForms
             this.splitContainerControl2.Panel2.Controls.Add(this.anprRecordsGrid);
             this.splitContainerControl2.Panel2.Text = "Panel2";
             this.splitContainerControl2.Size = new System.Drawing.Size(996, 717);
-            this.splitContainerControl2.SplitterPosition = 231;
+            // Keep the camera and selected-record pictures in a compact single row;
+            // the grid receives the remaining height below them.
+            this.splitContainerControl2.SplitterPosition = 115;
             this.splitContainerControl2.TabIndex = 1;
             this.splitContainerControl2.Text = "splitContainerControl2";
             // 
@@ -141,7 +143,7 @@ namespace EosParkingProfessional.EosForms
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 19.04762F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80.95238F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(996, 231);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(996, 115);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
             // tabControl1

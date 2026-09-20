@@ -14,7 +14,7 @@
 | ساختار پارکینگ | `ParkingForm`، `EquipmentForm`، `ParkingFloorForm`، `ParkingSectionForm`، `ParkingParkSpaceKindForm`، `ParkingDoorForm`، `ParkingTariffForm` | باید پیاده‌سازی شود |
 | اعضا و کارت | `MemberKindForm`، `MemberForm`، `ParkingCardForm`، `ControlListForm` | باید پیاده‌سازی شود |
 | تردد و پرداخت | `ManualTrafficControlForm`، `ManageTrafficRecordForm`، `PayForm`، `ExitPermissionForm`، `NewCargoForm`، `PlateDetectedList` | باید پیاده‌سازی شود؛ بخش تجهیزات وابسته به Backend است |
-| مانیتورینگ و گزارش | `MonitoringForm`، `MonitoringAnprForm` و report filter panelها | باید پیاده‌سازی شود؛ realtime/report API وابسته به Backend است |
+| مانیتورینگ و گزارش | `MonitoringForm`، `MonitoringAnprForm` و report filter panelها | workspaceهای مانیتورینگ و ANPR در UI مسیر و workflow اولیه دارند؛ realtime، report API، تصویر و stream وابسته به قرارداد Backend است |
 | import | `ImportDataConfigurationForm`، `ImportMembersForm` | باید پیاده‌سازی شود؛ اتصال ETS/Excel وابسته به Backend است |
 | اطلاعات محصول | `AboutForm` | باید به یک صفحه/دیالوگ ساده وب تبدیل شود |
 

@@ -12,6 +12,8 @@ export const parkingApi = {
   save: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/Save', { method: 'POST', body: JSON.stringify(payload) }),
   remove: (parkingId: number) => apiRequest<unknown>(`api/Parking/Delete?id=${parkingId}`),
   getDoors: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoors?parkingId=${parkingId}`),
+  getDoor: (doorId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoor?doorId=${doorId}`),
+  getDoorDevices: (doorId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoorDevices?doorId=${doorId}`),
   getDoorsLive: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoorsLive?parkingId=${parkingId}`),
   getMonitoringTraffics: (parkingId: number, count: number, trafficType: number, doorIds: number[], startDateTime = '') => {
     const params = new URLSearchParams({ parkingId: String(parkingId), Count: String(count), trafficType: String(trafficType), startDateTime });
@@ -29,6 +31,7 @@ export const parkingApi = {
  * owned by Backend, therefore the feature validates/normalizes it at its UI boundary. */
 export const anprApi = {
   listRecent: (isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/GetAnprRecordWithPicTop20LastHour?isEosAnpr=${isEosAnpr}`),
+  getPictureById: (anprId: number | string, isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/GetAnprPicById?anprId=${encodeURIComponent(String(anprId))}&isEosAnpr=${isEosAnpr}`),
   getLastId: (isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/GetLastMaxAnprId?isEosAnpr=${isEosAnpr}`),
   deleteOldPictures: (isEosAnpr: boolean) => apiRequest<unknown>(`api/Anpr/DeleteOldAnprPics?isEosAnpr=${isEosAnpr}`),
   listMemberPlates: () => apiRequest<unknown>('api/Member/GetAllMembersPlates', { method: 'POST', body: 'null' }),
