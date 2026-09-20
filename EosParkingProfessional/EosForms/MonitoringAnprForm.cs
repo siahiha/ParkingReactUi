@@ -25,6 +25,7 @@ namespace EosParkingProfessional.EosForms
         private ParkingDoorEntity _currentDoor;
         private bool _isGettingNewRecords;
         private List<CarEntity> memberPlates;
+        private readonly HashSet<long> _loadedAnprPictureIds = new HashSet<long>();
 
         #endregion
 
@@ -57,9 +58,28 @@ namespace EosParkingProfessional.EosForms
         private List<AnprWithPics> GetAnprRecordWithPicTop20LastHour()
         {
             var result = GetJsonObjecToLink<List<AnprWithPics>>(ApiAddress.AnprApi.GetAnprRecordWithPicTop20LastHour + $"?isEosAnpr={RbEosSourceElmoSanat.Checked}");
-            return result != null && result.HttpResponseType == System.Net.HttpStatusCode.OK && result.Values != null
-                ? result.Values ?? new List<AnprWithPics>()
-                : new List<AnprWithPics>();
+            if (result == null || result.HttpResponseType != System.Net.HttpStatusCode.OK || result.Values == null)
+                return new List<AnprWithPics>();
+
+            // Images are loaded on demand through GetAnprPicById when a row gets focus.
+            foreach (var record in result.Values)
+            {
+                record.CarPic = null;
+                record.PlatePic = null;
+            }
+
+            return result.Values;
+        }
+
+        private AnprWithPics GetAnprPicById(long anprId)
+        {
+            var result = GetJsonObjecToLink<AnprWithPics>(
+                ApiAddress.AnprApi.GetAnprPicById,
+                $"{anprId}&isEosAnpr={RbEosSourceElmoSanat.Checked}");
+
+            return result != null && result.HttpResponseType == System.Net.HttpStatusCode.OK
+                ? result.Values
+                : null;
         }
 
         private long GetLastMaxAnprId()
@@ -105,9 +125,11 @@ namespace EosParkingProfessional.EosForms
                         gridView2.FocusedRowHandle = 0;
                         gridView2.SelectRow(0);
                         gridView2.MakeRowVisible(0);
-                        var firstRow = anprWithPicsList.FirstOrDefault();
-                        CarPicture.Image = ByteArrayToImage(firstRow?.CarPic);
-                        PlatePicture.Image = ByteArrayToImage(firstRow?.PlatePic);
+                        SetNewSelectedRowImageToPictures(gridView2);
+                    }
+                    else
+                    {
+                        SetNewSelectedRowImageToPictures(gridView2);
                     }
                 }));
             }
@@ -121,9 +143,11 @@ namespace EosParkingProfessional.EosForms
                     gridView2.FocusedRowHandle = 0;
                     gridView2.SelectRow(0);
                     gridView2.MakeRowVisible(0);
-                    var firstRow = anprWithPicsList.FirstOrDefault();
-                    CarPicture.Image = ByteArrayToImage(firstRow?.CarPic);
-                    PlatePicture.Image = ByteArrayToImage(firstRow?.PlatePic);
+                    SetNewSelectedRowImageToPictures(gridView2);
+                }
+                else
+                {
+                    SetNewSelectedRowImageToPictures(gridView2);
                 }
             }
         }
@@ -207,6 +231,7 @@ namespace EosParkingProfessional.EosForms
                 if (lastAnprId > _currentLastAnprId)
                 {
                     _currentLastAnprId = lastAnprId;
+                    _loadedAnprPictureIds.Clear();
                     _anprWithPicsList = GetAnprRecordWithPicTop20LastHour();
                     SetAnprRecordsGridDataSource(_anprWithPicsList);
                     //RemoveOldImages();
@@ -214,6 +239,7 @@ namespace EosParkingProfessional.EosForms
                 else if (lastAnprId == 0)
                 {
                     _currentLastAnprId = 0;
+                    _loadedAnprPictureIds.Clear();
                     _anprWithPicsList = new List<AnprWithPics>();
                     SetAnprRecordsGridDataSource(_anprWithPicsList);
                 }
@@ -228,11 +254,42 @@ namespace EosParkingProfessional.EosForms
 
         private void SetNewSelectedRowImageToPictures(object sender)
         {
-            if ((sender as DevExpress.XtraGrid.Views.Grid.GridView)?.GetFocusedRow() is AnprWithPics row)
+            var gridView = sender as DevExpress.XtraGrid.Views.Grid.GridView;
+            var row = gridView?.GetFocusedRow() as AnprWithPics;
+            if (row == null)
             {
-                CarPicture.Image = ByteArrayToImage(row.CarPic);
-                PlatePicture.Image = ByteArrayToImage(row.PlatePic);
+                SetPictureImage(CarPicture, null);
+                SetPictureImage(PlatePicture, null);
+                return;
             }
+
+            if (!_loadedAnprPictureIds.Contains(row.ID))
+            {
+                var recordWithPictures = GetAnprPicById(row.ID);
+                _loadedAnprPictureIds.Add(row.ID);
+
+                if (recordWithPictures != null)
+                {
+                    row.CarPic = recordWithPictures.CarPic;
+                    row.PlatePic = recordWithPictures.PlatePic;
+                    row.CarImageName = recordWithPictures.CarImageName;
+                    row.PlateImageName = recordWithPictures.PlateImageName;
+                }
+
+                anprRecordsGrid.RefreshDataSource();
+                gridView.RefreshData();
+            }
+
+            SetPictureImage(CarPicture, row.CarPic);
+            SetPictureImage(PlatePicture, row.PlatePic);
+        }
+
+        private static void SetPictureImage(PictureBox pictureBox, byte[] bytes)
+        {
+            var newImage = ByteArrayToImage(bytes);
+            var oldImage = pictureBox.Image;
+            pictureBox.Image = newImage;
+            oldImage?.Dispose();
         }
 
         private void PrepareTimer()
@@ -311,13 +368,17 @@ namespace EosParkingProfessional.EosForms
 
             using (var ms = new MemoryStream(bytes))
             {
-                return Image.FromStream(ms);
+                using (var image = Image.FromStream(ms))
+                {
+                    return new Bitmap(image);
+                }
             }
         }
 
         private void OnRbEosSourceCheckedChanged()
         {
             _currentLastAnprId = 0;
+            _loadedAnprPictureIds.Clear();
             GetNewRecords(true);
         }
 

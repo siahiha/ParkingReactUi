@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Divider, Drawer, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Drawer, IconButton, Tooltip } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import LocalParkingRoundedIcon from '@mui/icons-material/LocalParkingRounded';
-import MenuOpenRoundedIcon from '@mui/icons-material/MenuOpenRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import TrafficRoundedIcon from '@mui/icons-material/TrafficRounded';
@@ -12,13 +10,13 @@ import type { HomeMenuGroup, HomeMenuItem, ManagementSection } from './homeMenuM
 
 type Props = {
   appName: string; systemMenu: string; currentParkingSectionTitle: string; reportsSectionTitle: string;
-  direction: 'rtl' | 'ltr'; collapseLabel: string; expandLabel: string;
+  direction: 'rtl' | 'ltr';
   visibleManagementItems: Array<HomeMenuItem & { key: ManagementSection }>; visibleParkingMenuGroups: HomeMenuGroup[];
   activeParkingMenu: string | null; managementSection?: ManagementSection; onNavigate: (path: string) => void;
   canManageDashboard: boolean; collapsed: boolean; onCollapsedChange: (collapsed: boolean) => void; mobileOpen: boolean; onMobileClose: () => void;
 };
 
-export function HomeSidebar({ appName, systemMenu, currentParkingSectionTitle, reportsSectionTitle, direction, collapseLabel, expandLabel, visibleManagementItems, visibleParkingMenuGroups, activeParkingMenu, managementSection, onNavigate, canManageDashboard, collapsed, onCollapsedChange, mobileOpen, onMobileClose }: Props) {
+export function HomeSidebar({ appName, systemMenu, currentParkingSectionTitle, reportsSectionTitle, direction, visibleManagementItems, visibleParkingMenuGroups, activeParkingMenu, managementSection, onNavigate, canManageDashboard, collapsed, onCollapsedChange, mobileOpen, onMobileClose }: Props) {
   const [expandedMenuGroup, setExpandedMenuGroup] = useState<string | null>(canManageDashboard ? 'system' : 'definitions-root');
   const [expandedSubgroups, setExpandedSubgroups] = useState<Record<string, boolean>>({});
   const definitionsGroup = visibleParkingMenuGroups.find((group) => group.key === 'definitions');
@@ -58,18 +56,20 @@ export function HomeSidebar({ appName, systemMenu, currentParkingSectionTitle, r
     {visibleManagementItems.length > 0 && <Box className="home-menu-section home-system-section home-top-level-section"><Button className={`home-nav-item home-menu-group-button home-parking-group-button home-top-level-heading ${expandedMenuGroup === 'system' ? 'active' : ''}`} startIcon={<LocalParkingRoundedIcon />} endIcon={<ExpandMoreRoundedIcon className={expandedMenuGroup === 'system' ? 'menu-chevron-open' : ''} />} onClick={() => setExpandedMenuGroup(expandedMenuGroup === 'system' ? null : 'system')} aria-expanded={expandedMenuGroup === 'system'}>{systemMenu}</Button>{expandedMenuGroup === 'system' && <Box className="home-top-level-subnav">{visibleManagementItems.map((item) => <Button key={item.key} className={`home-nav-item home-leaf-item ${managementSection === item.key ? 'active' : ''}`} startIcon={item.icon} onClick={() => navigate(`/home/management/${item.key}`)}>{item.label}</Button>)}</Box>}</Box>}
     <Box className="home-sidebar-parking-menu"><Box className="home-menu-section home-current-parking-section home-top-level-section"><Button className={`home-nav-item home-menu-group-button home-parking-group-button home-top-level-heading ${expandedMenuGroup === 'definitions-root' ? 'active' : ''}`} startIcon={<SettingsRoundedIcon />} endIcon={<ExpandMoreRoundedIcon className={expandedMenuGroup === 'definitions-root' ? 'menu-chevron-open' : ''} />} onClick={() => setExpandedMenuGroup(expandedMenuGroup === 'definitions-root' ? null : 'definitions-root')} aria-expanded={expandedMenuGroup === 'definitions-root'}>{currentParkingSectionTitle}</Button>{expandedMenuGroup === 'definitions-root' && <Box className="home-current-parking-subgroups home-top-level-subnav">{definitionsGroup?.items.map((item) => <Button key={item.key} className={`home-nav-item home-leaf-item ${activeParkingMenu === item.key ? 'active' : ''}`} startIcon={item.icon} onClick={() => navigate(`/home/parking/${item.key}`)}>{item.label}</Button>)}{currentParkingSubgroups.map(renderParkingGroup)}</Box>}</Box><Box className="home-menu-section home-reports-section home-top-level-section"><Button className={`home-nav-item home-menu-group-button home-parking-group-button home-top-level-heading ${expandedMenuGroup === 'reports-root' ? 'active' : ''}`} startIcon={<AssessmentRoundedIcon />} endIcon={<ExpandMoreRoundedIcon className={expandedMenuGroup === 'reports-root' ? 'menu-chevron-open' : ''} />} onClick={() => setExpandedMenuGroup(expandedMenuGroup === 'reports-root' ? null : 'reports-root')} aria-expanded={expandedMenuGroup === 'reports-root'}>{reportsSectionTitle}</Button>{expandedMenuGroup === 'reports-root' && reportsGroup && <Box className="home-current-parking-subgroups home-reports-subgroups home-top-level-subnav">{reportsGroup.items.map((item) => <Button key={item.key} className={`home-nav-item home-leaf-item ${activeParkingMenu === item.key ? 'active' : ''}`} startIcon={item.icon} onClick={() => navigate(`/home/parking/${item.key}`)}>{item.label}</Button>)}</Box>}</Box></Box>
   </>;
-  const renderBrandMark = (isDrawer: boolean) => {
-    if (!isDrawer && collapsed) {
-      return <Tooltip title={expandLabel} placement={direction === 'rtl' ? 'left' : 'right'}><IconButton className="home-sidebar-brand-menu-button" aria-label={expandLabel} onClick={() => onCollapsedChange(false)}><Box component="img" className="home-sidebar-brand-image" src="/parking-logo.png" alt="" /></IconButton></Tooltip>;
-    }
-
-    return <Box component="img" className="home-sidebar-brand-image" src="/parking-logo.png" alt="" />;
-  };
-
-  const navigation = (isDrawer: boolean) => <Box className={`home-sidebar-content ${isDrawer ? 'home-sidebar-drawer-content' : ''}`} dir={direction}><Box className="home-sidebar-brand-box">{renderBrandMark(isDrawer)}{(!collapsed || isDrawer) && <Typography className="home-sidebar-brand-title">{appName}</Typography>}{(isDrawer || !collapsed) && <Tooltip title={collapseLabel}><IconButton className="home-sidebar-collapse-button" aria-label={collapseLabel} onClick={isDrawer ? onMobileClose : () => onCollapsedChange(true)}>{isDrawer ? <CloseRoundedIcon /> : <MenuOpenRoundedIcon />}</IconButton></Tooltip>}</Box><Divider className="home-sidebar-brand-divider" />{isDrawer || !collapsed ? renderFullNavigation() : renderCompactNavigation()}</Box>;
+  const navigation = (isDrawer: boolean) => <Box className={`home-sidebar-content ${isDrawer ? 'home-sidebar-drawer-content' : ''}`} dir={direction}>
+    {isDrawer || !collapsed ? renderFullNavigation() : renderCompactNavigation()}
+  </Box>;
 
   return <>
-    <Paper component="nav" aria-label={appName} className={`home-sidebar ${collapsed ? 'home-sidebar-collapsed' : ''}`} elevation={0}>{navigation(false)}</Paper>
+    <Drawer
+      variant="permanent"
+      open={!collapsed}
+      anchor={direction === 'rtl' ? 'right' : 'left'}
+      className={`home-sidebar ${collapsed ? 'home-sidebar-collapsed' : ''}`}
+      slotProps={{ paper: { className: 'home-sidebar-paper' } }}
+    >
+      <Box component="nav" aria-label={appName}>{navigation(false)}</Box>
+    </Drawer>
     <Drawer anchor={direction === 'rtl' ? 'right' : 'left'} open={mobileOpen} onClose={onMobileClose} slotProps={{ paper: { className: 'home-sidebar-drawer' } }}>
       <Box component="nav" aria-label={appName}>{navigation(true)}</Box>
     </Drawer>

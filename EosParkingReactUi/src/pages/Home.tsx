@@ -5,18 +5,20 @@ import type { PaletteName } from '../components/homeProfileTypes';
 import type { ThemeShapeSettings } from '../theme';
 import { HomeDashboard } from './HomeDashboard';
 import { HomeFormRoutes } from './HomeFormRoutes';
-import { HomeHeader } from './HomeHeader';
+import { HomeHeader, type NavigationMode } from './HomeHeader';
 import { HomeSidebar } from './HomeSidebar';
-import { homeCopy } from './homeCopy';
+import { homeCopy, navigationModeCopy } from './homeCopy';
 import { createManagementItems, createParkingMenuGroups, visibleManagementItems as filterManagementItems, visibleParkingGroups, type ManagementSection } from './homeMenuModel';
 import type { HomeUser, ThemeMode } from './homeTypes';
 import { useLocation, useNavigate, type NavigateOptions } from 'react-router-dom';
 import { useNavigationGuard } from './NavigationGuardContext';
+import { HomeTabs, type HomeTab } from './HomeTabs';
 
 export type { HomeUser } from './homeTypes';
 export type { HomeLabels } from './homeCopy';
 
 type HomeProps = { language: Language; user: HomeUser; themeMode: ThemeMode; lightPalette: PaletteName; darkPalette: PaletteName; shapeSettings: ThemeShapeSettings; onShapeSettingsChange: (settings: ThemeShapeSettings) => void; onThemeToggle: () => void; onLightPaletteChange: (palette: PaletteName) => void; onDarkPaletteChange: (palette: PaletteName) => void; onLogout: () => void; onToggleLanguage: () => void };
+const navigationModeStorageKey = 'eos-parking-navigation-mode';
 
 function hasBit(value: string | number | undefined, bit: bigint) {
   try { return (BigInt(String(value ?? 0)) & bit) === bit; } catch { return false; }
@@ -24,6 +26,7 @@ function hasBit(value: string | number | undefined, bit: bigint) {
 
 export function Home({ language, user, themeMode, lightPalette, darkPalette, shapeSettings, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage }: HomeProps) {
   const t = homeCopy[language];
+  const direction = language === 'fa' ? 'rtl' : 'ltr';
   const location = useLocation();
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
@@ -50,6 +53,33 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   const hasSidebar = user.canManageDashboard || visibleManagement.length > 0 || visibleParking.length > 0;
   const firstVisibleParkingItem = visibleParking.flatMap((group) => group.items)[0];
   const selectedParking = parkingOptions.find((parking) => parking.id === selectedParkingId) ?? parkingOptions[0];
+  const [openTabs, setOpenTabs] = useState<HomeTab[]>([{ path: '/home', label: t.home }]);
+  const [navigationMode, setNavigationMode] = useState<NavigationMode>(() => window.localStorage.getItem(navigationModeStorageKey) === 'classic' ? 'classic' : 'tabs');
+  const labelForPath = (path: string) => {
+    if (path === '/home') return t.home;
+    const managementItem = visibleManagement.find((item) => path === `/home/management/${item.key}`);
+    if (managementItem) return managementItem.label;
+    const parkingItem = visibleParking.flatMap((group) => group.items).find((item) => path === `/home/parking/${item.key}`);
+    return parkingItem?.label ?? t.home;
+  };
+  const openNavigationTab = (path: string) => {
+    if (navigationMode === 'tabs') setOpenTabs((current) => current.some((tab) => tab.path === path) ? current : [...current, { path, label: labelForPath(path) }]);
+    guardedNavigate(path);
+  };
+  const closeNavigationTab = (path: string) => {
+    const index = openTabs.findIndex((tab) => tab.path === path);
+    if (index < 0 || path === '/home') return;
+    const remaining = openTabs.filter((tab) => tab.path !== path);
+    setOpenTabs(remaining);
+    if (location.pathname === path) guardedNavigate(remaining[Math.max(0, index - 1)]?.path ?? '/home');
+  };
+
+  useEffect(() => {
+    if (navigationMode === 'tabs' && location.pathname.startsWith('/home')) {
+      setOpenTabs((current) => current.some((tab) => tab.path === location.pathname) ? current : [...current, { path: location.pathname, label: labelForPath(location.pathname) }]);
+    }
+  }, [location.pathname, navigationMode]);
+  useEffect(() => { window.localStorage.setItem(navigationModeStorageKey, navigationMode); }, [navigationMode]);
 
   useEffect(() => {
     if (!user.canManageDashboard && !activeParkingMenu && !showManagement && firstVisibleParkingItem) guardedNavigate(`/home/parking/${firstVisibleParkingItem.key}`, { replace: true });
@@ -57,9 +87,10 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   useEffect(() => { window.localStorage.setItem('eos-parking-sidebar-collapsed', String(sidebarCollapsed)); }, [sidebarCollapsed]);
 
   return <Box className={`home-shell ${hasSidebar ? 'home-shell-with-sidebar' : ''} ${sidebarCollapsed ? 'home-shell-sidebar-collapsed' : ''}`} dir={language === 'fa' ? 'rtl' : 'ltr'}>
-    <HomeHeader labels={t} user={user} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={setSelectedParkingId} onHome={() => guardedNavigate('/home')} onNavigationOpen={() => setMobileNavigationOpen(true)} navigationLabel={t.openNavigation} />
+    <HomeHeader labels={t} user={user} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={setSelectedParkingId} onHome={() => openNavigationTab('/home')} onNavigationOpen={() => setMobileNavigationOpen(true)} onNavigationClose={() => setMobileNavigationOpen(false)} onNavigationToggle={() => setSidebarCollapsed((current) => !current)} sidebarCollapsed={sidebarCollapsed} mobileNavigationOpen={mobileNavigationOpen} navigationLabel={t.openNavigation} navigationToggleLabel={sidebarCollapsed ? t.expandNavigation : t.collapseNavigation} navigationMode={navigationMode} navigationModeLabel={`${navigationModeCopy[language].switchMode}: ${navigationMode === 'tabs' ? navigationModeCopy[language].classic : navigationModeCopy[language].tabs}`} onNavigationModeChange={setNavigationMode} direction={direction} />
+    {navigationMode === 'tabs' && <HomeTabs tabs={openTabs} activePath={location.pathname} homeLabel={t.home} closeLabel={t.close} direction={direction} onSelect={openNavigationTab} onClose={closeNavigationTab} />}
     <Box className={`home-body ${!hasSidebar ? 'home-body-no-sidebar' : ''}`}>
-      {hasSidebar && <HomeSidebar appName={t.app} systemMenu={t.systemMenu} currentParkingSectionTitle={language === 'fa' ? 'تعاریف و تنظیمات پارکینگ جاری' : 'Current parking definitions and settings'} reportsSectionTitle={language === 'fa' ? 'گزارش‌ها' : 'Reports'} direction={language === 'fa' ? 'rtl' : 'ltr'} collapseLabel={t.collapseNavigation} expandLabel={t.expandNavigation} visibleManagementItems={visibleManagement} visibleParkingMenuGroups={visibleParking} activeParkingMenu={activeParkingMenu} managementSection={managementSection} onNavigate={guardedNavigate} canManageDashboard={user.canManageDashboard} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} mobileOpen={mobileNavigationOpen} onMobileClose={() => setMobileNavigationOpen(false)} />}
+      {hasSidebar && <HomeSidebar appName={t.app} systemMenu={t.systemMenu} currentParkingSectionTitle={language === 'fa' ? 'تعاریف و تنظیمات پارکینگ جاری' : 'Current parking definitions and settings'} reportsSectionTitle={language === 'fa' ? 'گزارش‌ها' : 'Reports'} direction={language === 'fa' ? 'rtl' : 'ltr'} visibleManagementItems={visibleManagement} visibleParkingMenuGroups={visibleParking} activeParkingMenu={activeParkingMenu} managementSection={managementSection} onNavigate={openNavigationTab} canManageDashboard={user.canManageDashboard} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} mobileOpen={mobileNavigationOpen} onMobileClose={() => setMobileNavigationOpen(false)} />}
       <Box component="main" className="home-main">
         {!showManagement && !activeParkingMenu && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{t.homeTitle}</h1><p className="home-page-description">{t.homeDescription}</p></Box></Box>}
         {(showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} visibleParkingMenuItems={visibleParking.flatMap((group) => group.items)} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParkingId} />}

@@ -8,3 +8,8 @@ export const homeCopy = {
 } as const;
 
 export type HomeLabels = typeof homeCopy[keyof typeof homeCopy];
+
+export const navigationModeCopy = {
+  fa: { tabs: 'حالت تب‌ها', classic: 'حالت کلاسیک', switchMode: 'تغییر شیوهٔ ناوبری' },
+  en: { tabs: 'Tabbed navigation', classic: 'Classic navigation', switchMode: 'Change navigation mode' },
+} as const;

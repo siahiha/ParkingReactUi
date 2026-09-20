@@ -15,7 +15,9 @@
 - تنظیمات theme، زبان و palette؛
 - تغییر رمز عبور در UI.
 
-بخش زیادی از menu itemها هنوز placeholder هستند و به workflow و API واقعی متصل نشده‌اند.
+برخی menu itemها هنوز placeholder هستند؛ بررسی تکمیل آن‌ها در این snapshot عمداً خارج از
+دامنه است. موارد زیر فقط وضعیت قابلیت‌هایی را ثبت می‌کنند که در کد فعلی route یا workspace
+واقعی دارند.
 
 ## آخرین تطبیق مستندات با کد UI
 
@@ -33,7 +35,7 @@
 | تعرفه‌ها و اعضا | workflow ایجاد، ویرایش، حذف و ثبت/لغو اصلی پیاده‌سازی شده | `features/tariffs`، `features/members` | قراردادهای خطا، مجوز و برخی عملیات Windows ناقص است |
 | مجوز خروج | فهرست، فیلتر و تغییر مجوز پیاده‌سازی شده | `ExitPermissionWorkspace.tsx` | قرارداد Backend و audit نیازمند تأیید |
 | درب‌ها و کنترل فهرست خودرو | عمدتاً read-only | `ReadOnlyModuleWorkspace.tsx` | عملیات کامل پیاده‌سازی نشده است |
-| شیفت، تردد دستی، مدیریت تردد، مانیتورینگ و ANPR | placeholder یا فاقد workflow کامل | `HomeFormRoutes.tsx`، `ReadOnlyModuleWorkspace.tsx` | باز و خارج از وضعیت تکمیل |
+| اختصاص شیفت، مدیریت تردد، مانیتورینگ و ANPR | workspace و wiring اولیه‌ی route/API در کد موجود است؛ ANPR شامل polling، merge رکورد، lazy image و workflow حذف تصویر است | `HomeFormRoutes.tsx`، `ShiftAssignmentWorkspace.tsx`، `TrafficRecordsWorkspace.tsx`، `AnprMonitoringWorkspace.tsx`، `management.ts` | پیاده‌سازی UI؛ قرارداد رسمی API، تصویر، realtime و stream نیازمند تأیید Backend |
 | یکپارچه‌سازی، ETS و Excel | placeholder یا فاقد endpoint قابل اتکا | `homeMenuModel.tsx`، `ReadOnlyModuleWorkspace.tsx` | باز و نیازمند قرارداد Backend/تصمیم محصول |
 | گزارش‌های پارکینگ | آیتم‌های منو وجود دارند، اما مقصدها عمدتاً placeholder/read-only هستند | `homeMenuModel.tsx`، `HomeFormRoutes.tsx` | باز و نیازمند تکمیل مستقل |
 | دوربین RTSP | اتصال WebRTC/HLS، وضعیت، lifecycle و overlay ROI پایه پیاده‌سازی شده | سند ۲۴ و `CameraStreamPreview.tsx` | drag/edit/delete تعاملی ROI هنوز انجام نشده است |
@@ -140,8 +142,8 @@ Fallback قدیمی برگردانده شد و تست نمایش منوی مدی
 - ۱۲ فایل تست و ۳۹ تست خودکار موفق است؛
 - `typecheck` موفق است؛
 - `build` موفق است؛
-- build یک هشدار non-blocking برای chunkهای بزرگ‌تر از ۵۰۰KB دارد؛ بزرگ‌ترین chunk
-  فعلی حدود ۷۹۳KB است و باید در بررسی performance/lazy-loading پیگیری شود؛
+- build یک هشدار non-blocking برای chunkهای بزرگ‌تر از ۵۰۰KB دارد؛ chunkهای بزرگ فعلی
+  حدود ۸۲۰KB و ۷۳۳KB هستند و باید در بررسی performance/lazy-loading پیگیری شوند؛
 - تست E2E از نظر کد آماده است، اما اجرای آن به نصب Chromium وابسته است و دانلود مرورگر در محیط فعلی با خطای منطقه‌ای `403` متوقف شده است؛
 - اتصال واقعی Backend، session refresh، permission server-side، idempotency، تجهیزات و workflowهای اصلی هنوز نیازمند قرارداد Backend هستند.
 
@@ -161,7 +163,7 @@ Fallback قدیمی برگردانده شد و تست نمایش منوی مدی
 - password در هیچ storage مرورگر ذخیره نمی‌شود. مقادیر موجود در test setup صرفاً fixture تستی هستند و نباید وارد production شوند.
 
 موارد باز این بازبینی—route guard مدیریت، تعیین تکلیف `mediamtx-reader.js`، تکمیل
-workflowهای placeholder و بهینه‌سازی chunkهای بزرگ—هنوز اصلاح نشده‌اند و نباید به‌عنوان
-موارد انجام‌شده گزارش شوند.
+workflowهای خارج از دامنه‌ی این snapshot و بهینه‌سازی chunkهای بزرگ—هنوز اصلاح نشده‌اند و
+نباید به‌عنوان موارد انجام‌شده گزارش شوند.
 
 این تغییرات باید در هر feature جدید نیز رعایت شوند؛ هر دستکاری imperative UI، secret ثابت، ذخیره password یا API مستقیم در page، مانع تحویل است.
