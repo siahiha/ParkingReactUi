@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Typography } from '@mui/material';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Box, CircularProgress, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Tooltip, Typography } from '@mui/material';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { ApiError } from '../../api/client';
@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../ConfirmDialog';
 import { CameraStreamPreview } from './CameraStreamPreview';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { unwrapValues, type Language } from './managementTypes';
+import { selectAnprRowAfterRefresh } from './anprSelection';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
 type Row = Record<string, unknown>;
@@ -197,6 +198,12 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   const sourceRef = useRef(source);
   sourceRef.current = source;
   const [viewer] = useState(() => getViewerId());
+  const rowsRef = useRef<Row[]>([]);
+  const selectedKeyRef = useRef<string | null>(null);
+  const selectRecord = useCallback((row: Row | null) => {
+    selectedKeyRef.current = row ? stableRecordKey(row) : null;
+    setSelected(row);
+  }, []);
 
   const loadRecords = useCallback(async (reset = false) => {
     if (requestRef.current) {
@@ -209,8 +216,9 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
     if (reset) {
       lastIdRef.current = 0;
       setLastId(0);
+      rowsRef.current = [];
       setRows([]);
-      setSelected(null);
+      selectRecord(null);
     }
     try {
       const nextIdValue = await anprApi.getLastId(requestSource);
@@ -220,14 +228,17 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
       if (nextId === 0) {
         lastIdRef.current = 0;
         setLastId(0);
+        rowsRef.current = [];
         setRows([]);
-        setSelected(null);
+        selectRecord(null);
       } else if (reset || nextId !== lastKnownId) {
         const nextRows = rowsOf(await anprApi.listRecent(requestSource)).map(withoutRecordPictures);
         if (sourceRef.current !== requestSource) return;
-        setRows((current) => {
-          return reset || nextId < lastKnownId ? nextRows : mergeAnprRows(current, nextRows, 20);
-        });
+        const previousRows = rowsRef.current;
+        const updatedRows = reset || nextId < lastKnownId ? nextRows : mergeAnprRows(previousRows, nextRows, 20);
+        rowsRef.current = updatedRows;
+        setRows(updatedRows);
+        selectRecord(selectAnprRowAfterRefresh(previousRows, updatedRows, selectedKeyRef.current, reset, stableRecordKey));
         lastIdRef.current = nextId;
         setLastId(nextId);
       }
@@ -243,7 +254,7 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
         void loadRecords(true);
       }
     }
-  }, [language]);
+  }, [language, selectRecord]);
 
   const loadDoorCameras = useCallback(async () => {
     setDoorCameras([]);
@@ -309,7 +320,14 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
     setLastId(0);
     void loadRecords(true);
   }, [loadRecords, source]);
-  useEffect(() => { setSelected((current) => current && rows.some((row) => stableRecordKey(row) === stableRecordKey(current)) ? current : rows[0] ?? null); }, [rows]);
+  useEffect(() => {
+    rowsRef.current = rows;
+    setSelected((current) => {
+      const next = current && rows.some((row) => stableRecordKey(row) === stableRecordKey(current)) ? current : rows[0] ?? null;
+      selectedKeyRef.current = next ? stableRecordKey(next) : null;
+      return next;
+    });
+  }, [rows]);
   useEffect(() => {
     if (!selected) {
       setLoadingPicture(false);
@@ -358,10 +376,10 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   }, [language, selected, source]);
   useEffect(() => { void loadDoorCameras(); }, [loadDoorCameras]);
 
-  const visibleRows = useMemo(() => rows.filter((row) => !doorId || String(field(row, 'DoorId', 'ParkingDoorId')) === doorId), [doorId, rows]);
+  const visibleRows = rows;
   const isMemberPlate = (row: Row) => memberPlates.includes(String(field(row, 'Plate', 'CarPlate') ?? '').replaceAll('-', ''));
   const image = (row: Row | null, ...keys: string[]) => row ? keys.map((key) => imageSrc(field(row, key))).find(Boolean) ?? '' : '';
-  const doorName = (row: Row) => String(field(row, 'DoorName', 'ParkingDoorTitle') ?? '—');
+  const doorName = (row: Row) => String(field(row, 'DoorTitle', 'DoorName', 'ParkingDoorTitle') ?? '—');
   const columns = [
     { key: 'Plate', label: text(language, 'پلاک', 'Plate'), render: (row: Row) => <Box component="span" dir="ltr" sx={{ color: isMemberPlate(row) ? 'success.main' : 'inherit', fontWeight: isMemberPlate(row) ? 700 : 400 }}>{String(field(row, 'Plate', 'CarPlate') ?? '—')}</Box> },
     { key: 'Camera', label: text(language, 'دوربین', 'Camera'), render: (row: Row) => String(field(row, 'Camera', 'CameraName', 'CameraTitle') ?? '—') },
@@ -373,30 +391,38 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   const removeOldPictures = async () => { setDeleting(true); try { await anprApi.deleteOldPictures(source); setConfirmOpen(false); await loadRecords(true); } catch { setError(text(language, 'حذف تصاویر قدیمی انجام نشد.', 'Old pictures could not be deleted.')); } finally { setDeleting(false); } };
   const selectedPicturePanel = (label: string, keys: string[]) => {
     const src = image(selected, ...keys);
-    return <Paper variant="outlined" sx={{ p: 1, minWidth: 0 }}><Typography variant="caption" color="text.secondary">{label}</Typography>{src ? <Box component="img" src={src} alt={label} sx={{ display: 'block', width: '100%', objectFit: 'contain', bgcolor: 'grey.900', border: 1, borderColor: 'divider' }} /> : <Box sx={{ display: 'grid', placeItems: 'center', bgcolor: 'action.hover', border: 1, borderColor: 'divider' }}><Typography variant="caption" color="text.secondary">{loadingPicture ? text(language, 'در حال دریافت تصویر...', 'Loading image...') : text(language, 'تصویر موجود نیست', 'Image unavailable')}</Typography></Box>}</Paper>;
+    return <Box sx={{ display: 'flex', minWidth: 0, minHeight: 0 }}><>{src ? <Box component="img" src={src} alt={label} sx={{ display: 'block', width: '100%', height: '100%', minHeight: 0, objectFit: 'contain', bgcolor: 'grey.900', border: 1, borderColor: 'divider' }} /> : <Box sx={{ flex: 1, minHeight: 0, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', border: 1, borderColor: 'divider' }}><Typography variant="caption" color="text.secondary">{loadingPicture ? text(language, 'در حال دریافت تصویر...', 'Loading image...') : text(language, 'تصویر موجود نیست', 'Image unavailable')}</Typography></Box>}</></Box>;
   };
 
-  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={text(language, 'رکوردهای زنده تشخیص پلاک و تصاویر مرتبط', 'Live ANPR records and related images')} language={language} loading={refreshing} onRefresh={() => { void loadRecords(true); }} toolbar={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}>
-    <FormControl size="small" sx={{ minWidth: 180 }}><InputLabel>{text(language, 'منبع تشخیص', 'ANPR source')}</InputLabel><Select label={text(language, 'منبع تشخیص', 'ANPR source')} value={source ? 'elmo' : 'shahab'} onChange={(event) => setSource(event.target.value === 'elmo')}><MenuItem value="shahab">{text(language, 'شهاب', 'Shahab')}</MenuItem><MenuItem value="elmo">{text(language, 'الموصنعت', 'Elmo Sanat')}</MenuItem></Select></FormControl>
-    <FormControl size="small" sx={{ minWidth: 180 }}><InputLabel>{text(language, 'درب', 'Door')}</InputLabel><Select label={text(language, 'درب', 'Door')} value={doorId} onChange={(event) => setDoorId(event.target.value)}><MenuItem value="">{text(language, 'همه درب‌ها', 'All doors')}</MenuItem>{doors.map((door, index) => <MenuItem key={String(field(door, 'Id') ?? index)} value={String(field(door, 'Id') ?? '')}>{String(field(door, 'Title', 'DoorTitle') ?? '—')}</MenuItem>)}</Select></FormControl>
-    <Button color="error" variant="outlined" startIcon={<DeleteSweepRoundedIcon />} onClick={() => setConfirmOpen(true)} disabled={deleting}>{text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')}</Button>
-  </Stack>}>
+  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={text(language, 'رکوردهای زنده تشخیص پلاک و تصاویر مرتبط', 'Live ANPR records and related images')} language={language} loading={refreshing} onRefresh={() => { void loadRecords(true); }} headingActions={<>
+    <FormControl size="small" sx={{ width: 136 }}><InputLabel>{text(language, 'منبع تشخیص', 'ANPR source')}</InputLabel><Select label={text(language, 'منبع تشخیص', 'ANPR source')} value={source ? 'elmo' : 'shahab'} onChange={(event) => setSource(event.target.value === 'elmo')}><MenuItem value="shahab">{text(language, 'شهاب', 'Shahab')}</MenuItem><MenuItem value="elmo">{text(language, 'الموصنعت', 'Elmo Sanat')}</MenuItem></Select></FormControl>
+    <Tooltip title={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} arrow><span><IconButton className="workspace-refresh-button" color="error" aria-label={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} onClick={() => setConfirmOpen(true)} disabled={deleting}><DeleteSweepRoundedIcon /></IconButton></span></Tooltip>
+  </>}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {pictureError && <Alert severity="warning" sx={{ mb: 1.5 }}>{pictureError}</Alert>}
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: { xs: 0.5, sm: 1.5 }, mb: 2, alignItems: 'stretch', minWidth: 0 }}>
-      <Paper variant="outlined" sx={{ p: 1, minWidth: 0, overflow: 'hidden' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' }, gap: { xs: 0.5, sm: 1.5 }, mb: 2, alignItems: 'stretch', minWidth: 0, height: { md: 300 }, maxHeight: { md: 300 }, overflow: { md: 'hidden' } }}>
+      <Paper variant="outlined" sx={{ p: 0.5, minWidth: 0, minHeight: 0, height: '100%', overflow: 'hidden' }}>
+        <FormControl size="small" fullWidth sx={{ mb: 0.5, '& .MuiInputBase-root': { height: 30, fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' }, '& .MuiInputBase-input': { py: 0.25, px: 0.75 } }}>
+          <InputLabel>{text(language, 'درب دوربین', 'Camera door')}</InputLabel>
+          <Select label={text(language, 'درب دوربین', 'Camera door')} value={doorId} onChange={(event) => setDoorId(event.target.value)}>
+            <MenuItem value="">{text(language, 'انتخاب درب', 'Select a door')}</MenuItem>
+            {doors.map((door, index) => <MenuItem key={String(field(door, 'Id') ?? index)} value={String(field(door, 'Id') ?? '')}>{String(field(door, 'Title', 'DoorTitle') ?? '—')}</MenuItem>)}
+          </Select>
+        </FormControl>
         {cameraError && <Alert severity="error" sx={{ mb: 1 }}>{cameraError}</Alert>}
         {loadingCameras && <Box className="inline-status-row"><CircularProgress size={18} /><Typography variant="body2">{text(language, 'در حال دریافت دوربین...', 'Loading camera...')}</Typography></Box>}
         {!loadingCameras && !cameraError && !doorId && <Typography variant="body2" color="text.secondary">{text(language, 'برای نمایش تصویر زنده یک درب را انتخاب کنید.', 'Select a door to view the live camera.')}</Typography>}
         {!loadingCameras && !cameraError && doorId && doorCameras.length === 0 && <Typography variant="body2" color="text.secondary">{text(language, 'برای این درب دوربین فعالی پیدا نشد.', 'No active camera was found for this door.')}</Typography>}
-        {!loadingCameras && doorCameras.length > 0 && <>{doorCameras.map((camera) => <CameraStreamPreview key={camera.cameraId} camera={camera} language={language} viewer={viewer} size={{ width: '100%' }} showRoiAction={false} />)}</>}
+        {!loadingCameras && doorCameras.length > 0 && <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 0, minHeight: 0, overflow: 'hidden' }}>{doorCameras.map((camera) => <CameraStreamPreview key={camera.cameraId} camera={camera} language={language} viewer={viewer} size={{ width: '100%', height: 190 }} showRoiAction={false} compact />)}</Box>}
       </Paper>
-      {selectedPicturePanel(text(language, 'تصویر خودرو', 'Vehicle image'), ['CarPic', 'CarImage', 'CarImageBase64', 'CarImageUrl', 'CarImageName'])}
-      {selectedPicturePanel(text(language, 'تصویر پلاک', 'Plate image'), ['PlatePic', 'PlateImage', 'PlateImageBase64', 'PlateImageUrl', 'PlateImageName'])}
+      <Paper variant="outlined" sx={{ p: 0.5, minWidth: 0, minHeight: 0, height: '100%', display: 'grid', gridTemplateRows: { xs: '100px minmax(220px, 1fr)', md: 'minmax(72px, 0.65fr) minmax(180px, 1.35fr)' }, gap: 0.5, overflow: 'hidden' }}>
+        {selectedPicturePanel(text(language, 'پلاک خودرو', 'Vehicle plate'), ['PlatePic', 'PlateImage', 'PlateImageBase64', 'PlateImageUrl', 'PlateImageName'])}
+        {selectedPicturePanel(text(language, 'فریم خودرو', 'Vehicle frame'), ['CarPic', 'CarImage', 'CarImageBase64', 'CarImageUrl', 'CarImageName'])}
+      </Paper>
     </Box>
     <Paper variant="outlined" sx={{ minWidth: 0, minHeight: { md: 'calc(100vh - 430px)' }, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {loading && <Box className="inline-status-row" sx={{ px: 1.5, pt: 1.5 }}><CircularProgress size={18} /><Typography variant="body2">{text(language, 'در حال دریافت رکوردها...', 'Loading ANPR records...')}</Typography></Box>}
-      <Box sx={{ overflowX: 'auto', flex: '1 1 auto', minHeight: 0, '& .app-data-grid-wrapper': { height: '100%' } }}><AppDataGrid direction={language === 'fa' ? 'rtl' : 'ltr'} rows={visibleRows} columns={columns} rowKey={recordId} selectedKey={selected ? recordId(selected, 0) : null} onRowClick={(row) => setSelected(row)} onRowFocus={(row) => setSelected(row)} defaultFilterOpen /></Box>
+      <Box sx={{ overflowX: 'auto', flex: '1 1 auto', minHeight: 0, '& .app-data-grid-wrapper': { height: '100%' } }}><AppDataGrid direction={language === 'fa' ? 'rtl' : 'ltr'} rows={visibleRows} columns={columns} rowKey={recordId} selectedKey={selected ? recordId(selected, 0) : null} onRowClick={selectRecord} onRowFocus={selectRecord} defaultFilterOpen /></Box>
       {!loading && visibleRows.length === 0 && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 1.5, py: 1 }}>{text(language, 'در یک ساعت گذشته رکورد تشخیص پلاکی وجود ندارد.', 'No ANPR records were detected in the last hour.')}</Typography>}
     </Paper>
     <ConfirmDialog open={confirmOpen} busy={deleting} title={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} message={text(language, 'تصاویر قدیمی ANPR حذف می‌شوند. این عملیات قابل بازگشت نیست.', 'Old ANPR pictures will be deleted. This action cannot be undone.')} cancelLabel={text(language, 'لغو', 'Cancel')} confirmLabel={text(language, 'حذف', 'Delete')} onClose={() => setConfirmOpen(false)} onConfirm={() => { void removeOldPictures(); }} />
