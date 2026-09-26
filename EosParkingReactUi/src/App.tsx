@@ -8,7 +8,7 @@ import { prefixer } from 'stylis';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { type Language, translations } from './i18n';
 import { parseAuthSession, resolveCanManageDashboard } from './api/contracts';
-import { setAuthToken } from './api/client';
+import { apiRequest, getAuthToken, setAuthToken } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
@@ -77,7 +77,24 @@ export function App() {
     setHomeUser(user);
     requestNavigation(() => navigate('/home'));
   };
-  const logout = () => requestNavigation(() => { setAuthenticated(false); setHomeUser(null); setAuthToken(null); window.sessionStorage.removeItem(authSessionStorageKey); navigate('/'); });
+  const clearLocalSession = () => {
+    setAuthenticated(false);
+    setHomeUser(null);
+    setAuthToken(null);
+    window.sessionStorage.removeItem(authSessionStorageKey);
+    navigate('/');
+  };
+  const logout = () => requestNavigation(() => {
+    void (async () => {
+      try {
+        if (getAuthToken()) await apiRequest('api/user/Logout', { method: 'POST' });
+      } catch {
+        // Clear the browser session even if the API or SSO provider is offline.
+      } finally {
+        clearLocalSession();
+      }
+    })();
+  });
   const toggleLanguage = () => setLanguage((current) => current === 'fa' ? 'en' : 'fa');
 
   const themeVars = themeMode === 'dark'
