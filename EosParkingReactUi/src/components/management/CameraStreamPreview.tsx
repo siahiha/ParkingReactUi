@@ -143,6 +143,9 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   const hlsRef = useRef<Hls | null>(null);
   const readerRef = useRef<{ close: () => void } | null>(null);
   const sessionStarted = useRef(false);
+  const mountedRef = useRef(false);
+  const connectionAttemptRef = useRef(0);
+  const connectInFlightRef = useRef(false);
   const statusRef = useRef<CameraStatus | null>(null);
   const initialStatus: CameraStatus = { cameraId: camera.cameraId, state: 'Disconnected', error: null, viewerCount: 0, streamUrl: '', webRtcUrl: '', lastStateChangeUtc: '' };
   const [status, setStatus] = useState<CameraStatus>(initialStatus);
@@ -155,6 +158,10 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   statusRef.current = status;
 
   const connect = async (requestedMode: CameraStreamMode = streamMode) => {
+    if (connectInFlightRef.current || !mountedRef.current) return;
+    connectInFlightRef.current = true;
+    const attemptId = ++connectionAttemptRef.current;
+    const isCancelled = () => !mountedRef.current || connectionAttemptRef.current !== attemptId;
     setStreamMode(requestedMode);
     setError('');
     setVideoReady(false);
@@ -170,18 +177,33 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
     let lastCause: unknown = null;
     try {
       await releasePreviousSession();
+      if (isCancelled()) return;
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           const result = connectResponse(await cameraApi.connect(camera, viewer, requestedMode), initialStatus);
+          if (isCancelled()) {
+            await cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
+            return;
+          }
           sessionStarted.current = true;
           const nextStatus = result.status ?? await cameraApi.getStatus(camera.cameraId).then((response) => normalizeStatus(response, { ...initialStatus, state: 'Connecting', viewerCount: 1, streamUrl: result.streamUrl, webRtcUrl: result.webRtcUrl })).catch(() => ({ ...initialStatus, state: 'Connecting' as CameraStatusState, viewerCount: 1, streamUrl: result.streamUrl, webRtcUrl: result.webRtcUrl }));
+          if (isCancelled()) {
+            await cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
+            return;
+          }
           setStatus(nextStatus);
           setError(nextStatus.error || '');
           setStreamUrl(nextStatus.state === 'Failed' ? '' : result.streamUrl || nextStatus.streamUrl || '');
           setWebRtcUrl(nextStatus.state === 'Failed' ? '' : result.webRtcUrl || nextStatus.webRtcUrl || '');
-          setRois(asRois(await cameraApi.getRois(camera.cameraId, viewer)));
+          const nextRois = await cameraApi.getRois(camera.cameraId, viewer);
+          if (isCancelled()) {
+            await cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
+            return;
+          }
+          setRois(asRois(nextRois));
           return;
         } catch (cause) {
+          if (isCancelled()) return;
           lastCause = cause;
           if (!backendErrorMessage(cause, language) || attempt === 2) throw cause;
           await releasePreviousSession();
@@ -189,26 +211,47 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
         }
       }
     } catch (cause) {
+      if (isCancelled()) return;
       setStatus((current) => ({ ...current, state: 'Failed' }));
       setError(backendErrorMessage(lastCause ?? cause, language) ?? (cause instanceof ApiError ? `HTTP ${cause.status}` : text(language, 'ارتباط با دوربین برقرار نشد.', 'Camera connection failed.')));
+    } finally {
+      if (connectionAttemptRef.current === attemptId) connectInFlightRef.current = false;
     }
   };
 
   const disconnect = async () => {
+    ++connectionAttemptRef.current;
+    connectInFlightRef.current = false;
     setStatus((current) => ({ ...current, state: 'Stopping' }));
     readerRef.current?.close();
     readerRef.current = null;
-    await cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
+    hlsRef.current?.destroy();
+    hlsRef.current = null;
     setStreamUrl('');
     setWebRtcUrl('');
+    await cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
     setVideoReady(false);
-    setStatus((current) => ({ ...current, state: 'Disconnected' }));
+    if (mountedRef.current) {
+      sessionStarted.current = false;
+      setStatus((current) => ({ ...current, state: 'Disconnected' }));
+    }
   };
 
-  useEffect(() => () => {
-    readerRef.current?.close();
-    readerRef.current = null;
-    if (sessionStarted.current) void cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      ++connectionAttemptRef.current;
+      connectInFlightRef.current = false;
+      readerRef.current?.close();
+      readerRef.current = null;
+      hlsRef.current?.destroy();
+      hlsRef.current = null;
+      if (sessionStarted.current) {
+        sessionStarted.current = false;
+        void cameraApi.disconnect(camera.cameraId, viewer).catch(() => undefined);
+      }
+    };
   }, [camera.cameraId, viewer]);
 
   useEffect(() => {

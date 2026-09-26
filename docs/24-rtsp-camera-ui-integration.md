@@ -117,6 +117,9 @@ type CameraStreamPreviewProps = {
 
 - در صورت دریافت خطای ثبت‌شدن قبلی دوربین، کامپوننت session قبلی را دوباره آزاد می‌کند و حداکثر سه بار با فاصله‌ی افزایشی تلاش می‌کند.
 - در صورت شکست نهایی، state به `Failed` می‌رود و متن خطا فقط در Tooltip آیکون وضعیت نمایش داده می‌شود.
+- از اتصال‌های هم‌زمان برای یک preview جلوگیری می‌شود. هر عملیات اتصال یک شناسه‌ی نسل دارد؛
+  اگر preview در حین اتصال unmount شود یا عملیات جدیدی شروع شود، نتیجه‌ی قبلی روی state
+  اعمال نمی‌شود و اگر Backend اتصال را تکمیل کرده باشد، یک `disconnect` جبرانی ارسال می‌شود.
 - WebRTC فقط وقتی `status.state === "Connected"` باشد reader را ایجاد می‌کند و در cleanup با `reader.close()` می‌بندد.
 - HLS قبل از ساخت player، manifest را حداکثر ۳۰ ثانیه با فاصله‌ی ۵۰۰ میلی‌ثانیه بررسی می‌کند تا خطای زودهنگام «stream آماده نشد» ایجاد نشود.
 - در زمان فعال‌بودن stream، اگر وضعیت `Connected` باشد وضعیت Backend هر ۱۵ ثانیه refresh می‌شود تا فشار روی API کم بماند؛ در وضعیت‌های `Connecting`، `Stopping` یا `Failed` فاصله‌ی بررسی ۲٫۵ ثانیه است. در وضعیت `Failed` آدرس‌های stream پاک و player متوقف می‌شوند.
@@ -501,6 +504,8 @@ POST /api/rtspcamera/deleteroi?cameraId=gate-entrance-1&roiId=roi-1&viewerId=bro
 کامپوننت باید هنگام mount یا شروع اتصال، وضعیت `Connecting` را ثبت کند؛ نتیجه‌ی
 اتصال را فقط در صورت لغو‌نشدن effect اعمال کند؛ در خطا `Failed` و پیام محدودشده
 نمایش دهد؛ و در cleanup، polling، player، reader و session دوربین را آزاد کند.
+پیاده‌سازی فعلی cancellation منطقی را با شناسه‌ی نسل عملیات انجام می‌دهد و برای اتصال
+موفقی که بعد از unmount تکمیل شود، disconnect جبرانی می‌فرستد.
 تغییر `cameraId` یا `viewerId` باید ابتدا session قبلی را disconnect کند. اتصال‌های
 هم‌زمان و retry بی‌نهایت مجاز نیستند.
 
@@ -508,7 +513,7 @@ POST /api/rtspcamera/deleteroi?cameraId=gate-entrance-1&roiId=roi-1&viewerId=bro
 
 - از connectهای هم‌زمان تکراری برای یک دوربین جلوگیری شود.
 - هنگام تغییر `cameraId` ابتدا دوربین قبلی disconnect شود.
-- بعد از دریافت `Failed`، retry با فاصله‌ی افزایشی انجام شود؛ مثلاً ۲، ۵ و ۱۰ ثانیه.
+- در نسخه‌ی فعلی، بعد از دریافت `Failed` retry خودکار انجام نمی‌شود و کاربر باید اتصال را دوباره آغاز کند؛ در صورت اضافه‌شدن retry خودکار، باید محدود و با فاصله‌ی افزایشی (مثلاً ۲، ۵ و ۱۰ ثانیه) باشد.
 - polling و event listenerها هنگام unmount پاک شوند.
 - خطای قطع اتصال نباید باعث crash صفحه شود.
 

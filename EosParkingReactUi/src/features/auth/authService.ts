@@ -4,14 +4,7 @@ import type { HomeUser } from '../../pages/homeTypes';
 
 export type LoginResult = { token: string | null; user: HomeUser };
 
-export async function login(username: string, password: string): Promise<LoginResult> {
-  const passwordPayload = isLegacyPasswordEncryptionConfigured()
-    ? { UserPass: encryptLegacyPassword(password), UserPassEncrypted: true }
-    : { UserPass: password, UserPassEncrypted: false };
-  const raw = await apiRequest<unknown>('api/user/Login', {
-    method: 'POST',
-    body: JSON.stringify({ UserName: username, ...passwordPayload }),
-  });
+function parseUserLoginResponse(raw: unknown, fallbackUsername: string): LoginResult {
   const response = parseLoginResponse(raw);
   const value = readLoginUser(response);
   const responseType = response.ResponseResultType ?? response.responseResultType;
@@ -26,7 +19,7 @@ export async function login(username: string, password: string): Promise<LoginRe
     token: readLoginToken(response, value),
     user: {
       id: userId,
-      userName: String(value.UserName ?? value.userName ?? username),
+      userName: String(value.UserName ?? value.userName ?? fallbackUsername),
       currentParking: Number(value.CurrentParking ?? value.currentParking ?? 0),
       userType: Number(value.UserType ?? value.userType ?? 0),
       permissions,
@@ -36,4 +29,33 @@ export async function login(username: string, password: string): Promise<LoginRe
       canManageDashboard: resolveCanManageDashboard({ permissions, permissionPart1, legacyAccessLevelId, canManageDashboard: value.CanManageDashboard ?? value.canManageDashboard }),
     },
   };
+}
+
+export async function login(username: string, password: string): Promise<LoginResult> {
+  const passwordPayload = isLegacyPasswordEncryptionConfigured()
+    ? { UserPass: encryptLegacyPassword(password), UserPassEncrypted: true }
+    : { UserPass: password, UserPassEncrypted: false };
+  const raw = await apiRequest<unknown>('api/user/Login', {
+    method: 'POST',
+    body: JSON.stringify({ UserName: username, ...passwordPayload }),
+  });
+  return parseUserLoginResponse(raw, username);
+}
+
+export async function loginWithSso(input: {
+  issueCode: string;
+  clientId: string;
+  redirectUri: string;
+  codeVerifier: string;
+}): Promise<LoginResult> {
+  const raw = await apiRequest<unknown>('api/user/SsoLogin', {
+    method: 'POST',
+    body: JSON.stringify({
+      IssueCode: input.issueCode,
+      ClientId: input.clientId,
+      RedirectUri: input.redirectUri,
+      CodeVerifier: input.codeVerifier,
+    }),
+  });
+  return parseUserLoginResponse(raw, '');
 }
