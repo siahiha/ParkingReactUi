@@ -1,6 +1,6 @@
 export const appConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:44380/',
-  parkingServiceUrl: import.meta.env.VITE_PARKING_SERVICE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:44380/',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/',
+  parkingServiceUrl: import.meta.env.VITE_PARKING_SERVICE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/',
   authTokenHeader: 'UserToken',
   // A non-empty value switches the web application to SSO-only login.
   ssoBaseUrl: import.meta.env.VITE_SSO_BASE_URL || (import.meta.env.MODE === 'test' ? '' : 'http://localhost:3000/'),
