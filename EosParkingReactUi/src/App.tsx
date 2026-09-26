@@ -12,6 +12,7 @@ import { setAuthToken } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
+import { SsoCallbackPage } from './pages/SsoCallbackPage';
 import { useNavigationGuard } from './pages/NavigationGuardContext';
 import { createAppTheme, defaultThemeShape, getPaletteTokens, type ThemeMode, type ThemeShapeSettings } from './theme';
 
@@ -84,6 +85,7 @@ export function App() {
     : { surface: '#ffffff', shell: '#f3f5f7', text: '#18212b', mutedText: '#687482', border: '#d7dce2', input: '#fbfcfd' };
   return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>
     <Route path="/home/*" element={authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} /> : <Navigate to="/" replace />} />
+    <Route path="/sso/callback" element={<SsoCallbackPage language={language} onAuthenticated={authenticate} />} />
     <Route path="/" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="*" element={<Navigate to={authenticated ? '/home' : '/'} replace />} />
   </Routes></ThemeProvider></RTL></Box>;

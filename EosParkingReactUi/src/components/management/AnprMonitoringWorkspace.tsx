@@ -256,7 +256,7 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
     }
   }, [language, selectRecord]);
 
-  const loadDoorCameras = useCallback(async () => {
+  const loadDoorCameras = useCallback(async (isCancelled: () => boolean = () => false) => {
     setDoorCameras([]);
     setCameraError('');
     if (!doorId) return;
@@ -287,10 +287,13 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
         return equipment ? { ...equipment, ...row } : row;
       });
       const nextCameras = mergedRows.map(toCamera).filter((camera): camera is Camera => Boolean(camera && camera.enabled !== false)).filter((camera, index, list) => list.findIndex((item) => item.cameraId === camera.cameraId) === index);
+      if (isCancelled()) return;
       setDoorCameras(nextCameras);
-      if (failedRequests === 3) setCameraError(text(language, 'اطلاعات دوربین‌های این درب از API دریافت نشد.', 'The cameras for this door could not be loaded from the API.'));
+      if (failedRequests > 0) {
+        setCameraError(text(language, 'اطلاعات دوربین‌های این درب به‌طور کامل از API دریافت نشد.', 'Camera information for this door could not be loaded completely from the API.'));
+      }
     } finally {
-      setLoadingCameras(false);
+      if (!isCancelled()) setLoadingCameras(false);
     }
   }, [doorId, language, parkingId]);
 
@@ -306,19 +309,29 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
       } catch (cause) {
         if (!cancelled) setError(cause instanceof ApiError && cause.status === 403 ? text(language, 'دسترسی دریافت درب‌ها مجاز نیست.', 'Door access is forbidden.') : text(language, 'اطلاعات اولیه مانیتورینگ دریافت نشد.', 'Initial monitoring data could not be loaded.'));
       }
-      if (!cancelled) await loadRecords(true);
     };
     void initialize();
     return () => { cancelled = true; };
-  }, [language, loadRecords, parkingId]);
+  }, [language, parkingId]);
 
-  useEffect(() => { const timer = window.setInterval(() => { void loadRecords(false); }, 3000); return () => window.clearInterval(timer); }, [loadRecords]);
   useEffect(() => {
     pictureRequestRef.current.clear();
     setPictureError('');
     lastIdRef.current = 0;
     setLastId(0);
     void loadRecords(true);
+  }, [loadRecords, source]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setInterval(() => {
+      if (!cancelled) void loadRecords(false);
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [loadRecords, source]);
   useEffect(() => {
     rowsRef.current = rows;
@@ -374,7 +387,11 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
 
     return () => { cancelled = true; };
   }, [language, selected, source]);
-  useEffect(() => { void loadDoorCameras(); }, [loadDoorCameras]);
+  useEffect(() => {
+    let cancelled = false;
+    void loadDoorCameras(() => cancelled);
+    return () => { cancelled = true; };
+  }, [loadDoorCameras]);
 
   const visibleRows = rows;
   const isMemberPlate = (row: Row) => memberPlates.includes(String(field(row, 'Plate', 'CarPlate') ?? '').replaceAll('-', ''));

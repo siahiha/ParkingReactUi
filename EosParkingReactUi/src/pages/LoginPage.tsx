@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Alert, Box, Button, Checkbox, CircularProgress, FormControlLabel, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -11,6 +11,8 @@ import SensorsRoundedIcon from '@mui/icons-material/SensorsRounded';
 import DirectionsCarRoundedIcon from '@mui/icons-material/DirectionsCarRounded';
 import { translations, type Language } from '../i18n';
 import { useLogin } from '../features/auth/useLogin';
+import { beginSsoLogin } from '../features/auth/sso';
+import { appConfig } from '../config';
 import type { HomeUser } from './homeTypes';
 
 type Props = { language: Language; toggleLanguage: () => void; onAuthenticated: (session: { token: string | null; user: HomeUser }) => void };
@@ -27,6 +29,16 @@ export function LoginPage({ language, toggleLanguage, onAuthenticated }: Props) 
   const [apiMessage, setApiMessage] = useState('');
   const [apiMessageSeverity, setApiMessageSeverity] = useState<'info' | 'success' | 'error'>('info');
   const loginRequest = useLogin({ invalid: t.loginInvalid, requestFailed: t.loginRequestFailed });
+  const ssoStarted = useRef(false);
+
+  useEffect(() => {
+    if (!appConfig.ssoBaseUrl.trim() || ssoStarted.current) return;
+    ssoStarted.current = true;
+    void beginSsoLogin().catch((cause) => {
+      setApiMessage(cause instanceof Error ? cause.message : 'خطا در راه‌اندازی ورود SSO');
+      setApiMessageSeverity('error');
+    });
+  }, []);
 
   useEffect(() => {
     const rememberedUsername = window.localStorage.getItem(rememberedUsernameKey);
@@ -51,6 +63,15 @@ export function LoginPage({ language, toggleLanguage, onAuthenticated }: Props) 
     if (rememberMe) window.localStorage.setItem(rememberedUsernameKey, username.trim()); else window.localStorage.removeItem(rememberedUsernameKey);
     onAuthenticated({ token: result.token, user: nextUser });
   };
+
+  if (appConfig.ssoBaseUrl.trim()) {
+    return <Box className="login-page" dir={t.direction}>
+      <Paper className="login-card" elevation={0} sx={{ m: 'auto' }}>
+        <Typography component="h1" variant="h1" className="login-title">ورود به سیستم</Typography>
+        {!apiMessage ? <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box> : <Alert severity="error" sx={{ mt: 3 }}>{apiMessage}</Alert>}
+      </Paper>
+    </Box>;
+  }
 
   return <Box className="login-page" dir={t.direction}>
     <Box className="login-ambient" aria-hidden="true"><Box className="login-ambient-line login-ambient-line-one" /><Box className="login-ambient-line login-ambient-line-two" /></Box>

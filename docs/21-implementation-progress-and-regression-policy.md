@@ -35,10 +35,10 @@
 | تعرفه‌ها و اعضا | workflow ایجاد، ویرایش، حذف و ثبت/لغو اصلی پیاده‌سازی شده | `features/tariffs`، `features/members` | قراردادهای خطا، مجوز و برخی عملیات Windows ناقص است |
 | مجوز خروج | فهرست، فیلتر و تغییر مجوز پیاده‌سازی شده | `ExitPermissionWorkspace.tsx` | قرارداد Backend و audit نیازمند تأیید |
 | درب‌ها و کنترل فهرست خودرو | عمدتاً read-only | `ReadOnlyModuleWorkspace.tsx` | عملیات کامل پیاده‌سازی نشده است |
-| اختصاص شیفت، مدیریت تردد، مانیتورینگ و ANPR | workspace و wiring اولیه‌ی route/API در کد موجود است؛ ANPR شامل polling، merge رکورد، lazy image و workflow حذف تصویر است | `HomeFormRoutes.tsx`، `ShiftAssignmentWorkspace.tsx`، `TrafficRecordsWorkspace.tsx`، `AnprMonitoringWorkspace.tsx`، `management.ts` | پیاده‌سازی UI؛ قرارداد رسمی API، تصویر، realtime و stream نیازمند تأیید Backend |
+| اختصاص شیفت، مدیریت تردد، مانیتورینگ و ANPR | workspace و wiring route/API در کد موجود است؛ ANPR شامل SSE event-driven، merge رکورد، lazy image، مدیریت خطای جزئی تجهیزات و workflow حذف تصویر است | `HomeFormRoutes.tsx`، `ShiftAssignmentWorkspace.tsx`، `TrafficRecordsWorkspace.tsx`، `AnprMonitoringWorkspace.tsx`، `management.ts` | قرارداد رسمی API، تصویر و deployment stream نیازمند تأیید Backend |
 | یکپارچه‌سازی، ETS و Excel | placeholder یا فاقد endpoint قابل اتکا | `homeMenuModel.tsx`، `ReadOnlyModuleWorkspace.tsx` | باز و نیازمند قرارداد Backend/تصمیم محصول |
 | گزارش‌های پارکینگ | آیتم‌های منو وجود دارند، اما مقصدها عمدتاً placeholder/read-only هستند | `homeMenuModel.tsx`، `HomeFormRoutes.tsx` | باز و نیازمند تکمیل مستقل |
-| دوربین RTSP | اتصال WebRTC/HLS، وضعیت، lifecycle و overlay ROI پایه پیاده‌سازی شده | سند ۲۴ و `CameraStreamPreview.tsx` | drag/edit/delete تعاملی ROI هنوز انجام نشده است |
+| دوربین RTSP | اتصال WebRTC/HLS، وضعیت، lifecycle مقاوم در برابر unmount و overlay ROI پایه پیاده‌سازی شده | سند ۲۴، `CameraStreamPreview.tsx` و تست lifecycle | drag/edit/delete تعاملی ROI هنوز انجام نشده است |
 
 ### نقص route guard
 
@@ -139,7 +139,7 @@ Fallback قدیمی برگردانده شد و تست نمایش منوی مدی
 
 در آخرین بررسی:
 
-- ۱۲ فایل تست و ۳۹ تست خودکار موفق است؛
+- ۱۵ فایل تست و ۴۶ تست خودکار موفق است؛
 - `typecheck` موفق است؛
 - `build` موفق است؛
 - build یک هشدار non-blocking برای chunkهای بزرگ‌تر از ۵۰۰KB دارد؛ chunkهای بزرگ فعلی
