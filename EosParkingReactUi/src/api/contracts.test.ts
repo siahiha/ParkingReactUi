@@ -3,6 +3,7 @@ import {
   isSuccessfulLegacyResponse,
   parseAuthSession,
   parseLoginResponse,
+  parseSsoUserPreferences,
   permissionNames,
   readLoginPermissions,
   resolveCanManageDashboard,
@@ -43,5 +44,17 @@ describe('API contracts', () => {
       Values: { Id: 7, AccessPermissionValuePart1: String(1n << 56n) },
     });
     expect(response.Values?.AccessPermissionValuePart1).toBe(String(1n << 56n));
+  });
+
+  it('deserializes SSO preferences without failing the login response', () => {
+    const response = parseLoginResponse({
+      ResponseResultType: 1,
+      Values: { Id: 7, PreferencesJson: JSON.stringify({ theme: 'dark', themeColors: { primary: '#123456' }, locale: 'en-US' }) },
+    });
+    expect(parseSsoUserPreferences(response.Values?.PreferencesJson)).toEqual({
+      theme: 'dark',
+      themeColors: { primary: '#123456' },
+      locale: 'en-US',
+    });
   });
 });

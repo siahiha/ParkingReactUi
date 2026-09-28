@@ -12,7 +12,6 @@ vi.mock('../../api/management', async () => {
       ...actual.anprApi,
       listRecent: vi.fn(),
       getPictureById: vi.fn(),
-      getLastId: vi.fn(),
       deleteOldPictures: vi.fn(),
       listMemberPlates: vi.fn(),
     },
@@ -37,7 +36,6 @@ describe('AnprMonitoringWorkspace', () => {
     mockedParkingApi.getDoorDevices.mockResolvedValue({ Values: [] });
     mockedParkingApi.getEquipments.mockResolvedValue({ Values: [] });
     mockedAnprApi.listMemberPlates.mockResolvedValue({ Values: [{ Plate: '12الف345' }] });
-    mockedAnprApi.getLastId.mockResolvedValue({ Values: 10 });
     mockedAnprApi.listRecent.mockResolvedValue({ Values: [{ Id: 10, Plate: '12الف345', InsertTime: '2026-09-25T10:00:00Z' }] });
     mockedAnprApi.getPictureById.mockResolvedValue({ Values: { Id: 10, CarPic: [], PlatePic: [] } });
   });
@@ -47,7 +45,6 @@ describe('AnprMonitoringWorkspace', () => {
 
     expect(screen.getByText('ANPR monitoring')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('12الف345')).toBeInTheDocument());
-    expect(mockedAnprApi.getLastId).toHaveBeenCalled();
     expect(mockedAnprApi.listRecent).toHaveBeenCalled();
     expect(mockedAnprApi.getPictureById).toHaveBeenCalledWith('10', false);
   });

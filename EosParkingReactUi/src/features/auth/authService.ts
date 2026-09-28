@@ -1,8 +1,8 @@
 import { apiRequest, ApiError, encryptLegacyPassword, isLegacyPasswordEncryptionConfigured } from '../../api/client';
-import { isSuccessfulLegacyResponse, parseLoginResponse, readLoginPermissions, readLoginToken, readLoginUser, resolveCanManageDashboard } from '../../api/contracts';
+import { isSuccessfulLegacyResponse, parseLoginResponse, parseSsoUserPreferences, readLoginPermissions, readLoginToken, readLoginUser, resolveCanManageDashboard, type SsoUserPreferences } from '../../api/contracts';
 import type { HomeUser } from '../../pages/homeTypes';
 
-export type LoginResult = { token: string | null; user: HomeUser };
+export type LoginResult = { token: string | null; user: HomeUser; preferences?: SsoUserPreferences };
 
 function parseUserLoginResponse(raw: unknown, fallbackUsername: string): LoginResult {
   const response = parseLoginResponse(raw);
@@ -17,6 +17,7 @@ function parseUserLoginResponse(raw: unknown, fallbackUsername: string): LoginRe
   const legacyAccessLevelId = Number(value.UserAccessLevelId ?? value.userAccessLevelId ?? 0);
   return {
     token: readLoginToken(response, value),
+    preferences: parseSsoUserPreferences(value.PreferencesJson ?? value.preferencesJson ?? response.PreferencesJson ?? response.preferencesJson),
     user: {
       id: userId,
       userName: String(value.UserName ?? value.userName ?? fallbackUsername),

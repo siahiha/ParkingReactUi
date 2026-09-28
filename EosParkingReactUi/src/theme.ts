@@ -4,6 +4,11 @@ import type { PaletteName } from './components/homeProfileTypes';
 export type AppDirection = 'rtl' | 'ltr';
 export type ThemeMode = 'light' | 'dark';
 export type ThemeShapeSettings = { controlRadius: number; buttonRadius: number; popupRadius: number };
+export type ThemeColorOverrides = {
+  primary?: string; hover?: string; soft?: string; secondary?: string;
+  background?: string; paper?: string; surface?: string; shell?: string;
+  text?: string; mutedText?: string; border?: string; input?: string;
+};
 
 export const defaultThemeShape: ThemeShapeSettings = { controlRadius: 4, buttonRadius: 3, popupRadius: 5 };
 
@@ -12,23 +17,82 @@ export const paletteTokens: Record<ThemeMode, Record<PaletteName, { primary: str
   dark: { blue: { primary: '#8aa4bd', hover: '#b2c8da', soft: '#304252' }, green: { primary: '#79b9a5', hover: '#9bd1bf', soft: '#29453d' }, slate: { primary: '#b2bcc8', hover: '#d4dbe3', soft: '#39434d' } },
 };
 
-export function getPaletteTokens(mode: ThemeMode, name: PaletteName) { return paletteTokens[mode][name]; }
+function colorValue(source: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    if (typeof source[key] === 'string' && source[key].trim()) return source[key].trim();
+  }
+  return undefined;
+}
 
-export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode = 'light', paletteName: PaletteName = 'blue', shape: ThemeShapeSettings = defaultThemeShape) {
-  const tokens = getPaletteTokens(mode, paletteName);
+function colorSource(raw: unknown, mode: ThemeMode): Record<string, unknown> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const root = raw as Record<string, unknown>;
+  const modeValue = mode === 'light'
+    ? root.light ?? root.lightMode ?? root.day ?? root.dayMode
+    : root.dark ?? root.darkMode ?? root.night ?? root.nightMode;
+  return modeValue && typeof modeValue === 'object' && !Array.isArray(modeValue)
+    ? modeValue as Record<string, unknown>
+    : root;
+}
+
+export function resolveThemeColorOverrides(raw: unknown, mode: ThemeMode): ThemeColorOverrides {
+  const source = colorSource(raw, mode);
+  return {
+    primary: colorValue(source, 'primary', 'primaryColor', 'main', 'mainColor'),
+    hover: colorValue(source, 'hover', 'primaryHover', 'primaryDark'),
+    soft: colorValue(source, 'soft', 'primarySoft', 'backgroundSoft'),
+    secondary: colorValue(source, 'secondary', 'secondaryColor'),
+    background: colorValue(source, 'background', 'backgroundColor', 'pageBackground'),
+    paper: colorValue(source, 'paper', 'surface', 'surfaceColor', 'cardBackground'),
+    surface: colorValue(source, 'surface', 'surfaceColor', 'paper', 'cardBackground'),
+    shell: colorValue(source, 'shell', 'shellColor', 'layoutBackground'),
+    text: colorValue(source, 'text', 'textColor', 'foreground'),
+    mutedText: colorValue(source, 'mutedText', 'mutedColor', 'secondaryText'),
+    border: colorValue(source, 'border', 'borderColor', 'divider'),
+    input: colorValue(source, 'input', 'inputBackground', 'fieldBackground'),
+  };
+}
+
+export function resolvePaletteNames(raw: unknown): { light?: PaletteName; dark?: PaletteName } {
+  const known = new Set<PaletteName>(['blue', 'green', 'slate']);
+  const result: { light?: PaletteName; dark?: PaletteName } = {};
+  const read = (value: unknown) => typeof value === 'string' && known.has(value as PaletteName) ? value as PaletteName : undefined;
+  if (typeof raw === 'string') {
+    const palette = read(raw);
+    if (palette) return { light: palette, dark: palette };
+    return result;
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return result;
+  const source = raw as Record<string, unknown>;
+  const shared = read(source.palette ?? source.paletteName ?? source.name);
+  result.light = read(source.lightPalette ?? source.light) ?? shared;
+  result.dark = read(source.darkPalette ?? source.dark) ?? shared;
+  return result;
+}
+
+export function getPaletteTokens(mode: ThemeMode, name: PaletteName, overrides: ThemeColorOverrides = {}) {
+  const tokens = { ...paletteTokens[mode][name] };
+  if (overrides.primary) tokens.primary = overrides.primary;
+  if (overrides.hover) tokens.hover = overrides.hover;
+  if (overrides.soft) tokens.soft = overrides.soft;
+  return tokens;
+}
+
+export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode = 'light', paletteName: PaletteName = 'blue', shape: ThemeShapeSettings = defaultThemeShape, overrides: ThemeColorOverrides = {}) {
+  const tokens = getPaletteTokens(mode, paletteName, overrides);
   return createTheme({
   direction,
   palette: {
     mode,
     primary: { main: tokens.primary, dark: tokens.hover, contrastText: '#ffffff' },
-    secondary: { main: '#687482' },
+    secondary: { main: overrides.secondary ?? '#687482' },
     success: { main: '#2e7d32' },
     warning: { main: '#a86600' },
     error: { main: '#c62828' },
     info: { main: '#28658a' },
-    background: { default: mode === 'dark' ? '#202830' : '#f3f5f7', paper: mode === 'dark' ? '#29333d' : '#ffffff' },
-    divider: '#d7dce2',
-    text: { primary: mode === 'dark' ? '#f3f5f7' : '#18212b', secondary: mode === 'dark' ? '#b7c1ca' : '#687482' },
+    background: { default: overrides.background ?? (mode === 'dark' ? '#202830' : '#f3f5f7'), paper: overrides.paper ?? (mode === 'dark' ? '#29333d' : '#ffffff') },
+    divider: overrides.border ?? '#d7dce2',
+    text: { primary: overrides.text ?? (mode === 'dark' ? '#f3f5f7' : '#18212b'), secondary: overrides.mutedText ?? (mode === 'dark' ? '#b7c1ca' : '#687482') },
   },
   shape: { borderRadius: shape.controlRadius },
   typography: {

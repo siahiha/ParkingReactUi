@@ -4,6 +4,7 @@ import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { ApiError } from '../../api/client';
 import { anprApi, parkingApi, type Camera } from '../../api/management';
+import { AnprRealtimeConnection } from '../../api/anprRealtime';
 import { appConfig } from '../../config';
 import { formatDateTime } from '../../utils/formatters';
 import { AppDataGrid } from '../AppDataGrid';
@@ -149,12 +150,6 @@ const preserveCachedPictures = (row: Row, cached: Row | undefined): Row => {
   return result;
 };
 const stableRecordKey = (row: Row) => recordId(row, 0);
-const numericValue = (input: unknown) => {
-  const unwrapped = unwrapValues(input);
-  if (typeof unwrapped === 'number' || typeof unwrapped === 'string') return Number(unwrapped) || 0;
-  const row = asRecord(unwrapped);
-  return Number(row ? field(row, 'Value', 'LastAnprId', 'MaxAnprId', 'Id') : 0) || 0;
-};
 const mergeAnprRows = (current: Row[], incoming: Row[], limit: number) => {
   const cachedByKey = new Map(current.map((row) => [stableRecordKey(row), row]));
   const unique = new Map<string, Row>();
@@ -181,8 +176,6 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   const [source, setSource] = useState(false);
   const [doorId, setDoorId] = useState('');
   const [selected, setSelected] = useState<Row | null>(null);
-  const [lastId, setLastId] = useState(0);
-  const lastIdRef = useRef(0);
   const [loading, setLoading] = useState(true);
   const [loadingCameras, setLoadingCameras] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -214,34 +207,19 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
     setRefreshing(true);
     const requestSource = sourceRef.current;
     if (reset) {
-      lastIdRef.current = 0;
-      setLastId(0);
       rowsRef.current = [];
       setRows([]);
       selectRecord(null);
     }
     try {
-      const nextIdValue = await anprApi.getLastId(requestSource);
+      // This is a one-time initial snapshot only; live changes arrive through SignalR.
+      const nextRows = rowsOf(await anprApi.listRecent(requestSource)).map(withoutRecordPictures);
       if (sourceRef.current !== requestSource) return;
-      const nextId = numericValue(nextIdValue);
-      const lastKnownId = lastIdRef.current;
-      if (nextId === 0) {
-        lastIdRef.current = 0;
-        setLastId(0);
-        rowsRef.current = [];
-        setRows([]);
-        selectRecord(null);
-      } else if (reset || nextId !== lastKnownId) {
-        const nextRows = rowsOf(await anprApi.listRecent(requestSource)).map(withoutRecordPictures);
-        if (sourceRef.current !== requestSource) return;
-        const previousRows = rowsRef.current;
-        const updatedRows = reset || nextId < lastKnownId ? nextRows : mergeAnprRows(previousRows, nextRows, 20);
-        rowsRef.current = updatedRows;
-        setRows(updatedRows);
-        selectRecord(selectAnprRowAfterRefresh(previousRows, updatedRows, selectedKeyRef.current, reset, stableRecordKey));
-        lastIdRef.current = nextId;
-        setLastId(nextId);
-      }
+      const previousRows = rowsRef.current;
+      const updatedRows = reset ? nextRows : mergeAnprRows(previousRows, nextRows, 20);
+      rowsRef.current = updatedRows;
+      setRows(updatedRows);
+      selectRecord(selectAnprRowAfterRefresh(previousRows, updatedRows, selectedKeyRef.current, reset, stableRecordKey));
       setError('');
     } catch (cause) {
       setError(cause instanceof ApiError && cause.status === 403 ? text(language, 'دسترسی مشاهده تشخیص پلاک مجاز نیست.', 'ANPR monitoring access is forbidden.') : text(language, 'دریافت رکوردهای تشخیص پلاک ناموفق بود.', 'ANPR records could not be loaded.'));
@@ -317,22 +295,31 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   useEffect(() => {
     pictureRequestRef.current.clear();
     setPictureError('');
-    lastIdRef.current = 0;
-    setLastId(0);
     void loadRecords(true);
   }, [loadRecords, source]);
 
   useEffect(() => {
-    let cancelled = false;
-    const timer = window.setInterval(() => {
-      if (!cancelled) void loadRecords(false);
-    }, 3000);
-
+    let active = true;
+    const realtime = new AnprRealtimeConnection();
+    void realtime.start(source, (incoming) => {
+      if (!active) return;
+      const previousRows = rowsRef.current;
+      const updatedRows = mergeAnprRows(previousRows, [incoming], 20);
+      rowsRef.current = updatedRows;
+      setRows(updatedRows);
+      setLoading(false);
+      setRefreshing(false);
+      selectRecord(selectAnprRowAfterRefresh(previousRows, updatedRows, selectedKeyRef.current, false, stableRecordKey));
+      setError('');
+    }, (cause) => {
+      if (active) setError(text(language, 'اتصال زنده تشخیص پلاک برقرار نشد.', 'Live ANPR connection failed.'));
+      console.warn('ANPR SignalR error', cause);
+    });
     return () => {
-      cancelled = true;
-      window.clearInterval(timer);
+      active = false;
+      realtime.stop();
     };
-  }, [loadRecords, source]);
+  }, [language, selectRecord, source]);
   useEffect(() => {
     rowsRef.current = rows;
     setSelected((current) => {
@@ -355,6 +342,10 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
     }
 
     const selectedKey = stableRecordKey(selectedRecord);
+    if (field(selectedRecord, 'CarPic', 'CarImage', 'PlatePic', 'PlateImage') !== undefined) {
+      setLoadingPicture(false);
+      return;
+    }
     const requestKey = `${source}:${String(pictureId)}`;
     if (pictureRequestRef.current.has(requestKey)) return;
 

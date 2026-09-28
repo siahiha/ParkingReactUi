@@ -1,3 +1,4 @@
+import { apiRequest } from '../../api/client';
 import { appConfig } from '../../config';
 
 const pendingSsoKey = 'eos-parking-pending-sso';
@@ -30,16 +31,43 @@ function normalizeBaseUrl(value: string) {
   return value.endsWith('/') ? value : `${value}/`;
 }
 
+async function getSsoPkcePair() {
+  const raw = await apiRequest<unknown>('api/user/SsoPkce', { method: 'POST' });
+  type PkceValue = {
+    CodeVerifier?: unknown;
+    codeVerifier?: unknown;
+    CodeVerifierChallenge?: unknown;
+    codeVerifierChallenge?: unknown;
+  };
+  const response = raw as {
+    Values?: PkceValue | null;
+    values?: PkceValue | null;
+    Message?: string | null;
+    message?: string | null;
+    RealMessage?: string | null;
+    realMessage?: string | null;
+  };
+  const value = response.Values ?? response.values;
+  const codeVerifier = value?.CodeVerifier ?? value?.codeVerifier;
+  const codeVerifierChallenge = value?.CodeVerifierChallenge ?? value?.codeVerifierChallenge;
+
+  if (typeof codeVerifier !== 'string' || typeof codeVerifierChallenge !== 'string' ||
+      !codeVerifier || !codeVerifierChallenge) {
+    throw new Error(response.Message || response.message || response.RealMessage || response.realMessage ||
+      'اطلاعات PKCE از API دریافت نشد.');
+  }
+
+  return { codeVerifier, codeVerifierChallenge };
+}
+
 export async function beginSsoLogin() {
   const baseUrl = appConfig.ssoBaseUrl.trim();
   const clientId = appConfig.ssoClientId.trim();
   if (!baseUrl) throw new Error('SSO is not configured.');
   if (!clientId) throw new Error('SSO client id is not configured.');
 
-  const codeVerifier = randomBase64Url(32);
+  const { codeVerifier, codeVerifierChallenge } = await getSsoPkcePair();
   const state = randomBase64Url(24);
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
-  const codeChallenge = base64UrlEncode(new Uint8Array(digest));
   const redirectUri = `${window.location.origin}/sso/callback`;
 
   const pending: PendingSso = {
@@ -54,7 +82,7 @@ export async function beginSsoLogin() {
   const authorizationUrl = new URL('sso', normalizeBaseUrl(baseUrl));
   authorizationUrl.searchParams.set('client_id', clientId);
   authorizationUrl.searchParams.set('redirect_uri', redirectUri);
-  authorizationUrl.searchParams.set('code_challenge', codeChallenge);
+  authorizationUrl.searchParams.set('code_challenge', codeVerifierChallenge);
   authorizationUrl.searchParams.set('code_challenge_method', 'S256');
   authorizationUrl.searchParams.set('operation', 'authorize');
   window.location.assign(authorizationUrl.toString());
