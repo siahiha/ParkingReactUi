@@ -30,10 +30,13 @@
 به `AnprMonitoringWorkspace` متصل است. صفحه منبع ANPR، درب، رکوردهای اخیر، وضعیت عضو بودن
 پلاک، تصویر خودرو و تصویر پلاک را نمایش می‌دهد. گرید رکوردها حتی در حالت خالی نیز رندر
 می‌شود و فقط پیام empty در کنار/زیر گرید نمایش داده می‌شود. پس از بارگذاری اولیه، صفحه
-هر ۳ ثانیه `GetLastMaxAnprId` را فراخوانی می‌کند. اگر شناسه‌ی آخر تغییر کرده باشد،
-`GetAnprRecordWithPicTop20LastHour` دوباره فراخوانی شده و گرید با رکوردهای جدید merge
-می‌شود. هنگام تغییر منبع، شمارنده و گرید reset شده و polling با منبع جدید ادامه پیدا
-می‌کند؛ هنگام خروج component نیز timer متوقف می‌شود.
+پس از بارگذاری اولیه، UI دیگر به‌صورت دوره‌ای به دیتابیس/API درخواست نمی‌فرستد. سرویس
+Windows API یک `AnprPollingService` دارد که برای هر دو منبع شهاب و الموصنعت، هر ۱ ثانیه
+متدهای repository متناظر با `GetLastMaxAnprId` و `GetLastMaxEosAnprId` را بررسی می‌کند؛ با تغییر شناسه، رکوردهای جدید را
+با `GetAnprPicById` می‌خواند و از طریق SignalR به گروه همان منبع می‌فرستد. UI فقط یک
+snapshot اولیه از `GetAnprRecordWithPicTop20LastHour` می‌گیرد و سپس از Hub مسیر
+`/signalr`، متد `anprDetected` را دریافت می‌کند. هنگام تغییر منبع، عضویت SignalR بین
+گروه‌های منبع جابه‌جا می‌شود و در صورت قطع اتصال، کلاینت تلاش مجدد می‌کند.
 حذف تصاویر قدیمی فقط پس از تأیید صریح کاربر انجام می‌شود و خطاهای 403 و خطاهای عمومی به
 وضعیت قابل نمایش تبدیل می‌شوند. پس از انتخاب درب، تجهیزات متصل به آن درب از API خوانده
 می‌شوند؛ دوربین‌های فعال با `CameraStreamPreview`، اتصال WebRTC/HLS و تصویر زنده نمایش داده
@@ -55,8 +58,8 @@
 |---|---|---|
 | آخرین رکوردهای دارای تصویر | `GET api/Anpr/GetAnprRecordWithPicTop20LastHour?isEosAnpr={bool}` | نام endpoint مشخص؛ schema تصویر/خطا/مجوز ناقص |
 | تصویر رکورد انتخاب‌شده | `GET api/Anpr/GetAnprPicById?anprId={id}&isEosAnpr={bool}` | در UI به‌صورت lazy مصرف می‌شود؛ schema تصویر و خطا نیازمند تأیید |
-| آخرین شناسه ANPR | `GET api/Anpr/GetLastMaxAnprId?isEosAnpr={bool}` | نام endpoint مشخص؛ نوع wrapper و خطا نیازمند تأیید |
-| بررسی رکوردهای جدید | `GET api/Anpr/GetLastMaxAnprId?isEosAnpr={bool}` و در صورت تغییر `GET api/Anpr/GetAnprRecordWithPicTop20LastHour?isEosAnpr={bool}` | polling دوره‌ای ۳ ثانیه‌ای در UI |
+| آخرین شناسه ANPR | `GET api/Anpr/GetLastMaxAnprId?isEosAnpr={bool}` | endpoint قدیمی برای سازگاری؛ بررسی زنده اکنون داخل سرویس SignalR انجام می‌شود |
+| دریافت زنده رکوردهای جدید | SignalR `/signalr`, Hub `anprHub`, client event `anprDetected` | Poller سمت سرویس هر ۱ ثانیه شناسه را بررسی و جزئیات را با `GetAnprPicById` منتشر می‌کند |
 | حذف تصاویر قدیمی | `GET api/Anpr/DeleteOldAnprPics?isEosAnpr={bool}` | نام endpoint مشخص؛ retention، مجوز و اثر حذف نیازمند تأیید |
 | پلاک‌های اعضا | `POST api/Member/GetAllMembersPlates` | نام endpoint مشخص؛ request/response رسمی نیازمند تأیید |
 | درب‌های پارکینگ | `GET api/Parking/GetParkingDoors?parkingId={id}` | در UI موجود و endpoint مشخص؛ مدل کامل نیازمند تأیید |

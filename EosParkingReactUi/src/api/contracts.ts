@@ -34,6 +34,8 @@ const loginUserSchema = z.object({
   userToken: nullableString,
   Token: nullableString,
   token: nullableString,
+  PreferencesJson: nullableString,
+  preferencesJson: nullableString,
   Permissions: z.array(z.string()).optional(),
   permissions: z.array(z.string()).optional(),
 }).passthrough();
@@ -51,11 +53,35 @@ export const loginResponseSchema = z.object({
   userToken: z.string().nullable().optional(),
   Token: z.string().nullable().optional(),
   token: z.string().nullable().optional(),
+  PreferencesJson: nullableString,
+  preferencesJson: nullableString,
   Permissions: z.array(z.string()).nullable().optional(),
   permissions: z.array(z.string()).nullable().optional(),
 }).passthrough();
 
 export type LoginApiResponse = z.infer<typeof loginResponseSchema>;
+
+export type SsoUserPreferences = {
+  theme?: string;
+  themeColors?: unknown;
+  locale?: string;
+};
+
+export function parseSsoUserPreferences(raw: unknown): SsoUserPreferences | undefined {
+  if (raw == null || raw === '') return undefined;
+  try {
+    const value = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+    const record = value as Record<string, unknown>;
+    return {
+      theme: typeof record.theme === 'string' ? record.theme : undefined,
+      themeColors: record.themeColors,
+      locale: typeof record.locale === 'string' ? record.locale : undefined,
+    };
+  } catch {
+    return undefined;
+  }
+}
 
 export type AuthSession = {
   token: string | null;

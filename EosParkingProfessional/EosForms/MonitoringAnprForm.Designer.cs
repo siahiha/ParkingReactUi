@@ -69,7 +69,6 @@ namespace EosParkingProfessional.EosForms
             this.splitContainerControl1 = new DevExpress.XtraEditors.SplitContainerControl();
             this.splitContainerControl3 = new DevExpress.XtraEditors.SplitContainerControl();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-            this.timerGetRecord = new System.Windows.Forms.Timer(this.components);
             this.doorsComboBox = new EosParkingTools.EosControls.EosComboBoxEdit();
             ((System.ComponentModel.ISupportInitialize)(this.styleController)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerControl2)).BeginInit();
@@ -581,10 +580,6 @@ namespace EosParkingProfessional.EosForms
             this.splitContainerControl3.TabIndex = 2;
             this.splitContainerControl3.Text = "splitContainerControl3";
             // 
-            // timerGetRecord
-            // 
-            this.timerGetRecord.Tick += new System.EventHandler(this.timerGetRecord_Tick);
-            // 
             // eosComboBoxEdit1
             // 
             this.doorsComboBox.ConvertNumberToEnglish = false;
@@ -644,7 +639,6 @@ namespace EosParkingProfessional.EosForms
         private DevExpress.XtraGrid.Views.Grid.GridView gridView2;
         private DevExpress.XtraEditors.SplitContainerControl splitContainerControl3;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
-        private System.Windows.Forms.Timer timerGetRecord;
         private DevExpress.XtraGrid.Columns.GridColumn gridColumnID;
         private DevExpress.XtraGrid.Columns.GridColumn gridColumnPlate;
         private DevExpress.XtraGrid.Columns.GridColumn gridColumnCamera;

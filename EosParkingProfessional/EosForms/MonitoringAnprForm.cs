@@ -20,12 +20,12 @@ namespace EosParkingProfessional.EosForms
     {
         #region Fields
 
-        private long _currentLastAnprId;
         private List<AnprWithPics> _anprWithPicsList;
         private ParkingDoorEntity _currentDoor;
-        private bool _isGettingNewRecords;
         private List<CarEntity> memberPlates;
         private readonly HashSet<long> _loadedAnprPictureIds = new HashSet<long>();
+        private AnprSignalRClient _anprSignalRClient;
+        private bool _formLoaded;
 
         #endregion
 
@@ -39,15 +39,15 @@ namespace EosParkingProfessional.EosForms
 
         private void MonitoringAnprForm_Load(object sender, EventArgs e) => LoadAndInitForm();
 
-        private void timerGetRecord_Tick(object sender, EventArgs e) => GetNewRecords(true);
-
         private void gridView2_CustomDrawCell(object sender, RowCellCustomDrawEventArgs e) => CustomDrawCellInsertTime(e);
 
         private void gridView2_FocusedRowChanged(object sender, FocusedRowChangedEventArgs e) => SetNewSelectedRowImageToPictures(sender);
 
-        private void RbEosSourceShahab_CheckedChanged(object sender, EventArgs e) => OnRbEosSourceCheckedChanged();
+        private void RbEosSourceShahab_CheckedChanged(object sender, EventArgs e) => OnRbEosSourceCheckedChanged(sender);
 
-        private void RbEosSourceElmoSanat_CheckedChanged(object sender, EventArgs e) => OnRbEosSourceCheckedChanged();
+        private void RbEosSourceElmoSanat_CheckedChanged(object sender, EventArgs e) => OnRbEosSourceCheckedChanged(sender);
+
+        private void MonitoringAnprForm_FormClosed(object sender, FormClosedEventArgs e) => _anprSignalRClient?.Dispose();
 
         #endregion
 
@@ -80,12 +80,6 @@ namespace EosParkingProfessional.EosForms
             return result != null && result.HttpResponseType == System.Net.HttpStatusCode.OK
                 ? result.Values
                 : null;
-        }
-
-        private long GetLastMaxAnprId()
-        {
-            var result = GetJsonObjecToLink<long>(ApiAddress.AnprApi.GetLastMaxAnprId + $"?isEosAnpr={RbEosSourceElmoSanat.Checked}");
-            return (result != null && result.HttpResponseType == System.Net.HttpStatusCode.OK) ? result.Values : 0;
         }
 
         private void InitializeUserDoor()
@@ -160,7 +154,7 @@ namespace EosParkingProfessional.EosForms
         {
             _anprWithPicsList = new List<AnprWithPics>();
             InitializeComponent();
-
+            FormClosed += MonitoringAnprForm_FormClosed;
         }
 
         private void LoadAndInitForm()
@@ -169,9 +163,10 @@ namespace EosParkingProfessional.EosForms
             //RemoveOldImages();
             InitializeUserDoor();
             InitializeDoors();
-            GetNewRecords(false);
-            PrepareTimer();
             GetAllMemberPlates();
+            LoadInitialRecords();
+            _formLoaded = true;
+            StartAnprSignalR();
         }
 
         private void InitializeDoors()
@@ -220,36 +215,59 @@ namespace EosParkingProfessional.EosForms
             }
         }
 
-        private void GetNewRecords(bool checkRecordIsGetting)
+        private void LoadInitialRecords()
         {
-            timerGetRecord.Enabled = false;
-            if (checkRecordIsGetting && _isGettingNewRecords) return;
-            _isGettingNewRecords = true;
+            _loadedAnprPictureIds.Clear();
+            _anprWithPicsList = GetAnprRecordWithPicTop20LastHour();
+            SetAnprRecordsGridDataSource(_anprWithPicsList);
+        }
+
+        private async void StartAnprSignalR()
+        {
             try
             {
-                var lastAnprId = GetLastMaxAnprId();
-                if (lastAnprId > _currentLastAnprId)
-                {
-                    _currentLastAnprId = lastAnprId;
-                    _loadedAnprPictureIds.Clear();
-                    _anprWithPicsList = GetAnprRecordWithPicTop20LastHour();
-                    SetAnprRecordsGridDataSource(_anprWithPicsList);
-                    //RemoveOldImages();
-                }
-                else if (lastAnprId == 0)
-                {
-                    _currentLastAnprId = 0;
-                    _loadedAnprPictureIds.Clear();
-                    _anprWithPicsList = new List<AnprWithPics>();
-                    SetAnprRecordsGridDataSource(_anprWithPicsList);
-                }
+                _anprSignalRClient = new AnprSignalRClient();
+                _anprSignalRClient.RecordReceived += AnprSignalRClient_RecordReceived;
+                _anprSignalRClient.ConnectionError += exception => AnprSignalRClient_ConnectionError(this, exception);
+
+                var address = ConfigurationManager.AppSettings["AnprSignalRAddress"];
+                if (string.IsNullOrWhiteSpace(address))
+                    address = "http://localhost:3012/signalr";
+
+                await _anprSignalRClient.ConnectAsync(address, WebHelper.UserToken, RbEosSourceElmoSanat.Checked);
             }
-            finally
+            catch (Exception exception)
             {
-                
-                timerGetRecord.Enabled = true;
-                _isGettingNewRecords = false;
+                AnprSignalRClient_ConnectionError(this, exception);
             }
+        }
+
+        private void AnprSignalRClient_RecordReceived(object sender, AnprWithPics record)
+        {
+            if (record == null)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => AnprSignalRClient_RecordReceived(sender, record)));
+                return;
+            }
+
+            if (_anprWithPicsList.Any(item => item.ID == record.ID))
+                return;
+
+            _loadedAnprPictureIds.Add(record.ID);
+            _anprWithPicsList.Insert(0, record);
+            _anprWithPicsList = _anprWithPicsList
+                .OrderByDescending(item => item.InsertTime)
+                .Take(20)
+                .ToList();
+            SetAnprRecordsGridDataSource(_anprWithPicsList);
+        }
+
+        private void AnprSignalRClient_ConnectionError(object sender, Exception exception)
+        {
+            LogHelper.Log(System.Diagnostics.TraceEventType.Error, "ANPR SignalR connection error: " + exception);
         }
 
         private void SetNewSelectedRowImageToPictures(object sender)
@@ -290,13 +308,6 @@ namespace EosParkingProfessional.EosForms
             var oldImage = pictureBox.Image;
             pictureBox.Image = newImage;
             oldImage?.Dispose();
-        }
-
-        private void PrepareTimer()
-        {
-            timerGetRecord.Interval = 3000;
-            timerGetRecord.Enabled = true;
-            timerGetRecord.Start();
         }
 
         private void InitializeCamera()
@@ -375,11 +386,24 @@ namespace EosParkingProfessional.EosForms
             }
         }
 
-        private void OnRbEosSourceCheckedChanged()
+        private void OnRbEosSourceCheckedChanged(object sender)
         {
-            _currentLastAnprId = 0;
-            _loadedAnprPictureIds.Clear();
-            GetNewRecords(true);
+            if (!_formLoaded || !(sender is RadioButton radioButton) || !radioButton.Checked)
+                return;
+
+            var selectedSource = RbEosSourceElmoSanat.Checked;
+            LoadInitialRecords();
+            if (_anprSignalRClient == null)
+            {
+                StartAnprSignalR();
+                return;
+            }
+
+            _anprSignalRClient.SubscribeAsync(selectedSource).ContinueWith(task =>
+            {
+                if (task.IsFaulted && task.Exception != null)
+                    AnprSignalRClient_ConnectionError(this, task.Exception.GetBaseException());
+            });
         }
 
         #endregion
