@@ -108,9 +108,11 @@ public sealed class IdentityDatabaseForm : Form
         var footer = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 10, 0, 0) };
         Button close = MakeButton("Close");
         Button similarity = MakeButton("Face similarity");
+        Button palmSimilarity = MakeButton("Palm similarity");
         close.Click += (_, _) => Close();
         similarity.Click += (_, _) => { using var form = new FaceSimilarityForm(_faces); form.ShowDialog(this); RefreshPeople(); };
-        footer.Controls.AddRange([close, similarity]);
+        palmSimilarity.Click += (_, _) => { using var form = new PalmSimilarityForm(_palms); form.ShowDialog(this); RefreshPeople(); };
+        footer.Controls.AddRange([close, similarity, palmSimilarity]);
         root.Controls.Add(footer, 0, 1); root.SetColumnSpan(footer, 2);
         Controls.Add(root);
     }

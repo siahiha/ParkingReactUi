@@ -188,23 +188,26 @@ public sealed class DesktopEventStore
 
     public DesktopEventRecord? TryCreatePlateFaceAssociation(DesktopEventRecord current, int maxWindowMs = 1500)
     {
-        if (!current.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) && !current.Scenario.Equals("Face", StringComparison.OrdinalIgnoreCase)) return null;
+        if (!current.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) && !current.Scenario.Equals("Face", StringComparison.OrdinalIgnoreCase) && !current.Scenario.Equals("Palm", StringComparison.OrdinalIgnoreCase)) return null;
         lock (_gate)
         {
             DesktopEventRecord? other = _records
                 .Where(item => item.CameraId.Equals(current.CameraId, StringComparison.OrdinalIgnoreCase) && item.Id != current.Id)
-                .Where(item => (item.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) || item.Scenario.Equals("Face", StringComparison.OrdinalIgnoreCase)) && !item.Scenario.Equals(current.Scenario, StringComparison.OrdinalIgnoreCase))
+                .Where(item => (item.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) || item.Scenario.Equals("Face", StringComparison.OrdinalIgnoreCase) || item.Scenario.Equals("Palm", StringComparison.OrdinalIgnoreCase)) && !item.Scenario.Equals(current.Scenario, StringComparison.OrdinalIgnoreCase))
+                .Where(item => item.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) || current.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase))
                 .Where(item => Math.Abs((item.OccurredAtUtc - current.OccurredAtUtc).TotalMilliseconds) <= maxWindowMs)
                 .OrderByDescending(item => Math.Abs((item.OccurredAtUtc - current.OccurredAtUtc).TotalMilliseconds))
                 .FirstOrDefault();
             if (other is null) return null;
-            if (_records.Any(item => item.Scenario.Equals("PlateFace", StringComparison.OrdinalIgnoreCase) && item.CameraId.Equals(current.CameraId, StringComparison.OrdinalIgnoreCase) && Math.Abs((item.OccurredAtUtc - current.OccurredAtUtc).TotalMilliseconds) <= maxWindowMs && item.Label.Contains(current.Label, StringComparison.OrdinalIgnoreCase))) return null;
+            if (_records.Any(item => (item.Scenario.Equals("PlateFace", StringComparison.OrdinalIgnoreCase) || item.Scenario.Equals("PlatePalm", StringComparison.OrdinalIgnoreCase)) && item.CameraId.Equals(current.CameraId, StringComparison.OrdinalIgnoreCase) && Math.Abs((item.OccurredAtUtc - current.OccurredAtUtc).TotalMilliseconds) <= maxWindowMs && item.Label.Contains(current.Label, StringComparison.OrdinalIgnoreCase))) return null;
 
             DesktopEventRecord plate = current.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) ? current : other;
-            DesktopEventRecord face = current.Scenario.Equals("Face", StringComparison.OrdinalIgnoreCase) ? current : other;
-            using Bitmap? crop = LoadImage(face.CropPath) ?? LoadImage(plate.CropPath);
+            DesktopEventRecord identity = current.Scenario.Equals("Plate", StringComparison.OrdinalIgnoreCase) ? other : current;
+            string pairScenario = identity.Scenario.Equals("Palm", StringComparison.OrdinalIgnoreCase) ? "PlatePalm" : "PlateFace";
+            string pairEvent = identity.Scenario.Equals("Palm", StringComparison.OrdinalIgnoreCase) ? "PlatePalmAssociated" : "PlateFaceAssociated";
+            using Bitmap? crop = LoadImage(identity.CropPath) ?? LoadImage(plate.CropPath);
             using Bitmap? frame = LoadImage(current.FullFramePath) ?? LoadImage(other.FullFramePath);
-            return Append(current.CameraId, current.CameraName, current.RoiName, "PlateFaceAssociated", "PlateFace", $"{plate.Label} + {face.Label}", plate.PlateText ?? plate.Label, face.Identity ?? face.Label, Math.Min(plate.Confidence, face.Confidence), current.OccurredAtUtc > other.OccurredAtUtc ? current.OccurredAtUtc : other.OccurredAtUtc, crop, frame, new { plate = plate.PayloadJson, face = face.PayloadJson, associationWindowMs = maxWindowMs });
+            return Append(current.CameraId, current.CameraName, current.RoiName, pairEvent, pairScenario, $"{plate.Label} + {identity.Label}", plate.PlateText ?? plate.Label, identity.Identity ?? identity.Label, Math.Min(plate.Confidence, identity.Confidence), current.OccurredAtUtc > other.OccurredAtUtc ? current.OccurredAtUtc : other.OccurredAtUtc, crop, frame, new { plate = plate.PayloadJson, identity = identity.PayloadJson, associationWindowMs = maxWindowMs });
         }
     }
 

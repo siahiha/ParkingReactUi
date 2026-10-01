@@ -2,9 +2,9 @@
 
 ## 1. هدف قرارداد
 
-> **وضعیت implementation فعلی:** این سند هم قرارداد موجود و هم بخش‌هایی از طراحی تکمیلی را نگه می‌دارد. در کد فعلی association تاریخی خودرو/شخص و endpointهای `/api/v1/associations` وجود ندارد. ارتباط فعلی با دو component `plate` و `face`، و فیلدهای `source.associationType` و `source.associationAgeMs` ثبت می‌شود.
+> **وضعیت implementation فعلی:** این سند هم قرارداد موجود و هم بخش‌هایی از طراحی تکمیلی را نگه می‌دارد. در کد فعلی association تاریخی خودرو/شخص و endpointهای `/api/v1/associations` وجود ندارد. ارتباط فعلی با componentهای `plate`، `face` و `palm`، و فیلدهای `source.associationType` و `source.associationAgeMs` ثبت می‌شود.
 
-رخدادهای فعلی از این نوع‌ها استفاده می‌کنند: `PlateDetected`، `FaceRecognized`، `FaceUnknown` و `PlateFaceMatched`. سناریوها به‌ترتیب `PlateOnly`، `FaceRecognition` و `PlateFaceAssociation` هستند. association می‌تواند `SameFrame`، `TemporalAssociation` یا `Standalone` باشد.
+رخدادهای فعلی از این نوع‌ها استفاده می‌کنند: `PlateDetected`، `FaceRecognized`، `FaceUnknown`، `PalmRecognized`، `PalmUnknown`، `PlateFaceMatched` و `PlatePalmMatched`. سناریوها شامل `PlateOnly`، `FaceRecognition`، `PalmRecognition`، `PlateFaceAssociation` و `PlatePalmAssociation` هستند. association می‌تواند `SameFrame`، `TemporalAssociation` یا `Standalone` باشد.
 
 رخداد فعلی در `DetectionRuntimeHost.BuildEvent` این فیلدهای source را تولید می‌کند: `serviceNodeId`، `cameraId`، `cameraName`، `taskId`، `taskName`، `taskIds`، `roiId`، `roiName`، `roiIds`، `sourceFrameSequence`، `sourceFrameSequences`، `associationType`، `associationAgeMs`، `frameWidth` و `frameHeight`. بخش trigger شامل `matched`، `cooldownApplied`، `matchingTriggerIds` و `suppressedTriggerIds` است.
 
@@ -31,7 +31,9 @@
 | --- | --- |
 | `PlateOnly` | تشخیص پلاک بدون وابستگی به چهره |
 | `FaceRecognition` | تشخیص چهره و در صورت امکان شناسایی از Identity Database |
+| `PalmRecognition` | تشخیص کف دست و در صورت امکان شناسایی از Identity Database |
 | `PlateFaceAssociation` | اتصال componentهای پلاک و چهره در همان فریم یا پنجرهٔ زمانی؛ در نسخهٔ فعلی مقایسه با رکورد تاریخی انجام نمی‌شود |
+| `PlatePalmAssociation` | اتصال componentهای پلاک و کف دست در همان فریم یا پنجرهٔ زمانی؛ در نسخهٔ فعلی مقایسه با رکورد تاریخی انجام نمی‌شود |
 
 سناریو فقط نوع رخداد را مشخص می‌کند. هر سناریو می‌تواند چند component تشخیص داشته باشد.
 
@@ -229,7 +231,11 @@ RecognitionStatus:
 
 در این حالت باید مشخص باشد که فرد واقعاً ناشناس تشخیص داده شده است، نه اینکه recognition اصلاً اجرا نشده باشد.
 
-## 7. سناریوی `PlateFaceAssociation`
+## 7. سناریوی `PalmRecognition`
+
+component کف دست با کلید `palm` تولید می‌شود و علاوه بر فیلدهای عمومی، `recognitionStatus` و شیء `recognition` دارد. فیلدهای شناسایی آن با Face هم‌قرارداد هستند: `personId`، `name`، `personNumber`، `isUnknown`، `similarity`، `minimumSimilarity` و `matchedSampleId`. crop این component با artifact نوع `PalmCrop` ذخیره می‌شود.
+
+## 8. سناریوی `PlateFaceAssociation`
 
 در implementation فعلی association داخل `components.association` به‌صورت رکورد مستقل تولید نمی‌شود. وجود هم‌زمان کلیدهای `components.plate` و `components.face`، به‌همراه `source.associationType` و `source.associationAgeMs` نتیجهٔ ارتباط را نشان می‌دهد. نمونهٔ زیر قرارداد طراحی تکمیلی است و برای مصرف client فعلی باید با این قاعده تفسیر شود.
 
@@ -280,7 +286,7 @@ RecognitionStatus:
 | `InsufficientQuality` | یکی از دو component کیفیت لازم را ندارد |
 | `NoPreviousRecord` | تشخیص انجام شد ولی سابقه‌ای پیدا نشد |
 
-## 8. رکورد ارتباطی قبلی
+## 9. رکورد ارتباطی قبلی
 
 رکورد ارتباطی خودرو و شخص نباید داخل `People` یا `FaceSamples` قرار گیرد. این یک domain جداست:
 
@@ -300,7 +306,7 @@ VehiclePersonAssociation
 
 این رکورد می‌تواند از eventهای معتبر ساخته یا توسط API/کاربر تأیید شود. event جدید باید هم نتیجهٔ جاری و هم reference رکورد قبلی را گزارش کند.
 
-## 9. Artifactهای تصویری هر رخداد
+## 10. Artifactهای تصویری هر رخداد
 
 برای هر event، بستهٔ artifactها می‌تواند شامل این موارد باشد:
 
@@ -314,12 +320,13 @@ VehiclePersonAssociation
 | `DetectionCrop` | crop دقیق component چهره |
 | `FaceAlignedCrop` | crop aligned چهره، فقط اگر metadata مربوطه تولید شده باشد |
 | `PlateCrop` | crop نهایی component پلاک |
+| `PalmCrop` | crop نهایی component کف دست |
 | `CharacterCrop` | crop یا image sheet characterها؛ در مسیر فعلی تولید نمی‌شود |
 
 در پیاده‌سازی فعلی آرشیو تشخیص، برای هر event یک `FullFrameRaw` از اولین source
 frame یکتا ذخیره می‌شود؛ اگر association زمانی frame دیگری داشته باشد، آن frame
 با نوع `AssociatedFrameRaw` ذخیره می‌شود. برای componentها، `PlateCrop` برای
-پلاک و `DetectionCrop` برای چهره ساخته می‌شود و `FaceAlignedCrop` فقط در صورت
+پلاک، `DetectionCrop` برای چهره و `PalmCrop` برای کف دست ساخته می‌شود و `FaceAlignedCrop` فقط در صورت
 وجود metadata مربوطه اضافه می‌گردد. `RoiRaw` و artifactهای annotated در مسیر
 فعلی آرشیو ساخته نمی‌شوند.
 
@@ -347,7 +354,7 @@ frame یکتا ذخیره می‌شود؛ اگر association زمانی frame د
 مسیر فعلی از `FullFrameRaw`، در صورت نیاز `AssociatedFrameRaw`، و cropهای
 `PlateCrop` یا `DetectionCrop` استفاده می‌کند.
 
-## 10. Payload live، replay و Webhook
+## 11. Payload live، replay و Webhook
 
 هر سه کانال باید همین event contract را استفاده کنند:
 
@@ -357,7 +364,7 @@ frame یکتا ذخیره می‌شود؛ اگر association زمانی frame د
 
 برای eventهای کوچک، ارسال `DetectionCrop` به‌صورت multipart اختیاری است؛ Base64 برای فریم کامل توصیه نمی‌شود.
 
-## 11. API artifact و association
+## 12. API artifact و association
 
 APIهای فعال event عبارت‌اند از:
 
@@ -372,7 +379,7 @@ SignalR: /hubs/detections
 پارامترهای `clientMode`، `faceRequired`، `plateRequired`، `includeUnknownFace`، `windowMs`، `clientCameraIds` و `clientRoiIds` برای فیلتر connection-specific در `GET /api/v1/events` پشتیبانی می‌شوند. association تاریخی خودرو/شخص و API مستقل آن هنوز roadmap است.
 
 
-## 12. معیار پذیرش قرارداد
+## 13. معیار پذیرش قرارداد
 
 - رخداد پلاک بدون نیاز به Face شامل فریم، ROI، پلاک، characterها و جزئیات مدل باشد.
 - رخداد چهره مشخص کند detection موفق بوده، recognition اجرا شده یا نه، فرد ناشناس است یا به چه شخصی متصل شده است.

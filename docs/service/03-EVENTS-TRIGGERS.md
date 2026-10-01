@@ -4,7 +4,7 @@
 
 > **مرز implementation فعلی:** `EventStore` و replay ترتیبی SignalR فعال هستند و event قبل از broadcast در SQLite ثبت می‌شود. outbox مستقل، dispatcher webhook و API gap جداگانه در نسخهٔ فعلی وجود ندارند و بخش‌های مربوط به آن‌ها در این سند roadmap محسوب می‌شوند.
 
-هر connection در Hub subscription مستقل دارد. `Subscribe(lastSequence, ClientSubscription)` فیلترهای `All`، `Plate` و `KnownFace`، اجباری‌بودن componentها، unknown face، scope دوربین/ROI، پنجرهٔ association و `CooldownSeconds` را برای همان کلاینت اعمال می‌کند. این cooldown فقط replay/live همان connection است و با cooldown ثبت canonical یا cooldown تریگر قاطی نمی‌شود.
+هر connection در Hub subscription مستقل دارد. `Subscribe(lastSequence, ClientSubscription)` فیلترهای `All`، `Plate`، `Palm`، `KnownFace` و `KnownPalm`، اجباری‌بودن componentها، unknown face/palm، scope دوربین/ROI، پنجرهٔ association و `CooldownSeconds` را برای همان کلاینت اعمال می‌کند. این cooldown فقط replay/live همان connection است و با cooldown ثبت canonical یا cooldown تریگر قاطی نمی‌شود.
 
 ارسال live به UI به‌تنهایی قابل‌اعتماد نیست. UI ممکن است خاموش، قطع شبکه یا در حال restart باشد. بنابراین سرویس باید مستقل از وضعیت UI تشخیص بدهد، event را ذخیره کند و بعداً امکان replay بدهد.
 
@@ -40,7 +40,7 @@ DetectionEvent
  ├── CameraId / CameraName
  ├── TaskId
  ├── RoiId / RoiName
- ├── Kind: Face / Plate / ...
+ ├── Kind: Face / Palm / Plate / ...
  ├── Label
  ├── IdentityId / PlateText
  ├── Confidence / Similarity
@@ -60,6 +60,7 @@ DetectionEvent
 
 - نتیجهٔ خام inference داخلی باقی بماند.
 - Face با identity/track و cooldown نرمال شود.
+- Palm با identity/track و cooldown نرمال شود.
 - Plate با plate text، track و cooldown نرمال شود.
 - detectionهای زیر threshold event عمومی نشوند، مگر trigger مخصوص debug فعال باشد.
 - برای هر task policy مشخص شود: `EveryAccepted`, `OnEnter`, `OnChange`, `Interval`.
@@ -204,4 +205,4 @@ GET /api/v1/events/gaps
 
 ## 10. قرارداد کامل تشخیص و تصاویر
 
-مدل کامل payload و artifactهای تصویری در [07-DETECTION-EVENT-CONTRACT.md](07-DETECTION-EVENT-CONTRACT.md) تعریف شده است. آن سند سه سناریوی رسمی `PlateOnly`، `FaceRecognition` و `PlateFaceAssociation` را پوشش می‌دهد و برای هر رخداد فریم کامل، ROI، crop تشخیص و جزئیات شناسایی را مشخص می‌کند.
+مدل کامل payload و artifactهای تصویری در [07-DETECTION-EVENT-CONTRACT.md](07-DETECTION-EVENT-CONTRACT.md) تعریف شده است. آن سند سناریوهای `PlateOnly`، `FaceRecognition`، `PalmRecognition`، `PlateFaceAssociation` و `PlatePalmAssociation` را پوشش می‌دهد و برای هر رخداد فریم کامل، ROI، crop تشخیص و جزئیات شناسایی را مشخص می‌کند.

@@ -12,7 +12,7 @@ public sealed class AutomationManagerForm : Form
     private readonly TextBox _triggerLabel = new();
     private readonly TextBox _triggerPlate = new();
     private readonly TextBox _triggerIdentity = new();
-    private readonly ComboBox _triggerScenario = NewCombo("Any", "Plate", "Face", "Palm", "PlateFace");
+    private readonly ComboBox _triggerScenario = NewCombo("Any", "Plate", "Face", "Palm", "PlateFace", "PlatePalm");
     private readonly ComboBox _triggerAction = NewCombo("WindowsNotification", "Webhook");
     private readonly TextBox _triggerTarget = new();
     private readonly CheckBox _triggerEnabled = new() { Text = "Enabled", Checked = true, AutoSize = true };

@@ -209,14 +209,17 @@ export interface InvocationLog {
 export interface ClientSubscriptionProfile {
   id: string;
   name: string;
-  mode: "All" | "Plate" | "KnownFace";
+  mode: "All" | "Plate" | "Palm" | "KnownFace" | "KnownPalm";
   cameraIds: string[];
   roiIds: string[];
   faceRequired: boolean;
   plateRequired: boolean;
+  palmRequired: boolean;
   includeFace: boolean;
   includePlate: boolean;
+  includePalm: boolean;
   includeUnknownFace: boolean;
+  includeUnknownPalm: boolean;
   includeArtifacts: boolean;
   windowMs: number;
   cooldownSeconds: number;
@@ -286,6 +289,22 @@ export interface PalmSample {
   originalFileName: string;
   createdAtUtc: string;
   detectionConfidence: number;
+  palmImage?: number[];
+  embedding?: number[];
+}
+export interface PalmIdentity {
+  id: Id;
+  name: string;
+  isUnknown: boolean;
+  personNumber: number;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+  samples: PalmSample[];
+}
+export interface PalmSimilarityPair {
+  left: PalmSample;
+  right: PalmSample;
+  similarity: number;
 }
 export interface PalmPersonSummary {
   personId: Id;

@@ -73,6 +73,7 @@ import {
   useInvocations,
   useModels,
   usePeople,
+  usePalmPeople,
   usePalmPeopleSummary,
   usePersonPalmSamples,
   usePersonPlates,
@@ -96,6 +97,8 @@ import type {
   FaceSample,
   FaceSimilarityPair,
   PalmSample,
+  PalmIdentity,
+  PalmSimilarityPair,
   PersonPlate,
   LiveOverlayDetection,
   LiveOverlaySnapshot,
@@ -271,10 +274,14 @@ function fmt(v: unknown, digits = 1) {
 function eventTitle(event: DetectionEvent) {
   const hasFace = Boolean(event.components.face);
   const hasPlate = Boolean(event.components.plate);
+  const hasPalm = Boolean(event.components.palm);
+  if (hasFace && hasPlate && hasPalm) return "چهره، کف دست و پلاک";
   if (hasFace && hasPlate) return "چهره و پلاک";
+  if (hasPalm && hasPlate) return "کف دست و پلاک";
+  if (hasPalm && hasFace) return "کف دست و چهره";
   return s(
     event.components.face?.label,
-    s(event.components.plate?.plateText, event.eventType),
+    s(event.components.palm?.label, s(event.components.plate?.plateText, event.eventType)),
   );
 }
 function confidenceText(value: unknown) {
@@ -289,7 +296,7 @@ function objectValue(value: unknown): Record<string, unknown> {
 }
 function eventDetailRows(event: DetectionEvent) {
   const rows: Array<{
-    kind: "face" | "plate";
+    kind: "face" | "plate" | "palm";
     label: string;
     value: string;
     confidence: string;
@@ -313,6 +320,16 @@ function eventDetailRows(event: DetectionEvent) {
       confidence: confidenceText(face.confidence),
     });
   }
+  const palm = event.components.palm;
+  if (palm) {
+    const recognition = objectValue(palm.recognition);
+    rows.push({
+      kind: "palm",
+      label: "کف دست",
+      value: s(recognition.name, s(palm.label, "کف دست")),
+      confidence: confidenceText(palm.confidence),
+    });
+  }
   return rows;
 }
 function eventPreviewArtifacts(event: DetectionEvent) {
@@ -329,6 +346,9 @@ function eventPreviewArtifacts(event: DetectionEvent) {
     event.components.face
       ? findArtifact(["facealignedcrop", "detectioncrop"])
       : undefined,
+    event.components.palm
+      ? findArtifact(["palmcrop", "detectioncrop"])
+      : undefined,
   ].filter((artifact, index, items): artifact is Artifact => {
     if (!artifact) return false;
     return items.findIndex((item) => item?.artifactId === artifact.artifactId) === index;
@@ -338,6 +358,7 @@ function eventPreviewArtifacts(event: DetectionEvent) {
     "detectioncrop",
     "platecrop",
     "facealignedcrop",
+    "palmcrop",
     "roiannotated",
     "associatedframeraw",
     "fullframeraw",
@@ -3863,6 +3884,7 @@ function Faces() {
   const [group, setGroup] = useState(true);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [similarOpen, setSimilarOpen] = useState(false);
+  const [palmSimilarOpen, setPalmSimilarOpen] = useState(false);
   const create = useMutation({
     mutationFn: api.createPerson,
     onSuccess: async (person) => {
@@ -3949,7 +3971,10 @@ function Faces() {
               icon={UsersRound}
               onClick={() => setSimilarOpen(true)}
             >
-              Similar samples
+              Face similar samples
+            </Button>
+            <Button variant="soft" icon={Hand} onClick={() => setPalmSimilarOpen(true)}>
+              Palm similar samples
             </Button>
             {bulkSelected.size > 0 && (
               <Button
@@ -4121,6 +4146,7 @@ function Faces() {
           onClose={() => setSimilarOpen(false)}
         />
       )}
+      {palmSimilarOpen && <PalmSimilarityDialog onClose={() => setPalmSimilarOpen(false)} />}
     </>
   );
 }
@@ -4702,6 +4728,56 @@ function SimilarityDialog({
   );
 }
 
+function PalmSimilarityDialog({ onClose }: { onClose: () => void }) {
+  const [threshold, setThreshold] = useState(0.4);
+  const [different, setDifferent] = useState(false);
+  const [pairs, setPairs] = useState<PalmSimilarityPair[]>();
+  const [busy, setBusy] = useState(false);
+  const client = useQueryClient();
+  const check = async () => {
+    setBusy(true);
+    try { setPairs(await api.palmSimilar(threshold, different)); }
+    finally { setBusy(false); }
+  };
+  const merge = async (pair: PalmSimilarityPair) => {
+    if (!confirm(`ادغام ${pair.right.personName} در ${pair.left.personName}؟`)) return;
+    await api.mergePeople(pair.left.personId, pair.right.personId);
+    await client.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
+    await client.invalidateQueries({ queryKey: ["palm-people-summary"], refetchType: "active" });
+    await check();
+  };
+  return (
+    <div className="modal-backdrop">
+      <section className="modal-panel similarity-dialog">
+        <div className="panel-head">
+          <div><h3>Similar palm samples</h3><span>threshold پیش‌فرض 0.40</span></div>
+          <button className="icon-button" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="similar-toolbar">
+          <Field label="Minimum similarity"><input type="number" min=".3" max=".99" step=".01" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} /></Field>
+          <label className="check-field"><input type="checkbox" checked={different} onChange={(e) => setDifferent(e.target.checked)} /><span>Only different people</span></label>
+          <Button icon={Search} onClick={() => void check()}>{busy ? "در حال بررسی..." : "Check similarity"}</Button>
+        </div>
+        <div className="similar-results">
+          {pairs?.map((pair) => (
+            <div className="similar-pair" key={`${pair.left.id}-${pair.right.id}`}>
+              <IdentitySampleImage imageUrl={api.palmSampleImageUrl(pair.left.id)} alt="left palm" />
+              <div><b>{pair.left.personName} / sample {pair.left.sampleNumber}</b><span>#{pair.left.personNumber}</span></div>
+              <strong>{pair.similarity.toFixed(3)}</strong>
+              <IdentitySampleImage imageUrl={api.palmSampleImageUrl(pair.right.id)} alt="right palm" />
+              <div><b>{pair.right.personName} / sample {pair.right.sampleNumber}</b><span>#{pair.right.personNumber}</span></div>
+              <Button variant="soft" onClick={() => void merge(pair)}>ادغام در اولی</Button>
+            </div>
+          ))}
+          {pairs && !pairs.length && <Empty icon={CheckCircle2} title="جفت مشابهی پیدا نشد" text="threshold را کمتر کنید یا فیلتر افراد متفاوت را بردارید." />}
+          {!pairs && <Empty icon={Hand} title="Similarity اجرا نشده" text="آستانه را انتخاب و Check را اجرا کنید." />}
+        </div>
+        <div className="modal-foot"><span>نمونه‌های کف دست</span><Button variant="ghost" onClick={onClose}>بستن</Button></div>
+      </section>
+    </div>
+  );
+}
+
 function Events() {
   type DeleteMode = "all" | "today" | "7days" | "30days" | "custom";
   type DeleteSelection = { range: { fromUtc?: string; toUtc?: string }; label: string };
@@ -4758,7 +4834,9 @@ function Events() {
           s(event.source.roiName),
           s(event.components.plate?.plateText),
           s(event.components.face?.label),
+          s(event.components.palm?.label),
           s(recognition.name),
+          s(objectValue(event.components.palm?.recognition).name),
         ].join(" ").toLocaleLowerCase();
         return searchText.includes(normalizedFilter);
       })
@@ -4839,7 +4917,9 @@ function Events() {
         <option value="">همهٔ سناریوها</option>
         <option value="PlateOnly">پلاک</option>
         <option value="FaceRecognition">چهره</option>
+        <option value="PalmRecognition">کف دست</option>
         <option value="PlateFaceAssociation">پلاک + چهره</option>
+        <option value="PlatePalmAssociation">پلاک + کف دست</option>
       </select>
       <div className="event-delete-tools">
         <select
@@ -4888,7 +4968,7 @@ function Events() {
               <Activity size={35} />
               <b>یک رخداد را انتخاب کنید</b>
               <span>
-                فریم کامل، cropهای ROI/Plate/Face و payload جزئی آن نمایش داده
+                فریم کامل، cropهای ROI/Plate/Face/Palm و payload جزئی آن نمایش داده
                 می‌شود.
               </span>
             </div>
@@ -4927,7 +5007,7 @@ function Events() {
               >
                 <span className="event-cell">
                   <i
-                    className={`event-kind-dot ${event.scenario.toLowerCase().includes("face") ? "face" : "plate"}`}
+                    className={`event-kind-dot ${event.scenario.toLowerCase().includes("face") ? "face" : event.scenario.toLowerCase().includes("palm") ? "palm" : "plate"}`}
                   />
                   <div>
                     <b>{eventTitle(event)}</b>
@@ -5086,6 +5166,7 @@ function Triggers() {
   const query = useTriggers();
   const cameras = useCameras();
   const people = usePeople();
+  const palmPeople = usePalmPeople();
   const mutation = useTriggerMutation();
   const client = useQueryClient();
   const [selected, setSelected] = useState<TriggerDefinition>();
@@ -5161,6 +5242,7 @@ function Triggers() {
               trigger={selected}
               cameras={cameras.data ?? []}
               people={people.data ?? []}
+              palmPeople={palmPeople.data ?? []}
               exists={
                 query.data?.items.some((item) => item.id === selected.id) ??
                 false
@@ -5266,7 +5348,9 @@ function ClientSubscriptionTester({ cameras }: { cameras: CameraStatus[] }) {
                 <select value={profile.mode} onChange={(e) => updateProfile(profile.id, { mode: e.target.value as ClientSubscriptionProfile["mode"] })}>
                   <option value="All">همهٔ رخدادها</option>
                   <option value="Plate">پلاک‌محور</option>
+                  <option value="Palm">کف دست‌محور</option>
                   <option value="KnownFace">چهرهٔ شناخته‌شده</option>
+                  <option value="KnownPalm">کف دست شناخته‌شده</option>
                 </select>
               </Field>
               <Field label="پنجرهٔ association (ms)">
@@ -5277,7 +5361,9 @@ function ClientSubscriptionTester({ cameras }: { cameras: CameraStatus[] }) {
               </Field>
               <Field label="چهره الزامی باشد"><Toggle checked={profile.faceRequired} onChange={(value) => updateProfile(profile.id, { faceRequired: value })} /></Field>
               <Field label="پلاک الزامی باشد"><Toggle checked={profile.plateRequired} onChange={(value) => updateProfile(profile.id, { plateRequired: value })} /></Field>
+              <Field label="کف دست الزامی باشد"><Toggle checked={profile.palmRequired} onChange={(value) => updateProfile(profile.id, { palmRequired: value })} /></Field>
               <Field label="چهرهٔ ناشناس هم ارسال شود"><Toggle checked={profile.includeUnknownFace} onChange={(value) => updateProfile(profile.id, { includeUnknownFace: value })} /></Field>
+              <Field label="کف دست ناشناس هم ارسال شود"><Toggle checked={profile.includeUnknownPalm} onChange={(value) => updateProfile(profile.id, { includeUnknownPalm: value })} /></Field>
             </div>
             <div className="trigger-scope">
               <b>دوربین‌های این پروفایل</b>
@@ -5302,6 +5388,7 @@ function TriggerEditor({
   trigger,
   cameras,
   people,
+  palmPeople,
   exists,
   onSave,
   onDelete,
@@ -5309,6 +5396,7 @@ function TriggerEditor({
   trigger: TriggerDefinition;
   cameras: CameraStatus[];
   people: FaceIdentity[];
+  palmPeople: PalmIdentity[];
   exists: boolean;
   onSave: (trigger: TriggerDefinition) => void;
   onDelete: () => void;
@@ -5359,6 +5447,9 @@ function TriggerEditor({
             <option>PlateRecognition</option>
             <option>FaceRecognition</option>
             <option>PlateFaceMatch</option>
+            <option>PalmRecognition</option>
+            <option>PalmUnknown</option>
+            <option>PlatePalmMatch</option>
           </select>
         </Field>
         <Field
@@ -5403,7 +5494,7 @@ function TriggerEditor({
             }
           />
         </Field>
-        <Field label="Face identity">
+        <Field label="Face / Palm identity">
           <select
             value={draft.identityId ?? ""}
             onChange={(e) => update("identityId", e.target.value || undefined)}
@@ -5414,6 +5505,13 @@ function TriggerEditor({
               .map((person) => (
                 <option key={person.id} value={person.id}>
                   #{person.personNumber} {person.name}
+                </option>
+              ))}
+            {palmPeople
+              .filter((item) => item.samples.length > 0 && !item.isUnknown)
+              .map((person) => (
+                <option key={`palm-${person.id}`} value={person.id}>
+                  #{person.personNumber} {person.name} (Palm)
                 </option>
               ))}
           </select>
@@ -5511,6 +5609,9 @@ const invocationEventTypeOptions: InvocationSourceOption[] = [
   ["FaceRecognized", "شناسایی چهره"],
   ["FaceUnknown", "چهره ناشناس"],
   ["PlateFaceMatched", "تطبیق پلاک و چهره"],
+  ["PalmRecognized", "شناسایی کف دست"],
+  ["PalmUnknown", "کف دست ناشناس"],
+  ["PlatePalmMatched", "تطبیق پلاک و کف دست"],
 ];
 
 function InvocationEventTypeSelect({
@@ -5618,6 +5719,20 @@ const invocationSourceGroups: { label: string; options: InvocationSourceOption[]
     ],
   },
   {
+    label: "تشخیص کف دست",
+    options: [
+      ["components.palm.label", "برچسب کف دست"],
+      ["components.palm.confidence", "اعتماد تشخیص کف دست"],
+      ["components.palm.recognitionStatus", "وضعیت شناسایی کف دست"],
+      ["components.palm.recognition.personId", "شناسه فرد"],
+      ["components.palm.recognition.name", "نام فرد"],
+      ["components.palm.recognition.personNumber", "شماره فرد"],
+      ["components.palm.recognition.isUnknown", "کف دست ناشناس است؟"],
+      ["components.palm.recognition.similarity", "شباهت کف دست"],
+      ["components.palm.trackId", "شناسه Track کف دست"],
+    ],
+  },
+  {
     label: "تریگر",
     options: [
       ["trigger.matched", "تریگر فعال شده است؟"],
@@ -5637,6 +5752,9 @@ const invocationSourceGroups: { label: string; options: InvocationSourceOption[]
       ["image.crop.face", "کراپ چهره - باینری"],
       ["image.crop.face.rawBase64", "کراپ چهره - Base64 خام"],
       ["image.crop.face.base64", "کراپ چهره - Data URI"],
+      ["image.crop.palm", "کراپ کف دست - باینری"],
+      ["image.crop.palm.rawBase64", "کراپ کف دست - Base64 خام"],
+      ["image.crop.palm.base64", "کراپ کف دست - Data URI"],
       ["image.faceAlignedCrop", "کراپ تراز شده چهره - باینری"],
       ["image.faceAlignedCrop.rawBase64", "کراپ تراز شده چهره - Base64 خام"],
       ["image.faceAlignedCrop.base64", "کراپ تراز شده چهره - Data URI"],

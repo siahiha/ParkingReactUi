@@ -31,7 +31,7 @@ public sealed partial class MainForm
             .Concat(_cameras.Values.SelectMany(camera => camera.AnalysisHistory.Select(item => new
             {
                 Camera = camera.Settings.Name,
-                Label = item.Detection.TrackId is int trackId ? $"Face #{trackId}" : "Face",
+                Label = FormatAnalysisLabel(item.Detection),
                 Crop = item.Crop,
                 Confidence = item.Detection.Confidence,
                 Timestamp = item.Timestamp,
@@ -40,7 +40,7 @@ public sealed partial class MainForm
             .Concat(_cameras.Values.SelectMany(camera => camera.ArchivedAnalysisHistory.Select(item => new
             {
                 Camera = camera.Settings.Name,
-                Label = item.Detection.TrackId is int trackId ? $"Face #{trackId}" : "Face",
+                Label = FormatAnalysisLabel(item.Detection),
                 Crop = item.Crop,
                 Confidence = item.Detection.Confidence,
                 Timestamp = item.Timestamp,
@@ -66,6 +66,17 @@ public sealed partial class MainForm
                 if (entry.Archived) entry.Crop.Dispose();
             }
         }
+    }
+
+    private static string FormatAnalysisLabel(AnalysisDetection detection)
+    {
+        string kind = detection.Kind switch
+        {
+            AnalysisKind.Face => "Face",
+            AnalysisKind.Palm => "Palm",
+            _ => detection.Kind.ToString()
+        };
+        return detection.TrackId is int trackId ? $"{kind} #{trackId}" : kind;
     }
 
     private void AddPlateCard(

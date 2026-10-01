@@ -77,7 +77,7 @@ DELETE /api/v1/invocations/{invocationId}
 | --- | --- |
 | `enabled` | فعال یا غیرفعال بودن تعریف |
 | `cameraIds` | محدودکردن به شناسهٔ داخلی دوربین؛ خالی یعنی همهٔ دوربین‌ها |
-| `eventTypes` | محدودکردن به نوع رخداد، مانند `PlateDetected` یا `FaceRecognized`؛ در UI از combo نوع رخداد انتخاب می‌شود و حالت پیش‌فرض همهٔ رخدادهاست |
+| `eventTypes` | محدودکردن به نوع رخداد، مانند `PlateDetected`، `FaceRecognized`، `PalmRecognized`، `PalmUnknown` یا `PlatePalmMatched`؛ در UI از combo نوع رخداد انتخاب می‌شود و حالت پیش‌فرض همهٔ رخدادهاست |
 | `triggered` | `true` فقط eventهای همراه trigger، `false` فقط eventهای معمولی، `null` هر دو |
 | `triggerIds` | حداقل یکی از triggerهای منطبق باید در این فهرست باشد |
 | `minimumConfidence` | بیشترین confidence componentهای event باید حداقل این مقدار باشد |
@@ -140,6 +140,8 @@ workflowId = "plate-flow"   stepOrder = 3   dependsOnPrevious = true
 
 منابع تشخیص چهره شامل `components.face.label`، `confidence`، `recognitionStatus`، `recognition.personId`، `recognition.name`، `recognition.personNumber`، `recognition.isUnknown`، `recognition.similarity` و `trackId` هستند.
 
+منابع تشخیص کف دست شامل `components.palm.label`، `confidence`، `recognitionStatus`، `recognition.personId`، `recognition.name`، `recognition.personNumber`، `recognition.isUnknown`، `recognition.similarity` و `trackId` هستند.
+
 برای فیلدهایی که در ComboBox وجود ندارند، گزینهٔ «مسیر سفارشی» استفاده شود.
 
 ## 6. تصاویر و تفاوت JSON و multipart
@@ -151,6 +153,7 @@ workflowId = "plate-flow"   stepOrder = 3   dependsOnPrevious = true
 | `image.frame` یا `image.fullFrame` | تصویر فریم کامل به‌صورت باینری |
 | `image.crop.plate` | کراپ پلاک به‌صورت باینری |
 | `image.crop.face` | کراپ تشخیص چهره به‌صورت باینری |
+| `image.crop.palm` | کراپ تشخیص کف دست به‌صورت باینری |
 | `image.faceAlignedCrop` | کراپ تراز شدهٔ چهره به‌صورت باینری |
 | منبع مشابه با `.rawBase64` | رشتهٔ Base64 خام، بدون `data:` |
 | منبع مشابه با `.base64` | Data URI مانند `data:image/jpeg;base64,...` |

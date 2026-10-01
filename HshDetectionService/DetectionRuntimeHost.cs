@@ -472,17 +472,17 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
             var remaining = new List<PendingComponent>(current);
 
             // Prefer an exact same-frame association. It is the strongest
-            // evidence and prevents PlateFirst/FaceFirst duplicate records.
+            // evidence and prevents PlateFirst/FaceFirst/PalmFirst duplicate records.
             foreach (PendingComponent plate in remaining.Where(item => item.Detection.Kind == AnalysisKind.Plate).ToArray())
             {
-                PendingComponent[] faces = remaining
-                    .Where(item => item.Detection.Kind == AnalysisKind.Face && SameAssociationScope(item, plate))
+                PendingComponent[] partners = remaining
+                    .Where(item => (item.Detection.Kind == AnalysisKind.Face || item.Detection.Kind == AnalysisKind.Palm) && SameAssociationScope(item, plate))
                     .ToArray();
-                if (faces.Length != 1) continue;
-                PendingComponent face = faces[0];
+                if (partners.Length != 1) continue;
+                PendingComponent partner = partners[0];
                 remaining.Remove(plate);
-                remaining.Remove(face);
-                ready.Add(new DetectionWork(plate.CameraId, [plate, face], "SameFrame"));
+                remaining.Remove(partner);
+                ready.Add(new DetectionWork(plate.CameraId, [plate, partner], "SameFrame"));
             }
 
             // A pending component can be completed by the opposite component
@@ -758,16 +758,24 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         var envelope = new DetectionEventEnvelope
         {
             EventId = eventId,
-            EventType = hasPlate && hasFace
-                ? "PlateFaceMatched"
+            EventType = hasPlate && hasFace && hasPalm
+                ? "PlateFacePalmMatched"
+                : hasPlate && hasFace
+                    ? "PlateFaceMatched"
+                    : hasPlate && hasPalm
+                        ? "PlatePalmMatched"
                 : hasFace
                     ? (IsUnknown(primary.Detection) ? "FaceUnknown" : "FaceRecognized")
                     : hasPalm
                         ? (IsUnknown(primary.Detection) ? "PalmUnknown" : "PalmRecognized")
                         : "PlateDetected",
-            Scenario = hasPlate && hasFace
-                ? "PlateFaceAssociation"
-                : hasFace ? "FaceRecognition" : hasPalm ? "PalmRecognition" : "PlateOnly",
+            Scenario = hasPlate && hasFace && hasPalm
+                ? "PlateFacePalmAssociation"
+                : hasPlate && hasFace
+                    ? "PlateFaceAssociation"
+                    : hasPlate && hasPalm
+                        ? "PlatePalmAssociation"
+                        : hasFace ? "FaceRecognition" : hasPalm ? "PalmRecognition" : "PlateOnly",
             OccurredAtUtc = work.Timestamp,
             ReceivedAtUtc = DateTime.UtcNow,
             Source = new JsonObject
@@ -886,7 +894,7 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         if (!trigger.Enabled) return false;
         if (trigger.CameraIds.Count > 0 && !trigger.CameraIds.Contains(cameraId, StringComparer.OrdinalIgnoreCase)) return false;
         if (trigger.TaskIds.Count > 0 && !trigger.TaskIds.Contains(taskId, StringComparer.OrdinalIgnoreCase)) return false;
-        if (trigger.Kinds.Count > 0 && !trigger.Kinds.Contains(kind, StringComparer.OrdinalIgnoreCase)) return false;
+        if (trigger.Kinds.Count > 0 && !trigger.Kinds.Any(expected => KindMatches(expected, kind, detection))) return false;
         if (!string.IsNullOrWhiteSpace(trigger.LabelEquals) && !string.Equals(trigger.LabelEquals, label, StringComparison.OrdinalIgnoreCase)) return false;
         if (trigger.MinimumConfidence is float minimum && confidence < minimum) return false;
         if (!string.IsNullOrWhiteSpace(trigger.IdentityId) && !string.Equals(trigger.IdentityId, GetMetadataString(detection, "IdentityId"), StringComparison.OrdinalIgnoreCase)) return false;
@@ -902,10 +910,13 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         if (!trigger.Enabled) return false;
         if (trigger.CameraIds.Count > 0 && !trigger.CameraIds.Contains(cameraId, StringComparer.OrdinalIgnoreCase)) return false;
 
-        bool pairRequired = trigger.Kinds.Any(IsPlateFaceKind);
-        bool plateRequired = pairRequired || trigger.Kinds.Any(IsPlateKind);
-        bool faceRequired = pairRequired || trigger.Kinds.Any(IsFaceKind);
-        if (!plateRequired && !faceRequired)
+        bool plateFacePairRequired = trigger.Kinds.Any(IsPlateFaceKind);
+        bool platePalmPairRequired = trigger.Kinds.Any(IsPlatePalmKind);
+        bool threeWayPairRequired = trigger.Kinds.Any(IsPlateFacePalmKind);
+        bool plateRequired = plateFacePairRequired || platePalmPairRequired || threeWayPairRequired || trigger.Kinds.Any(IsPlateKind);
+        bool faceRequired = plateFacePairRequired || threeWayPairRequired || trigger.Kinds.Any(IsFaceKind);
+        bool palmRequired = platePalmPairRequired || threeWayPairRequired || trigger.Kinds.Any(IsPalmKind);
+        if (!plateRequired && !faceRequired && !palmRequired)
         {
             return components.Any(item =>
             {
@@ -916,13 +927,16 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         }
 
         IReadOnlyList<PendingComponent> plates = components.Where(item => item.Detection.Kind == AnalysisKind.Plate).ToArray();
-        IReadOnlyList<PendingComponent> faces = components.Where(item => item.Detection.Kind == AnalysisKind.Face).ToArray();
+        IReadOnlyList<PendingComponent> faces = components.Where(item => item.Detection.Kind == AnalysisKind.Face && MatchesKindSet(trigger, item.Detection)).ToArray();
+        IReadOnlyList<PendingComponent> palms = components.Where(item => item.Detection.Kind == AnalysisKind.Palm && MatchesKindSet(trigger, item.Detection)).ToArray();
         if (plateRequired && plates.Count == 0) return false;
         if (faceRequired && faces.Count == 0) return false;
+        if (palmRequired && palms.Count == 0) return false;
 
-        IEnumerable<PendingComponent> required = plateRequired && faceRequired
-            ? plates.Concat(faces)
-            : plateRequired ? plates : faces;
+        IEnumerable<PendingComponent> required = Enumerable.Empty<PendingComponent>()
+            .Concat(plateRequired ? plates : [])
+            .Concat(faceRequired ? faces : [])
+            .Concat(palmRequired ? palms : []);
         PendingComponent[] requiredComponents = required.ToArray();
         if (trigger.TaskIds.Count > 0 && !requiredComponents.Any(item =>
                 trigger.TaskIds.Contains(GetMetadataString(item.Detection, "ProcessingItemId") ?? string.Empty, StringComparer.OrdinalIgnoreCase)))
@@ -934,7 +948,10 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         if (!string.IsNullOrWhiteSpace(trigger.PlateTextEquals) && !plates.Any(item =>
                 string.Equals(trigger.PlateTextEquals, GetMetadataString(item.Detection, "PlateText") ?? item.Detection.Label, StringComparison.OrdinalIgnoreCase)))
             return false;
-        if (!string.IsNullOrWhiteSpace(trigger.IdentityId) && !faces.Any(item =>
+        IReadOnlyList<PendingComponent> identityCandidates = faceRequired && !palmRequired ? faces
+            : palmRequired && !faceRequired ? palms
+            : faces.Concat(palms).ToArray();
+        if (!string.IsNullOrWhiteSpace(trigger.IdentityId) && !identityCandidates.Any(item =>
                 string.Equals(trigger.IdentityId, GetMetadataString(item.Detection, "IdentityId"), StringComparison.OrdinalIgnoreCase)))
             return false;
         return true;
@@ -944,6 +961,14 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         kind.Equals("PlateFaceMatch", StringComparison.OrdinalIgnoreCase) ||
         kind.Equals("PlateFaceAssociation", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsPlatePalmKind(string kind) =>
+        kind.Equals("PlatePalmMatch", StringComparison.OrdinalIgnoreCase) ||
+        kind.Equals("PlatePalmAssociation", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPlateFacePalmKind(string kind) =>
+        kind.Equals("PlateFacePalmMatch", StringComparison.OrdinalIgnoreCase) ||
+        kind.Equals("PlateFacePalmAssociation", StringComparison.OrdinalIgnoreCase);
+
     private static bool IsPlateKind(string kind) =>
         kind.Equals("PlateRecognition", StringComparison.OrdinalIgnoreCase) ||
         kind.Equals("Plate", StringComparison.OrdinalIgnoreCase);
@@ -952,18 +977,62 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         kind.Equals("FaceRecognition", StringComparison.OrdinalIgnoreCase) ||
         kind.Equals("Face", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsPalmKind(string kind) =>
+        kind.Equals("PalmRecognition", StringComparison.OrdinalIgnoreCase) ||
+        kind.Equals("PalmRecognized", StringComparison.OrdinalIgnoreCase) ||
+        kind.Equals("PalmUnknown", StringComparison.OrdinalIgnoreCase) ||
+        kind.Equals("Palm", StringComparison.OrdinalIgnoreCase);
+
+    private static bool KindMatches(string expected, string actual, AnalysisDetection? detection = null)
+    {
+        if (expected.Equals(actual, StringComparison.OrdinalIgnoreCase)) return true;
+        if (actual.Equals(nameof(AnalysisKind.Face), StringComparison.OrdinalIgnoreCase) && expected.Equals("FaceRecognized", StringComparison.OrdinalIgnoreCase))
+            return GetMetadataBool(detection, "Recognized");
+        if (actual.Equals(nameof(AnalysisKind.Face), StringComparison.OrdinalIgnoreCase) && expected.Equals("FaceUnknown", StringComparison.OrdinalIgnoreCase))
+            return !GetMetadataBool(detection, "Recognized");
+        if (actual.Equals(nameof(AnalysisKind.Palm), StringComparison.OrdinalIgnoreCase) && expected.Equals("PalmRecognized", StringComparison.OrdinalIgnoreCase))
+            return GetMetadataBool(detection, "Recognized");
+        if (actual.Equals(nameof(AnalysisKind.Palm), StringComparison.OrdinalIgnoreCase) && expected.Equals("PalmUnknown", StringComparison.OrdinalIgnoreCase))
+            return !GetMetadataBool(detection, "Recognized");
+        return actual.Equals(nameof(AnalysisKind.Plate), StringComparison.OrdinalIgnoreCase) && IsPlateKind(expected) ||
+            actual.Equals(nameof(AnalysisKind.Face), StringComparison.OrdinalIgnoreCase) && IsFaceKind(expected) ||
+            actual.Equals(nameof(AnalysisKind.Palm), StringComparison.OrdinalIgnoreCase) && IsPalmKind(expected);
+    }
+
+    private static bool MatchesKindSet(TriggerDefinition trigger, AnalysisDetection detection)
+    {
+        if (trigger.Kinds.Count == 0) return true;
+        if (detection.Kind == AnalysisKind.Face)
+        {
+            if (trigger.Kinds.Any(kind => kind.Equals("FaceUnknown", StringComparison.OrdinalIgnoreCase) || kind.Equals("FaceRecognized", StringComparison.OrdinalIgnoreCase)))
+                return trigger.Kinds.Any(expected => KindMatches(expected, detection.Kind.ToString(), detection));
+            if (trigger.Kinds.Any(kind => IsFaceKind(kind) || IsPlateFaceKind(kind) || IsPlateFacePalmKind(kind))) return true;
+        }
+        if (detection.Kind == AnalysisKind.Palm)
+        {
+            if (trigger.Kinds.Any(kind => kind.Equals("PalmUnknown", StringComparison.OrdinalIgnoreCase) || kind.Equals("PalmRecognized", StringComparison.OrdinalIgnoreCase)))
+                return trigger.Kinds.Any(expected => KindMatches(expected, detection.Kind.ToString(), detection));
+            if (trigger.Kinds.Any(kind => IsPalmKind(kind) || IsPlatePalmKind(kind) || IsPlateFacePalmKind(kind))) return true;
+        }
+        return trigger.Kinds.Any(expected => KindMatches(expected, detection.Kind.ToString(), detection));
+    }
+
     private static string BuildTriggerHistoryKey(
         TriggerDefinition trigger,
         string cameraId,
         IReadOnlyList<PendingComponent> components)
     {
-        bool pairRequired = trigger.Kinds.Any(IsPlateFaceKind);
-        bool plateRequired = pairRequired || trigger.Kinds.Any(IsPlateKind);
-        bool faceRequired = pairRequired || trigger.Kinds.Any(IsFaceKind);
-        IEnumerable<PendingComponent> selected = plateRequired || faceRequired
+        bool plateFacePairRequired = trigger.Kinds.Any(IsPlateFaceKind);
+        bool platePalmPairRequired = trigger.Kinds.Any(IsPlatePalmKind);
+        bool threeWayPairRequired = trigger.Kinds.Any(IsPlateFacePalmKind);
+        bool plateRequired = plateFacePairRequired || platePalmPairRequired || threeWayPairRequired || trigger.Kinds.Any(IsPlateKind);
+        bool faceRequired = plateFacePairRequired || threeWayPairRequired || trigger.Kinds.Any(IsFaceKind);
+        bool palmRequired = platePalmPairRequired || threeWayPairRequired || trigger.Kinds.Any(IsPalmKind);
+        IEnumerable<PendingComponent> selected = plateRequired || faceRequired || palmRequired
             ? components.Where(item =>
                 (plateRequired && item.Detection.Kind == AnalysisKind.Plate) ||
-                (faceRequired && item.Detection.Kind == AnalysisKind.Face))
+                (faceRequired && item.Detection.Kind == AnalysisKind.Face) ||
+                (palmRequired && item.Detection.Kind == AnalysisKind.Palm))
             : components;
 
         string roi = string.Join(",", selected
@@ -980,7 +1049,12 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
             .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "IdentityId") ?? item.Detection.Label))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
-        return string.Join("\u001f", NormalizeTriggerKeyPart(cameraId), roi, plates, faces);
+        string palms = string.Join(",", selected
+            .Where(item => item.Detection.Kind == AnalysisKind.Palm)
+            .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "IdentityId") ?? item.Detection.Label))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
+        return string.Join("\u001f", NormalizeTriggerKeyPart(cameraId), roi, plates, faces, palms);
     }
 
     private static string NormalizeTriggerKeyPart(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
@@ -1006,7 +1080,12 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
             .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "IdentityId") ?? item.Detection.Label))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
-        return string.Join("\u001f", NormalizeTriggerKeyPart(work.CameraId), roi, plates, faces);
+        string palms = string.Join(",", work.Components
+            .Where(item => item.Detection.Kind == AnalysisKind.Palm)
+            .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "IdentityId") ?? item.Detection.Label))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
+        return string.Join("\u001f", NormalizeTriggerKeyPart(work.CameraId), roi, plates, faces, palms);
     }
 
     private static JsonObject TriggerKeysJson(IReadOnlyDictionary<string, string> keys)

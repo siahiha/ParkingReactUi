@@ -274,7 +274,9 @@ public sealed partial class MainForm : Form
     private void Runtime_AnalysisDetected(CameraRuntime camera, CameraRuntime.AnalysisHistoryItem item)
     {
         Bitmap crop = new(item.Crop);
-        string label = item.Detection.Label is "Unknown" or "face" ? "Unknown face" : item.Detection.Label;
+        string label = item.Detection.Label is "Unknown" or "face"
+            ? item.Detection.Kind == AnalysisKind.Palm ? "Unknown palm" : "Unknown face"
+            : item.Detection.Label;
         if (item.Detection.TrackId is int trackId) label = $"{label} #{trackId}";
         string scenario = item.Detection.Kind.ToString();
         string? identity = item.Detection.Label.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase) ? null : item.Detection.Label;

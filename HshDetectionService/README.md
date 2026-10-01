@@ -54,6 +54,7 @@ GET  /api/v1/palm/people
 GET  /api/v1/palm/people/summary
 GET  /api/v1/palm/people/{personId}/samples
 GET  /api/v1/palm/database/health
+GET  /api/v1/palm/similar?minimumSimilarity=0.40&onlyDifferentPeople=false
 POST /api/v1/palm/samples                 (multipart image)
 GET  /api/v1/palm/samples/{sampleId}/image
 DELETE /api/v1/palm/samples/{sampleId}
@@ -82,7 +83,7 @@ GET /api/v1/streams/{cameraId}/snapshot
 
 ## قرارداد رخداد
 
-هر event قبل از ارسال live در `events.db` ذخیره می‌شود و شامل `EventId`، `Sequence`، source، trigger state، componentهای `plate`/`face` و artifact descriptorهاست. artifactهای تصویری به‌جای Base64 با URL سرویس ارائه می‌شوند. برای face، person id/number/name، unknown state، similarity، matched sample id و aligned crop ذخیره می‌شود. برای plate، متن، validation، threshold و characterهای OCR با bounds و confidence ارائه می‌شود.
+هر event قبل از ارسال live در `events.db` ذخیره می‌شود و شامل `EventId`، `Sequence`، source، trigger state، componentهای `plate`/`face`/`palm` و artifact descriptorهاست. artifactهای تصویری به‌جای Base64 با URL سرویس ارائه می‌شوند. برای face و palm، person id/number/name، unknown state، similarity، matched sample id و crop مربوطه ذخیره می‌شود. برای plate، متن، validation، threshold و characterهای OCR با bounds و confidence ارائه می‌شود.
 
 کلاینت SignalR به `/hubs/detections` وصل می‌شود و متد `Subscribe(lastSequence)` را صدا می‌زند. اگر cursor در retention موجود نباشد، پیام `cursorExpired` دریافت می‌کند و باید resync کامل انجام دهد.
 برای اتصال مرورگر، origin دقیق UI باید در `http.corsOrigins` تنظیمات HTTP سرویس

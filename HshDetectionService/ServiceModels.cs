@@ -38,7 +38,7 @@ public sealed class ServiceRuntimeSettings
 
 public sealed class ServiceAssociationSettings
 {
-    /// <summary>Upper bound for temporal Plate/Face correlation.</summary>
+    /// <summary>Upper bound for temporal Plate/Face/Palm correlation.</summary>
     public int MaxWindowMs { get; set; } = 1500;
     public bool RequireSameRoi { get; set; } = true;
 }
@@ -170,15 +170,18 @@ public sealed class TriggerActionDefinition
 
 public class ClientSubscriptionFilter
 {
-    /// <summary>All, Plate, or KnownFace.</summary>
+    /// <summary>All, Plate, Palm, KnownFace, or KnownPalm.</summary>
     public string Mode { get; set; } = "All";
     public List<string> CameraIds { get; set; } = [];
     public List<string> RoiIds { get; set; } = [];
     public bool FaceRequired { get; set; }
     public bool PlateRequired { get; set; }
+    public bool PalmRequired { get; set; }
     public bool IncludeFace { get; set; } = true;
     public bool IncludePlate { get; set; } = true;
+    public bool IncludePalm { get; set; } = true;
     public bool IncludeUnknownFace { get; set; } = true;
+    public bool IncludeUnknownPalm { get; set; } = true;
     public bool IncludeArtifacts { get; set; } = true;
     public int WindowMs { get; set; } = 1500;
     public int CooldownSeconds { get; set; }
@@ -189,7 +192,9 @@ public class ClientSubscriptionFilter
         Mode = Mode.Trim();
         if (!Mode.Equals("All", StringComparison.OrdinalIgnoreCase) &&
             !Mode.Equals("Plate", StringComparison.OrdinalIgnoreCase) &&
-            !Mode.Equals("KnownFace", StringComparison.OrdinalIgnoreCase))
+            !Mode.Equals("Palm", StringComparison.OrdinalIgnoreCase) &&
+            !Mode.Equals("KnownFace", StringComparison.OrdinalIgnoreCase) &&
+            !Mode.Equals("KnownPalm", StringComparison.OrdinalIgnoreCase))
             Mode = "All";
         CameraIds ??= [];
         RoiIds ??= [];

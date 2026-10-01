@@ -303,6 +303,8 @@ public sealed class InvocationDeliveryService : BackgroundService
         if (key.Equals("image.crop.plate.base64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "PlateCrop", true);
         if (key.Equals("image.crop.face.rawBase64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "DetectionCrop", false);
         if (key.Equals("image.crop.face.base64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "DetectionCrop", true);
+        if (key.Equals("image.crop.palm.rawBase64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "PalmCrop", false);
+        if (key.Equals("image.crop.palm.base64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "PalmCrop", true);
         if (key.Equals("image.faceAlignedCrop.rawBase64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "FaceAlignedCrop", false);
         if (key.Equals("image.faceAlignedCrop.base64", StringComparison.OrdinalIgnoreCase)) return ReadArtifactBase64(envelope, "FaceAlignedCrop", true);
         if (key.StartsWith("event.", StringComparison.OrdinalIgnoreCase)) key = key[6..];
@@ -326,6 +328,7 @@ public sealed class InvocationDeliveryService : BackgroundService
         else if (key.Equals("image.frame", StringComparison.OrdinalIgnoreCase) || key.Equals("image.fullFrame", StringComparison.OrdinalIgnoreCase)) type = "FullFrameRaw";
         else if (key.Equals("image.crop.plate", StringComparison.OrdinalIgnoreCase)) type = "PlateCrop";
         else if (key.Equals("image.crop.face", StringComparison.OrdinalIgnoreCase)) type = "DetectionCrop";
+        else if (key.Equals("image.crop.palm", StringComparison.OrdinalIgnoreCase)) type = "PalmCrop";
         else if (key.Equals("image.faceAlignedCrop", StringComparison.OrdinalIgnoreCase)) type = "FaceAlignedCrop";
         if (type is null) return null;
         EventArtifactDescriptor? artifact = envelope.Artifacts.FirstOrDefault(item => item.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
@@ -345,6 +348,7 @@ public sealed class InvocationDeliveryService : BackgroundService
             key.Equals("image.fullFrame", StringComparison.OrdinalIgnoreCase) ||
             key.Equals("image.crop.plate", StringComparison.OrdinalIgnoreCase) ||
             key.Equals("image.crop.face", StringComparison.OrdinalIgnoreCase) ||
+            key.Equals("image.crop.palm", StringComparison.OrdinalIgnoreCase) ||
             key.Equals("image.faceAlignedCrop", StringComparison.OrdinalIgnoreCase)
             ? ImagePayloadMode.Binary
             : ImagePayloadMode.None;

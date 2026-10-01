@@ -6,12 +6,12 @@ import type { EventDeletionRange } from './api'
 import type { CameraSettings, ClientSubscription, ClientSubscriptionProfile, DetectionEvent, InvocationDefinition, TriggerDefinition } from './types'
 export const keys = { status: ['status'], cameras: ['cameras'], settings: ['settings'], capabilities: ['capabilities'], models: ['models'], people: ['people'], triggers: ['triggers'], invocations: ['invocations'], invocationLogs: ['invocation-logs'], events: ['events'] }
 export const clientSubscriptionKey = 'hsh-client-subscription'
-export const defaultClientSubscriptionProfile = (): ClientSubscriptionProfile => ({ id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '') : `${Date.now()}${Math.random()}`, name: 'پروفایل جدید', mode: 'All', cameraIds: [], roiIds: [], faceRequired: false, plateRequired: false, includeFace: true, includePlate: true, includeUnknownFace: true, includeArtifacts: true, windowMs: 1500, cooldownSeconds: 0 })
+export const defaultClientSubscriptionProfile = (): ClientSubscriptionProfile => ({ id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '') : `${Date.now()}${Math.random()}`, name: 'پروفایل جدید', mode: 'All', cameraIds: [], roiIds: [], faceRequired: false, plateRequired: false, palmRequired: false, includeFace: true, includePlate: true, includePalm: true, includeUnknownFace: true, includeUnknownPalm: true, includeArtifacts: true, windowMs: 1500, cooldownSeconds: 0 })
 export const defaultClientSubscription = (): ClientSubscription => ({ profiles: [] })
 export function readClientSubscription(): ClientSubscription {
   try {
     const value = JSON.parse(sessionStorage.getItem(clientSubscriptionKey) ?? 'null') as Partial<ClientSubscription> | null
-    if (Array.isArray(value?.profiles)) return { profiles: value.profiles as ClientSubscriptionProfile[] }
+    if (Array.isArray(value?.profiles)) return { profiles: value.profiles.map(profile => ({ ...defaultClientSubscriptionProfile(), ...(profile as Partial<ClientSubscriptionProfile>) })) }
     // Migrate the previous single-profile shape stored by older UI builds.
     const legacyValue = value as unknown as Partial<ClientSubscriptionProfile> | null
     if (legacyValue && typeof legacyValue.mode === 'string') {
@@ -44,6 +44,7 @@ export function useInvocations() { return useQuery({ queryKey: keys.invocations,
 export function useInvocationLogs(invocationId?: string, limit = 200) { return useQuery({ queryKey: [...keys.invocationLogs, invocationId, limit], queryFn: () => api.invocationLogs(invocationId, limit), refetchInterval: 5000 }) }
 export function useInvocationMutation() { const client = useQueryClient(); return useMutation({ mutationFn: (input: { value: InvocationDefinition; create: boolean }) => input.create ? api.createInvocation(input.value) : api.updateInvocation(input.value), onSuccess: () => { void client.invalidateQueries({ queryKey: keys.invocations }); void client.invalidateQueries({ queryKey: keys.invocationLogs }) } }) }
 export function usePeople() { return useQuery({ queryKey: keys.people, queryFn: api.people }) }
+export function usePalmPeople() { return useQuery({ queryKey: ['palm-people'], queryFn: api.palmPeople, staleTime: 30_000 }) }
 export function usePalmPeopleSummary() { return useQuery({ queryKey: ['palm-people-summary'], queryFn: api.palmPeopleSummary, staleTime: 30_000 }) }
 export function usePersonSamples(id?: string) { return useQuery({ queryKey: ['samples', id], queryFn: () => api.samples(id!), enabled: Boolean(id) }) }
 export function usePersonPalmSamples(id?: string) { return useQuery({ queryKey: ['palm-samples', id], queryFn: () => api.palmSamples(id!), enabled: Boolean(id) }) }

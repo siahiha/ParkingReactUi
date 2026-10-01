@@ -349,7 +349,7 @@ public static class ServiceApi
             return Results.NoContent();
         });
 
-        app.MapGet("/api/v1/events", (long? afterSequence, int? limit, string? cameraId, string? scenario, DateTime? fromUtc, DateTime? toUtc, string? clientMode, bool? faceRequired, bool? plateRequired, bool? includeFace, bool? includePlate, bool? includeUnknownFace, int? windowMs, int? clientCooldownSeconds, string? clientCameraIds, string? clientRoiIds, string? clientProfiles, DetectionRuntimeHost host) =>
+        app.MapGet("/api/v1/events", (long? afterSequence, int? limit, string? cameraId, string? scenario, DateTime? fromUtc, DateTime? toUtc, string? clientMode, bool? faceRequired, bool? plateRequired, bool? palmRequired, bool? includeFace, bool? includePlate, bool? includePalm, bool? includeUnknownFace, bool? includeUnknownPalm, int? windowMs, int? clientCooldownSeconds, string? clientCameraIds, string? clientRoiIds, string? clientProfiles, DetectionRuntimeHost host) =>
         {
             int requestedLimit = Math.Clamp(limit ?? 200, 1, 2000);
             ClientSubscription? subscription = null;
@@ -369,9 +369,12 @@ public static class ServiceApi
                     Mode = clientMode,
                     FaceRequired = faceRequired ?? false,
                     PlateRequired = plateRequired ?? false,
+                    PalmRequired = palmRequired ?? false,
                     IncludeFace = includeFace ?? true,
                     IncludePlate = includePlate ?? true,
+                    IncludePalm = includePalm ?? true,
                     IncludeUnknownFace = includeUnknownFace ?? true,
+                    IncludeUnknownPalm = includeUnknownPalm ?? true,
                     WindowMs = windowMs ?? 1500,
                     CooldownSeconds = clientCooldownSeconds ?? 0,
                     CameraIds = SplitList(clientCameraIds),
@@ -384,9 +387,12 @@ public static class ServiceApi
                  !subscription.Mode.Equals("All", StringComparison.OrdinalIgnoreCase) ||
                  subscription.FaceRequired ||
                  subscription.PlateRequired ||
+                 subscription.PalmRequired ||
                  !subscription.IncludeFace ||
                  !subscription.IncludePlate ||
+                 !subscription.IncludePalm ||
                  !subscription.IncludeUnknownFace ||
+                 !subscription.IncludeUnknownPalm ||
                  subscription.WindowMs != 1500 ||
                  subscription.CooldownSeconds != 0 ||
                  subscription.CameraIds.Count > 0 ||
@@ -607,6 +613,8 @@ public static class ServiceApi
             samples = host.PalmDatabase.GetSamples().Count,
             sizeBytes = File.Exists(host.PalmDatabase.DatabasePath) ? new FileInfo(host.PalmDatabase.DatabasePath).Length : 0
         }));
+        app.MapGet("/api/v1/palm/similar", (float? minimumSimilarity, bool? onlyDifferentPeople, DetectionRuntimeHost host) =>
+            Results.Ok(host.PalmDatabase.FindSimilar(minimumSimilarity ?? 0.40f, onlyDifferentPeople ?? false)));
         app.MapPost("/api/v1/palm/samples", async (HttpRequest request, DetectionRuntimeHost host, CancellationToken cancellationToken) =>
         {
             IFormCollection form = await request.ReadFormAsync(cancellationToken);
@@ -832,12 +840,17 @@ public sealed class DetectionHub : Hub
 
         bool hasPlate = item.Components.ContainsKey("plate");
         bool hasFace = item.Components.TryGetValue("face", out JsonObject? face);
+        bool hasPalm = item.Components.TryGetValue("palm", out JsonObject? palm);
         bool knownFace = hasFace && string.Equals(
             face?["recognitionStatus"]?.GetValue<string>(), "Matched", StringComparison.OrdinalIgnoreCase);
-        if (!profile.IncludePlate && hasPlate && !hasFace) return false;
-        if (!profile.IncludeFace && hasFace && !hasPlate) return false;
+        bool knownPalm = hasPalm && string.Equals(
+            palm?["recognitionStatus"]?.GetValue<string>(), "Matched", StringComparison.OrdinalIgnoreCase);
+        if (!profile.IncludePlate && hasPlate && !hasFace && !hasPalm) return false;
+        if (!profile.IncludeFace && hasFace && !hasPlate && !hasPalm) return false;
+        if (!profile.IncludePalm && hasPalm && !hasPlate && !hasFace) return false;
         if (profile.FaceRequired && !hasFace) return false;
         if (profile.PlateRequired && !hasPlate) return false;
+        if (profile.PalmRequired && !hasPalm) return false;
 
         if (profile.Mode.Equals("Plate", StringComparison.OrdinalIgnoreCase))
         {
@@ -851,9 +864,21 @@ public sealed class DetectionHub : Hub
             if (!knownFace) return false;
             return true;
         }
+        if (profile.Mode.Equals("Palm", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!hasPalm) return false;
+            if (!profile.IncludeUnknownPalm && !knownPalm) return false;
+            return true;
+        }
+        if (profile.Mode.Equals("KnownPalm", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!knownPalm) return false;
+            return true;
+        }
 
-        if (!profile.IncludeUnknownFace && hasFace && !knownFace && !hasPlate) return false;
-        return hasPlate || hasFace;
+        if (!profile.IncludeUnknownFace && hasFace && !knownFace && !hasPlate && !hasPalm) return false;
+        if (!profile.IncludeUnknownPalm && hasPalm && !knownPalm && !hasPlate && !hasFace) return false;
+        return hasPlate || hasFace || hasPalm;
     }
 
     private static bool PassesCooldown(string connectionId, DetectionEventEnvelope item, ClientSubscription subscription)
