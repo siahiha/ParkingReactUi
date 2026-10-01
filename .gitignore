@@ -25,6 +25,10 @@ coverage/
 **/events.db
 **/face-database.db
 **/history-archive.json
+**/desktop-events.json
+**/desktop-automation.json
+**/desktop-invocation-logs.json
+**/desktop-event-artifacts/
 **/media/
 **/logs/
 *.log
@@ -50,6 +54,7 @@ secrets*.json
 
 # Raw/experimental model sources and archives; runtime packages are handled below.
 HshDetectionEngin.Tools/RawModels/
+/Models/
 *.onnx
 *.pt
 *.pth
@@ -57,18 +62,11 @@ HshDetectionEngin.Tools/RawModels/
 *.7z
 *.rar
 
-# Palm runtime models used by the local/debug build.
-!Models/Palm/
-!Models/Palm/palm_blazepalm_full.onnx
-!Models/Palm/rtmdet_nano_hand.onnx
-
-# Runtime-ready plate detector and whole-plate OCR models.
-!HshDetectionEngin.Plate/Models/plate_yolo.onnx
-!HshDetectionEngin.Plate/Models/plate_yolo_fallback.onnx
-!HshDetectionEngin.Plate/Models/ocr_crnn.onnx
-!HshDetectionEngin.Plate/Models/ocr_cnn.onnx
-!HshDetectionEngin.Plate/Models/chars_best_v26.onnx
-!HshDetectionEngin.Plate/Models/chars_best_v26_int8.onnx
+# Runtime model sources are not application assets. Only protected packages
+# and their OCR sidecars are eligible for runtime/deployment.
+!HshDetectionEngin.Palm/Models/
+!HshDetectionEngin.Palm/Models/*.hshmodel
+!HshDetectionEngin.Plate/Models/*.hshmodel
 !HshDetectionEngin.Plate/Models/chars_best_v26.labels.json
 
 # Model packages over GitHub's regular 100 MB file limit.

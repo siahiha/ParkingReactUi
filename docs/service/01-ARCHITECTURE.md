@@ -127,6 +127,11 @@ inference را ارائه می‌کند و UI با `VITE_HSH_API_BASE_URL` به 
 `http.corsOrigins` برای fetch، snapshot، WHEP و SignalR originهای UI را کنترل
 می‌کند.
 
+`HshVisionLab` در این معماری client سرویس نیست. برنامهٔ Windows به‌صورت مستقل
+engineهای داخل solution را اجرا می‌کند، مستقیماً به دوربین وصل می‌شود و نباید
+از API، SignalR، WHEP، Overlay یا دیتابیس سرویس استفاده کند. شباهت امکانات وب و
+Windows فقط قراردادی و تجربهٔ کاربری است، نه اشتراک runtime یا مسیر capture.
+
 ### `StreamSessionManager`
 
 برای هر دوربین یک منبع تصویری composited دارد و چند کلاینت WebRTC را به همان منبع متصل می‌کند. اتصال یک کلاینت نباید باعث اجرای inference یا compositing جداگانه برای کلاینت‌های دیگر شود.

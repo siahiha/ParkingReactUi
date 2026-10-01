@@ -16,12 +16,20 @@ HshDetectionEngin.LicenseRequest    ابزار مشتری برای درخواس�
 HshDetectionEngin.LicenseIssuer     ابزار امن مدیریت مشتری و صدور/آرشیو لایسنس
 ```
 
+## مرز قطعی Windows و وب
+
+`HshVisionLab` برنامهٔ مستقل Windows است. این برنامه engineهای داخل solution را reference می‌کند و خودش مسئول اتصال مستقیم به دوربین، capture، inference، ROI، overlay، history و دیتابیس است. `HshVisionLab` نباید هیچ‌وقت به `HshDetectionService`، API، SignalR، WHEP یا Overlay سرویس وابسته شود.
+
+`DetectionManagerUi` برنامهٔ وب مستقل دیگری است که فقط برای `HshDetectionService` ساخته شده است. دوربین، inference، state و دیتابیس این UI متعلق به سرویس است و UI وب تصویر/نتیجه را از API، SignalR و WHEP/Overlay می‌گیرد. `DetectionManagerUi` و `HshVisionLab` هیچ ارتباط runtime یا data-sharing مستقیم با یکدیگر ندارند.
+
+هدف مشترک این دو برنامه، ارائهٔ امکانات مشابه و تجربهٔ کاربری هم‌سطح است؛ این شباهت نباید به اشتراک الگوریتم runtime، process یا مسیر capture تعبیر شود.
+
 ## مرز مسئولیت
 
-- UI صاحب نمایش، مدیریت دوربین، ویرایش ROI، history، هماهنگ‌کردن enrollment با `FaceModule` و مدیریت Face database است؛ ساخت pipelineهای runtime در ماژول‌های پردازشی انجام می‌شود.
+- UI صاحب نمایش، مدیریت دوربین، ویرایش ROI، history، هماهنگ‌کردن enrollment با `FaceModule` و مدیریت صفحهٔ مرکزی `مدیریت افراد` است؛ ساخت pipelineهای runtime در ماژول‌های پردازشی انجام می‌شود.
 - Engine صاحب چرخهٔ دریافت فریم، Motion Gate و lifecycle دوربین است؛ `CameraPipelineCoordinator` ساخت graph پردازش، اجرای pipelineهای هر ROI، انتقال metadata و dispose آن‌ها را جداگانه مدیریت می‌کند. overlay و history هنوز policy خروجی دوربین هستند.
 - Abstractions هیچ منطق قابلیت خاص ندارد و قراردادهای پایدار را نگه می‌دارد.
-- Plate، Face و Palm منطق domain و مدل خود را نگه می‌دارند؛ مدل‌های هر قابلیت در زمان اجرا از پوشهٔ `Models/<Capability>` کنار executable خوانده می‌شوند. Palm از دو detector خام ONNX استفاده می‌کند و مدل recognition بزرگ CCNet/PPNet باید جداگانه نصب شود. پوشهٔ flat `Models` و مسیر قدیمی `Modules/<Capability>/Models` نیز برای سازگاری پشتیبانی می‌شوند.
+- Plate، Face و Palm منطق domain و مدل خود را نگه می‌دارند؛ runtime مدل هر قابلیت را فقط از packageهای `.hshmodel` در پوشهٔ `Models/<Capability>` کنار executable می‌خواند. Palm نیز مانند Plate و Face فقط package می‌پذیرد و مدل خام ONNX یا مدل نصب‌شدهٔ خارج از قرارداد را اجرا نمی‌کند. پوشهٔ flat `Models` و مسیر قدیمی `Modules/<Capability>/Models` نیز برای سازگاری packageها پشتیبانی می‌شوند.
 - Licensing تنها مرجع صدور و اعتبارسنجی license است؛ `HshVisionLab` و ماژول‌های runtime نباید private key را دریافت کنند. `LicenseIssuer` یک UI جداگانه و فقط برای workstation امن صادرکننده است و private key را مصرف می‌کند.
 - `IdentityDatabase` مرجع SQLite برای `People`، `PersonPlates`، `FaceSamples` و `PalmSamples` است. هر شخص یک `PersonId` مشترک دارد و هر modality نمونه‌های یک‌به‌چند خود را نگه می‌دارد؛ UI فقط snapshot رکوردها را برای گرید و مدیریت دریافت می‌کند. `FaceDatabase` و `PalmDatabase` adapterهای سازگار با API قبلی هستند.
 - آیکون‌های دکمه‌های UI از Material Icons رسمی انتخاب می‌شوند و فونت آن به‌صورت resource داخلی در `Assets/MaterialIcons/MaterialIcons-Regular.ttf` embed شده است؛ در runtime وابستگی به سایت یا اینترنت وجود ندارد.
@@ -84,21 +92,25 @@ timer فعال نگه نمی‌دارند. این محدودسازی فقط مص
 
 هر قابلیت قابل توسعه باید `IProcessingPipeline` را پیاده‌سازی کند. `ProcessingContext.Image` تصویر محلی ROI است و `SourceBounds` محل آن در فریم اصلی. Runtime فقط offset ROI را به detectionها و overlayهای هندسی اضافه می‌کند؛ pipelineی که ابعاد تصویر را تغییر می‌دهد باید نگاشت مختصات را خودش حفظ کند. اگر pipeline تصویر بعدی برمی‌گرداند، Runtime با `PipelineResult.TakeNextImage()` مالکیت آن را منتقل می‌کند. `AnalysisDetection` برای نتیجهٔ معنایی مانند Face/Plate و `ProcessingOverlay` برای رسم هندسهٔ بصری مانند polyline، polygon، point، circle و rectangle است؛ overlay وارد history یا event تشخیص نمی‌شود.
 
- `NamedRoi.Processing` فهرست آیتم‌های هر ROI و `NamedRoi.ProcessingMode` نحوهٔ اجرای آن‌ها را نگه می‌دارد. ROIهای فعال یک دوربین به‌صورت موازی اجرا می‌شوند. مقدار `Sequential` (پیش‌فرض برای سازگاری) taskهای همان ROI را به‌ترتیب فهرست اجرا می‌کند و `PreviousDetections`/`NextImage` را زنجیره می‌کند؛ مقدار `Parallel` هر task را روی یک کپی مستقل از تصویر ROI اجرا می‌کند و زنجیرهٔ بین taskها را فعال نمی‌کند. هر آیتم فیلدهای مشترک `Enabled`، `MaxFps` و `Threads` را دارد و تنظیمات اختصاصی ماژول را در `Options` نگه می‌دارد؛ Plate از `PlateProcessingOptions`، Face از `FaceProcessingOptions` و Palm از `PalmProcessingOptions` استفاده می‌کنند. Palm در WinForms editor اختصاصی detection، identification و tracking دارد و `DetectorKind` از مدل انتخاب‌شده به‌صورت خودکار تعیین می‌شود. ماژول گزینه‌های typed خود را هنگام ساخت pipeline یک‌بار از JSON می‌خواند و مسیر `Process()` به JSON یا reflection دسترسی ندارد. `ProcessingModuleDescriptor.OptionsType` قرارداد UI برای deserialize کردن گزینه‌هاست و نوع‌های جدید بدون تغییر فرم، editor عمومی options دریافت می‌کنند؛ `EditorKey` فقط برای انتخاب editor اختصاصی قابلیت‌های موجود است. `CameraProcessingSettings.Type` فقط مقدار serialized سازگار با فایل‌های قدیمی است؛ کد اجرایی باید از `CameraProcessingSettings.Kind` و `ProcessingType` استفاده کند. فیلدهای Face/Plate در `CameraSettings` فقط default سازگار با فایل‌های قدیمی و template ساخت آیتم تازه هستند؛ آیتم موجود از تغییرات بعدی camera default مستقل می‌ماند. دوربین بدون ROI و ROI بدون آیتم پردازش فقط تصویر/overlay ROI را نمایش می‌دهند و inference انجام نمی‌دهند. `ProcessingRegistry` مرجع ثبت قابلیت‌هاست و UI descriptorهای آن را برای نمایش نوع‌ها مصرف می‌کند.
+ `NamedRoi.Processing` فهرست آیتم‌های هر ROI و `NamedRoi.ProcessingMode` نحوهٔ اجرای آن‌ها را نگه می‌دارد. ROIهای فعال یک دوربین به‌صورت موازی اجرا می‌شوند. مقدار `Sequential` (پیش‌فرض برای سازگاری) taskهای همان ROI را به‌ترتیب فهرست اجرا می‌کند و `PreviousDetections`/`NextImage` را زنجیره می‌کند؛ مقدار `Parallel` هر task را روی یک کپی مستقل از تصویر ROI اجرا می‌کند و زنجیرهٔ بین taskها را فعال نمی‌کند. هر آیتم فیلدهای مشترک `Enabled`، `MaxFps` و `Threads` را دارد و تنظیمات اختصاصی ماژول را در `Options` نگه می‌دارد؛ Plate از `PlateProcessingOptions`، Face از `FaceProcessingOptions` و Palm از `PalmProcessingOptions` استفاده می‌کنند. در UI وب taskها کارت detailed کرکره‌ای و تب‌های detection، recognition/identification و tracking/recording دارند. Palm در WinForms و وب editor اختصاصی detection، identification و tracking دارد و `DetectorKind` از مدل انتخاب‌شده به‌صورت خودکار تعیین می‌شود؛ کنترل جداگانهٔ DetectorKind وجود ندارد. مدل‌های catalog بر اساس قابلیت فیلتر می‌شوند تا ComboBox هر modality مدل نامرتبط نشان ندهد. ماژول گزینه‌های typed خود را هنگام ساخت pipeline یک‌بار از JSON می‌خواند و مسیر `Process()` به JSON یا reflection دسترسی ندارد. `ProcessingModuleDescriptor.OptionsType` قرارداد UI برای deserialize کردن گزینه‌هاست و نوع‌های جدید بدون تغییر فرم، editor عمومی options دریافت می‌کنند؛ `EditorKey` فقط برای انتخاب editor اختصاصی قابلیت‌های موجود است. `CameraProcessingSettings.Type` فقط مقدار serialized سازگار با فایل‌های قدیمی است؛ کد اجرایی باید از `CameraProcessingSettings.Kind` و `ProcessingType` استفاده کند. فیلدهای Face/Plate در `CameraSettings` فقط default سازگار با فایل‌های قدیمی و template ساخت آیتم تازه هستند؛ آیتم موجود از تغییرات بعدی camera default مستقل می‌ماند. دوربین بدون ROI و ROI بدون آیتم پردازش فقط تصویر/overlay ROI را نمایش می‌دهند و inference انجام نمی‌دهند. `ProcessingRegistry` مرجع ثبت قابلیت‌هاست و UI descriptorهای آن را برای نمایش نوع‌ها مصرف می‌کند.
 
 ## Identity database and Windows management
 
 فایل `identity-database.db` مرجع مرکزی اشخاص است. `People` اطلاعات پایهٔ فرد
 را نگه می‌دارد و `PersonPlates`، `FaceSamples` و `PalmSamples` با کلید خارجی
 `PersonId` به آن متصل هستند. یک شخص می‌تواند چند پلاک، چند نمونهٔ چهره و چند
-نمونهٔ کف دست داشته باشد. فرم Windows با نام `Identity database` همین چهار
-بخش را مدیریت می‌کند؛ فرم وب فعلاً تغییر نکرده است.
+نمونهٔ کف دست داشته باشد. فرم Windows با نام `Identity database` و صفحهٔ وب با
+نام `مدیریت افراد` همین چهار بخش را مدیریت می‌کنند. صفحهٔ وب برای هر شخص تب‌های
+`چهره`، `پالم` و `پلاک` دارد، افراد Palm-only و `Unknown Palm #…` را نیز
+فهرست می‌کند و حذف گروهی با حذف متعلقات را ارائه می‌دهد.
 
-دیتابیس در اولین اجرا از `face-database.db` و `palm-database.db` قدیمی import
-می‌شود. افراد هم‌نام در migration به یک شخص مرکزی متصل می‌شوند و ادغام بعدی
-باید از مدیریت هویت انجام شود.
+دیتابیس هنگام load از `face-database.db` و `palm-database.db` قدیمی به‌صورت
+مستقل import می‌کند. افراد هم‌نام یا هم‌شماره در migration به یک شخص مرکزی
+متصل می‌شوند، نمونهٔ تکراری دوباره وارد نمی‌شود و ادغام بعدی باید از مدیریت
+هویت انجام شود. حذف `People` با `ON DELETE CASCADE` نمونه‌های Face/Palm و
+پلاک‌های همان شخص را نیز پاک می‌کند.
 
-## Face database compatibility
+## Face sample compatibility
 
 ساختار database از یک رابطهٔ یک‌به‌چند تشکیل می‌شود: `People(PersonId, PersonNumber, Name, IsUnknown, CreatedAtUtc, UpdatedAtUtc)` و `FaceSamples(SampleId, PersonId, SampleNumber, FaceImage, Embedding, CreatedAtUtc, OriginalFileName, FileExtension)`. کلید خارجی حذف آبشاری دارد و `UNIQUE(PersonId, SampleNumber)` از تکرار شمارهٔ نمونه جلوگیری می‌کند. سقف نمونه در لایهٔ database enforce می‌شود و مقدار آن 10 است. شناسایی زنده با بیشترین similarity بین نمونه‌های هر شخص انجام می‌شود. چهرهٔ ناشناس جدید به یک شخص `Unknown #NNNN` تبدیل و همراه اولین crop/embedding ذخیره می‌شود؛ مشاهدات مشابه هر 10 ثانیه حداکثر یک نمونهٔ جدید به همان شخص اضافه می‌کنند. Rename، `IsUnknown` را خاموش می‌کند تا نمونه‌ها در شناسایی نام‌دار استفاده شوند.
 

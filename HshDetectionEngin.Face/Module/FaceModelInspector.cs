@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Collections.Concurrent;
 using Microsoft.ML.OnnxRuntime;
 
@@ -46,7 +44,7 @@ public static class FaceModelInspector
             string modelPath = resolvedPath;
             if (resolvedPath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase))
             {
-                temporaryModel = Materialize(resolvedPath);
+                temporaryModel = ProtectedModelPackage.Materialize(resolvedPath, "hsh-face-inspect");
                 modelPath = temporaryModel;
             }
 
@@ -71,23 +69,4 @@ public static class FaceModelInspector
         }
     }
 
-    private const string DevelopmentLicense = "HSH-DETECTION-DEVELOPMENT-LICENSE-V1";
-
-    private static string Materialize(string packagePath)
-    {
-        byte[] package = File.ReadAllBytes(packagePath);
-        if (package.Length <= 24 || Encoding.ASCII.GetString(package, 0, 8) != "HSHM0001")
-            throw new InvalidDataException("Invalid protected face model package.");
-
-        byte[] key = SHA256.HashData(Encoding.UTF8.GetBytes(
-            Environment.GetEnvironmentVariable("HSH_DETECTION_LICENSE") ?? DevelopmentLicense));
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.IV = package[8..24];
-        byte[] model = aes.CreateDecryptor().TransformFinalBlock(package, 24, package.Length - 24);
-        string path = Path.Combine(Path.GetTempPath(), $"hsh-face-inspect-{Guid.NewGuid():N}.onnx");
-        File.WriteAllBytes(path, model);
-        CryptographicOperations.ZeroMemory(model);
-        return path;
-    }
 }

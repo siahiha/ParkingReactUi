@@ -2,6 +2,14 @@
 
 `HshVisionLab` یک میزکار WinForms برای تحلیل هم‌زمان چند دوربین است. هر دوربین source، ROI چندضلعی، Motion Gate و مسیرهای پردازش مستقل دارد و می‌تواند Plate، Face، Palm یا ترکیب آن‌ها را اجرا کند.
 
+## مرز قطعی برنامهٔ Windows و UI وب
+
+`HshVisionLab.exe` یک برنامهٔ Windows مستقل است. تمام capture، اتصال مستقیم به دوربین، inference، پردازش ROI، overlay، history و دیتابیس موردنیاز آن در خود برنامه و پروژه‌های داخل همین solution پیاده‌سازی می‌شوند. این برنامه نباید به `HshDetectionService`، API، SignalR، WHEP یا Overlay سرویس وصل شود و تصویر یا نتیجهٔ پردازش را از سرویس دریافت کند.
+
+`DetectionManagerUi` یک UI وب مستقل برای `HshDetectionService` است. این UI فقط از API، SignalR، stream و WHEP/Overlay سرویس استفاده می‌کند؛ مستقیماً به دوربین، engine یا دیتابیس محلی دسترسی ندارد و هیچ ارتباطی با `HshVisionLab` برقرار نمی‌کند.
+
+این دو برنامه از نظر امکانات و تجربهٔ کاربری باید هم‌سطح و تا حد امکان مشابه باشند، اما runtime، مسیر capture، pipeline، state و ارتباطات آن‌ها مستقل است. شباهت قابلیت‌ها به معنی اشتراک process یا اتصال بین دو UI نیست.
+
 برای بازسازی مشابه این پروژه، از [راهنمای مرجع بازسازی](docs/REBUILD_GUIDE.md) شروع کنید. آن سند منبع اصلی رفتار، معماری، تنظیمات، مدل‌ها، لایسنس و معیارهای پذیرش است.
 
 رابط کاربری برنامه دو زبانه است و از دکمهٔ زبان در نوار بالایی برای جابه‌جایی فارسی و انگلیسی استفاده می‌کند. انتخاب زبان کنار فایل اجرایی ذخیره می‌شود و پس از راه‌اندازی مجدد باقی می‌ماند.
@@ -10,7 +18,7 @@
 
 | جزء | مسئولیت |
 | --- | --- |
-| `HshVisionLab.exe` | UI چنددوربینه، preview، ROI، history و Face database |
+| `HshVisionLab.exe` | UI چنددوربینه، preview، ROI، history محلی، automation و Identity database |
 | `HshDetectionEngin.Abstractions.dll` | قراردادها و تنظیمات مشترک |
 | `HshDetectionEngin.dll` | capture، Motion، ROI و runtime processing |
 | `HshDetectionEngin.Plate.dll` | تشخیص پلاک ایرانی و مدل‌های package شده |
@@ -31,11 +39,14 @@
 - نوار وضعیت پایین صفحه وضعیت دوربین، FPS، زمان inference، resolution و dropped frames را نشان می‌دهد.
 - پنجرهٔ `Identity database` از SQLite مرکزی (`identity-database.db`) استفاده می‌کند. جدول `People` مشخصات شخص را نگه می‌دارد و جدول‌های `PersonPlates`، `FaceSamples` و `PalmSamples` اطلاعات modalityها را با `PersonId` مشترک ذخیره می‌کنند. فرم از یک فهرست اشخاص و تب‌های پلاک، نمونه‌های چهره و نمونه‌های کف دست تشکیل شده و افزودن، حذف و rename را مدیریت می‌کند؛ ابزارهای import و similarity چهره نیز در همان فرم در دسترس‌اند.
 - در تنظیمات هر دوربین، `CaptureBackend` بین `FFmpeg`، `LibVLC` و `MediaMTX` قابل انتخاب است. `FFmpeg` پیش‌فرض است؛ `LibVLC` برای RTSPهایی است که در VLC پایدارتر هستند و به VLC 3.x x64 نصب‌شده یا `VLC_HOME` نیاز دارد؛ `MediaMTX` برای path مستقل، WHEP خام و پخش کم‌تاخیر مرورگر استفاده می‌شود.
+- دکمهٔ `Detection history` یک Event Store محلی برای رخدادهای Plate/Face/Palm باز می‌کند. رخدادها همراه crop، فریم خام، metadata و payload در `desktop-events.json` و `desktop-event-artifacts` ذخیره می‌شوند و جست‌وجو، فیلتر، صفحه‌بندی، preview و حذف همه/بازه‌ای دارند.
+- دکمهٔ `Triggers and workflows` برای برنامهٔ Windows مستقل است: تریگرهای محلی با camera scope، label/plate/identity، confidence و cooldown، اعلان داخل برنامه یا Webhook، و Invocationهای HTTP یا SQLite با timeout، retry و log را مدیریت می‌کند. این بخش هیچ اتصال یا وابستگی به `HshDetectionService` ندارد.
+- فرم `Identity database` جست‌وجوی اشخاص، حذف گروهی آبشاری، افزودن چندتصویر، Import folder برای Face/Palm و انتقال نمونهٔ Face/Palm بین اشخاص را فراهم می‌کند.
 
 ## پنل وب و مسیر تصویر
 
-`DetectionManagerUi` رابط وب سرویس است و رفتارهای اصلی برنامهٔ Windows را در
-یک dashboard ارائه می‌کند: نوار اکشن بالایی، tileهای دوربین با کنترل‌های
+`DetectionManagerUi` رابط وب مستقل سرویس است و همان سطح قابلیت‌های عملیاتی برنامهٔ Windows را در
+یک dashboard ارائه می‌کند؛ اما به `HshVisionLab` وصل نمی‌شود: نوار اکشن بالایی، tileهای دوربین با کنترل‌های
 `Start/Stop`، `Edit` و نمای کامل، و پنل `Detected events` در کنار تصویر که crop
 و جزئیات متنی هر تشخیص را نشان می‌دهد. زیر این layout نیز پنل `وضعیت runtime`
 برای پنج دوربین اول وجود دارد. دکمهٔ Delete در `CameraTile` وب وجود ندارد.

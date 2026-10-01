@@ -21,6 +21,8 @@ public sealed partial class MainForm : Form
     private readonly FaceModule _faceModule;
     private readonly PalmModule _palmModule;
     private readonly ProcessingRegistry _processingCatalog;
+    private readonly DesktopEventStore _eventStore;
+    private readonly DesktopAutomationEngine _automation;
     private readonly Dictionary<string, CameraRuntime> _cameras = new();
     private readonly Dictionary<string, Bitmap> _latestFrames = new();
     private readonly HashSet<string> _pendingFrameUpdates = new();
@@ -51,6 +53,10 @@ public sealed partial class MainForm : Form
         _faceModule = new FaceModule(_faceDatabase, _license);
         _palmModule = new PalmModule(_palmDatabase, _license);
         _processingCatalog = CreateProcessingCatalog(_faceModule, _palmModule, _license);
+        _eventStore = new DesktopEventStore();
+        _automation = new DesktopAutomationEngine(_eventStore, new DesktopAutomationStore());
+        _automation.StatusChanged += Automation_StatusChanged;
+        _eventStore.Prune(_automation.Store.Settings.EventRetentionDays, _automation.Store.Settings.ArtifactRetentionDays);
         BuildUi();
         UiLocalization.Apply(this);
         _btnLanguage.Text = UiLocalization.IsPersian ? "English" : "فارسی";
@@ -238,6 +244,25 @@ public sealed partial class MainForm : Form
             return;
         }
 
+        using Bitmap? rawFrame = camera.TryGetLatestRawFrame(out _);
+        DesktopEventRecord record = _eventStore.Append(
+            camera.Settings.Id,
+            camera.Settings.Name,
+            string.Empty,
+            "PlateDetected",
+            "Plate",
+            item.Text,
+            item.Text,
+            null,
+            item.Confidence,
+            item.Timestamp,
+            item.Crop,
+            rawFrame,
+            new { camera = camera.Settings.Name, plate = item.Text, ownerKey = item.OwnerKey, confidence = item.Confidence });
+        _automation.Process(record);
+        DesktopEventRecord? association = _eventStore.TryCreatePlateFaceAssociation(record);
+        if (association is not null) _automation.Process(association);
+
         SafeInvoke(() => AddPlateCard(
             new Bitmap(item.Crop),
             camera.Settings.Name,
@@ -251,14 +276,50 @@ public sealed partial class MainForm : Form
         Bitmap crop = new(item.Crop);
         string label = item.Detection.Label is "Unknown" or "face" ? "Unknown face" : item.Detection.Label;
         if (item.Detection.TrackId is int trackId) label = $"{label} #{trackId}";
+        string scenario = item.Detection.Kind.ToString();
+        string? identity = item.Detection.Label.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase) ? null : item.Detection.Label;
+        using Bitmap? rawFrame = camera.TryGetLatestRawFrame(out _);
+        DesktopEventRecord record = _eventStore.Append(
+            camera.Settings.Id,
+            camera.Settings.Name,
+            string.Empty,
+            $"{scenario}Detected",
+            scenario,
+            label,
+            null,
+            identity,
+            item.Detection.Confidence,
+            item.Timestamp,
+            item.Crop,
+            rawFrame,
+            new { camera = camera.Settings.Name, kind = scenario, label, confidence = item.Detection.Confidence, bounds = item.Detection.Bounds, trackId = item.Detection.TrackId, metadata = item.Detection.Metadata });
+        _automation.Process(record);
+        DesktopEventRecord? association = _eventStore.TryCreatePlateFaceAssociation(record);
+        if (association is not null) _automation.Process(association);
         SafeInvoke(() => AddPlateCard(crop, camera.Settings.Name, label, item.Detection.Confidence, item.Timestamp));
     }
+
+    private void Automation_StatusChanged(string message, bool isError)
+        => SafeInvoke(() => PushStatus(message, isError));
 
     private void ManageIdentityDatabase()
     {
         using var form = new IdentityDatabaseForm(_identityDatabase, _faceDatabase, _palmDatabase,
             RegisterFaceFromImage, AddFaceSampleToPerson, ImportFacesFromFolder,
             RegisterPalmFromImage, AddPalmSampleToPerson);
+        form.ShowDialog(this);
+    }
+
+    private void ShowHistoryManager()
+    {
+        using var form = new HistoryManagementForm(_eventStore);
+        form.ShowDialog(this);
+        RebuildAllHistoryCards();
+    }
+
+    private void ShowAutomationManager()
+    {
+        using var form = new AutomationManagerForm(_automation.Store);
         form.ShowDialog(this);
     }
 
@@ -678,6 +739,8 @@ public sealed partial class MainForm : Form
         {
             camera.Dispose();
         }
+
+        _automation.Dispose();
 
         _identityDatabase.Dispose();
 

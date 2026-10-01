@@ -68,13 +68,14 @@ public sealed class PalmModule
         if (requireRecognition && (!options.RecognitionEnabled || recognitionPath is null))
             return null;
         if (!options.RecognitionEnabled || recognitionPath is null) recognitionPath = null;
+        string detectorKind = InferDetectorKind(options.DetectorModelFile);
 
         return new PalmPipeline(
             detectorPath,
             new PalmPipelineOptions
             {
-                DetectorKind = InferDetectorKind(options.DetectorModelFile, options.DetectorKind),
-                DetectorInputSize = InferDetectorKind(options.DetectorModelFile, options.DetectorKind).Equals("RTMDet", StringComparison.OrdinalIgnoreCase)
+                DetectorKind = detectorKind,
+                DetectorInputSize = detectorKind.Equals("RTMDet", StringComparison.OrdinalIgnoreCase)
                     ? 320
                     : options.DetectorInputSize,
                 DetectionConfidence = options.DetectionConfidence,
@@ -92,12 +93,12 @@ public sealed class PalmModule
             _license);
     }
 
-    private static string InferDetectorKind(string modelFile, string configuredKind)
+    private static string InferDetectorKind(string modelFile)
     {
         if (modelFile.Contains("rtmdet", StringComparison.OrdinalIgnoreCase) ||
             modelFile.Contains("hand", StringComparison.OrdinalIgnoreCase)) return "RTMDet";
         if (modelFile.Contains("blaze", StringComparison.OrdinalIgnoreCase) ||
             modelFile.Contains("palm", StringComparison.OrdinalIgnoreCase)) return "BlazePalm";
-        return configuredKind;
+        throw new InvalidOperationException($"Unsupported Palm detector model '{modelFile}'. The detector kind is defined by the model.");
     }
 }

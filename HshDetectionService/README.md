@@ -8,7 +8,7 @@
 dotnet run --project .\HshDetectionService\HshDetectionService.csproj
 ```
 
-سرویس فقط API، SignalR، stream و inference را ارائه می‌کند و UI در آن host نمی‌شود. پنل React در پروژهٔ `DetectionManagerUi` جداگانه build/serve می‌شود و با `VITE_HSH_API_BASE_URL` به این سرویس وصل می‌گردد؛ routeهای `/api` و `/hubs` متعلق به سرویس هستند.
+سرویس فقط API، SignalR، stream و inference را برای `DetectionManagerUi` ارائه می‌کند و UI اصلی را host نمی‌کند. پنل React در پروژهٔ `DetectionManagerUi` جداگانه build/serve می‌شود و با `VITE_HSH_API_BASE_URL` به این سرویس وصل می‌گردد؛ routeهای `/api` و `/hubs` متعلق به سرویس هستند. `HshVisionLab` مشتری این سرویس نیست و باید به‌صورت مستقل با engineهای داخل solution و اتصال مستقیم به دوربین اجرا شود.
 
 برای build کامل خروجی سرویس:
 
@@ -23,7 +23,7 @@ dotnet build .\HshDetectionService\HshDetectionService.csproj -c Debug
 
 data root سرویس برابر پوشهٔ اجرای `HshDetectionService.exe` است. سرویس هنگام اجرا فایل‌های زیر را در همین پوشه ایجاد می‌کند:
 
-- `config\settings.json`: همان `AppSettings` برنامهٔ HshVisionLab
+- `config\settings.json`: تنظیمات سرویس با schema سازگار با `AppSettings`؛ فایل مستقل از `HshVisionLab` است
 - `config\service-settings.json`: تنظیمات HTTP، امنیت، retention و triggerها
 - `database\identity-database.db`: دیتابیس مرکزی SQLite اشخاص، پلاک‌ها، نمونه‌های Face و نمونه‌های Palm
 - `database\events.db`: event log ترتیبی برای replay
@@ -45,14 +45,23 @@ GET/POST/PUT/DELETE /api/v1/cameras/{cameraId}/rois
 POST/PUT/DELETE /api/v1/cameras/{cameraId}/rois/{roiId}/tasks
 
 GET/POST/PATCH/DELETE /api/v1/face/people
+POST /api/v1/face/people/bulk-delete      (JSON: { "personIds": ["..."] })
 POST /api/v1/face/people/{personId}/samples   (multipart image)
 GET  /api/v1/face/samples/{sampleId}/image
 POST /api/v1/face/samples/{sampleId}/move
 
 GET  /api/v1/palm/people
+GET  /api/v1/palm/people/summary
 GET  /api/v1/palm/people/{personId}/samples
 GET  /api/v1/palm/database/health
 POST /api/v1/palm/samples                 (multipart image)
+GET  /api/v1/palm/samples/{sampleId}/image
+DELETE /api/v1/palm/samples/{sampleId}
+POST /api/v1/palm/samples/{sampleId}/move
+
+GET  /api/v1/identity/people/{personId}/plates
+POST /api/v1/identity/people/{personId}/plates
+DELETE /api/v1/identity/plates/{plateId}
 
 GET /api/v1/events?afterSequence=0&limit=200
 DELETE /api/v1/events?fromUtc=...&toUtc=...  (هر دو خالی = حذف همه)
@@ -69,7 +78,7 @@ POST/PATCH/DELETE /api/v1/streams/{cameraId}/webrtc/whep/{viewerId}
 GET /api/v1/streams/{cameraId}/snapshot
 ```
 
-برای حذف تاریخچه، `DELETE /api/v1/events` با `fromUtc` و `toUtc` به‌صورت ISO-8601 استفاده می‌شود؛ حذف بدون بازه تمام eventها و artifactهای تصویری آن‌ها را پاک می‌کند. برای routeهای مدیریتی از `X-Hsh-Api-Key` استفاده می‌شود. به‌صورت پیش‌فرض دسترسی loopback بدون کلید برای ابزار تنظیمات محلی مجاز است و باید برای استقرار remote غیرفعال شود. UI وب در این مرحله تغییر نکرده و فقط API و storage مرکزی به‌روزرسانی شده‌اند.
+برای حذف تاریخچه، `DELETE /api/v1/events` با `fromUtc` و `toUtc` به‌صورت ISO-8601 استفاده می‌شود؛ حذف بدون بازه تمام eventها و artifactهای تصویری آن‌ها را پاک می‌کند. برای routeهای مدیریتی از `X-Hsh-Api-Key` استفاده می‌شود. به‌صورت پیش‌فرض دسترسی loopback بدون کلید برای ابزار تنظیمات محلی مجاز است و باید برای استقرار remote غیرفعال شود. UI وب صفحهٔ `مدیریت افراد` را برای مدیریت مشترک Face/Palm/Plate مصرف می‌کند.
 
 ## قرارداد رخداد
 

@@ -1,6 +1,6 @@
 # DetectionManagerUi
 
-پنل مدیریتی React/TypeScript برای `HshDetectionService`. این UI مشابه جریان کاری HshVisionLab طراحی شده، اما تمام عملیات را از طریق API سرویس انجام می‌دهد و به فایل‌های تنظیمات یا دیتابیس دسترسی مستقیم ندارد. مشخصات مرجع برای بازسازی دقیق در [WEB-UI-RECONSTRUCTION-SPEC.md](../docs/WEB-UI-RECONSTRUCTION-SPEC.md) است؛ مسیرهای تصویر و latency در [WEB-UI-AND-STREAMING.md](../docs/WEB-UI-AND-STREAMING.md) آمده‌اند.
+پنل مدیریتی React/TypeScript مستقل برای `HshDetectionService`. این UI از نظر امکانات و تجربهٔ کاربری هم‌سطح `HshVisionLab` طراحی شده، اما هیچ ارتباطی با خود برنامهٔ `HshVisionLab` ندارد؛ تمام عملیات فقط از طریق API، SignalR، stream و WHEP/Overlay سرویس انجام می‌شود و UI به فایل‌های تنظیمات، engine یا دیتابیس محلی دسترسی مستقیم ندارد. مشخصات مرجع برای بازسازی دقیق در [WEB-UI-RECONSTRUCTION-SPEC.md](../docs/WEB-UI-RECONSTRUCTION-SPEC.md) است؛ مسیرهای تصویر و latency در [WEB-UI-AND-STREAMING.md](../docs/WEB-UI-AND-STREAMING.md) آمده‌اند.
 
 ## اجرا
 
@@ -66,11 +66,12 @@ npm run dev
 - نمای متمرکز دوربین تصویر همان دوربین را در workspace میانی نشان می‌دهد و به‌صورت خودکار وارد edit نمی‌شود؛ ابزارهای ویرایش، ROI جدید، حذف، ذخیره، لغو و بازگشت مستقل‌اند
 - تنظیمات کامل General/Capture، FFmpeg، LibVLC یا MediaMTX، TCP/UDP، reconnect، buffer و Motion Gate
 - پروفایل‌های Weak، Balanced و High مطابق فرم ویندوزی، بدون تغییر thresholdهای تشخیص
-- تنظیمات مستقل Plate و Face برای هر ROI در چهار گروه Plate detection، Face detection، Face identification و Tracking/recording
-- مدل‌ها در ComboBox از catalog سرویس (`/api/v1/service/models`) بارگذاری می‌شوند؛ UI برای model file ورودی متنی ندارد
+- تنظیمات مستقل Plate، Face و Palm برای هر ROI؛ پردازش‌های هر ROI در تب‌های detection، recognition/identification و tracking/recording در دسترس‌اند و کارت‌های detailed با کلیک باز و بسته می‌شوند
+- مدل‌ها در ComboBox از catalog سرویس (`/api/v1/service/models`) بارگذاری می‌شوند؛ هر ComboBox فقط مدل‌های همان قابلیت را نشان می‌دهد (Plate، Face یا Palm) و UI برای model file ورودی متنی ندارد
 - MediaMTX با WHEP خام و کم‌تاخیر در `<video>` نمایش داده می‌شود و ROI، کادر تشخیص، متن و primitiveهای پردازشی از `/api/v1/streams/{cameraId}/overlay` به‌صورت SVG Overlay سمت کلاینت رسم می‌شوند
 - snapshot برای backendهای غیر MediaMTX و endpoint WebRTC کامپوزیت‌شده برای مصرف‌کننده‌های legacy باقی می‌مانند؛ مسیر اصلی MediaMTX از encode مجدد ویدئو استفاده نمی‌کند
-- Face Database کامل: افراد نام‌دار/Unknown، rename، حذف sample/person، enrollment چندتصویری، انتقال sample و Similarity/Merge
+- صفحهٔ `مدیریت افراد` (`/faces`) به‌جای Face Database: افراد نام‌دار، Unknown و `Unknown Palm #…` را نشان می‌دهد و برای هر فرد سه تب مستقل `چهره`، `پالم` و `پلاک` دارد؛ تصاویر crop‌شدهٔ Face/Palm، افزودن چندتصویری، Import folder، انتقال/حذف sample، rename و Similarity/Merge از همین صفحه انجام می‌شوند
+- حذف گروهی افراد با checkbox کنار نام (سمت راست ردیف) و تأیید کاربر انجام می‌شود؛ endpoint حذف، متعلقات همان افراد شامل FaceSamples، PalmSamples و PersonPlates را نیز با حذف آبشاری پاک می‌کند
 - مشاهدهٔ eventهای پایدار، فریم کامل، ROI/Plate/Face crop، metadata جزئی و payload کامل trigger
 - صفحهٔ تاریخچهٔ رخدادها آخرین ۵۰۰ رکورد را بارگذاری می‌کند و گرید آن با اندازهٔ ۵۰ (پیش‌فرض)، ۱۰۰ یا ۲۰۰ رکورد در صفحه، داخل خود گرید صفحه‌بندی می‌شود
 - preview رخداد انتخاب‌شده در بالای صفحه sticky است؛ فقط گرید اسکرول عمودی دارد و header آن ثابت می‌ماند، و ارتفاع ردیف‌ها برای نمایش رکوردهای بیشتر فشرده شده است
@@ -79,6 +80,25 @@ npm run dev
 - فیلد `History event cooldown (sec)` در «آزمایش subscription کلاینت»؛ فقط history و replay/live همان اتصال وب را فیلتر می‌کند و database مشترک یا triggerها را تغییر نمی‌دهد
 - triggerهای سناریویی Plate، Face و Plate+Face با camera scope، identity، confidence و `History event cooldown (sec)`؛ cooldown هر تریگر از Event Store بررسی می‌شود و برای کلید همان سناریو اعمال می‌شود
 - مدیریت سرویس، listener، API key، retention، runtime reload، capability registry و inventory مدل‌ها
+
+### API هویت در UI وب
+
+صفحهٔ `مدیریت افراد` از دیتابیس مرکزی سرویس استفاده می‌کند و به SQLite به‌صورت
+مستقیم دسترسی ندارد. مسیرهای اصلی آن عبارت‌اند از:
+
+```text
+GET  /api/v1/face/people
+POST /api/v1/face/people/bulk-delete       { "personIds": ["..."] }
+GET  /api/v1/face/people/{id}/samples
+GET  /api/v1/palm/people/summary
+GET  /api/v1/palm/people/{id}/samples
+GET  /api/v1/palm/samples/{id}/image
+GET  /api/v1/identity/people/{id}/plates
+```
+
+حذف گروهی برای بدنهٔ خالی `400` و برای درخواست معتبر `200` با
+`{ "deletedCount": number }` برمی‌گرداند. سرویس با حذف آبشاری، نمونه‌های چهره،
+کف‌دست و پلاک‌های همان افراد را نیز حذف می‌کند.
 
 ## ساخت production
 

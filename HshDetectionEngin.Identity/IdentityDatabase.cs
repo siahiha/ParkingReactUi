@@ -89,13 +89,12 @@ public sealed class IdentityDatabase : IDisposable
 
     public static IdentityDatabase Load(string path, string? legacyFacePath = null, string? legacyPalmPath = null)
     {
-        bool wasEmpty = !File.Exists(path) || new FileInfo(path).Length == 0;
         var database = new IdentityDatabase(path);
-        if (wasEmpty || database.IsEmpty())
-        {
-            database.ImportLegacyFaceDatabase(legacyFacePath);
-            database.ImportLegacyPalmDatabase(legacyPalmPath);
-        }
+        // A central database may already contain people created by another
+        // modality. Import each legacy modality independently so existing
+        // people do not prevent their old face/palm samples from migrating.
+        database.ImportLegacyFaceDatabase(legacyFacePath);
+        database.ImportLegacyPalmDatabase(legacyPalmPath);
         return database;
     }
 
@@ -112,6 +111,18 @@ public sealed class IdentityDatabase : IDisposable
     }
 
     public IdentityPersonRecord? FindPerson(string id) => GetPeople().FirstOrDefault(item => item.Id == id);
+
+    public IReadOnlyDictionary<string, int> GetPalmSampleCounts()
+    {
+        lock (_gate)
+        {
+            using SqliteCommand command = CreateCommand("SELECT PersonId, COUNT(*) FROM PalmSamples GROUP BY PersonId;");
+            using SqliteDataReader reader = command.ExecuteReader();
+            var result = new Dictionary<string, int>(StringComparer.Ordinal);
+            while (reader.Read()) result[reader.GetString(0)] = Convert.ToInt32(reader.GetInt64(1), CultureInfo.InvariantCulture);
+            return result;
+        }
+    }
 
     public IdentityPersonRecord CreatePerson(string name, bool isUnknown = false)
     {
@@ -155,10 +166,26 @@ public sealed class IdentityDatabase : IDisposable
 
     public bool RemovePerson(string personId)
     {
+        return RemovePeople([personId]) > 0;
+    }
+
+    public int RemovePeople(IEnumerable<string> personIds)
+    {
+        string[] ids = personIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (ids.Length == 0) return 0;
         lock (_gate)
         {
-            using SqliteCommand command = CreateCommand("DELETE FROM People WHERE PersonId=$id;");
-            Add(command, "$id", personId); return command.ExecuteNonQuery() > 0;
+            using SqliteTransaction transaction = _connection.BeginTransaction();
+            string[] placeholders = ids.Select((_, index) => $"$id{index}").ToArray();
+            using SqliteCommand command = CreateCommand($"DELETE FROM People WHERE PersonId IN ({string.Join(",", placeholders)});", transaction);
+            for (int index = 0; index < ids.Length; index++) Add(command, placeholders[index], ids[index]);
+            int deleted = command.ExecuteNonQuery();
+            transaction.Commit();
+            return deleted;
         }
     }
 
@@ -233,6 +260,7 @@ public sealed class IdentityDatabase : IDisposable
     }
 
     public byte[] GetFaceImage(string sampleId) => GetFaceSamples(true).FirstOrDefault(item => item.Id == sampleId)?.FaceImage ?? [];
+    public byte[] GetPalmImage(string sampleId) => GetPalmSamples().FirstOrDefault(item => item.Id == sampleId)?.PalmImage ?? [];
 
     public IReadOnlyList<IdentityPalmSampleRecord> GetPalmSamples(string? personId = null)
     {
@@ -561,14 +589,21 @@ public sealed class IdentityDatabase : IDisposable
         using var source = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadOnly }.ToString()); source.Open();
         using SqliteCommand people = source.CreateCommand(); people.CommandText = "SELECT PersonId,PersonNumber,Name,IsUnknown,CreatedAtUtc,UpdatedAtUtc FROM People;";
         using SqliteDataReader reader = people.ExecuteReader(); var mapping = new Dictionary<string, string>();
-        while (reader.Read()) { IdentityPersonRecord person = ImportPerson(reader.GetString(0), reader.GetString(2), reader.GetInt32(3) != 0); mapping[reader.GetString(0)] = person.Id; }
+        while (reader.Read()) { IdentityPersonRecord person = ImportPerson(reader.GetString(2), reader.GetInt32(3) != 0, reader.GetInt32(1)); mapping[reader.GetString(0)] = person.Id; }
         reader.Close();
         using SqliteCommand samples = source.CreateCommand(); samples.CommandText = "SELECT PersonId,SampleNumber,OriginalFileName,FileExtension,CreatedAtUtc,DetectionConfidence,FaceImage,Embedding FROM FaceSamples;";
         using SqliteDataReader sampleReader = samples.ExecuteReader();
         while (sampleReader.Read() && mapping.TryGetValue(sampleReader.GetString(0), out string? personId))
         {
             IdentityPersonRecord? person = FindPerson(personId); if (person is null) continue;
-            try { RegisterFaceSample(person.Name, BytesToEmbedding((byte[])sampleReader[7]), (byte[])sampleReader[6], sampleReader.GetString(2), person.Id, sampleReader.GetFloat(5), ParseTime(sampleReader.GetString(4)), person.IsUnknown); } catch (InvalidOperationException) { }
+            string fileName = sampleReader.GetString(2);
+            DateTime createdAtUtc = ParseTime(sampleReader.GetString(4));
+            byte[] image = (byte[])sampleReader[6];
+            float[] embedding = BytesToEmbedding((byte[])sampleReader[7]);
+            if (GetFaceSamples(false, person.Id).Any(existing =>
+                existing.OriginalFileName.Equals(fileName, StringComparison.OrdinalIgnoreCase) &&
+                existing.CreatedAtUtc == createdAtUtc && existing.Embedding.SequenceEqual(embedding))) continue;
+            try { RegisterFaceSample(person.Name, embedding, image, fileName, person.Id, sampleReader.GetFloat(5), createdAtUtc, person.IsUnknown); } catch (InvalidOperationException) { }
         }
     }
 
@@ -578,20 +613,28 @@ public sealed class IdentityDatabase : IDisposable
         using var source = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadOnly }.ToString()); source.Open();
         using SqliteCommand people = source.CreateCommand(); people.CommandText = "SELECT PersonId,PersonNumber,Name,CreatedAtUtc,UpdatedAtUtc FROM PalmPeople;";
         using SqliteDataReader reader = people.ExecuteReader(); var mapping = new Dictionary<string, string>();
-        while (reader.Read()) { IdentityPersonRecord person = ImportPerson(reader.GetString(0), reader.GetString(2), false); mapping[reader.GetString(0)] = person.Id; }
+        while (reader.Read()) { IdentityPersonRecord person = ImportPerson(reader.GetString(2), false, reader.GetInt32(1)); mapping[reader.GetString(0)] = person.Id; }
         reader.Close();
         using SqliteCommand samples = source.CreateCommand(); samples.CommandText = "SELECT PersonId,SampleNumber,OriginalFileName,CreatedAtUtc,DetectionConfidence,PalmImage,Embedding FROM PalmSamples;";
         using SqliteDataReader sampleReader = samples.ExecuteReader();
         while (sampleReader.Read() && mapping.TryGetValue(sampleReader.GetString(0), out string? personId))
         {
             IdentityPersonRecord? person = FindPerson(personId); if (person is null) continue;
-            try { RegisterPalmSample(person.Name, BytesToEmbedding((byte[])sampleReader[6]), (byte[])sampleReader[5], sampleReader.GetString(2), person.Id, sampleReader.GetFloat(4), ParseTime(sampleReader.GetString(3))); } catch (InvalidOperationException) { }
+            string fileName = sampleReader.GetString(2);
+            DateTime createdAtUtc = ParseTime(sampleReader.GetString(3));
+            byte[] image = (byte[])sampleReader[5];
+            float[] embedding = BytesToEmbedding((byte[])sampleReader[6]);
+            if (GetPalmSamples(person.Id).Any(existing =>
+                existing.OriginalFileName.Equals(fileName, StringComparison.OrdinalIgnoreCase) &&
+                existing.CreatedAtUtc == createdAtUtc && existing.Embedding.SequenceEqual(embedding))) continue;
+            try { RegisterPalmSample(person.Name, embedding, image, fileName, person.Id, sampleReader.GetFloat(4), createdAtUtc); } catch (InvalidOperationException) { }
         }
     }
 
-    private IdentityPersonRecord ImportPerson(string oldId, string name, bool unknown)
+    private IdentityPersonRecord ImportPerson(string name, bool unknown, int personNumber)
     {
-        IdentityPersonRecord? existing = GetPeople().FirstOrDefault(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        IdentityPersonRecord? existing = GetPeople().FirstOrDefault(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+            ?? GetPeople().FirstOrDefault(item => item.PersonNumber == personNumber);
         return existing ?? CreatePerson(name, unknown);
     }
 

@@ -369,18 +369,28 @@ public sealed class PalmPipeline : IProcessingPipeline
     private static InferenceSession CreateSession(string path, PalmPipelineOptions options, out string inputName, out bool usesNhwc)
     {
         if (!File.Exists(path)) throw new FileNotFoundException("Palm model not found.", path);
-        using var settings = new SessionOptions
+        string runtimePath = path.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase)
+            ? ProtectedModelPackage.Materialize(path, "hsh-palm")
+            : throw new InvalidOperationException("Palm models must be protected .hshmodel packages.");
+        try
         {
-            GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
-            ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
-            IntraOpNumThreads = 1,
-            InterOpNumThreads = 1
-        };
-        var session = new InferenceSession(path, settings);
-        inputName = session.InputNames.First();
-        int[] dimensions = session.InputMetadata[inputName].Dimensions.ToArray();
-        usesNhwc = dimensions.Length == 4 && dimensions[3] == 3 && dimensions[1] != 3;
-        return session;
+            using var settings = new SessionOptions
+            {
+                GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
+                IntraOpNumThreads = 1,
+                InterOpNumThreads = 1
+            };
+            var session = new InferenceSession(runtimePath, settings);
+            inputName = session.InputNames.First();
+            int[] dimensions = session.InputMetadata[inputName].Dimensions.ToArray();
+            usesNhwc = dimensions.Length == 4 && dimensions[3] == 3 && dimensions[1] != 3;
+            return session;
+        }
+        finally
+        {
+            try { File.Delete(runtimePath); } catch { }
+        }
     }
     public void Dispose() { _detector.Dispose(); _recognizer?.Dispose(); GC.SuppressFinalize(this); }
 }

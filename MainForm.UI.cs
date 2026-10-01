@@ -15,6 +15,8 @@ public sealed partial class MainForm
     private Button _btnManageCameras = null!;
     private Button _btnSaveAll = null!;
     private Button _btnManageIdentity = null!;
+    private Button _btnHistory = null!;
+    private Button _btnAutomation = null!;
     private Button _btnStartAll = null!;
     private Button _btnStopAll = null!;
     private Button _btnBackToThumbnails = null!;
@@ -110,7 +112,7 @@ public sealed partial class MainForm
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 8,
+            ColumnCount = 10,
             RowCount = 1
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -131,13 +133,17 @@ public sealed partial class MainForm
         _btnManageCameras = MakeButton(string.Empty, BgButton);
         _btnSaveAll = MakeButton(string.Empty, BgButton);
         _btnManageIdentity = MakeButton(string.Empty, BgButton);
+        _btnHistory = MakeButton(string.Empty, BgButton);
+        _btnAutomation = MakeButton(string.Empty, BgButton);
         _btnStartAll = MakeButton(string.Empty, AccentGreen);
         _btnStopAll = MakeButton(string.Empty, AccentRed);
         _btnBackToThumbnails = MakeButton(string.Empty, BgButton);
         _btnLanguage = MakeButton(string.Empty, BgButton);
         StyleMainActionButton(_btnManageCameras, "view_module", "Manage cameras", BgButton);
         StyleMainActionButton(_btnSaveAll, "save", "Save", BgButton);
-        StyleMainActionButton(_btnManageIdentity, "badge", "Identity database", BgButton);
+        StyleMainActionButton(_btnManageIdentity, "storage", "Identity database", BgButton);
+        StyleMainActionButton(_btnHistory, "history", "Detection history", BgButton);
+        StyleMainActionButton(_btnAutomation, "bolt", "Triggers and workflows", BgButton);
         StyleMainActionButton(_btnStartAll, "play_arrow", "Start All", AccentGreen);
         StyleMainActionButton(_btnStopAll, "stop", "Stop All", AccentRed);
         StyleMainActionButton(_btnBackToThumbnails, "view_module", "Thumbnails", BgButton);
@@ -147,6 +153,8 @@ public sealed partial class MainForm
         _btnManageCameras.Click += (_, _) => ShowCameraManager();
         _btnSaveAll.Click += (_, _) => OnSaveSettingsClick();
         _btnManageIdentity.Click += (_, _) => ManageIdentityDatabase();
+        _btnHistory.Click += (_, _) => ShowHistoryManager();
+        _btnAutomation.Click += (_, _) => ShowAutomationManager();
         _btnStartAll.Click += (_, _) => StartAllCameras();
         _btnStopAll.Click += (_, _) => StopAllCameras();
         _btnBackToThumbnails.Click += (_, _) => ShowThumbnails();
@@ -158,8 +166,10 @@ public sealed partial class MainForm
         layout.Controls.Add(_btnStopAll, 3, 0);
         layout.Controls.Add(_btnSaveAll, 4, 0);
         layout.Controls.Add(_btnManageIdentity, 5, 0);
-        layout.Controls.Add(_btnBackToThumbnails, 6, 0);
-        layout.Controls.Add(_btnLanguage, 7, 0);
+        layout.Controls.Add(_btnHistory, 6, 0);
+        layout.Controls.Add(_btnAutomation, 7, 0);
+        layout.Controls.Add(_btnBackToThumbnails, 8, 0);
+        layout.Controls.Add(_btnLanguage, 9, 0);
         _topBar.Controls.Add(layout);
         Controls.Add(_topBar);
     }

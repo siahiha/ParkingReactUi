@@ -36,8 +36,8 @@ def main() -> None:
     root = Path(__file__).resolve().parent.parent
     source_name = sys.argv[1] if len(sys.argv) > 1 else "best_416_static.onnx"
     destination_name = sys.argv[2] if len(sys.argv) > 2 else "best_416_int8_qdq_experimental.onnx"
-    source = root / "Models" / source_name
-    destination = root / "Models" / destination_name
+    source = root / "RawModels" / "Plate" / source_name
+    destination = root / "RawModels" / "Plate" / destination_name
 
     if not source.is_file():
         raise FileNotFoundError(source)

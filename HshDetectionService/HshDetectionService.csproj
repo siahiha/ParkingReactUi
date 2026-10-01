@@ -13,6 +13,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\HshDetectionEngin.Face\Models\face_yunet_2023mar.hshmodel"
+          Link="Models\Face\face_yunet_2023mar.hshmodel"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\HshDetectionEngin.Face\Models\face_yunet_2023mar_int8.hshmodel"
+          Link="Models\Face\face_yunet_2023mar_int8.hshmodel"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\HshDetectionEngin.Face\Models\face_recognition_sface_2021dec.hshmodel"
+          Link="Models\Face\face_recognition_sface_2021dec.hshmodel"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\HshDetectionEngin\HshDetectionEngin.csproj" />
     <ProjectReference Include="..\HshDetectionEngin.Abstractions\HshDetectionEngin.Abstractions.csproj" />
     <ProjectReference Include="..\HshDetectionEngin.Face\HshDetectionEngin.Face.csproj" />
@@ -35,31 +50,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\Models\Palm\palm_blazepalm_full.onnx"
-          Link="Models\Palm\palm_blazepalm_full.onnx"
+    <None Include="..\HshDetectionEngin.Palm\Models\palm_blazepalm_full.hshmodel"
+          Link="Models\Palm\palm_blazepalm_full.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\Models\Palm\rtmdet_nano_hand.onnx"
-          Link="Models\Palm\rtmdet_nano_hand.onnx"
+    <None Include="..\HshDetectionEngin.Palm\Models\rtmdet_nano_hand.hshmodel"
+          Link="Models\Palm\rtmdet_nano_hand.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\Models\Palm\palm_ccnet.onnx"
-          Link="Models\Palm\palm_ccnet.onnx"
+    <None Include="..\HshDetectionEngin.Palm\Models\palm_ccnet.hshmodel"
+          Link="Models\Palm\palm_ccnet.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\HshDetectionEngin.Plate\Models\plate_yolo.onnx"
-          Link="Models\Plate\plate_yolo.onnx"
+    <None Include="..\HshDetectionEngin.Plate\Models\plate_yolo.hshmodel"
+          Link="Models\Plate\plate_yolo.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\HshDetectionEngin.Plate\Models\plate_yolo_fallback.onnx"
-          Link="Models\Plate\plate_yolo_fallback.onnx"
+    <None Include="..\HshDetectionEngin.Plate\Models\plate_yolo_fallback.hshmodel"
+          Link="Models\Plate\plate_yolo_fallback.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\HshDetectionEngin.Plate\Models\ocr_crnn.onnx"
-          Link="Models\Plate\ocr_crnn.onnx"
+    <None Include="..\HshDetectionEngin.Plate\Models\ocr_crnn.hshmodel"
+          Link="Models\Plate\ocr_crnn.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\HshDetectionEngin.Plate\Models\ocr_crnn.labels.json"
@@ -70,8 +85,8 @@
           Link="Models\Plate\ocr_crnn.ocr.json"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\HshDetectionEngin.Plate\Models\ocr_cnn.onnx"
-          Link="Models\Plate\ocr_cnn.onnx"
+    <None Include="..\HshDetectionEngin.Plate\Models\ocr_cnn.hshmodel"
+          Link="Models\Plate\ocr_cnn.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\HshDetectionEngin.Plate\Models\ocr_cnn.labels.json"
@@ -82,12 +97,12 @@
           Link="Models\Plate\ocr_cnn.ocr.json"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\HshDetectionEngin.Plate\Models\chars_best_v26.onnx"
-          Link="Models\Plate\chars_best_v26.onnx"
+    <None Include="..\HshDetectionEngin.Plate\Models\chars_best_v26.hshmodel"
+          Link="Models\Plate\chars_best_v26.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\HshDetectionEngin.Plate\Models\chars_best_v26_int8.onnx"
-          Link="Models\Plate\chars_best_v26_int8.onnx"
+    <None Include="..\HshDetectionEngin.Plate\Models\chars_best_v26_int8.hshmodel"
+          Link="Models\Plate\chars_best_v26_int8.hshmodel"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\HshDetectionEngin.Plate\Models\chars_best_v26.labels.json"

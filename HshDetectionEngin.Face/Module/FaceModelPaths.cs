@@ -12,26 +12,23 @@ internal static class FaceModelPaths
         [
             Path.Combine(AppContext.BaseDirectory, "Models", "Face", packageName),
             Path.Combine(AppContext.BaseDirectory, "Models", packageName),
-            Path.Combine(AppContext.BaseDirectory, "Modules", "Face", "Models", packageName),
-            Path.Combine(AppContext.BaseDirectory, "Models", "Face", name),
-            Path.Combine(AppContext.BaseDirectory, "Models", name)
+            Path.Combine(AppContext.BaseDirectory, "Modules", "Face", "Models", packageName)
         ];
 
         // Keep Debug/Visual Studio runs working without copying the repository's
         // packaged models into bin. Published deployments use Models beside the exe.
-        AddDevelopmentModelPath(candidates, packageName, name);
+        AddDevelopmentModelPath(candidates, packageName);
 
         return candidates.FirstOrDefault(File.Exists);
     }
 
-    private static void AddDevelopmentModelPath(List<string> candidates, string packageName, string rawName)
+    private static void AddDevelopmentModelPath(List<string> candidates, string packageName)
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         for (int i = 0; i < 7 && directory is not null; i++, directory = directory.Parent)
         {
             string modelDirectory = Path.Combine(directory.FullName, "HshDetectionEngin.Face", "Models");
             candidates.Add(Path.Combine(modelDirectory, packageName));
-            candidates.Add(Path.Combine(modelDirectory, rawName));
         }
     }
 }

@@ -44,7 +44,7 @@ internal sealed class CrnnPlateRecognizer : IPlateTextRecognizer
 
     public double LastInferenceMs { get; private set; }
 
-    public CrnnPlateRecognizer(string modelPath, int intraOpThreads)
+    public CrnnPlateRecognizer(string modelPath, int intraOpThreads, string? metadataPath = null)
     {
         if (!File.Exists(modelPath))
             throw new FileNotFoundException($"Plate OCR model was not found: {modelPath}");
@@ -60,7 +60,7 @@ internal sealed class CrnnPlateRecognizer : IPlateTextRecognizer
         _session = new InferenceSession(modelPath, sessionOptions);
         string inputName = _session.InputNames.First();
         _outputNames = _session.OutputNames.ToArray();
-        _labels = LoadLabels(modelPath);
+        _labels = LoadLabels(metadataPath ?? modelPath);
         _blank = _labels.Length;
         _inputTensor = OrtValue.CreateTensorValueFromMemory(_inputBuffer, [1, 1, ImageHeight, ImageWidth]);
         _inputs = new Dictionary<string, OrtValue>(1) { [inputName] = _inputTensor };

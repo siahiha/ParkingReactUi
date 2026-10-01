@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Drawing;
 using HshDetectionEngin;
 using HshDetectionEngin.Face;
+using HshDetectionEngin.Identity;
 using HshDetectionEngin.Palm;
 using HshDetectionEngin.Plate;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -50,7 +51,9 @@ public static class ServiceApi
             var files = EnumerateModelFiles("Plate", "HshDetectionEngin.Plate")
                 .Select(path => new { path, module = "Plate" })
                 .Concat(EnumerateModelFiles("Face", "HshDetectionEngin.Face")
-                    .Select(path => new { path, module = "Face" }));
+                    .Select(path => new { path, module = "Face" }))
+                .Concat(EnumerateModelFiles("Palm", "HshDetectionEngin.Palm")
+                    .Select(path => new { path, module = "Palm" }));
 
             var models = files
                 .Select(item =>
@@ -58,11 +61,15 @@ public static class ServiceApi
                     string name = Path.ChangeExtension(Path.GetFileName(item.path), ".onnx");
                     string capability = item.module == "Plate"
                         ? (PlateOcrModelCatalog.IsOcrModel(item.path) ? "PlateRecognition" : "Plate")
-                        : name.Contains("sface", StringComparison.OrdinalIgnoreCase)
-                            ? "FaceRecognition"
-                            : name.Contains("yunet", StringComparison.OrdinalIgnoreCase)
-                                ? "FaceDetection"
-                                : "Face";
+                        : item.module == "Face"
+                            ? name.Contains("sface", StringComparison.OrdinalIgnoreCase)
+                                ? "FaceRecognition"
+                                : name.Contains("yunet", StringComparison.OrdinalIgnoreCase)
+                                    ? "FaceDetection"
+                                    : "Face"
+                            : name.Contains("ccnet", StringComparison.OrdinalIgnoreCase) || name.Contains("ppnet", StringComparison.OrdinalIgnoreCase)
+                                ? "PalmRecognition"
+                                : "PalmDetection";
                     int[] inputSizes;
                     if (item.module == "Plate" && capability == "Plate")
                     {
@@ -76,6 +83,10 @@ public static class ServiceApi
                     {
                         inputSizes = [FaceModelInspector.GetCatalogSquareInputSize(name)];
                     }
+                    else if (capability == "PalmDetection")
+                    {
+                        inputSizes = [name.Contains("rtmdet", StringComparison.OrdinalIgnoreCase) ? 320 : 192];
+                    }
                     else
                     {
                         inputSizes = [];
@@ -87,6 +98,9 @@ public static class ServiceApi
                         relativePath = Path.GetRelativePath(AppContext.BaseDirectory, item.path).Replace('\\', '/'),
                         module = item.module,
                         capability,
+                        detectorKind = capability == "PalmDetection"
+                            ? (name.Contains("rtmdet", StringComparison.OrdinalIgnoreCase) || name.Contains("hand", StringComparison.OrdinalIgnoreCase) ? "RTMDet" : "BlazePalm")
+                            : null,
                         ocrDecoder = ocrDescriptor?.Decoder,
                         ocrAlphabet = ocrDescriptor?.Alphabet,
                         inputSizes,
@@ -511,6 +525,21 @@ public static class ServiceApi
                 ? Results.NoContent()
                 : Results.Conflict(new { error = "The person name could not be changed." });
         });
+        app.MapPost("/api/v1/face/people/bulk-delete", (BulkDeletePeopleRequest request, DetectionRuntimeHost host) =>
+        {
+            if (request.PersonIds is null || request.PersonIds.Count == 0)
+                return Results.BadRequest(new { error = "At least one person is required." });
+            // Keep this endpoint compatible with service deployments that still
+            // have the previous Identity assembly beside the executable.  The
+            // single-person operation is part of the older public contract and
+            // performs the same FK-cascade cleanup for face, palm and plates.
+            int deletedCount = request.PersonIds
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id.Trim())
+                .Distinct(StringComparer.Ordinal)
+                .Count(host.IdentityDatabase.RemovePerson);
+            return Results.Ok(new { deletedCount });
+        });
         app.MapDelete("/api/v1/face/people/{personId}", (string personId, DetectionRuntimeHost host) =>
             host.FaceDatabase.Remove(personId) ? Results.NoContent() : Results.NotFound());
         app.MapGet("/api/v1/face/people/{personId}/samples", (string personId, DetectionRuntimeHost host) =>
@@ -556,8 +585,21 @@ public static class ServiceApi
         });
 
         app.MapGet("/api/v1/palm/people", (DetectionRuntimeHost host) => Results.Ok(host.PalmDatabase.Identities));
+        app.MapGet("/api/v1/palm/people/summary", (DetectionRuntimeHost host) =>
+            Results.Ok(host.IdentityDatabase.GetPalmSamples()
+                .GroupBy(sample => sample.PersonId, StringComparer.Ordinal)
+                .Select(group => new PalmPersonSummary(group.Key, group.Count()))));
         app.MapGet("/api/v1/palm/people/{personId}/samples", (string personId, DetectionRuntimeHost host) =>
             Results.Ok(host.PalmDatabase.GetSamples().Where(sample => sample.PersonId == personId)));
+        app.MapGet("/api/v1/palm/samples/{sampleId}/image", (string sampleId, DetectionRuntimeHost host) =>
+        {
+            byte[] image = host.PalmDatabase.GetPalmImage(sampleId);
+            return image.Length == 0 ? Results.NotFound() : Results.File(image, "image/jpeg");
+        });
+        app.MapDelete("/api/v1/palm/samples/{sampleId}", (string sampleId, DetectionRuntimeHost host) =>
+            host.PalmDatabase.RemoveSample(sampleId) ? Results.NoContent() : Results.NotFound());
+        app.MapPost("/api/v1/palm/samples/{sampleId}/move", (string sampleId, MoveSampleRequest request, DetectionRuntimeHost host) =>
+            host.PalmDatabase.MoveSample(sampleId, request.TargetPersonId) ? Results.Ok() : Results.NotFound());
         app.MapGet("/api/v1/palm/database/health", (DetectionRuntimeHost host) => Results.Ok(new
         {
             databasePath = host.PalmDatabase.DatabasePath,
@@ -577,6 +619,23 @@ public static class ServiceApi
             PalmSample sample = await host.EnrollPalmSampleAsync(personId, personName, stream.ToArray(), file.FileName, cancellationToken);
             return Results.Ok(sample);
         });
+
+        app.MapGet("/api/v1/identity/people/{personId}/plates", (string personId, DetectionRuntimeHost host) =>
+            Results.Ok(host.IdentityDatabase.GetPlates(personId)));
+        app.MapPost("/api/v1/identity/people/{personId}/plates", (string personId, AddPlateRequest request, DetectionRuntimeHost host) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.PlateText)) return Results.BadRequest(new { error = "Plate text is required." });
+            try
+            {
+                PersonPlateRecord plate = host.IdentityDatabase.AddPlate(personId, request.PlateText, request.IsPrimary, request.Notes);
+                return Results.Created($"/api/v1/identity/plates/{plate.Id}", plate);
+            }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+            catch (Microsoft.Data.Sqlite.SqliteException ex) { return Results.Conflict(new { error = ex.Message }); }
+        });
+        app.MapDelete("/api/v1/identity/plates/{plateId}", (string plateId, DetectionRuntimeHost host) =>
+            host.IdentityDatabase.RemovePlate(plateId) ? Results.NoContent() : Results.NotFound());
 
         app.MapPost("/api/v1/face/people/{personId}/samples", async (HttpRequest request, string personId, DetectionRuntimeHost host, CancellationToken cancellationToken) =>
         {
@@ -624,14 +683,15 @@ public static class ServiceApi
         app.MapHub<DetectionHub>("/hubs/detections");
     }
 
-    private static IEnumerable<string> EnumerateModelFiles(string capability, string projectDirectory)
+    private static IEnumerable<string> EnumerateModelFiles(string capability, string projectDirectory, bool includeSharedModels = false)
     {
         var directories = new List<string>
         {
             Path.Combine(AppContext.BaseDirectory, "Models", capability),
-            Path.Combine(AppContext.BaseDirectory, "Models"),
             Path.Combine(AppContext.BaseDirectory, "Modules", capability, "Models")
         };
+        if (includeSharedModels)
+            directories.Add(Path.Combine(AppContext.BaseDirectory, "Models"));
 
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         for (int i = 0; i < 7 && directory is not null; i++, directory = directory.Parent)
@@ -642,10 +702,7 @@ public static class ServiceApi
         return directories
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Where(Directory.Exists)
-            .SelectMany(path => Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly)
-                .Where(file => file.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase) ||
-                               file.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase)))
-            .Where(file => !Path.GetFileName(file).EndsWith("_ort_optimized.onnx", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(path => Directory.EnumerateFiles(path, "*.hshmodel", SearchOption.TopDirectoryOnly))
             .Distinct(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -667,7 +724,10 @@ public static class ServiceApi
 public sealed record ConfigurationUpdateRequest(long Revision, AppSettings? Detection, ServiceSettingsDocument? Service);
 public sealed record CreatePersonRequest(string Name);
 public sealed record RenamePersonRequest(string Name);
+public sealed record BulkDeletePeopleRequest(IReadOnlyList<string> PersonIds);
 public sealed record MoveSampleRequest(string TargetPersonId);
+public sealed record AddPlateRequest(string PlateText, bool IsPrimary = false, string? Notes = null);
+public sealed record PalmPersonSummary(string PersonId, int SampleCount);
 public sealed record WebRtcOfferRequest(string Type, string Sdp);
 
 internal static class AppSettingsApiExtensions

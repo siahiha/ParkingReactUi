@@ -21,11 +21,11 @@
 Models\\Plate\\<ModelFile>.hshmodel
 ```
 
-برای نصب ساده‌تر، می‌توان همهٔ packageها را به‌صورت flat در `Models\\` کنار executable نیز قرار داد. مسیر قدیمی `Modules\\Plate\\Models` فقط برای سازگاری بررسی می‌شود. در اجرای Debug/Visual Studio، `HshDetectionEngin.Plate\\Models` نیز fallback است تا مدل‌های repository بدون کپی‌شدن به `bin` قابل تست باشند. اگر package وجود نداشته باشد، مسیر خام `Models\\<ModelFile>` به‌عنوان fallback بررسی می‌شود. مدل‌های ONNX و manifestهای OCR که در project ثبت شده‌اند هنگام build به خروجی کپی می‌شوند؛ مدل‌های package بزرگ باید جداگانه در deployment قرار گیرند. نام منطقی پیش‌فرض detector در تنظیمات `best.onnx` است.
+برای نصب ساده‌تر، می‌توان همهٔ packageها را به‌صورت flat در `Models\\` کنار executable نیز قرار داد. مسیر قدیمی `Modules\\Plate\\Models` فقط برای سازگاری بررسی می‌شود. در اجرای Debug/Visual Studio، `HshDetectionEngin.Plate\\Models` نیز fallback است تا مدل‌های repository بدون کپی‌شدن به `bin` قابل تست باشند. مسیر خام ONNX هرگز fallback اجرایی نیست و از خروجی build/publish کپی نمی‌شود. فایل‌های OCR فقط به‌صورت package و manifest هم‌نام آن‌ها در runtime قرار می‌گیرند. نام منطقی پیش‌فرض detector در تنظیمات `best.onnx` است و runtime بستهٔ `best.hshmodel` را پیدا می‌کند.
 
 ### قرارداد استاندارد OCR
 
-هر مدل OCR کنار فایل ONNX یک manifest با پسوند `.ocr.json` دارد. این manifest
+هر مدل OCR کنار فایل package یک manifest با پسوند `.ocr.json` دارد. این manifest
 نوع decoder، alphabet و اندازهٔ ورودی را اعلام می‌کند؛ نمونه:
 
 ```json
@@ -52,12 +52,12 @@ Models\\Plate\\<ModelFile>.hshmodel
 دو نسخهٔ قابل انتخاب وجود دارد:
 
 ```text
-Models\\Plate\\chars_best_v26.onnx       # FP32، دقت مرجع
-Models\\Plate\\chars_best_v26_int8.onnx # INT8، حجم و مصرف حافظه کمتر
+Models\\Plate\\chars_best_v26.hshmodel       # FP32، دقت مرجع
+Models\\Plate\\chars_best_v26_int8.hshmodel # INT8، حجم و مصرف حافظه کمتر
 ```
 
 نسخهٔ INT8 با calibration نمونه‌های crop پلاک ساخته شده و برای مقایسهٔ سرعت/دقت
-ارائه می‌شود؛ مدل پیش‌فرض پروژه همچنان `ocr_crnn.onnx` باقی می‌ماند تا پس از تست
+ارائه می‌شود؛ نام منطقی پیش‌فرض پروژه همچنان `ocr_crnn.onnx` باقی می‌ماند تا پس از تست
 روی دیتاست دوربین، بهترین گزینه انتخاب شود.
 
 

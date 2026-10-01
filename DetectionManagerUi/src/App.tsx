@@ -19,6 +19,7 @@ import {
   BellRing,
   Camera,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleGauge,
@@ -26,7 +27,10 @@ import {
   Download,
   Eye,
   FileJson,
+  FolderOpen,
   Gauge,
+  Hand,
+  ImageOff,
   LayoutDashboard,
   Menu,
   Maximize2,
@@ -69,6 +73,9 @@ import {
   useInvocations,
   useModels,
   usePeople,
+  usePalmPeopleSummary,
+  usePersonPalmSamples,
+  usePersonPlates,
   usePersonSamples,
   useServiceStatus,
   useSettings,
@@ -88,6 +95,8 @@ import type {
   FaceIdentity,
   FaceSample,
   FaceSimilarityPair,
+  PalmSample,
+  PersonPlate,
   LiveOverlayDetection,
   LiveOverlaySnapshot,
   ModelInfo,
@@ -105,7 +114,7 @@ import type {
 const navItems = [
   { to: "/", label: "نمای کلی", icon: LayoutDashboard, end: true },
   { to: "/cameras", label: "مدیریت دوربین‌ها", icon: Camera },
-  { to: "/faces", label: "پایگاه چهره", icon: UsersRound },
+  { to: "/faces", label: "مدیریت افراد", icon: UsersRound },
   { to: "/events", label: "تاریخچه تشخیص", icon: Archive },
   { to: "/triggers", label: "تریگرها و کلاینت‌ها", icon: BellRing },
   { to: "/invocations", label: "فراخوانی‌ها", icon: Zap },
@@ -216,7 +225,7 @@ function validateCameraDraft(camera: CameraSettings): string[] {
       errors.push(`ROI «${roiName || "بدون نام"}» حداقل به سه نقطه نیاز دارد.`);
     for (const task of roi.processing) {
       const type = processingType(task.type);
-      if (type !== "Plate" && type !== "Face")
+      if (type !== "Plate" && type !== "Face" && type !== "Palm")
         errors.push(
           `نوع task «${task.type}» در ROI «${roiName}» پشتیبانی نمی‌شود.`,
         );
@@ -766,7 +775,7 @@ function Dashboard() {
         />
         <Stat
           icon={UsersRound}
-          label="افراد پایگاه چهره"
+          label="افراد مدیریت‌شده"
           value={people.data?.length ?? 0}
           detail="شامل Unknownها"
           tone="green"
@@ -1657,12 +1666,13 @@ function CameraEditor({ id }: { id: string }) {
   const addTask = (type = "Plate") => {
     if (!roi) return;
     const face = type.toLocaleLowerCase() === "face";
+    const palm = type.toLocaleLowerCase() === "palm";
     const task: ProcessingTask = {
       id: newId(),
-      type: face ? "Face" : "Plate",
-      name: face ? "Face detection" : "Plate detection",
+      type: face ? "Face" : palm ? "Palm" : "Plate",
+      name: face ? "Face detection" : palm ? "Palm detection" : "Plate detection",
       enabled: true,
-      maxFps: face ? draft.faceMaxFps : draft.maxFps,
+      maxFps: face ? draft.faceMaxFps : palm ? 10 : draft.maxFps,
       threads: draft.threads,
       options: face
         ? {
@@ -1681,6 +1691,23 @@ function CameraEditor({ id }: { id: string }) {
             unknownMatchThreshold: draft.faceUnknownMatchThreshold,
             eventCooldownSeconds: draft.faceEventCooldownSeconds,
           }
+        : palm
+          ? {
+              detectorModelFile: "palm_blazepalm_full.onnx",
+              detectorInputSize: 192,
+              detectionConfidence: 0.55,
+              nmsIoU: 0.30,
+              maxHands: 2,
+              recognitionModelFile: "palm_ccnet.onnx",
+              recognitionInputSize: 128,
+              recognitionEnabled: true,
+              recognitionThreshold: 0.55,
+              unknownMatchThreshold: 0.35,
+              recordConfidence: 0.55,
+              matchIou: 0.25,
+              trackMaxMisses: 10,
+              eventCooldownSeconds: 60,
+            }
         : {
             modelFile: draft.modelFile,
             inputSize: draft.inputSize,
@@ -2985,6 +3012,14 @@ function ProcessingSettings({
           >
             Face
           </Button>
+          <Button
+            variant="soft"
+            icon={Plus}
+            onClick={() => addTask("Palm")}
+            disabled={!roi}
+          >
+            Palm
+          </Button>
         </div>
       </div>
       <div className="processing-body">
@@ -3095,7 +3130,7 @@ function ProcessingSettings({
                 <Empty
                   icon={SlidersHorizontal}
                   title="پردازشی برای این ROI نیست"
-                  text="Plate یا Face را اضافه کنید."
+                  text="Plate، Face یا Palm را اضافه کنید."
                 />
               )}
             </>
@@ -3112,6 +3147,36 @@ function ProcessingSettings({
   );
 }
 
+type ModelCapability = "plate" | "plateRecognition" | "faceDetection" | "faceRecognition" | "palmDetection" | "palmRecognition";
+
+function isModelForCapability(model: ModelInfo, capability: ModelCapability) {
+  const advertised = model.capability?.toLowerCase();
+  const expected = capability.toLowerCase();
+  const text = `${model.module} ${model.name} ${model.relativePath}`.toLowerCase();
+
+  // Palm/Face must also pass a name/path guard. Older service builds exposed
+  // shared Models/* files under every module with a misleading capability.
+  if (capability === "palmRecognition") {
+    const isPalm = text.includes("ccnet") || text.includes("ppnet") || text.includes("palm");
+    return isPalm && (!advertised || advertised === expected);
+  }
+  if (capability === "palmDetection") {
+    const isPalm = text.includes("palm") || text.includes("hand");
+    return isPalm && !text.includes("ccnet") && !text.includes("ppnet") && (!advertised || advertised === expected);
+  }
+  if (capability === "faceRecognition") {
+    const isFace = text.includes("face") && text.includes("sface");
+    return isFace && (!advertised || advertised === expected);
+  }
+  if (capability === "faceDetection") {
+    const isFace = text.includes("face") && text.includes("yunet");
+    return isFace && (!advertised || advertised === expected);
+  }
+  if (advertised) return advertised === expected;
+  if (capability === "plate") return text.includes("plate");
+  return text.includes("ocr") || text.includes("char");
+}
+
 function ModelSelect({
   label,
   value,
@@ -3124,21 +3189,15 @@ function ModelSelect({
   value: string;
   onChange: (value: string) => void;
   models: ModelInfo[];
-  capability: "plate" | "plateRecognition" | "faceDetection" | "faceRecognition";
+  capability: ModelCapability;
   wide?: boolean;
 }) {
   const modelValue = (model: ModelInfo) => model.name || model.relativePath;
   const modelText = (model: ModelInfo) => model.name || model.relativePath;
-  const familyModels = models.filter((model) => {
-    const advertised = model.capability?.toLowerCase();
-    if (advertised) return advertised === capability.toLowerCase();
-    const text = `${model.module} ${model.name} ${model.relativePath}`.toLowerCase();
-    if (capability === "plate") return text.includes("plate");
-    if (capability === "plateRecognition") return text.includes("ocr") || text.includes("char");
-    if (capability === "faceRecognition") return text.includes("face") && text.includes("sface");
-    return text.includes("face") && text.includes("yunet");
-  });
-  const available = familyModels.length ? familyModels : models;
+  const familyModels = models.filter((model) => isModelForCapability(model, capability));
+  // Never fall back to the complete catalog: a detector/recognizer combo must
+  // remain scoped to its own modality even when the service returns no match.
+  const available = familyModels;
   const currentModel = available.find(
     (model) => model.name === value || model.relativePath === value,
   );
@@ -3180,18 +3239,9 @@ function ModelSelect({
 
 function modelFamilyModels(
   models: ModelInfo[],
-  capability: "plate" | "plateRecognition" | "faceDetection" | "faceRecognition",
+  capability: ModelCapability,
 ) {
-  const familyModels = models.filter((model) => {
-    const advertised = model.capability?.toLowerCase();
-    if (advertised) return advertised === capability.toLowerCase();
-    const text = `${model.module} ${model.name} ${model.relativePath}`.toLowerCase();
-    if (capability === "plate") return text.includes("plate");
-    if (capability === "plateRecognition") return text.includes("ocr") || text.includes("char");
-    if (capability === "faceRecognition") return text.includes("face") && text.includes("sface");
-    return text.includes("face") && text.includes("yunet");
-  });
-  return familyModels.length ? familyModels : models;
+  return models.filter((model) => isModelForCapability(model, capability));
 }
 
 function InputSizeSelect({
@@ -3203,7 +3253,7 @@ function InputSizeSelect({
 }: {
   task: ProcessingTask;
   models: ModelInfo[];
-  capability: "plate" | "faceDetection";
+  capability: "plate" | "faceDetection" | "palmDetection";
   fallback: number;
   onChange: (value: number) => void;
 }) {
@@ -3251,13 +3301,20 @@ function TaskEditor({
   models: ModelInfo[];
 }) {
   const face = task.type.toLocaleLowerCase() === "face";
+  const palm = task.type.toLocaleLowerCase() === "palm";
+  const [sectionTab, setSectionTab] = useState<"detection" | "recognition" | "tracking">("detection");
+  const [cardExpanded, setCardExpanded] = useState(false);
+  useEffect(() => {
+    setSectionTab("detection");
+    setCardExpanded(false);
+  }, [task.id, task.type]);
   const set = (key: string, value: unknown) =>
     onChange(setOption(task, key, value));
-  const setModel = (value: string, capability: "plate" | "plateRecognition" | "faceDetection") => {
+  const setModel = (value: string, capability: "plate" | "plateRecognition" | "faceDetection" | "palmDetection" | "palmRecognition") => {
     // Detection and OCR are two independent stages. The OCR combo must only
     // update CharacterModelFile; changing it must never replace the plate
     // detector selected in ModelFile.
-    const optionKey = capability === "plateRecognition" ? "characterModelFile" : "modelFile";
+    const optionKey = capability === "plateRecognition" ? "characterModelFile" : capability === "palmRecognition" ? "recognitionModelFile" : capability === "palmDetection" ? "detectorModelFile" : "modelFile";
     let next = setOption(task, optionKey, value);
     const selected = modelFamilyModels(models, capability).find(
       (model) => model.name === value || model.relativePath === value,
@@ -3266,19 +3323,27 @@ function TaskEditor({
       (size) => Number.isInteger(size) && size > 0,
     );
     if (capability !== "plateRecognition" && declaredSize)
-      next = setOption(next, "inputSize", declaredSize);
+      next = setOption(next, capability === "palmDetection" ? "detectorInputSize" : "inputSize", declaredSize);
     onChange(next);
   };
   return (
     <div className="task-card detailed">
       <div className="task-card-top">
-        <div className="task-symbol">
-          {face ? <UserRound size={17} /> : <Radio size={17} />}
-        </div>
-        <div>
-          <b>{task.name}</b>
-          <span>{task.type} · مستقل برای همین ROI</span>
-        </div>
+        <button
+          type="button"
+          className="task-card-toggle"
+          onClick={() => setCardExpanded((expanded) => !expanded)}
+          aria-expanded={cardExpanded}
+        >
+          <div className="task-symbol">
+            {face ? <UserRound size={17} /> : palm ? <Hand size={17} /> : <Radio size={17} />}
+          </div>
+          <div className="task-card-summary">
+            <b>{task.name}</b>
+            <span>{task.type} · مستقل برای همین ROI</span>
+          </div>
+          <ChevronDown size={16} className={cardExpanded ? "expanded" : ""} />
+        </button>
         <Toggle
           checked={task.enabled}
           onChange={(value) => onChange({ ...task, enabled: value })}
@@ -3287,6 +3352,7 @@ function TaskEditor({
           <Trash2 size={16} />
         </button>
       </div>
+      {cardExpanded && <>
       <div className="task-name-field">
         <Field label="نام task">
           <input
@@ -3295,9 +3361,35 @@ function TaskEditor({
           />
         </Field>
       </div>
-      {!face && (
+      <div className="tab-bar process-tabs" role="tablist" aria-label="بخش‌های پردازش">
+        <button
+          className={sectionTab === "detection" ? "active" : ""}
+          onClick={() => setSectionTab("detection")}
+          role="tab"
+          aria-selected={sectionTab === "detection"}
+        >
+          {face ? "تشخیص چهره" : palm ? "تشخیص کف دست" : "تشخیص پلاک"}
+        </button>
+        <button
+          className={sectionTab === "recognition" ? "active" : ""}
+          onClick={() => setSectionTab("recognition")}
+          role="tab"
+          aria-selected={sectionTab === "recognition"}
+        >
+          {face ? "شناسایی چهره" : palm ? "شناسایی کف دست" : "خواندن پلاک"}
+        </button>
+        <button
+          className={sectionTab === "tracking" ? "active" : ""}
+          onClick={() => setSectionTab("tracking")}
+          role="tab"
+          aria-selected={sectionTab === "tracking"}
+        >
+          ردیابی و سابقه
+        </button>
+      </div>
+      {!face && !palm && (
         <>
-        <div className="processing-option-section plate-section">
+        {sectionTab === "detection" && <div className="processing-option-section plate-section">
           <div className="processing-section-head">
             <div>
               <b>۱. تشخیص پلاک</b>
@@ -3354,58 +3446,9 @@ function TaskEditor({
                 onChange={(e) => set("nmsIoU", Number(e.target.value))}
               />
             </Field>
-            <Field label="Max processing FPS">
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={task.maxFps}
-                onChange={(e) =>
-                  onChange({ ...task, maxFps: Number(e.target.value) })
-                }
-              />
-            </Field>
-            <Field label="Threads">
-              <input
-                type="number"
-                min="1"
-                max="16"
-                value={task.threads}
-                onChange={(e) =>
-                  onChange({ ...task, threads: Number(e.target.value) })
-                }
-              />
-            </Field>
-            <Field label="Buffer count" hint="۰ یعنی فقط جدیدترین فریم">
-              <input
-                type="number"
-                min="0"
-                max="10"
-                value={bufferCount}
-                onChange={(e) => onBufferChange(Number(e.target.value))}
-              />
-            </Field>
-            <Field label="Track max misses">
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={n(option(task, "trackMaxMisses", 6))}
-                onChange={(e) => set("trackMaxMisses", Number(e.target.value))}
-              />
-            </Field>
-            <Field label="History event cooldown (sec)">
-              <input
-                type="number"
-                min="0"
-                max="3600"
-                value={n(option(task, "eventCooldownSeconds", 60))}
-                onChange={(e) => set("eventCooldownSeconds", Number(e.target.value))}
-              />
-            </Field>
           </div>
-        </div>
-        <div className="processing-option-section plate-section">
+        </div>}
+        {sectionTab === "recognition" && <div className="processing-option-section plate-section">
           <div className="processing-section-head">
             <div>
               <b>۲. خواندن کاراکترهای پلاک</b>
@@ -3445,12 +3488,65 @@ function TaskEditor({
               />
             </Field>
           </div>
-        </div>
+        </div>}
+        {sectionTab === "tracking" && <div className="processing-option-section tracking-section">
+          <div className="processing-section-head">
+            <div><b>ردیابی و ثبت سابقه پلاک</b><span>کنترل نرخ پردازش و ثبت رویدادهای پلاک</span></div>
+          </div>
+          <div className="task-fields">
+            <Field label="Max processing FPS"><input type="number" min="1" max="60" value={task.maxFps} onChange={(e) => onChange({ ...task, maxFps: Number(e.target.value) })} /></Field>
+            <Field label="Threads"><input type="number" min="1" max="16" value={task.threads} onChange={(e) => onChange({ ...task, threads: Number(e.target.value) })} /></Field>
+            <Field label="Buffer count" hint="۰ یعنی فقط جدیدترین فریم"><input type="number" min="0" max="10" value={bufferCount} onChange={(e) => onBufferChange(Number(e.target.value))} /></Field>
+            <Field label="Track max misses"><input type="number" min="1" max="60" value={n(option(task, "trackMaxMisses", 6))} onChange={(e) => set("trackMaxMisses", Number(e.target.value))} /></Field>
+            <Field label="History event cooldown (sec)"><input type="number" min="0" max="3600" value={n(option(task, "eventCooldownSeconds", 60))} onChange={(e) => set("eventCooldownSeconds", Number(e.target.value))} /></Field>
+          </div>
+        </div>}
+        </>
+      )}
+      {palm && (
+        <>
+          {sectionTab === "detection" && <div className="processing-option-section palm-section">
+            <div className="processing-section-head">
+              <div><b>۱. تشخیص کف دست</b><span>Palm detection · BlazePalm یا RTMDet</span></div>
+              <Toggle checked={task.enabled} onChange={(value) => onChange({ ...task, enabled: value })} />
+            </div>
+            <div className="task-fields">
+              <ModelSelect label="Detection model" value={s(option(task, "detectorModelFile", "palm_blazepalm_full.onnx"))} onChange={(value) => setModel(value, "palmDetection")} models={models} capability="palmDetection" wide />
+              <InputSizeSelect task={task} models={models} capability="palmDetection" fallback={192} onChange={(value) => set("detectorInputSize", value)} />
+              <Field label="Detection confidence"><input type="number" min="0" max="1" step=".01" value={n(option(task, "detectionConfidence", .55))} onChange={(e) => set("detectionConfidence", Number(e.target.value))} /></Field>
+              <Field label="NMS IoU"><input type="number" min="0" max="1" step=".01" value={n(option(task, "nmsIoU", .30))} onChange={(e) => set("nmsIoU", Number(e.target.value))} /></Field>
+              <Field label="Max hands"><input type="number" min="1" max="20" value={n(option(task, "maxHands", 2))} onChange={(e) => set("maxHands", Number(e.target.value))} /></Field>
+            </div>
+          </div>}
+          {sectionTab === "recognition" && <div className="processing-option-section palm-section">
+            <div className="processing-section-head">
+              <div><b>۲. شناسایی کف دست</b><span>Palm recognition · مقایسه با Palm DB</span></div>
+              <Toggle checked={Boolean(option(task, "recognitionEnabled", true))} onChange={(value) => set("recognitionEnabled", value)} />
+            </div>
+            <div className="task-fields">
+              <ModelSelect label="Recognition model" value={s(option(task, "recognitionModelFile", "palm_ccnet.onnx"))} onChange={(value) => setModel(value, "palmRecognition")} models={models} capability="palmRecognition" wide />
+              <Field label="Recognition input size"><input type="number" min="32" max="1024" value={n(option(task, "recognitionInputSize", 128))} onChange={(e) => set("recognitionInputSize", Number(e.target.value))} /></Field>
+              <Field label="Known-person threshold"><input type="number" min="0" max="1" step=".01" value={n(option(task, "recognitionThreshold", .55))} onChange={(e) => set("recognitionThreshold", Number(e.target.value))} /></Field>
+              <Field label="Unknown match threshold"><input type="number" min="0" max="1" step=".01" value={n(option(task, "unknownMatchThreshold", .35))} onChange={(e) => set("unknownMatchThreshold", Number(e.target.value))} /></Field>
+            </div>
+          </div>}
+          {sectionTab === "tracking" && <div className="processing-option-section tracking-section">
+            <div className="processing-section-head"><div><b>ردیابی و ثبت سابقه</b><span>Tracking and recording</span></div></div>
+            <div className="task-fields">
+              <Field label="Max processing FPS"><input type="number" min="1" max="60" value={task.maxFps} onChange={(e) => onChange({ ...task, maxFps: Number(e.target.value) })} /></Field>
+              <Field label="Threads"><input type="number" min="1" max="16" value={task.threads} onChange={(e) => onChange({ ...task, threads: Number(e.target.value) })} /></Field>
+              <Field label="Buffer count" hint="۰ یعنی فقط جدیدترین فریم"><input type="number" min="0" max="10" value={bufferCount} onChange={(e) => onBufferChange(Number(e.target.value))} /></Field>
+              <Field label="History record confidence"><input type="number" min="0" max="1" step=".01" value={n(option(task, "recordConfidence", .55))} onChange={(e) => set("recordConfidence", Number(e.target.value))} /></Field>
+              <Field label="History event cooldown (sec)"><input type="number" min="0" value={n(option(task, "eventCooldownSeconds", 60))} onChange={(e) => set("eventCooldownSeconds", Number(e.target.value))} /></Field>
+              <Field label="Tracking IoU"><input type="number" min="0" max="1" step=".01" value={n(option(task, "matchIou", .25))} onChange={(e) => set("matchIou", Number(e.target.value))} /></Field>
+              <Field label="Track max misses"><input type="number" min="1" max="60" value={n(option(task, "trackMaxMisses", 10))} onChange={(e) => set("trackMaxMisses", Number(e.target.value))} /></Field>
+            </div>
+          </div>}
         </>
       )}
       {face && (
         <>
-          <div className="processing-option-section face-section">
+          {sectionTab === "detection" && <div className="processing-option-section face-section">
             <div className="processing-section-head">
               <div>
                 <b>۲. تشخیص چهره</b>
@@ -3519,8 +3615,8 @@ function TaskEditor({
                 />
               </Field>
             </div>
-          </div>
-          <div className="processing-option-section identification-section">
+          </div>}
+          {sectionTab === "recognition" && <div className="processing-option-section identification-section">
             <div className="processing-section-head">
               <div>
                 <b>۳. شناسایی چهره</b>
@@ -3571,8 +3667,8 @@ function TaskEditor({
                 />
               </Field>
             </div>
-          </div>
-          <div className="processing-option-section tracking-section">
+          </div>}
+          {sectionTab === "tracking" && <div className="processing-option-section tracking-section">
             <div className="processing-section-head">
               <div>
                 <b>ردیابی و ثبت سابقه</b>
@@ -3653,9 +3749,10 @@ function TaskEditor({
                 />
               </Field>
             </div>
-          </div>
+          </div>}
         </>
       )}
+      </>}
     </div>
   );
 }
@@ -3758,11 +3855,13 @@ function LivePreview({ camera }: { camera?: CameraStatus }) {
 
 function Faces() {
   const people = usePeople();
+  const palmPeopleSummary = usePalmPeopleSummary();
   const health = useQueryClient();
   const [selected, setSelected] = useState<string>();
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState(true);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [similarOpen, setSimilarOpen] = useState(false);
   const create = useMutation({
     mutationFn: api.createPerson,
@@ -3784,15 +3883,57 @@ function Faces() {
       await health.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
     },
   });
+  const removeMany = useMutation({
+    mutationFn: (personIds: string[]) => api.deletePeople(personIds),
+    onSuccess: async (_, personIds) => {
+      if (selected && personIds.includes(selected)) setSelected(undefined);
+      setBulkSelected(new Set());
+      await health.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
+      await health.invalidateQueries({ queryKey: ["palm-people-summary"], refetchType: "active" });
+    },
+  });
+  const toggleBulkPerson = (personId: string) => {
+    setBulkSelected((current) => {
+      const next = new Set(current);
+      if (next.has(personId)) next.delete(personId);
+      else next.add(personId);
+      return next;
+    });
+  };
+  const bulkCheckbox = (person: FaceIdentity) => (
+    <input
+      className="person-bulk-checkbox"
+      type="checkbox"
+      checked={bulkSelected.has(person.id)}
+      aria-label={`انتخاب ${person.name}`}
+      onClick={(event) => event.stopPropagation()}
+      onChange={() => toggleBulkPerson(person.id)}
+    />
+  );
+  const normalizedSearch = search.trim().toLocaleLowerCase();
   const filtered =
-    people.data?.filter((person) =>
-      person.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
-    ) ?? [];
+    people.data?.filter((person) => {
+      if (!normalizedSearch) return true;
+      return (
+        person.name.toLocaleLowerCase().includes(normalizedSearch) ||
+        String(person.personNumber).includes(normalizedSearch)
+      );
+    }) ?? [];
+  const palmCounts = useMemo(
+    () => new Map((palmPeopleSummary.data ?? []).map((item) => [item.personId, item.sampleCount])),
+    [palmPeopleSummary.data],
+  );
+  const flatSamples = filtered.flatMap((person) =>
+    person.samples.map((sample) => ({ person, sample })),
+  );
+  const palmOnlyPeople = filtered.filter(
+    (person) => person.samples.length === 0 && (palmCounts.get(person.id) ?? 0) > 0,
+  );
   return (
     <>
       <PageHead
-        title="پایگاه دادهٔ چهره"
-        description="معادل FaceDatabaseForm: افراد، نمونه‌ها، Unknownها، انتقال، ادغام و Similarity."
+        title="مدیریت افراد"
+        description="مدیریت افراد و نمونه‌های چهره؛ همسان با Identity database و FaceDatabaseForm ویندوز."
         action={
           <div className="page-actions">
             <div className="search-box">
@@ -3810,9 +3951,33 @@ function Faces() {
             >
               Similar samples
             </Button>
+            {bulkSelected.size > 0 && (
+              <Button
+                variant="danger"
+                icon={Trash2}
+                disabled={removeMany.isPending}
+                onClick={() => {
+                  const names = (people.data ?? [])
+                    .filter((person) => bulkSelected.has(person.id))
+                    .map((person) => person.name)
+                    .slice(0, 5);
+                  const suffix = bulkSelected.size > names.length ? " و افراد دیگر" : "";
+                  if (window.confirm(`حذف ${bulkSelected.size} فرد به‌همراه نمونه‌های چهره، کف‌دست و پلاک انجام شود؟\n\n${names.join("، ")}${suffix}`))
+                    removeMany.mutate([...bulkSelected]);
+                }}
+              >
+                حذف گروهی ({bulkSelected.size})
+              </Button>
+            )}
           </div>
         }
       />
+      {removeMany.error instanceof Error && (
+        <div className="preview-error">
+          <AlertTriangle size={15} />
+          حذف گروهی انجام نشد: {removeMany.error.message}
+        </div>
+      )}
       <div className="faces-layout">
         <section className="panel people-panel">
           <div className="panel-head compact">
@@ -3834,32 +3999,68 @@ function Faces() {
             </label>
           </div>
           <div className={`person-list ${group ? "grouped" : ""}`}>
-            {filtered.map((person) => (
-              <button
-                key={person.id}
-                className={`person-row ${selected === person.id ? "selected" : ""}`}
-                onClick={() => setSelected(person.id)}
-              >
-                <div
-                  className={`person-avatar ${person.isUnknown ? "unknown" : ""}`}
-                >
-                  {person.isUnknown ? "?" : person.name.slice(0, 1)}
-                </div>
-                <div>
-                  <b>{person.name}</b>
-                  <span>
-                    #{String(person.personNumber).padStart(4, "0")} ·{" "}
-                    {person.samples.length}/10 sample
-                  </span>
-                </div>
-                <ChevronLeft size={15} />
-              </button>
-            ))}
-            {!filtered.length && (
+            {group
+              ? filtered.map((person) => (
+                  <button
+                    key={person.id}
+                    className={`person-row ${selected === person.id ? "selected" : ""}`}
+                    onClick={() => setSelected(person.id)}
+                  >
+                    <div
+                      className={`person-avatar ${person.isUnknown ? "unknown" : ""}`}
+                    >
+                      {person.isUnknown ? "?" : person.name.slice(0, 1)}
+                    </div>
+                    <div>
+                      <div className="person-row-name">{bulkCheckbox(person)}<b>{person.name}</b></div>
+                      <span>
+                        #{String(person.personNumber).padStart(4, "0")} · چهره {person.samples.length}/10 · کف‌دست {palmCounts.get(person.id) ?? 0}/10
+                      </span>
+                    </div>
+                    <ChevronLeft size={15} />
+                  </button>
+                ))
+              : <>
+                  {flatSamples.map(({ person, sample }) => (
+                    <button
+                      key={sample.id}
+                      className={`person-row ${selected === person.id ? "selected" : ""}`}
+                      onClick={() => setSelected(person.id)}
+                    >
+                      <div className={`person-avatar ${person.isUnknown ? "unknown" : ""}`}>
+                        {person.isUnknown ? "?" : person.name.slice(0, 1)}
+                      </div>
+                      <div>
+                        <div className="person-row-name">{bulkCheckbox(person)}<b>{person.name} · Sample {sample.sampleNumber}</b></div>
+                        <span>
+                          #{String(person.personNumber).padStart(4, "0")} · چهره · {sample.originalFileName || "Image missing"}
+                        </span>
+                      </div>
+                      <ChevronLeft size={15} />
+                    </button>
+                  ))}
+                  {palmOnlyPeople.map((person) => (
+                    <button
+                      key={`palm:${person.id}`}
+                      className={`person-row ${selected === person.id ? "selected" : ""}`}
+                      onClick={() => setSelected(person.id)}
+                    >
+                      <div className={`person-avatar ${person.isUnknown ? "unknown" : ""}`}>
+                        {person.isUnknown ? "?" : person.name.slice(0, 1)}
+                      </div>
+                      <div>
+                        <div className="person-row-name">{bulkCheckbox(person)}<b>{person.name}</b></div>
+                        <span>#{String(person.personNumber).padStart(4, "0")} · کف‌دست {palmCounts.get(person.id)}/10</span>
+                      </div>
+                      <ChevronLeft size={15} />
+                    </button>
+                  ))}
+                </>}
+            {(!filtered.length || (!group && !flatSamples.length && !palmOnlyPeople.length)) && (
               <Empty
                 icon={UserRound}
                 title="فردی پیدا نشد"
-                text="از فرم پایین یک شخص بسازید."
+                text="از فرم پایین یک شخص بسازید یا فیلتر جست‌وجو را تغییر دهید."
               />
             )}
           </div>
@@ -3893,7 +4094,11 @@ function Faces() {
               id={selected}
               people={people.data ?? []}
               onRename={(next) => rename.mutateAsync({ id: selected, name: next })}
-              onDelete={() => remove.mutate(selected)}
+              onDelete={() => {
+                if (window.confirm("این شخص و تمام نمونه‌های چهرهٔ او حذف شود؟")) {
+                  remove.mutate(selected);
+                }
+              }}
               renamePending={rename.isPending}
               renameError={rename.error instanceof Error ? rename.error.message : undefined}
               deleteError={remove.error instanceof Error ? remove.error.message : undefined}
@@ -3937,17 +4142,23 @@ function PersonDetail({
   deleteError?: string;
 }) {
   const samples = usePersonSamples(id);
+  const palmSamples = usePersonPalmSamples(id);
+  const plates = usePersonPlates(id);
   const client = useQueryClient();
   const person = people.find((item) => item.id === id);
   const [edit, setEdit] = useState(false);
   const [nextName, setNextName] = useState(person?.name ?? "");
+  const [activeTab, setActiveTab] = useState<"face" | "palm" | "plate">("face");
   const [moveSample, setMoveSample] = useState<string>();
+  const [uploadNotice, setUploadNotice] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  useEffect(() => {
+    setNextName(person?.name ?? "");
+    setEdit(false);
+    setActiveTab("face");
+  }, [id, person?.name]);
   const upload = useMutation({
     mutationFn: (file: File) => api.uploadSample(id, file),
-    onSuccess: () => {
-      void samples.refetch();
-      void client.invalidateQueries({ queryKey: keys.people });
-    },
   });
   const del = useMutation({
     mutationFn: api.deleteSample,
@@ -3957,9 +4168,26 @@ function PersonDetail({
     },
   });
   if (!person) return <ErrorBox message="شخص انتخاب‌شده دیگر وجود ندارد." />;
-  const uploadFiles = (files: FileList | null) => {
+  const uploadFiles = async (files: FileList | null) => {
     if (!files) return;
-    Array.from(files).forEach((file) => upload.mutate(file));
+    const selectedFiles = Array.from(files);
+    if (!selectedFiles.length) return;
+    setUploadNotice("");
+    setUploadError("");
+    let imported = 0;
+    let failed = 0;
+    for (const file of selectedFiles) {
+      try {
+        await upload.mutateAsync(file);
+        imported += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    await samples.refetch();
+    await client.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
+    setUploadNotice(`${imported} تصویر وارد شد${failed ? `؛ ${failed} مورد ناموفق بود` : ""}.`);
+    if (failed) setUploadError("برخی فایل‌ها توسط سرویس پذیرفته نشدند یا چهرهٔ معتبر نداشتند.");
   };
   return (
     <div className="editor-stack">
@@ -4024,23 +4252,63 @@ function PersonDetail({
           {renameError ?? deleteError}
         </div>
       )}
-      <section className="panel">
+      <section className="panel modality-tabs">
+        <div className="tab-bar">
+          <button className={activeTab === "face" ? "active" : ""} onClick={() => setActiveTab("face")}>
+            چهره <small>{person.samples.length}</small>
+          </button>
+          <button className={activeTab === "palm" ? "active" : ""} onClick={() => setActiveTab("palm")}>
+            پالم <small>{palmSamples.data?.length ?? 0}</small>
+          </button>
+          <button className={activeTab === "plate" ? "active" : ""} onClick={() => setActiveTab("plate")}>
+            پلاک <small>{plates.data?.length ?? 0}</small>
+          </button>
+        </div>
+      </section>
+      {activeTab === "face" && <section className="panel">
         <div className="panel-head">
           <div>
             <h3>نمونه‌های این شخص</h3>
             <span>حداکثر ۱۰ نمونه؛ فایل تصویر در SQLite نگهداری می‌شود.</span>
           </div>
-          <label className="button primary upload-button">
-            <Plus size={16} />
-            افزودن تصویر / folder
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => uploadFiles(e.target.files)}
-            />
-          </label>
+          <div className="title-actions">
+            <label className="button primary upload-button">
+              <Plus size={16} />
+              افزودن تصویر
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={upload.isPending}
+                onChange={(e) => {
+                  void uploadFiles(e.target.files);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
+            <label className="button soft upload-button">
+              <FolderOpen size={16} />
+              Import folder
+              <input
+                {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={upload.isPending}
+                onChange={(e) => {
+                  void uploadFiles(e.target.files);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
+          </div>
         </div>
+        {(uploadNotice || uploadError) && (
+          <div className={uploadError ? "preview-error" : "preview-note"}>
+            {uploadError ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}
+            {uploadError || uploadNotice}
+          </div>
+        )}
         {samples.isLoading ? (
           <Loading />
         ) : (
@@ -4055,11 +4323,13 @@ function PersonDetail({
                   void api.moveSample(sample.id, target).then(() => {
                     setMoveSample(undefined);
                     void samples.refetch();
-                    void client.invalidateQueries({ queryKey: keys.people });
+                    void client.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
                   });
                 }}
                 onStartMove={() => setMoveSample(sample.id)}
-                onDelete={() => del.mutate(sample.id)}
+                onDelete={() => {
+                  if (window.confirm("این نمونه حذف شود؟")) del.mutate(sample.id);
+                }}
               />
             ))}
             {!samples.data?.length && (
@@ -4071,9 +4341,134 @@ function PersonDetail({
             )}
           </div>
         )}
-      </section>
+      </section>}
+      {activeTab === "palm" && (
+        <PalmSamplesPanel id={id} people={people} samples={palmSamples.data ?? []} loading={palmSamples.isLoading} client={client} />
+      )}
+      {activeTab === "plate" && (
+        <PlatesPanel personId={id} plates={plates.data ?? []} loading={plates.isLoading} client={client} />
+      )}
     </div>
   );
+}
+function PalmSamplesPanel({
+  id,
+  people,
+  samples,
+  loading,
+  client,
+}: {
+  id: string;
+  people: FaceIdentity[];
+  samples: PalmSample[];
+  loading: boolean;
+  client: ReturnType<typeof useQueryClient>;
+}) {
+  const settings = useSettings();
+  const palmTask = settings.data?.detection.cameras
+    .flatMap((camera) => camera.rois.flatMap((roi) => roi.processing))
+    .find((task) => task.enabled && task.type.toLocaleLowerCase() === "palm");
+  const palmEnrollmentReady = !settings.data || Boolean(palmTask);
+  const [moveSample, setMoveSample] = useState<string>();
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const upload = useMutation({ mutationFn: (file: File) => api.uploadPalmSample(id, file) });
+  const del = useMutation({
+    mutationFn: api.deletePalmSample,
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ["palm-samples", id] });
+      void client.invalidateQueries({ queryKey: ["palm-people-summary"] });
+      void client.invalidateQueries({ queryKey: keys.people });
+    },
+  });
+  const uploadFiles = async (files: FileList | null) => {
+    const selectedFiles = files ? Array.from(files) : [];
+    if (!selectedFiles.length) return;
+    setNotice("");
+    setError("");
+    let imported = 0;
+    for (const file of selectedFiles) {
+      try { await upload.mutateAsync(file); imported += 1; } catch { setError("برخی فایل‌های پالم پذیرفته نشدند."); }
+    }
+    await client.invalidateQueries({ queryKey: ["palm-samples", id] });
+    await client.invalidateQueries({ queryKey: ["palm-people-summary"] });
+    await client.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
+    setNotice(`${imported} نمونهٔ پالم وارد شد.`);
+  };
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <div><h3>نمونه‌های پالم</h3><span>حداکثر ۱۰ نمونه برای هر فرد؛ همسان با تب Palm samples ویندوز.</span></div>
+        <div className="title-actions">
+          <label className="button primary upload-button"><Plus size={16} /> افزودن تصویر
+            <input type="file" accept="image/*" multiple disabled={!palmEnrollmentReady || upload.isPending} onChange={(e) => { void uploadFiles(e.target.files); e.currentTarget.value = ""; }} />
+          </label>
+          <label className="button soft upload-button"><FolderOpen size={16} /> Import folder
+            <input {...({ webkitdirectory: "", directory: "" } as Record<string, string>)} type="file" accept="image/*" multiple disabled={!palmEnrollmentReady || upload.isPending} onChange={(e) => { void uploadFiles(e.target.files); e.currentTarget.value = ""; }} />
+          </label>
+        </div>
+      </div>
+      {settings.isFetched && !palmEnrollmentReady && (
+        <div className="preview-error">
+          <AlertTriangle size={15} />
+          license پالم معتبر است، اما هیچ task فعال Palm در تنظیمات وجود ندارد؛ ابتدا Palm processing را در تنظیمات یک ROI فعال کنید.
+        </div>
+      )}
+      {(notice || error) && <div className={error ? "preview-error" : "preview-note"}><AlertTriangle size={15} />{error || notice}</div>}
+      {loading ? <Loading /> : <div className="sample-grid detailed-samples">
+        {samples.map((sample) => <PalmSampleCard key={sample.id} sample={sample} people={people} moving={moveSample === sample.id} onStartMove={() => setMoveSample(sample.id)} onMove={async (target) => { await api.movePalmSample(sample.id, target); setMoveSample(undefined); await client.invalidateQueries({ queryKey: ["palm-samples", id] }); await client.invalidateQueries({ queryKey: ["palm-people-summary"] }); await client.invalidateQueries({ queryKey: keys.people, refetchType: "active" }); }} onDelete={() => { if (window.confirm("این نمونهٔ پالم حذف شود؟")) del.mutate(sample.id); }} />)}
+        {!samples.length && <Empty icon={UserRound} title="نمونهٔ پالم برای این فرد ثبت نشده" text="اگر این کراپ از دوربین ثبت شده، فرد «Unknown Palm #…» را از فهرست افراد انتخاب کنید؛ برای اتصال به این فرد، یک تصویر کف‌دست را با دکمهٔ افزودن تصویر ثبت کنید." />}
+      </div>}
+    </section>
+  );
+}
+function PalmSampleCard({
+  sample,
+  people,
+  moving,
+  onStartMove,
+  onMove,
+  onDelete,
+}: {
+  sample: PalmSample;
+  people: FaceIdentity[];
+  moving: boolean;
+  onStartMove: () => void;
+  onMove: (target: string) => Promise<void>;
+  onDelete: () => void;
+}) {
+  return <div className="sample-card">
+    <IdentitySampleImage imageUrl={api.palmSampleImageUrl(sample.id)} alt={sample.originalFileName} />
+    <div><b>Sample {sample.sampleNumber} · #{sample.personNumber}</b><span title={sample.originalFileName}>{sample.originalFileName || "Image missing"}</span><small>confidence {fmt(sample.detectionConfidence, 2)} · {fmtDate(sample.createdAtUtc)}</small>
+      <div className="sample-actions"><button className="icon-button" title="انتقال به شخص دیگر" onClick={onStartMove}><Move size={14} /></button><button className="icon-button danger-icon" title="حذف نمونه" onClick={onDelete}><Trash2 size={14} /></button>{moving && <select defaultValue="" onChange={(e) => { const target = people.find((item) => item.id === e.target.value); if (target && window.confirm(`نمونه به ${target.name} منتقل شود؟`)) void onMove(target.id); }}><option value="">انتخاب مقصد</option>{people.filter((item) => item.id !== sample.personId && !item.isUnknown).map((item) => <option key={item.id} value={item.id}>#{item.personNumber} {item.name}</option>)}</select>}</div>
+    </div>
+  </div>;
+}
+function PlatesPanel({
+  personId,
+  plates,
+  loading,
+  client,
+}: {
+  personId: string;
+  plates: PersonPlate[];
+  loading: boolean;
+  client: ReturnType<typeof useQueryClient>;
+}) {
+  const [plateText, setPlateText] = useState("");
+  const [notes, setNotes] = useState("");
+  const [primary, setPrimary] = useState(false);
+  const add = useMutation({
+    mutationFn: () => api.addPersonPlate(personId, { plateText, isPrimary: primary, notes }),
+    onSuccess: () => { setPlateText(""); setNotes(""); setPrimary(false); void client.invalidateQueries({ queryKey: ["person-plates", personId] }); },
+  });
+  const remove = useMutation({ mutationFn: api.deletePersonPlate, onSuccess: () => void client.invalidateQueries({ queryKey: ["person-plates", personId] }) });
+  return <section className="panel">
+    <div className="panel-head"><div><h3>پلاک‌های این شخص</h3><span>هر پلاک به همین PersonId مرکزی متصل است.</span></div></div>
+    <div className="plate-form"><input value={plateText} onChange={(e) => setPlateText(e.target.value)} placeholder="شماره پلاک" /><input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="یادداشت" /><label className="check-inline"><input type="checkbox" checked={primary} onChange={(e) => setPrimary(e.target.checked)} /> پلاک اصلی</label><Button icon={Plus} disabled={!plateText.trim() || add.isPending} onClick={() => add.mutate()}>افزودن پلاک</Button></div>
+    {add.error instanceof Error && <div className="preview-error"><AlertTriangle size={15} />{add.error.message}</div>}
+    {loading ? <Loading /> : <div className="plate-list">{plates.map((plate) => <div className="plate-row" key={plate.id}><div><b>{plate.plateText}</b><span>{plate.isPrimary ? "پلاک اصلی" : "پلاک ثانویه"}{plate.notes ? ` · ${plate.notes}` : ""}</span></div><button className="icon-button danger-icon" title="حذف پلاک" onClick={() => { if (window.confirm(`پلاک ${plate.plateText} حذف شود؟`)) remove.mutate(plate.id); }}><Trash2 size={14} /></button></div>)}{!plates.length && <Empty icon={Database} title="پلاکی ثبت نشده" text="شمارهٔ پلاک این فرد را اضافه کنید." />}</div>}
+  </section>;
 }
 function SampleCard({
   sample,
@@ -4092,13 +4487,7 @@ function SampleCard({
 }) {
   return (
     <div className="sample-card">
-      <img
-        src={api.sampleImageUrl(sample.id)}
-        alt={sample.originalFileName}
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-      />
+      <FaceSampleImage sampleId={sample.id} alt={sample.originalFileName} />
       <div>
         <b>
           Sample {sample.sampleNumber} · #{sample.personNumber}
@@ -4128,7 +4517,13 @@ function SampleCard({
           {moveSample && (
             <select
               defaultValue=""
-              onChange={(e) => e.target.value && onMove(e.target.value)}
+              onChange={(e) => {
+                const target = people.find((item) => item.id === e.target.value);
+                if (!target) return;
+                if (window.confirm(`نمونه به ${target.name} منتقل شود؟`)) {
+                  onMove(target.id);
+                }
+              }}
             >
               <option value="">انتخاب مقصد</option>
               {people
@@ -4147,6 +4542,51 @@ function SampleCard({
     </div>
   );
 }
+function FaceSampleImage({
+  sampleId,
+  alt,
+  className = "",
+}: {
+  sampleId: string;
+  alt: string;
+  className?: string;
+}) {
+  return <IdentitySampleImage imageUrl={api.sampleImageUrl(sampleId)} alt={alt} className={className} />;
+}
+function IdentitySampleImage({
+  imageUrl,
+  alt,
+  className = "",
+}: {
+  imageUrl: string;
+  alt: string;
+  className?: string;
+}) {
+  const [src, setSrc] = useState<string>();
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | undefined;
+    setSrc(undefined);
+    setMissing(false);
+    void api.loadImage(imageUrl).then((url) => {
+      objectUrl = url;
+      if (active) setSrc(url);
+      else URL.revokeObjectURL(url);
+    }).catch(() => {
+      if (active) setMissing(true);
+    });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [imageUrl]);
+  return (
+    <div className={`face-image ${className} ${missing ? "missing" : ""}`}>
+      {src ? <img src={src} alt={alt} /> : <><ImageOff size={20} /><span>{missing ? "Image missing" : "در حال بارگذاری تصویر…"}</span></>}
+    </div>
+  );
+}
 function SimilarityDialog({
   people,
   onClose,
@@ -4158,6 +4598,7 @@ function SimilarityDialog({
   const [different, setDifferent] = useState(false);
   const [pairs, setPairs] = useState<FaceSimilarityPair[]>();
   const [busy, setBusy] = useState(false);
+  const client = useQueryClient();
   const check = async () => {
     setBusy(true);
     try {
@@ -4170,6 +4611,8 @@ function SimilarityDialog({
     if (!confirm(`ادغام ${pair.right.personName} در ${pair.left.personName}؟`))
       return;
     await api.mergePeople(pair.left.personId, pair.right.personId);
+    await client.invalidateQueries({ queryKey: keys.people, refetchType: "active" });
+    await client.invalidateQueries({ queryKey: ["samples"] });
     await check();
   };
   return (
@@ -4213,7 +4656,7 @@ function SimilarityDialog({
               className="similar-pair"
               key={`${pair.left.id}-${pair.right.id}`}
             >
-              <img src={api.sampleImageUrl(pair.left.id)} alt="left" />
+              <FaceSampleImage sampleId={pair.left.id} alt="left" />
               <div>
                 <b>
                   {pair.left.personName} / sample {pair.left.sampleNumber}
@@ -4221,7 +4664,7 @@ function SimilarityDialog({
                 <span>#{pair.left.personNumber}</span>
               </div>
               <strong>{pair.similarity.toFixed(3)}</strong>
-              <img src={api.sampleImageUrl(pair.right.id)} alt="right" />
+              <FaceSampleImage sampleId={pair.right.id} alt="right" />
               <div>
                 <b>
                   {pair.right.personName} / sample {pair.right.sampleNumber}

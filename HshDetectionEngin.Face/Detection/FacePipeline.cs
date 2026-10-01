@@ -2,8 +2,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
@@ -33,7 +31,6 @@ public sealed record FaceEnrollment(byte[] FaceImage, float[] Embedding, float D
 /// <summary>YuNet face detection, temporal tracking and optional SFace identity matching.</summary>
 public sealed class FacePipeline : IProcessingPipeline
 {
-    private const string DevelopmentLicense = "HSH-DETECTION-DEVELOPMENT-LICENSE-V1";
     private const int YuNetModelInputSize = 640;
     private const int SFaceModelInputSize = 112;
     private static readonly int[] YuNetStrides = [8, 16, 32];
@@ -469,7 +466,7 @@ public sealed class FacePipeline : IProcessingPipeline
     private static InferenceSession CreateSession(string modelPath, int threads)
     {
         string runtimePath = modelPath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase)
-            ? Materialize(modelPath)
+            ? ProtectedModelPackage.Materialize(modelPath, "hsh-face")
             : modelPath;
         try
         {
@@ -519,23 +516,6 @@ public sealed class FacePipeline : IProcessingPipeline
     }
 
     private static string ShortId(string id) => id.Length > 14 ? id[^8..] : id;
-
-    private static string Materialize(string packagePath)
-    {
-        byte[] package = File.ReadAllBytes(packagePath);
-        if (package.Length <= 24 || Encoding.ASCII.GetString(package, 0, 8) != "HSHM0001")
-            throw new InvalidDataException("Invalid protected face model package.");
-        byte[] key = SHA256.HashData(Encoding.UTF8.GetBytes(
-            Environment.GetEnvironmentVariable("HSH_DETECTION_LICENSE") ?? DevelopmentLicense));
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.IV = package[8..24];
-        byte[] model = aes.CreateDecryptor().TransformFinalBlock(package, 24, package.Length - 24);
-        string path = Path.Combine(Path.GetTempPath(), $"hsh-face-{Guid.NewGuid():N}.onnx");
-        File.WriteAllBytes(path, model);
-        CryptographicOperations.ZeroMemory(model);
-        return path;
-    }
 
     private static void TryDelete(string path) { try { File.Delete(path); } catch { } }
 

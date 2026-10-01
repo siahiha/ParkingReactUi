@@ -44,7 +44,6 @@ public sealed class FaceProcessingOptions
 public sealed class PalmProcessingOptions
 {
     public string DetectorModelFile { get; set; } = "palm_blazepalm_full.onnx";
-    public string DetectorKind { get; set; } = "BlazePalm";
     public int DetectorInputSize { get; set; } = 192;
     public float DetectionConfidence { get; set; } = 0.55f;
     public float NmsIoU { get; set; } = 0.30f;
@@ -153,7 +152,6 @@ public sealed partial class CameraProcessingSettings
             PalmProcessingOptions value = new()
             {
                 DetectorModelFile = Legacy("PalmDetectorModelFile", "palm_blazepalm_full.onnx"),
-                DetectorKind = Legacy("PalmDetectorKind", "BlazePalm"),
                 DetectorInputSize = Legacy("PalmDetectorInputSize", 192),
                 DetectionConfidence = Legacy("PalmDetectionConfidence", 0.55f),
                 NmsIoU = Legacy("PalmNmsIoU", 0.30f),

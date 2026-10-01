@@ -39,7 +39,7 @@ internal sealed class Yolo26PlateRecognizer : IPlateTextRecognizer
 
     public double LastInferenceMs { get; private set; }
 
-    public Yolo26PlateRecognizer(string modelPath, int intraOpThreads, float confidence)
+    public Yolo26PlateRecognizer(string modelPath, int intraOpThreads, float confidence, string? metadataPath = null)
     {
         if (!File.Exists(modelPath))
             throw new FileNotFoundException("YOLO26 character model was not found.", modelPath);
@@ -62,7 +62,7 @@ internal sealed class Yolo26PlateRecognizer : IPlateTextRecognizer
         _inputWidth = dimensions.Length >= 4 && dimensions[^1] > 0 ? dimensions[^1] : 416;
         _confidence = Math.Clamp(confidence, 0.05f, 0.95f);
 
-        _labels = LoadLabels(modelPath);
+        _labels = LoadLabels(metadataPath ?? modelPath);
         // MixChannels requires destination matrices to have the same depth
         // as the source. Allocate the RGB planes explicitly as 8-bit images;
         // they are normalized into the separate float planes afterwards.

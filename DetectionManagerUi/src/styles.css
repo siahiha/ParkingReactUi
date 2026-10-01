@@ -121,6 +121,35 @@ button { cursor: pointer; }
   color: #818b97;
   font-size: 9px;
 }
+.processing-section-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: right;
+  cursor: pointer;
+}
+.processing-section-toggle > div {
+  display: grid;
+  gap: 4px;
+}
+.processing-section-toggle > svg {
+  flex: 0 0 auto;
+  color: #7d91a5;
+  transition: transform .18s ease;
+}
+.processing-section-toggle > svg.expanded {
+  transform: rotate(180deg);
+}
+.processing-section-toggle:hover > svg {
+  color: #b9d8f5;
+}
 .processing-option-section > .task-fields {
   margin-top: 0;
   padding: 13px;
@@ -300,11 +329,19 @@ button { -webkit-tap-highlight-color: transparent; }
 .roi-content { padding: 15px 17px 19px; }
 .task-card { margin-top: 8px; padding: 11px; border-color: rgba(255,255,255,.12); border-radius: 5px; background: rgba(20,21,23,.65); }
 .task-symbol { border-radius: 4px; }
+.task-card-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 0; border: 0; color: inherit; background: transparent; text-align: right; cursor: pointer; }
+.task-card-summary { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.task-card-toggle > svg { flex: 0 0 auto; color: #7d91a5; transition: transform .18s ease; }
+.task-card-toggle > svg.expanded { transform: rotate(180deg); }
+.task-card-toggle:hover > svg { color: #b9d8f5; }
 .inline-create { padding: 10px 12px; margin-bottom: 12px; border-color: rgba(76,194,255,.25); border-radius: 5px; background: rgba(0,120,212,.11); }
 .inline-create b { font-size: 10px; }
 .inline-create span { color: #9baec0; font-size: 9px; }
 .search-box { min-width: 210px; border-radius: 4px; background: #17181a; border-color: rgba(255,255,255,.13); }
 .person-avatar { border-radius: 5px; }
+.person-bulk-checkbox { flex: 0 0 auto; width: 15px; height: 15px; accent-color: var(--primary-strong); cursor: pointer; }
+.person-row-name { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.person-row-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .create-person { padding: 11px; border-top-color: rgba(255,255,255,.08); }
 .sample-grid { padding: 17px; gap: 10px; }
 .sample-card { border-radius: 5px; border-color: rgba(255,255,255,.12); background: #17181a; }
@@ -867,3 +904,21 @@ html[data-language="en"] .preview-toolbar span { margin-left: auto; margin-right
 .subscription-tab b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; font-weight: 600; }
 .subscription-tab small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #607a96; font-size: 9px; }
 .subscription-tab.active small { color: #91bee5; }
+
+/* People management: preserve the Windows form's explicit missing-image state. */
+.face-image { width: 100%; height: 135px; display: grid; place-items: center; gap: 5px; color: #657d96; background: #07111f; font-size: 9px; text-align: center; }
+.face-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.face-image.missing { color: #d0956b; background: rgba(99, 54, 35, .18); }
+.detailed-samples .sample-card .face-image { height: 155px; }
+.similar-pair .face-image { width: 55px; height: 55px; border-radius: 6px; }
+.modality-tabs { padding: 0 15px; }
+.modality-tabs .tab-bar { justify-content: flex-start; }
+.tab-bar small { color: #6f879f; font-size: 9px; }
+.plate-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.plate-form input { min-width: 150px; flex: 1; color: #dceafa; background: #0b192b; border: 1px solid rgba(139,177,217,.14); border-radius: 7px; padding: 9px 10px; outline: 0; font-size: 11px; }
+.plate-form input:focus { border-color: rgba(67,153,255,.65); box-shadow: 0 0 0 3px rgba(67,153,255,.1); }
+.plate-list { padding: 8px 20px 18px; }
+.plate-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(147,180,218,.08); }
+.plate-row > div { display: grid; gap: 4px; }
+.plate-row b { color: #dbe9f7; font-size: 12px; direction: ltr; text-align: right; }
+.plate-row span { color: #7189a3; font-size: 10px; }

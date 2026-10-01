@@ -20,6 +20,7 @@ public sealed class IdentityDatabaseForm : Form
     private readonly DataGridView _plates = CreateGrid();
     private readonly DataGridView _faceSamples = CreateGrid();
     private readonly DataGridView _palmSamples = CreateGrid();
+    private readonly TextBox _personSearch = new();
     private readonly List<IdentityPersonRecord> _personRows = [];
     private IdentityPersonRecord? _selected;
 
@@ -53,32 +54,41 @@ public sealed class IdentityDatabaseForm : Form
         Size = new Size(1180, 700);
         MinimumSize = new Size(900, 540);
         BuildUi();
+        UiLocalization.Apply(this);
         RefreshPeople();
     }
 
     private void BuildUi()
     {
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(12) };
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 280));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260));
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        var peoplePanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(0, 0, 10, 0) };
+        var peoplePanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(0, 0, 10, 0) };
+        peoplePanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         peoplePanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         peoplePanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         peoplePanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         peoplePanel.Controls.Add(new Label { Text = "People", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 11F, FontStyle.Bold), Padding = new Padding(0, 0, 0, 8) }, 0, 0);
+        _personSearch.Dock = DockStyle.Fill;
+        _personSearch.PlaceholderText = "Search name or number";
+        _personSearch.TextChanged += (_, _) => RefreshPeople();
+        peoplePanel.Controls.Add(_personSearch, 0, 1);
         _people.Dock = DockStyle.Fill;
+        _people.SelectionMode = SelectionMode.MultiExtended;
         _people.SelectedIndexChanged += (_, _) => SelectPerson();
-        peoplePanel.Controls.Add(_people, 0, 1);
+        peoplePanel.Controls.Add(_people, 0, 2);
         var personActions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = true };
         Button addPerson = MakeButton("Add person");
         Button rename = MakeButton("Rename");
         Button delete = MakeButton("Delete");
+        Button deleteSelected = MakeButton("Delete selected");
         addPerson.Click += (_, _) => AddPerson(); rename.Click += (_, _) => RenamePerson(); delete.Click += (_, _) => DeletePerson();
-        personActions.Controls.AddRange([addPerson, rename, delete]);
-        peoplePanel.Controls.Add(personActions, 0, 2);
+        deleteSelected.Click += (_, _) => DeleteSelectedPeople();
+        personActions.Controls.AddRange([addPerson, rename, delete, deleteSelected]);
+        peoplePanel.Controls.Add(personActions, 0, 3);
         root.Controls.Add(peoplePanel, 0, 0);
 
         var details = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
@@ -90,8 +100,8 @@ public sealed class IdentityDatabaseForm : Form
         details.Controls.Add(_personInfo, 0, 0);
         var tabs = new TabControl { Dock = DockStyle.Fill };
         tabs.TabPages.Add(BuildPlatesTab());
-        tabs.TabPages.Add(BuildSamplesTab("Face samples", _faceSamples, AddFaceSample, DeleteFaceSample, import: true));
-        tabs.TabPages.Add(BuildSamplesTab("Palm samples", _palmSamples, AddPalmSample, DeletePalmSample, import: false, assign: AssignPalmSample));
+        tabs.TabPages.Add(BuildSamplesTab("Face samples", _faceSamples, AddFaceSample, DeleteFaceSample, assign: AssignFaceSample, importAction: ImportFaceFolder));
+        tabs.TabPages.Add(BuildSamplesTab("Palm samples", _palmSamples, AddPalmSample, DeletePalmSample, assign: AssignPalmSample, importAction: ImportPalmFolder));
         details.Controls.Add(tabs, 0, 1);
         root.Controls.Add(details, 1, 0);
 
@@ -118,7 +128,7 @@ public sealed class IdentityDatabaseForm : Form
         page.Controls.Add(_plates); page.Controls.Add(actions); return page;
     }
 
-    private TabPage BuildSamplesTab(string title, DataGridView grid, Action add, Action remove, bool import, Action? assign = null)
+    private TabPage BuildSamplesTab(string title, DataGridView grid, Action add, Action remove, Action? assign = null, Action? importAction = null)
     {
         var page = new TabPage(title);
         grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person #", DataPropertyName = "PersonNumber", Width = 80 });
@@ -133,9 +143,9 @@ public sealed class IdentityDatabaseForm : Form
         {
             Button assignButton = MakeButton("Assign to person"); assignButton.Click += (_, _) => assign(); actions.Controls.Add(assignButton);
         }
-        if (import)
+        if (importAction is not null)
         {
-            Button importButton = MakeButton("Import folder"); importButton.Click += (_, _) => ImportFaceFolder(); actions.Controls.Add(importButton);
+            Button importButton = MakeButton("Import folder"); importButton.Click += (_, _) => importAction(); actions.Controls.Add(importButton);
         }
         page.Controls.Add(grid); page.Controls.Add(actions); return page;
     }
@@ -145,7 +155,9 @@ public sealed class IdentityDatabaseForm : Form
         _personRows.Clear(); _personRows.AddRange(_database.GetPeople());
         string? previous = _selected?.Id;
         _people.Items.Clear();
-        foreach (IdentityPersonRecord person in _personRows) _people.Items.Add(new PersonRow { Person = person });
+        string filter = _personSearch.Text.Trim();
+        foreach (IdentityPersonRecord person in _personRows.Where(item => string.IsNullOrWhiteSpace(filter) || item.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) || item.PersonNumber.ToString().Contains(filter, StringComparison.OrdinalIgnoreCase)))
+            _people.Items.Add(new PersonRow { Person = person });
         int index = _personRows.FindIndex(item => item.Id == previous);
         _people.SelectedIndex = index >= 0 ? index : (_personRows.Count > 0 ? 0 : -1);
         RefreshDetails();
@@ -186,6 +198,16 @@ public sealed class IdentityDatabaseForm : Form
         if (_selected is null || MessageBox.Show(this, $"Delete '{_selected.Name}' and all identity data?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
         _database.RemovePerson(_selected.Id); RefreshPeople();
     }
+
+    private void DeleteSelectedPeople()
+    {
+        IdentityPersonRecord[] selected = _people.SelectedItems.OfType<PersonRow>().Select(item => item.Person).ToArray();
+        if (selected.Length == 0) return;
+        if (MessageBox.Show(this, $"Delete {selected.Length} people and all identity data?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        _database.RemovePeople(selected.Select(item => item.Id));
+        _selected = null;
+        RefreshPeople();
+    }
     private void AddPlate()
     {
         if (_selected is null) return; string? plate = Prompt("Plate number", string.Empty); if (string.IsNullOrWhiteSpace(plate)) return;
@@ -198,16 +220,21 @@ public sealed class IdentityDatabaseForm : Form
     }
     private void AddFaceSample()
     {
-        using var dialog = new OpenFileDialog { Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp;*.webp" }; if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        using var dialog = new OpenFileDialog { Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp;*.webp", Multiselect = true }; if (dialog.ShowDialog(this) != DialogResult.OK) return;
         try
         {
+            string? name = _selected?.Name;
             if (_selected is null)
             {
-                string? name = Prompt("Person name", string.Empty);
+                name = Prompt("Person name", string.Empty);
                 if (string.IsNullOrWhiteSpace(name)) return;
-                if (_registerFace(name, dialog.FileName)) RefreshPeople();
             }
-            else if (_addFace(_selected.Id, dialog.FileName)) RefreshPeople();
+            int imported = 0;
+            foreach (string file in dialog.FileNames)
+            {
+                if (_selected is null ? _registerFace(name!, file) : _addFace(_selected.Id, file)) imported++;
+            }
+            if (imported > 0) RefreshPeople();
         }
         catch (Exception ex) { ShowError(ex); }
     }
@@ -220,24 +247,60 @@ public sealed class IdentityDatabaseForm : Form
     {
         if (_faceSamples.CurrentRow?.DataBoundItem is SampleRow row) { _faces.RemoveSample(row.Id); RefreshDetails(); }
     }
-    private void AddPalmSample()
+
+    private void AssignFaceSample()
     {
-        using var dialog = new OpenFileDialog { Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp;*.webp" }; if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        if (_faceSamples.CurrentRow?.DataBoundItem is not SampleRow row) return;
+        IdentityPersonRecord[] choices = _personRows.Where(person => person.Id != _selected?.Id && !person.IsUnknown).ToArray();
+        IdentityPersonRecord? target = ChoosePerson(choices, "Assign face to person");
+        if (target is null) return;
         try
         {
+            if (!_faces.MoveSample(row.Id, target.Id)) throw new InvalidOperationException("The face sample could not be assigned. The target may already have the maximum number of samples.");
+            RefreshPeople();
+        }
+        catch (Exception ex) { ShowError(ex); }
+    }
+    private void AddPalmSample()
+    {
+        using var dialog = new OpenFileDialog { Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp;*.webp", Multiselect = true }; if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        try
+        {
+            string? name = _selected?.Name;
             if (_selected is null)
             {
-                string? name = Prompt("Person name", string.Empty);
+                name = Prompt("Person name", string.Empty);
                 if (string.IsNullOrWhiteSpace(name)) return;
-                if (_registerPalm(name, dialog.FileName)) RefreshPeople();
             }
-            else if (_addPalm(_selected.Id, dialog.FileName)) RefreshPeople();
+            int imported = 0;
+            foreach (string file in dialog.FileNames)
+            {
+                if (_selected is null ? _registerPalm(name!, file) : _addPalm(_selected.Id, file)) imported++;
+            }
+            if (imported > 0) RefreshPeople();
         }
         catch (Exception ex) { ShowError(ex); }
     }
     private void DeletePalmSample()
     {
         if (_palmSamples.CurrentRow?.DataBoundItem is SampleRow row) { _palms.RemoveSample(row.Id); RefreshDetails(); }
+    }
+
+    private void ImportPalmFolder()
+    {
+        if (_selected is null) { MessageBox.Show(this, "Select a person first.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        using var dialog = new FolderBrowserDialog { Description = "Select a folder containing palm images" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        string[] files = Directory.EnumerateFiles(dialog.SelectedPath, "*.*", SearchOption.TopDirectoryOnly)
+            .Where(file => new[] { ".jpg", ".jpeg", ".png", ".bmp", ".webp" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)).ToArray();
+        int imported = 0; var errors = new List<string>();
+        foreach (string file in files)
+        {
+            try { if (_addPalm(_selected.Id, file)) imported++; }
+            catch (Exception ex) { errors.Add($"{Path.GetFileName(file)}: {ex.Message}"); }
+        }
+        RefreshPeople();
+        MessageBox.Show(this, $"Imported {imported} palm image(s).{(errors.Count == 0 ? string.Empty : $"\r\nSkipped {errors.Count}.")}", "Palm import", MessageBoxButtons.OK, errors.Count == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
     }
 
     private void AssignPalmSample()
@@ -254,10 +317,10 @@ public sealed class IdentityDatabaseForm : Form
         catch (Exception ex) { ShowError(ex); }
     }
 
-    private static IdentityPersonRecord? ChoosePerson(IReadOnlyList<IdentityPersonRecord> people)
+    private static IdentityPersonRecord? ChoosePerson(IReadOnlyList<IdentityPersonRecord> people, string title = "Assign to person")
     {
         if (people.Count == 0) return null;
-        using var dialog = new Form { Text = "Assign Palm to person", Size = new Size(430, 360), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
+        using var dialog = new Form { Text = title, Size = new Size(430, 360), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
         var list = new ListBox { Dock = DockStyle.Fill, DisplayMember = nameof(IdentityPersonRecord.Name) };
         foreach (IdentityPersonRecord person in people) list.Items.Add(person);
         list.SelectedIndex = 0;

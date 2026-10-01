@@ -9,13 +9,16 @@
 ## تصمیم‌های اصلی
 
 1. سرویس مالک اصلی تنظیمات فعال، Identity Database و Event Store است.
-2. `HshVisionLab` در حالت Service Manager از API سرویس استفاده می‌کند و فایل‌های سرویس را مستقیم باز نمی‌کند.
+2. `HshVisionLab` بخشی از این سرویس نیست و هیچ حالت `Service Manager` برای اتصال آن به سرویس تعریف نمی‌شود؛ برنامهٔ Windows مستقل و مستقیم اجرا می‌شود. کلاینت UI این سرویس `DetectionManagerUi` است.
 3. هر `CameraSettings.Rois[].Processing[]` در نسخهٔ اول یک Detection Task است؛ مدل جدید و تکراری برای Task ایجاد نمی‌شود.
 4. نرخ Rendering مستقل از نرخ inference است.
 5. مسیر MediaMTX در وب WHEP خام را ارسال می‌کند و Overlay تشخیص جداگانه روی کلاینت رسم می‌شود؛ مسیر composited WebRTC برای clientهای legacy باقی می‌ماند و inference هیچ‌وقت منتظر encoder یا کلاینت نمی‌ماند.
+
 6. رخداد قبل از broadcast در Event Store ثبت می‌شود و کلاینت با cursor ترتیبی replay می‌کند.
 7. SignalR/WebSocket برای کنترل، رخداد و signaling و WebRTC برای ویدئوی زنده استفاده می‌شود.
 8. رخدادهای عملیاتی در `events.db` جدا از `identity-database.db` ذخیره می‌شوند؛ Identity Database شامل People، Plate، Face و Palm است.
+
+`HshVisionLab` و `DetectionManagerUi` دو برنامهٔ مستقل هستند. آن‌ها باید امکانات مشابه داشته باشند، اما هیچ ارتباط runtime، API، SignalR، WHEP، دیتابیس مشترک یا اشتراک process با یکدیگر ندارند. این سند فقط معماری `HshDetectionService` و کلاینت وب آن را تعریف می‌کند.
 
 ## اسناد
 

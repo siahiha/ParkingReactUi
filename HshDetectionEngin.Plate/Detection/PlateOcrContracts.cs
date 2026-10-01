@@ -49,9 +49,9 @@ public static class PlateOcrModelCatalog
         ArgumentNullException.ThrowIfNull(directories);
         return directories
             .Where(Directory.Exists)
-            .SelectMany(directory => Directory.EnumerateFiles(directory, "*.onnx", SearchOption.TopDirectoryOnly))
+            .SelectMany(directory => Directory.EnumerateFiles(directory, "*.hshmodel", SearchOption.TopDirectoryOnly))
             .Where(IsOcrModel)
-            .Select(path => Path.GetFileName(path) ?? string.Empty)
+            .Select(path => Path.ChangeExtension(Path.GetFileName(path), ".onnx") ?? string.Empty)
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
@@ -61,14 +61,17 @@ public static class PlateOcrModelCatalog
     public static bool TryDescribe(string modelPath, out PlateOcrModelDescriptor descriptor)
     {
         descriptor = null!;
-        if (string.IsNullOrWhiteSpace(modelPath) ||
-            !modelPath.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(modelPath))
             return false;
 
-        string? resolved = Path.IsPathRooted(modelPath)
-            ? modelPath
+        bool isPackage = modelPath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase);
+        bool isLogicalName = modelPath.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase) && !Path.IsPathRooted(modelPath);
+        if (!isPackage && !isLogicalName) return false;
+
+        string? resolved = isPackage
+            ? (Path.IsPathRooted(modelPath) ? modelPath : PlateModelPaths.Find(modelPath))
             : PlateModelPaths.Find(modelPath);
-        if (resolved is null || !File.Exists(resolved)) return false;
+        if (resolved is null || !resolved.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase) || !File.Exists(resolved)) return false;
 
         if (TryReadManifest(resolved, out descriptor)) return true;
 

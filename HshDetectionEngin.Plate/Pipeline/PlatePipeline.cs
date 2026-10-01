@@ -29,17 +29,18 @@ internal sealed class PlatePipeline : IProcessingPipeline
         string? temporaryModel = null;
         try
         {
-            bool encrypted = platePath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase);
-            temporaryModel = encrypted ? SecureModelLoader.Materialize(platePath) : null;
+            if (!platePath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Plate models must be protected .hshmodel packages.");
+            temporaryModel = SecureModelLoader.Materialize(platePath);
             _plateDetector = new YoloDetector(new YoloOptions
             {
-                ModelPath = temporaryModel ?? platePath,
+                ModelPath = temporaryModel,
                 InputWidth = options.InputSize,
                 InputHeight = options.InputSize,
                 ConfThreshold = options.Confidence,
                 NmsIoUThreshold = options.NmsIoU,
                 IntraOpThreads = threads,
-                AutoOptimizeModel = !encrypted
+                AutoOptimizeModel = false
             });
         }
         finally
@@ -50,9 +51,17 @@ internal sealed class PlatePipeline : IProcessingPipeline
         if (!options.CharacterRecognitionEnabled) return;
         string ocrPath = PlateModelPaths.Find(options.CharacterModelFile)
             ?? throw new FileNotFoundException($"Plate recognition model was not found: {options.CharacterModelFile}");
-        if (ocrPath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("The selected plate recognition model must be an ONNX OCR model with a .labels.json sidecar.");
-        _ocr = PlateOcrRecognizerFactory.Create(ocrPath, threads, options.CharacterConfidence);
+        if (!ocrPath.EndsWith(".hshmodel", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Plate recognition models must be protected .hshmodel packages.");
+        string ocrRuntimePath = SecureModelLoader.Materialize(ocrPath);
+        try
+        {
+            _ocr = PlateOcrRecognizerFactory.Create(ocrRuntimePath, ocrPath, threads, options.CharacterConfidence);
+        }
+        finally
+        {
+            TryDelete(ocrRuntimePath);
+        }
     }
 
     public PipelineResult Process(ProcessingContext context)

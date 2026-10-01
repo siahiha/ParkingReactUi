@@ -1,6 +1,8 @@
 # رابط وب و مسیرهای دریافت/نمایش تصویر
 
-در توسعه، UI مستقل `DetectionManagerUi` با Vite روی پورت `5081` اجرا می‌شود. برای
+در توسعه، UI مستقل `DetectionManagerUi` با Vite روی پورت `5081` اجرا می‌شود. این
+UI فقط client وب `HshDetectionService` است و هیچ ارتباطی با `HshVisionLab` ندارد.
+برای
 دسترسی از شبکهٔ محلی باید Vite روی همهٔ interfaceها bind شود:
 
 ```powershell
@@ -71,8 +73,9 @@ npx vite --host 0.0.0.0 --port 5081
 
 ## ۳. دسته‌بندی تنظیمات پردازش
 
-در بخش `Processing / ROI`، هر ROI می‌تواند آیتم‌های مستقل داشته باشد. ادیتور
-مطابق کد فعلی این بخش‌ها را جدا می‌کند:
+در بخش `Processing / ROI`، هر ROI می‌تواند آیتم‌های مستقل داشته باشد. کارت
+هر task در وب کرکره‌ای است و با کلیک باز می‌شود؛ تب‌های همان کارت مطابق کد فعلی
+این بخش‌ها را جدا می‌کنند:
 
 1. `تشخیص پلاک` (`Plate detection`): مدل، input size، confidence، NMS، نرخ
    پردازش و tracking پلاک. مقدار `preprocessing` در تنظیمات، مسیر legacy
@@ -84,30 +87,37 @@ npx vite --host 0.0.0.0 --port 5081
 3. `تشخیص چهره` (`Face detection`): مدل YuNet، input size، preprocessing،
    confidence و NMS/TopK تشخیص چهره.
 4. `شناسایی چهره` (`Face identification`): مدل SFace، threshold شناسایی،
-   known/unknown matching و اتصال به Face Database.
-5. `ردیابی و ثبت سابقه` (`Tracking and recording`): IoU، حداکثر miss، نرخ
+   known/unknown matching و اتصال به دیتابیس مرکزی هویت.
+5. `تشخیص کف دست` و `شناسایی کف دست` (`Palm detection/recognition`): مدل
+   detector و recognition، input size، confidence، NMS، حداکثر دست و thresholdهای
+   known/unknown. `DetectorKind` کنترل جدا ندارد و از مدل انتخابی تعیین می‌شود.
+6. `ردیابی و ثبت سابقه` (`Tracking and recording`): IoU، حداکثر miss، نرخ
    پردازش، record confidence و cooldown رخداد.
 
 مدل‌ها در UI به‌صورت input متنی وارد نمی‌شوند. هر فیلد مدل یک ComboBox است و
-گزینه‌ها از catalog سرویس (`GET /api/v1/service/models`) بارگذاری می‌شوند.
+گزینه‌ها از catalog سرویس (`GET /api/v1/service/models`) بارگذاری می‌شوند و
+هر ComboBox فقط مدل‌های capability خودش را نشان می‌دهد؛ catalog کامل هرگز
+به‌عنوان fallback نمایش داده نمی‌شود.
 catalog مسیرهای مدل زیر را بررسی می‌کند:
 
 ```text
 <service-base>/Models/Plate
 <service-base>/Models/Face
-<service-base>/Models
+<service-base>/Models/Palm
 <service-base>/Modules/<Capability>/Models
 <project module>/Models            (Debug fallback؛ در زنجیرهٔ parentها)
 ```
 
-در انتشار مشتری، مدل‌ها معمولاً در `Models/Plate` و `Models/Face` کنار خروجی
-سرویس قرار می‌گیرند؛ flat `Models` و مسیر legacy نیز بررسی می‌شوند و fallback
-پروژه برای Debug است.
+در انتشار مشتری، مدل‌ها معمولاً در `Models/Plate`، `Models/Face` و
+`Models/Palm` کنار خروجی سرویس قرار می‌گیرند؛ flat `Models` و مسیر legacy برای
+lookup داخلی runtime پشتیبانی می‌شوند و fallback پروژه فقط برای Debug است.
 
 فایل‌های runtime packageهای `.hshmodel` هستند، اما catalog سرویس نام نمایشی
-آن‌ها را با پسوند `.onnx` و capability مربوطه مانند
-`Plate`، `FaceDetection` و `FaceRecognition` به UI می‌دهد. مقدار ذخیره‌شده در
-select از `model.name` می‌آید؛ `relativePath` مسیر نسبی package را برای catalog
+آن‌ها را با capability مربوطه مانند `Plate`، `FaceDetection`،
+`FaceRecognition`، `PalmDetection` و `PalmRecognition` به UI می‌دهد. برای
+Palm detector فیلد `detectorKind` نیز اعلام می‌شود، اما کنترل مستقلی در UI
+وجود ندارد. مقدار ذخیره‌شده در
+select از نام منطقی `model.name` می‌آید؛ `relativePath` مسیر نسبی package را برای catalog
 نگه می‌دارد و مسیر absolute به UI داده نمی‌شود.
 
 ## ۴. مسیر MediaMTX با latency کم

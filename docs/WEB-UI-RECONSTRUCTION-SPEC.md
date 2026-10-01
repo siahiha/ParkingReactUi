@@ -18,8 +18,10 @@
 | `DetectionManagerUi/src/styles.css` | layout، اندازه‌ها، breakpointها و ظاهر |
 | `HshDetectionService/ServiceApi.cs` | endpointهای واقعی سرویس و catalog مدل‌ها |
 
-این سند مربوط به وب است. `README.md`، `docs/ARCHITECTURE.md` و
-`docs/REBUILD_GUIDE.md` علاوه بر وب، رفتار برنامهٔ WinForms را نیز شرح می‌دهند؛
+این سند مربوط به وب مستقل است. `DetectionManagerUi` فقط به
+`HshDetectionService` متصل می‌شود و هیچ ارتباطی با process یا runtime
+`HshVisionLab` ندارد. `README.md`، `docs/ARCHITECTURE.md` و
+`docs/REBUILD_GUIDE.md` علاوه بر وب، رفتار مستقل برنامهٔ WinForms را نیز شرح می‌دهند؛
 عبارت‌هایی مثل `CameraManagerForm`، `DockStyle`، دکمهٔ حذف بالای tile و نوار
 زبان، به‌طور خودکار به وب تعمیم داده نمی‌شوند.
 
@@ -82,7 +84,7 @@ sidebar شامل این ترتیب است:
 | --- | --- | --- |
 | `/` | `نمای کلی` | فقط مسیر دقیق `/` |
 | `/cameras` | `مدیریت دوربین‌ها` | مسیر و زیرمسیرهای آن |
-| `/faces` | `پایگاه چهره` | مسیر و زیرمسیرهای آن |
+| `/faces` | `مدیریت افراد` | مسیر و زیرمسیرهای آن |
 | `/events` | `تاریخچه تشخیص` | `/events` و `/events/:eventId` |
 | `/triggers` | `تریگرها و کلاینت‌ها` | مسیر و زیرمسیرهای آن |
 | `/settings` | `تنظیمات سرویس` | مسیر و زیرمسیرهای آن |
@@ -127,8 +129,8 @@ commandbar عنوان `مرکز کنترل دوربین‌ها` و زیرعنو�
 
 در hero، badge `سرویس آنلاین` یا `در انتظار سرویس`، عنوان
 `مرکز مدیریت تشخیص`، متن توضیحی، تعداد دوربین، `Sequence #...` و تعداد افراد
-پایگاه چهره نمایش داده می‌شود. چهار stat card عبارت‌اند از:
-`دوربین‌های فعال`، `رخدادهای پایدار`، `افراد پایگاه چهره` و `میانگین inference`.
+مدیریت افراد نمایش داده می‌شود. چهار stat card عبارت‌اند از:
+`دوربین‌های فعال`، `رخدادهای پایدار`، `افراد مدیریت‌شده` و `میانگین inference`.
 
 ### ۳.۲ دیوار دوربین و پنل تشخیص
 
@@ -332,24 +334,29 @@ TopK را به draft اعمال می‌کند و thresholdها را تغییر �
 ## ۷. Processing / ROI
 
 این تب با عنوان `Processing tree` و توضیح اجرای موازی ROIها، دکمه‌های
-`Plate` و `Face` برای افزودن task دارد. سمت چپ درخت ROI با نام، تعداد task،
+`Plate`، `Face` و `Palm` برای افزودن task دارد. سمت چپ درخت ROI با نام، تعداد task،
 حالت `سریالی/همزمان` و فعال/غیرفعال‌بودن ROI است؛ سمت دیگر نام ROI، فیلد
 `اجرای پردازش‌های این ROI` با گزینه‌های `سریالی (زنجیره‌ای)` و `همزمان (موازی)`،
 checkbox `ROI فعال` و task editor را نشان می‌دهد. در حالت سریالی taskها به‌ترتیب
 فهرست و با زنجیرهٔ خروجی/تصویر اجرا می‌شوند؛ در حالت همزمان هر task کپی مستقل
 از تصویر ROI را دریافت می‌کند.
 
-هر task یک کارت با نام، type، Toggle فعال، حذف، ویرایش نام و options دارد.
+هر task یک کارت detailed با نام، type، Toggle فعال و حذف دارد. کارت‌ها به‌صورت
+پیش‌فرض بسته‌اند و با کلیک روی header باز می‌شوند؛ ویرایش نام و options فقط در
+حالت باز نمایش داده می‌شود.
 
-### ۷.۱ چهار بخش بصری task چهره/پلاک
+### ۷.۱ تب‌های پردازش و بخش‌های هر task
 
-کد فعلی چهار بخش بصری دارد؛ سه بخش اول شماره‌گذاری شده‌اند و بخش چهارم
-عنوان مستقل دارد:
+هر task سه تب ثابت دارد:
 
-1. `۱. تشخیص پلاک` — `Plate detection`؛
-2. `۲. تشخیص چهره` — `Face detection`؛
-3. `۳. شناسایی چهره` — `Face identification`؛
-4. `ردیابی و ثبت سابقه` — `Tracking and recording`.
+1. `تشخیص`؛
+2. `شناسایی/خواندن`؛
+3. `ردیابی و سابقه`.
+
+عنوان تب بر اساس نوع task تغییر می‌کند: برای Plate به‌ترتیب `تشخیص پلاک`،
+`خواندن پلاک` و `ردیابی و ثبت سابقه`؛ برای Face، `تشخیص چهره`، `شناسایی
+چهره` و `ردیابی و سابقه`؛ و برای Palm، `تشخیص کف دست`، `شناسایی کف دست` و
+`ردیابی و ثبت سابقه`.
 
 بخش Plate detection شامل ComboBox `Model`، `Input size`، `Preprocessing`، `Confidence`,
 `NMS IoU`، `Max processing FPS`، `Threads`، `Buffer count`،
@@ -374,42 +381,62 @@ checkbox `ROI فعال` و task editor را نشان می‌دهد. در حال�
 count`، `History record confidence`، `History event cooldown (sec)`،
 `Tracking IoU` و `Track max misses` است.
 
+بخش Palm detection شامل ComboBox مدل، Input size، `Detection confidence`،
+`NMS IoU` و `Max hands` است. بخش Palm recognition شامل ComboBox مدل شناسایی،
+`Recognition input size`، `Known-person threshold` و `Unknown match threshold`
+است و بخش tracking/recording همان کنترل‌های نرخ، thread، buffer، cooldown و
+tracker را دارد. `DetectorKind` در UI فیلد جداگانه ندارد؛ runtime آن را از
+مدل انتخاب‌شده تعیین می‌کند (`BlazePalm` یا `RTMDet`).
+
 ### ۷.۲ مدل‌ها
 
 هیچ‌یک از modelها input متنی اصلی نیستند. `ModelSelect` یک HTML `select` است.
 داده از `GET /api/v1/service/models` می‌آید و برای قابلیت‌های `plate`،
-`faceDetection` و `faceRecognition` فیلتر می‌شود. متن option از `model.name`
-است؛ اگر مقدار فعلی در catalog نبود، یک option موقت `Current` ساخته می‌شود.
-اگر فیلتر capability هیچ گزینه‌ای ندهد، `ModelSelect` کل catalog را به‌عنوان
-fallback نشان می‌دهد.
+`plateRecognition`، `faceDetection`، `faceRecognition`، `palmDetection` و
+`palmRecognition` فیلتر می‌شود. متن option از `model.name` است. `ModelSelect`
+هیچ‌وقت به catalog کامل fallback نمی‌کند؛ اگر مدل فعلی در فهرست همان قابلیت
+نباشد فقط همان مقدار فعلی را به‌صورت موقت نشان می‌دهد تا انتخاب اشتباه بین
+Plate، Face و Palm ایجاد نشود.
 
-سرویس فقط فایل‌های `*.hshmodel` را از این مسیرهای top-level جست‌وجو می‌کند:
+سرویس فقط مدل‌های package شده با پسوند `.hshmodel` را از این مسیرهای
+top-level جست‌وجو می‌کند:
 
 ```text
 <service-base>/Models/Plate
 <service-base>/Models/Face
-<service-base>/Models
+<service-base>/Models/Palm
 <service-base>/Modules/Plate/Models
 <service-base>/Modules/Face/Models
+<service-base>/Modules/Palm/Models
 Models پوشهٔ پروژهٔ HshDetectionEngin.Plate در زنجیرهٔ parentها (Debug)
 Models پوشهٔ پروژهٔ HshDetectionEngin.Face در زنجیرهٔ parentها (Debug)
+Models پوشهٔ پروژهٔ HshDetectionEngin.Palm در زنجیرهٔ parentها (Debug)
 ```
 
-catalog برای نمایش، نام فایل `.hshmodel` را با پسوند `.onnx` به `name` تبدیل
-می‌کند، اما `relativePath` همچنان مسیر نسبی فایل package است و `packaged` در
-وضعیت فعلی `true` برگردانده می‌شود. capability از module و نام فایل به‌صورت
-`Plate`، `FaceDetection` یا `FaceRecognition` تعیین می‌شود. فهرست‌سازی
-پوشه‌ای است و به یک یا دو model ثابت hard-code نشده است.
+مسیر flat `<service-base>/Models` ممکن است برای lookup داخلی runtime وجود داشته
+باشد، اما catalog سرویس آن را با capabilityهای دیگر مخلوط نمی‌کند؛ catalog هر
+قابلیت را از پوشهٔ اختصاصی همان capability و fallback پروژهٔ مربوط می‌سازد.
 
-## ۸. صفحهٔ Face Database `/faces`
+catalog برای نمایش، نام منطقی با پسوند `.onnx` را در `name` و مسیر نسبی package
+با پسوند `.hshmodel` را در `relativePath` برمی‌گرداند. capability از module و نام فایل به‌صورت `Plate`،
+`FaceDetection`، `FaceRecognition`، `PalmDetection` یا `PalmRecognition` تعیین
+می‌شود و برای detectorهای Palm، `detectorKind` نیز در catalog اعلام می‌شود.
+فهرست‌سازی پوشه‌ای است و به یک یا دو model ثابت hard-code نشده است.
+
+## ۸. صفحهٔ مدیریت افراد `/faces`
 
 ردیف اکشن بالای صفحه search با placeholder
 `جست‌وجوی نام یا شماره` و دکمهٔ `Similar samples` دارد. layout دو ستون است:
 
 - `People / Samples`: تعداد افراد و نمونه‌ها، checkbox `Group by person`،
-  فهرست person، input `نام شخص جدید` و دکمهٔ `افزودن`؛
-- detail: با انتخاب شخص، نام/شماره/نوع/تاریخ، Rename، حذف شخص، آپلود چند فایل
-  (`افزودن تصویر / folder`)، نمونه‌ها، انتقال sample و حذف sample.
+  فهرست person، input `نام شخص جدید` و دکمهٔ `افزودن`. کنار نام هر فرد checkbox
+  انتخاب قرار دارد و دکمهٔ `حذف گروهی` پس از تأیید، افراد انتخاب‌شده را همراه با
+  متعلقاتشان حذف می‌کند؛ checkbox در سمت راست نام نمایش داده می‌شود؛
+- detail: با انتخاب شخص، نام/شماره/نوع/تاریخ، Rename، حذف شخص و سه تب مستقل
+  `چهره`، `پالم` و `پلاک`. تب چهره و پالم آپلود چند فایل (`افزودن تصویر / folder`)،
+  نمایش تصویر crop، انتقال و حذف sample را دارند؛ تب پلاک افزودن/حذف پلاک و
+  تعیین پلاک اصلی را دارد. افراد Palm-only و `Unknown Palm #…` نیز در فهرست
+  نمایش داده می‌شوند.
 
 Unknown با avatar علامت `?` دارد و شخص عادی حرف اول نام را به‌عنوان avatar
 می‌گیرد. Similarity در modal با threshold عددی، checkbox `Only different
@@ -570,7 +597,12 @@ GET  /api/v1/service/capabilities        stale time = 60 ثانیه
 GET  /api/v1/events?limit=500...          هر 5 ثانیه در صفحهٔ تاریخچه؛ داشبورد از limit پیش‌فرض 200 استفاده می‌کند
 GET  /api/v1/events/{id}
 GET  /api/v1/face/people
+POST /api/v1/face/people/bulk-delete       body: { personIds: string[] }
 GET  /api/v1/face/people/{id}/samples
+GET  /api/v1/palm/people/summary
+GET  /api/v1/palm/people/{id}/samples
+GET  /api/v1/palm/samples/{id}/image
+GET  /api/v1/identity/people/{id}/plates
 GET  /api/v1/triggers
 GET  /api/v1/settings
 ```

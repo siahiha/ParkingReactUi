@@ -8,13 +8,14 @@
 | --- | --- | --- |
 | `HshDetectionEngin.Plate/Models` | packageهای `.hshmodel` پلاک | Release: جداگانه در `Models/Plate` یا `Models` کنار executable؛ Debug: fallback از پوشهٔ پروژه |
 | `HshDetectionEngin.Face/Models` | YuNet FP32/INT8 و SFace package شده | Release: جداگانه در `Models/Face` یا `Models` کنار executable؛ Debug: fallback از پوشهٔ پروژه |
-| `HshDetectionEngin.Tools/RawModels` | ONNX/PyTorch خام | خیر |
+| `HshDetectionEngin.Palm/Models` | packageهای `.hshmodel` کف دست | Release: در `Models/Palm`؛ Debug: fallback از پوشهٔ پروژه |
+| `HshDetectionEngin.Tools/RawModels/{Plate,Face,Palm}` | ONNX/PyTorch خام با تفکیک قابلیت | خیر |
 | `HshDetectionEngin.Tools/ModelTools` | اسکریپت‌های Python quantization | خیر |
 | `HshDetectionEngin.Tools/BuildArtifacts` | خروجی‌های آزمایشی و legacy | خیر |
 
 ## اجرای Plate
 
-YOLO با ONNX Runtime و CPU اجرا می‌شود. ورودی با letterbox به `InputSize` تبدیل می‌شود، threshold و NMS از تنظیمات می‌آید و `Threads` به `SessionOptions.IntraOpNumThreads` در ONNX Runtime وصل است. برای مدل خام، `ModelOptimizer` ممکن است artifact بهینه‌شده بسازد؛ packageهای رمزگذاری‌شده در مسیر فعلی به‌صورت مستقیم و موقت materialize می‌شوند و بهینه‌سازی خودکار خام ندارند.
+YOLO با ONNX Runtime و CPU اجرا می‌شود. ورودی با letterbox به `InputSize` تبدیل می‌شود، threshold و NMS از تنظیمات می‌آید و `Threads` به `SessionOptions.IntraOpNumThreads` در ONNX Runtime وصل است. `ModelOptimizer` فقط ابزار توسعه برای graph خام است؛ runtime و خروجی publish فقط packageهای `.hshmodel` را مصرف می‌کنند. package برای ساخت session موقتاً materialize می‌شود و فایل موقت پس از ایجاد session حذف می‌گردد.
 
 برای latency زنده، مهم‌تر از بالا بردن FPS این موارد هستند:
 
@@ -49,8 +50,8 @@ local RTSP MediaMTX استفاده کند و فقط state سبک Overlay را ب
 FFmpeg `nobuffer`، `low_delay` و `max_delay=0` باز می‌شود. در LibVLC، مقدار
 مثبت `BufferCount` صف واقعی می‌سازد و برای کاهش latency باید صفر بماند.
 
-catalog مدل UI نیز فقط فایل‌های قابل استفاده را از `Models/Plate`، `Models/Face`،
-`Models`، مسیرهای legacy و fallbackهای Debug فهرست می‌کند؛ ComboBox مدل نباید
+ catalog مدل UI نیز فقط packageهای `.hshmodel` قابل استفاده را از `Models/Plate`، `Models/Face`،
+`Models/Palm`، مسیرهای legacy و fallbackهای Debug فهرست می‌کند؛ ComboBox مدل نباید
 به مسیر absolute یا یک model file تایپ‌شده وابسته باشد. `inputSizes` نیز از همان
 catalog می‌آید: مدل ثابت فقط سایز ثابت tensor را اعلام می‌کند و مدل YOLO با
 ابعاد پویا، گزینه‌های stride-aligned استاندارد `320`، `416`، `480`، `512` و

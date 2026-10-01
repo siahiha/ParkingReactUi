@@ -26,8 +26,8 @@ class CalibrationReader(CalibrationDataReader):
 
 def main() -> None:
     root = Path(__file__).resolve().parent.parent
-    source = root / "RawModels" / (sys.argv[1] if len(sys.argv) > 1 else "face_detection_yunet_2023mar.onnx")
-    destination = root / "RawModels" / (sys.argv[2] if len(sys.argv) > 2 else "face_detection_yunet_2023mar_int8.onnx")
+    source = root / "RawModels" / "Face" / (sys.argv[1] if len(sys.argv) > 1 else "face_detection_yunet_2023mar.onnx")
+    destination = root / "RawModels" / "Face" / (sys.argv[2] if len(sys.argv) > 2 else "face_detection_yunet_2023mar_int8.onnx")
     if not source.is_file():
         raise FileNotFoundError(source)
     model = onnx.load(source, load_external_data=False)

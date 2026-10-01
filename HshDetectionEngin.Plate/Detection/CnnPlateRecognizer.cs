@@ -40,7 +40,7 @@ internal sealed class CnnPlateRecognizer : IPlateTextRecognizer
 
     public double LastInferenceMs { get; private set; }
 
-    public CnnPlateRecognizer(string modelPath, int intraOpThreads)
+    public CnnPlateRecognizer(string modelPath, int intraOpThreads, string? metadataPath = null)
     {
         if (!File.Exists(modelPath))
             throw new FileNotFoundException($"Plate CNN OCR model was not found: {modelPath}");
@@ -56,7 +56,7 @@ internal sealed class CnnPlateRecognizer : IPlateTextRecognizer
         _session = new InferenceSession(modelPath, sessionOptions);
         string inputName = _session.InputNames.First();
         _outputNames = _session.OutputNames.ToArray();
-        _labels = LoadLabels(modelPath);
+        _labels = LoadLabels(metadataPath ?? modelPath);
         _inputTensor = OrtValue.CreateTensorValueFromMemory(_inputBuffer, [1, 1, InputSize, InputSize]);
         _inputs = new Dictionary<string, OrtValue>(1) { [inputName] = _inputTensor };
     }

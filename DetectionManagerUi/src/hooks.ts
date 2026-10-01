@@ -44,7 +44,10 @@ export function useInvocations() { return useQuery({ queryKey: keys.invocations,
 export function useInvocationLogs(invocationId?: string, limit = 200) { return useQuery({ queryKey: [...keys.invocationLogs, invocationId, limit], queryFn: () => api.invocationLogs(invocationId, limit), refetchInterval: 5000 }) }
 export function useInvocationMutation() { const client = useQueryClient(); return useMutation({ mutationFn: (input: { value: InvocationDefinition; create: boolean }) => input.create ? api.createInvocation(input.value) : api.updateInvocation(input.value), onSuccess: () => { void client.invalidateQueries({ queryKey: keys.invocations }); void client.invalidateQueries({ queryKey: keys.invocationLogs }) } }) }
 export function usePeople() { return useQuery({ queryKey: keys.people, queryFn: api.people }) }
+export function usePalmPeopleSummary() { return useQuery({ queryKey: ['palm-people-summary'], queryFn: api.palmPeopleSummary, staleTime: 30_000 }) }
 export function usePersonSamples(id?: string) { return useQuery({ queryKey: ['samples', id], queryFn: () => api.samples(id!), enabled: Boolean(id) }) }
+export function usePersonPalmSamples(id?: string) { return useQuery({ queryKey: ['palm-samples', id], queryFn: () => api.palmSamples(id!), enabled: Boolean(id) }) }
+export function usePersonPlates(id?: string) { return useQuery({ queryKey: ['person-plates', id], queryFn: () => api.personPlates(id!), enabled: Boolean(id) }) }
 export function useEvents(query = '', limit = 200) {
   const subscription = useClientSubscription()
   const subscriptionKey = JSON.stringify(subscription)

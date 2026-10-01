@@ -42,6 +42,7 @@ public sealed class PalmDatabase : IDisposable
     public static PalmDatabase FromStore(IdentityDatabase store) => new(store, false);
     public IReadOnlyList<PalmIdentity> Identities => _store.GetPeople().Select(MapPerson).ToArray();
     public IReadOnlyList<PalmSample> GetSamples() => _store.GetPalmSamples().Select(MapSample).ToArray();
+    public byte[] GetPalmImage(string sampleId) => _store.GetPalmImage(sampleId);
     public PalmSample RegisterSample(string name, IReadOnlyList<float> embedding, byte[] palmImage, string originalFileName,
         string? personId = null, float detectionConfidence = 0) =>
         MapSample(_store.RegisterPalmSample(name, embedding, palmImage, originalFileName, personId, detectionConfidence));

@@ -2,7 +2,7 @@
 
 ## 1. اصل مالکیت
 
-سرویس تنها processای است که configuration فعال و Identity Database را برای runtime باز نگه می‌دارد. `HshVisionLab` در حالت مدیریت از API استفاده می‌کند و هم‌زمان فایل‌های سرویس را با `File.ReadAllText` یا یک database دوم باز نمی‌کند.
+سرویس تنها processای است که configuration فعال و Identity Database مربوط به runtime سرویس را باز نگه می‌دارد. `DetectionManagerUi` این داده‌ها را فقط از API سرویس مصرف می‌کند. `HshVisionLab` به این سرویس وصل نمی‌شود و configuration، دیتابیس و runtime مستقل خودش را دارد.
 
 این تصمیم برای Identity Database مهم است، چون implementation فعلی باید فقط یک instance مرکزی SQLite را باز نگه دارد تا viewهای People، Plate، Face و Palm بین processها ناسازگار نشوند.
 
@@ -78,9 +78,11 @@ PalmSamples(SampleId, PersonId, SampleNumber, PalmImage, Embedding, ...)
 ```
 
 `PersonId` تنها رابطهٔ هویتی مشترک بین modalityهاست. یک نفر می‌تواند چند پلاک
-و چند نمونهٔ Face/Palm داشته باشد. در اولین اجرای دیتابیس مرکزی، داده‌های
-`face-database.db` و `palm-database.db` قدیمی import می‌شوند؛ پس از migration
-سرویس فقط `identity-database.db` را باز نگه می‌دارد.
+و چند نمونهٔ Face/Palm داشته باشد. هنگام load، داده‌های `face-database.db` و
+`palm-database.db` قدیمی به‌صورت مستقل import می‌شوند؛ افراد هم‌نام یا هم‌شماره
+به یک Person مرکزی متصل و نمونه‌های تکراری حذف می‌شوند. پس از migration سرویس
+فقط `identity-database.db` را باز نگه می‌دارد. حذف Person به‌صورت آبشاری
+FaceSamples، PalmSamples و PersonPlates را نیز پاک می‌کند.
 
 ### `events.db`
 
@@ -160,6 +162,7 @@ merge خودکار JSON در سرویس انجام نشود؛ چون برای RO
 
 - rename
 - delete person
+- bulk delete people with their cascade-owned samples and plates
 - add sample
 - move sample
 - similarity search

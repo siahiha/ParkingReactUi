@@ -145,6 +145,7 @@ POST   /api/v1/face/people
 GET    /api/v1/face/people/{personId}
 PATCH  /api/v1/face/people/{personId}
 DELETE /api/v1/face/people/{personId}
+POST   /api/v1/face/people/bulk-delete
 
 GET    /api/v1/face/people/{personId}/samples
 POST   /api/v1/face/people/{personId}/samples
@@ -167,12 +168,31 @@ POST   /api/v1/face/database/restore
 
 ```text
 GET  /api/v1/palm/people
+GET  /api/v1/palm/people/summary
 GET  /api/v1/palm/people/{personId}/samples
 GET  /api/v1/palm/database/health
 POST /api/v1/palm/samples
+GET  /api/v1/palm/samples/{sampleId}/image
+DELETE /api/v1/palm/samples/{sampleId}
+POST /api/v1/palm/samples/{sampleId}/move
+
+GET  /api/v1/identity/people/{personId}/plates
+POST /api/v1/identity/people/{personId}/plates
+DELETE /api/v1/identity/plates/{plateId}
 ```
 
-در `POST /api/v1/palm/samples`، `personId` می‌تواند به شخصی اشاره کند که قبلاً از Face یا مدیریت پلاک ایجاد شده است؛ در صورت نبود آن، سرویس می‌تواند بر اساس `personName` شخص را ایجاد کند. Palm person database جداگانه‌ای ندارد. Web UI فعلاً در این تغییرات دست‌نخورده است و این routeها قرارداد سرویس/Backend هستند.
+در `POST /api/v1/palm/samples`، `personId` می‌تواند به شخصی اشاره کند که قبلاً از Face یا مدیریت پلاک ایجاد شده است؛ در صورت نبود آن، سرویس می‌تواند بر اساس `personName` شخص را ایجاد کند. Palm person database جداگانه‌ای ندارد. وب UI همین شخص مرکزی را در صفحهٔ `مدیریت افراد` و در تب `پالم` نمایش می‌دهد.
+
+`POST /api/v1/face/people/bulk-delete` بدنه‌ای مانند زیر می‌گیرد:
+
+```json
+{ "personIds": ["person-id-1", "person-id-2"] }
+```
+
+برای فهرست خالی پاسخ `400` و برای درخواست معتبر پاسخ `200` با
+`{ "deletedCount": number }` برمی‌گردد. حذف هر شخص، به‌دلیل کلیدهای خارجی با
+`ON DELETE CASCADE`، نمونه‌های Face/Palm و پلاک‌های همان `PersonId` را نیز حذف
+می‌کند. حذف تکی و گروهی یک قانون داده‌ای یکسان دارند.
 
 ## 8. Trigger و Webhook
 

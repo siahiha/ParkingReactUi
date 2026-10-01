@@ -17,8 +17,10 @@ public sealed class MediaMtxOptions
     public string ExecutablePath { get; init; } = string.Empty;
     public string ConfigPath { get; init; } = string.Empty;
     public int RtspPort { get; init; } = 8554;
-    public int WebRtcPort { get; init; } = 8889;
-    public int WebRtcUdpPort { get; init; } = 8189;
+    // 8889 is commonly excluded by Windows/Hyper-V port reservations on
+    // deployed machines. Keep the managed defaults on a less restricted pair.
+    public int WebRtcPort { get; init; } = 9000;
+    public int WebRtcUdpPort { get; init; } = 8190;
     public int ControlPort { get; init; } = 9997;
     public string AdditionalHosts { get; init; } = string.Empty;
 
@@ -32,8 +34,8 @@ public sealed class MediaMtxOptions
             ExecutablePath = Environment.GetEnvironmentVariable("HSH_MEDIAMTX_PATH") ?? string.Empty,
             ConfigPath = Environment.GetEnvironmentVariable("HSH_MEDIAMTX_CONFIG") ?? string.Empty,
             RtspPort = ReadPort("HSH_MEDIAMTX_RTSP_PORT", 8554),
-            WebRtcPort = ReadPort("HSH_MEDIAMTX_WEBRTC_PORT", 8889),
-            WebRtcUdpPort = ReadPort("HSH_MEDIAMTX_WEBRTC_UDP_PORT", 8189),
+            WebRtcPort = ReadPort("HSH_MEDIAMTX_WEBRTC_PORT", 9000),
+            WebRtcUdpPort = ReadPort("HSH_MEDIAMTX_WEBRTC_UDP_PORT", 8190),
             ControlPort = ReadPort("HSH_MEDIAMTX_API_PORT", 9997),
             AdditionalHosts = Environment.GetEnvironmentVariable("HSH_MEDIAMTX_ADDITIONAL_HOSTS") ?? string.Empty
         };
@@ -358,7 +360,15 @@ public sealed class MediaMtxRuntime : IDisposable
             "api: true",
             $"apiAddress: :{_options.ControlPort}",
             "rtsp: true",
+            "rtspTransports: [tcp]",
             $"rtspAddress: :{_options.RtspPort}",
+            "rtmp: false",
+            // HshVision uses RTSP and WebRTC/WHEP. Disable MediaMTX's
+            // optional HLS listener so deployments do not depend on its
+            // default port (8888), which may be reserved by Windows.
+            "hls: false",
+            "srt: false",
+            "moq: false",
             "webrtc: true",
             $"webrtcAddress: :{_options.WebRtcPort}",
             $"webrtcLocalUDPAddress: :{_options.WebRtcUdpPort}",

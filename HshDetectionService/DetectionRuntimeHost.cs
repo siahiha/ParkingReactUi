@@ -71,6 +71,7 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
     public EventStore Events => _eventStore;
     public ArtifactStore Artifacts => _artifactStore;
     public FaceDatabase FaceDatabase => _faceDatabase ?? throw new InvalidOperationException("Identity database is not ready.");
+    public IdentityDatabase IdentityDatabase => _identityDatabase ?? throw new InvalidOperationException("Identity database is not ready.");
     public FaceModule FaceModule => _faceModule ?? throw new InvalidOperationException("Face module is not ready.");
     public PalmDatabase PalmDatabase => _palmDatabase ?? throw new InvalidOperationException("Identity database is not ready.");
     public PalmModule PalmModule => _palmModule ?? throw new InvalidOperationException("Palm module is not ready.");

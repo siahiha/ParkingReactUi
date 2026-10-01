@@ -148,17 +148,16 @@
 - reference رکورد قبلی و eventهای evidence قابل بازیابی باشد.
 - تشخیص پلاک تنها و چهرهٔ ناشناس بدون association معتبر، به‌اشتباه match اعلام نشود.
 
-## مرحلهٔ هشت: تبدیل HshVisionLab به Service Manager
+## مرحلهٔ هشت: تثبیت مرز مستقل Windows و سرویس
 
-خروجی:
+در این معماری `HshVisionLab` به Service Manager تبدیل نمی‌شود و Local Mode/Service Mode
+برای اتصال آن به `HshDetectionService` وجود ندارد. `HshVisionLab` مستقل می‌ماند و
+مستقیماً engine، دوربین، pipeline و دیتابیس خودش را اجرا می‌کند. مدیریت سرویس،
+تنظیمات فعال، رخدادهای replay/live و Identity Database سرویس فقط از طریق
+`DetectionManagerUi` انجام می‌شود.
 
-- انتخاب Local Mode یا Service Mode
-- اتصال به API
-- import اولیهٔ settings و Identity Database
-- مدیریت دوربین، task، Identity Database و trigger از UI
-- نمایش رخدادهای replayشده و live
-
-در Service Mode، UI نباید فایل‌های اصلی سرویس را با instance جداگانهٔ `FaceDatabase` باز کند.
+دو UI باید از نظر امکانات هم‌سطح باشند، اما نباید بین آن‌ها اتصال API، process،
+database یا runtime مشترک ایجاد شود.
 
 ## تست‌های ضروری پیش از production
 

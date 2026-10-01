@@ -123,6 +123,7 @@ export interface ModelInfo {
   relativePath: string;
   module: string;
   capability?: string;
+  detectorKind?: string;
   ocrDecoder?: string;
   ocrAlphabet?: string;
   inputSizes?: number[];
@@ -275,6 +276,30 @@ export interface FaceSimilarityPair {
   left: FaceSample;
   right: FaceSample;
   similarity: number;
+}
+export interface PalmSample {
+  id: Id;
+  personId: Id;
+  personNumber: number;
+  personName: string;
+  sampleNumber: number;
+  originalFileName: string;
+  createdAtUtc: string;
+  detectionConfidence: number;
+}
+export interface PalmPersonSummary {
+  personId: Id;
+  sampleCount: number;
+}
+export interface PersonPlate {
+  id: Id;
+  personId: Id;
+  plateText: string;
+  normalizedText: string;
+  isPrimary: boolean;
+  notes: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
 }
 export interface FaceDatabaseHealth {
   databasePath: string;
