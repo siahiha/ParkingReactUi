@@ -1025,15 +1025,11 @@ function CameraTile({
   return (
     <article className={`camera-tile ${running ? "camera-running" : "camera-stopped"}`}>
       <button className="camera-tile-open" onClick={onOpen} aria-label={`باز کردن ${camera.name}`}>
-        {camera.captureBackend?.toLocaleLowerCase() === "mediamtx" ? (
-          <RawMediaMtxStream cameraId={camera.id} enabled={running} overlayIntervalMs={400} />
-        ) : (
-          <CompositeWebRtcStream
-            cameraId={camera.id}
-            enabled={running}
-            className="camera-live-video"
-          />
-        )}
+        <CompositeWebRtcStream
+          cameraId={camera.id}
+          enabled={running}
+          className="camera-live-video"
+        />
       </button>
       <div className="camera-tile-toolbar">
         <span className="camera-tile-status">
@@ -2492,12 +2488,12 @@ function MediaMtxLivePreview({ camera }: { camera?: CameraStatus }) {
       <div className="panel-head compact">
         <div>
           <h3>پخش کم‌تاخیر MediaMTX</h3>
-          <span>WHEP خام MediaMTX + Overlay سبک سمت کلاینت</span>
+          <span>MediaMTX + خروجی کامپوزیت‌شدهٔ سرویس با overlay زمان‌دار</span>
         </div>
       </div>
       <div className="video-frame">
         {camera?.id ? (
-          <RawMediaMtxStream cameraId={camera.id} enabled={Boolean(camera.running)} />
+          <CompositeWebRtcStream cameraId={camera.id} enabled={Boolean(camera.running)} />
         ) : (
           <div className="video-empty"><Video size={34} /><span>دوربینی انتخاب نشده</span></div>
         )}
@@ -2667,18 +2663,7 @@ function RoiCanvas({
         >
           {!enabled ? (
             <div className="video-empty"><Pause size={22} /><span>دوربین غیرفعال است</span></div>
-          ) : live ? streamBackend?.toLocaleLowerCase() === "mediamtx" ? (
-            <RawMediaMtxStream
-              cameraId={cameraId}
-              enabled
-              onLoadedMetadata={(event) =>
-                setImageSize({
-                  width: event.currentTarget.videoWidth || 16,
-                  height: event.currentTarget.videoHeight || 9,
-                })
-              }
-            />
-          ) : (
+          ) : live ? (
             <CompositeWebRtcStream
               cameraId={cameraId}
               enabled

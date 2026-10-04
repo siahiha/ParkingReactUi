@@ -407,9 +407,10 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
             _latestFrames.AddOrUpdate(camera.Settings.Id,
                 _ => new LatestFrameSlot(clone, sequence),
                 (_, old) => { old.Replace(clone, sequence); return old; });
-            // MediaMTX cameras are displayed through the raw WHEP path. Do
-            // not clone and enqueue every preview frame into the composite
-            // gateway unless a legacy/composite WebRTC viewer is connected.
+            // The CameraRuntime preview worker is the display path for the
+            // service WebRTC viewer. It already consumes the newest raw frame
+            // independently of inference and applies the time-bounded overlay
+            // snapshot before this event reaches the gateway.
             if (_webrtc.SessionCount > 0)
             {
                 using Bitmap webRtcFrame = new(frame);
