@@ -302,6 +302,31 @@ public sealed class EventStore : IDisposable
         }
     }
 
+    public IReadOnlyList<DetectionEventEnvelope> ReadLatestBefore(long? beforeSequence, int limit)
+    {
+        lock (_gate)
+        {
+            ThrowIfDisposed();
+            limit = Math.Clamp(limit, 1, 2000);
+            using SqliteCommand command = _connection.CreateCommand();
+            command.CommandText = beforeSequence is null
+                ? "SELECT Sequence, PayloadJson FROM DetectionEvents ORDER BY Sequence DESC LIMIT $limit;"
+                : "SELECT Sequence, PayloadJson FROM DetectionEvents WHERE Sequence < $before ORDER BY Sequence DESC LIMIT $limit;";
+            Add(command, "$limit", limit);
+            if (beforeSequence is not null) Add(command, "$before", beforeSequence.Value);
+            using SqliteDataReader reader = command.ExecuteReader();
+            var result = new List<DetectionEventEnvelope>();
+            while (reader.Read())
+            {
+                DetectionEventEnvelope? item = JsonSerializer.Deserialize<DetectionEventEnvelope>(reader.GetString(1), ServiceJson.Options);
+                if (item is null) continue;
+                item.Sequence = reader.GetInt64(0);
+                result.Add(item);
+            }
+            return result;
+        }
+    }
+
     public bool HasRecentTriggerEvent(string triggerId, string triggerKey, DateTime sinceUtc)
     {
         lock (_gate)

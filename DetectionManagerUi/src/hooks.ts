@@ -106,11 +106,22 @@ export function useDetectionStream() {
       pending.push(item)
       if (flushTimer === undefined) flushTimer = window.setTimeout(flush, 50)
     }
+    const subscribe = () => connection.invoke('Subscribe', last, readClientSubscription()).catch(() => undefined)
+    const resync = async () => {
+      try {
+        const status = await api.status()
+        last = status.eventSequence
+        sessionStorage.setItem(key, String(last))
+      } catch {
+        last = 0
+        sessionStorage.setItem(key, '0')
+      }
+      if (!stopped) await subscribe()
+    }
     connection.on('detection', apply)
-    connection.on('cursorExpired', () => { last = 0; sessionStorage.setItem(key, '0'); void client.invalidateQueries({ queryKey: keys.events }) })
+    connection.on('cursorExpired', () => { void client.invalidateQueries({ queryKey: keys.events }); void resync() })
     connection.on('replayStarted', () => undefined)
     connection.on('replayCompleted', (message: { lastSequence?: number }) => { if (message?.lastSequence) { last = Math.max(last, message.lastSequence); sessionStorage.setItem(key, String(last)) } })
-    const subscribe = () => connection.invoke('Subscribe', last, readClientSubscription()).catch(() => undefined)
     const onSubscriptionChanged = () => { void subscribe(); void client.invalidateQueries({ queryKey: keys.events }) }
     window.addEventListener('hsh-client-subscription-changed', onSubscriptionChanged)
     const connect = async () => {

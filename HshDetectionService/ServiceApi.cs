@@ -411,8 +411,30 @@ public static class ServiceApi
             DateTime to = toUtc?.ToUniversalTime() ?? DateTime.MaxValue;
             var matched = new List<DetectionEventEnvelope>(requestedLimit);
             var clientHistory = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-            long cursor = afterSequence ?? 0;
             const int pageSize = 2000;
+            if (afterSequence is null)
+            {
+                long? beforeSequence = null;
+                while (matched.Count < requestedLimit)
+                {
+                    IReadOnlyList<DetectionEventEnvelope> page = host.Events.ReadLatestBefore(beforeSequence, pageSize);
+                    if (page.Count == 0) break;
+                    beforeSequence = page[^1].Sequence;
+                    foreach (DetectionEventEnvelope item in page)
+                    {
+                        if (!string.IsNullOrWhiteSpace(cameraId) && !string.Equals(item.Source["cameraId"]?.GetValue<string>(), cameraId, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!string.IsNullOrWhiteSpace(scenario) && !string.Equals(item.Scenario, scenario, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (item.OccurredAtUtc < from || item.OccurredAtUtc > to) continue;
+                        if (subscription is not null && (!DetectionHub.Matches(item, subscription) || !DetectionHub.PassesHistoryCooldown(clientHistory, item, subscription))) continue;
+                        matched.Add(item);
+                        if (matched.Count >= requestedLimit) break;
+                    }
+                    if (page.Count < pageSize) break;
+                }
+                return Results.Ok(matched.ToArray());
+            }
+
+            long cursor = afterSequence.Value;
             while (matched.Count < requestedLimit)
             {
                 IReadOnlyList<DetectionEventEnvelope> page = host.Events.ReadAfter(cursor, pageSize);
