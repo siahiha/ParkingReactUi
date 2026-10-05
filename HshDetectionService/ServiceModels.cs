@@ -5,7 +5,7 @@ namespace HshDetectionService;
 
 public sealed class ServiceSettingsDocument
 {
-    public int SchemaVersion { get; set; } = 2;
+    public int SchemaVersion { get; set; } = 3;
     public long Revision { get; set; }
     public string ServiceNodeId { get; set; } = Guid.NewGuid().ToString("N");
     public ServiceHttpSettings Http { get; set; } = new();
@@ -13,6 +13,12 @@ public sealed class ServiceSettingsDocument
     public ServiceRuntimeSettings Runtime { get; set; } = new();
     public ServiceAssociationSettings Association { get; set; } = new();
     public ServiceRetentionSettings Retention { get; set; } = new();
+    /// <summary>
+    /// Application-owned history policy. It controls which processed detections
+    /// become canonical history events; it is not a public query filter and it
+    /// is independent from outbound trigger delivery.
+    /// </summary>
+    public ClientSubscription HistorySubscription { get; set; } = new();
     public List<TriggerDefinition> Triggers { get; set; } = [];
     public List<InvocationDefinition> Invocations { get; set; } = [];
 }
@@ -204,8 +210,9 @@ public class ClientSubscriptionFilter
 }
 
 /// <summary>
-/// Per-connection event policy. It never changes camera inference settings;
-/// it only controls which canonical events a client receives.
+/// Shared filter shape used in two deliberately separate places: the service's
+/// application-owned history profiles and a per-connection SignalR delivery
+/// subscription. It never changes camera inference settings.
 /// </summary>
 public sealed class ClientSubscription : ClientSubscriptionFilter
 {

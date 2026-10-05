@@ -77,7 +77,7 @@ npm run dev
 - preview رخداد انتخاب‌شده در بالای صفحه sticky است؛ فقط گرید اسکرول عمودی دارد و header آن ثابت می‌ماند، و ارتفاع ردیف‌ها برای نمایش رکوردهای بیشتر فشرده شده است
 - اتصال SignalR با نگهداری sequence و replay پس از reconnect؛ polling فقط fallback است
 - تنظیم `History event cooldown (sec)` مستقل برای هر آیتم Plate/Face زیر ROI؛ در نبود trigger، ثبت تکراری canonical history برای همان دوربین/ROI/component را محدود می‌کند
-- فیلد `History event cooldown (sec)` در «آزمایش subscription کلاینت»؛ فقط history و replay/live همان اتصال وب را فیلتر می‌کند و database مشترک یا triggerها را تغییر نمی‌دهد
+- تنظیم subscription چندپروفایلی برنامه با محور تشخیص، دوربین/ROI، requiredهای Face/Plate/Palm، `includeFace`، `includePlate`، `includePalm`، unknown policy، artifact و cooldown؛ این تنظیم فقط روی event canonical ثبت‌شده اثر دارد و پنل تشخیص/تاریخچهٔ عمومی را فیلتر نمی‌کند. trigger مسیر مستقل ارسال به کلاینت است و payload کامل موجود، از جمله Palm، را تحویل می‌دهد.
 - triggerهای سناریویی Plate، Face و Plate+Face با camera scope، identity، confidence و `History event cooldown (sec)`؛ cooldown هر تریگر از Event Store بررسی می‌شود و برای کلید همان سناریو اعمال می‌شود
 - مدیریت سرویس، listener، API key، retention، runtime reload، capability registry و inventory مدل‌ها
 

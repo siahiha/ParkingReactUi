@@ -75,7 +75,6 @@ GET    /api/v1/cameras/{cameraId}
 PUT    /api/v1/cameras/{cameraId}
 PATCH  /api/v1/cameras/{cameraId}
 DELETE /api/v1/cameras/{cameraId}
-
 POST /api/v1/cameras/{cameraId}/start
 POST /api/v1/cameras/{cameraId}/stop
 POST /api/v1/cameras/{cameraId}/restart
@@ -84,6 +83,13 @@ GET  /api/v1/cameras/{cameraId}/statistics
 ```
 
 `PUT/PATCH` باید قبل از apply، source، backend، model reference و processing schema را validate کند.
+
+`GET/PUT /api/v1/settings` بخش `service.historySubscription` را نیز ذخیره می‌کند.
+این بخش شامل `profiles[]` است و هر profile می‌تواند `mode`، `cameraIds`، `roiIds`،
+`faceRequired`/`plateRequired`/`palmRequired`، `includeFace`، `includePlate`,
+`includePalm`، unknown policy، `includeArtifacts`، `windowMs` و `cooldownSeconds`
+داشته باشد. profileها فقط سیاست ثبت داخلی Event Store هستند و query تاریخچه یا
+پنل تشخیص را فیلتر نمی‌کنند؛ دوربین خارج از scope همهٔ تشخیص‌های معتبر را ثبت می‌کند.
 
 ## 5. ROIها و Detection Taskها
 
@@ -258,7 +264,7 @@ DELETE /api/v1/events?fromUtc=...&toUtc=...
 
 برای مصرف زنده، Hub فعال رخداد:
 
-در implementation فعلی endpointهای `/api/v1/events/{eventId}/image`، `/api/v1/events/gaps` و `/api/v1/events/export` وجود ندارند. Queryهای واقعی شامل `afterSequence`، `limit`، `cameraId`، `scenario`، `fromUtc`، `toUtc` و فیلترهای subscription شامل `clientMode`، `faceRequired`، `plateRequired`، `includeFace`، `includePlate`، `includeUnknownFace`، `windowMs`، `clientCooldownSeconds`، `clientCameraIds` و `clientRoiIds` هستند.
+در implementation فعلی endpointهای `/api/v1/events/{eventId}/image`، `/api/v1/events/gaps` و `/api/v1/events/export` وجود ندارند. Queryهای واقعی شامل `afterSequence`، `limit`، `cameraId`، `scenario`، `fromUtc` و `toUtc` هستند. پارامترهای `clientMode`، `faceRequired`، `plateRequired`، `palmRequired`، `includeFace`، `includePlate`، `includePalm`، `includeUnknownFace`، `includeUnknownPalm`، `windowMs`، `clientCooldownSeconds`، `clientCameraIds` و `clientRoiIds` فقط برای مصرف‌کننده‌ای هستند که عمداً Event API را با subscription تحویل کلاینت صدا می‌زند؛ UI عمومی این فیلترها را ارسال نمی‌کند.
 
 `DELETE /api/v1/events` تاریخچه را حذف می‌کند. اگر هر دو پارامتر `fromUtc` و `toUtc` خالی باشند، همهٔ رخدادها حذف می‌شوند؛ در غیر این صورت بازهٔ زمانی انتخاب‌شده حذف می‌شود. `fromUtc` و `toUtc` باید timestamp معتبر ISO-8601 باشند. پوشهٔ artifact هر رخداد نیز پس از حذف رکورد پاک می‌شود و پاسخ شامل `deletedCount` است.
 
@@ -319,7 +325,7 @@ offer/answer اختصاصی و `WebRtcGateway` برای clientهای legacy که
 این pair شدن به معنی رابطهٔ قطعی چهره با خودرو نیست: runtime فاصله، هم‌پوشانی bounding box یا مالکیت خودرو را بررسی نمی‌کند. در همان فریم، اگر برای یک Plate بیش از یک Face مخالف وجود داشته باشد، association مبهم تلقی شده و pair ساخته نمی‌شود؛ در association زمانی نیز باید دقیقاً یک component مخالف در پنجرهٔ زمانی وجود داشته باشد.
 
 
-در نسخهٔ فعلی، policy هر اتصال با متد SignalR به نام `Subscribe(lastSequence, subscription)` تعیین می‌شود و تنظیمات inference دوربین را تغییر نمی‌دهد. فیلدهای اصلی subscription عبارت‌اند از `mode` (`All`، `Plate`، `KnownFace`)، `cameraIds`، `roiIds`، `faceRequired`، `plateRequired`، `includeFace`، `includePlate`، `includeUnknownFace`، `includeArtifacts`، `windowMs` و `cooldownSeconds`. `cooldownSeconds` فقط برای همان اتصال اعمال می‌شود و replay، live و query تاریخچهٔ UI را با کلید plate/face مستقل فیلتر می‌کند؛ برای REST history نام query آن `clientCooldownSeconds` است. اگر `faceRequired` یا `plateRequired` برابر false باشد، component اختیاری است و در صورت شناسایی به همان client ارسال می‌شود.
+در نسخهٔ فعلی، policy تحویل هر اتصال با متد SignalR به نام `Subscribe(lastSequence, subscription)` تعیین می‌شود و تنظیمات inference یا Event Store را تغییر نمی‌دهد. فیلدهای اصلی subscription عبارت‌اند از `mode` (`All`، `Plate`، `Palm`، `KnownFace`، `KnownPalm`)، `cameraIds`، `roiIds`، `faceRequired`، `plateRequired`، `palmRequired`، `includeFace`، `includePlate`، `includePalm`، `includeUnknownFace`، `includeUnknownPalm`، `includeArtifacts`، `windowMs` و `cooldownSeconds`. `cooldownSeconds` فقط برای همان اتصال اعمال می‌شود و پنل عمومی و query عمومی تاریخچه را فیلتر نمی‌کند؛ برای مصرف‌کنندهٔ REST اختصاصی نام query آن `clientCooldownSeconds` است. اگر required مربوط به یک modality برابر false باشد، component اختیاری است و در صورت وجود به همان client ارسال می‌شود. رخداد match‌شدهٔ trigger با componentهای موجود Plate، Face و Palm به‌صورت کامل تحویل می‌شود.
 
 endpointهای `/api/v1/associations` در نسخهٔ فعلی پیاده‌سازی نشده‌اند و نباید توسط client فراخوانی شوند؛ client باید eventهای `PlateOnly`، `FaceRecognition` یا `PlateFaceAssociation` را از Event API/SignalR مصرف کند.
 

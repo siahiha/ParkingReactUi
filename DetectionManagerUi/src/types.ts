@@ -106,6 +106,7 @@ export interface ServiceSettings {
     artifactDays: number;
     webhookRetryDays: number;
   };
+  historySubscription: ClientSubscription;
   triggers: TriggerDefinition[];
   invocations: InvocationDefinition[];
 }

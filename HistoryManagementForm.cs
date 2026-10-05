@@ -6,6 +6,7 @@ namespace HshVisionLab;
 public sealed class HistoryManagementForm : Form
 {
     private readonly DesktopEventStore _store;
+    private readonly Action<DateTime?, DateTime?> _clearRuntimeHistory;
     private readonly TextBox _search = new();
     private readonly ComboBox _scenario = new();
     private readonly ComboBox _deletePreset = new();
@@ -21,9 +22,10 @@ public sealed class HistoryManagementForm : Form
     private int _page;
     private const int PageSize = 50;
 
-    public HistoryManagementForm(DesktopEventStore store)
+    public HistoryManagementForm(DesktopEventStore store, Action<DateTime?, DateTime?> clearRuntimeHistory)
     {
         _store = store;
+        _clearRuntimeHistory = clearRuntimeHistory;
         Text = "Detection history";
         StartPosition = FormStartPosition.CenterParent;
         Size = new Size(1320, 780);
@@ -155,7 +157,7 @@ public sealed class HistoryManagementForm : Form
     private void DeleteAll()
     {
         if (MessageBox.Show(this, "Delete all local events and image evidence?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-        _store.Delete(); RefreshRows();
+        _store.Delete(); _clearRuntimeHistory(null, null); RefreshRows();
     }
 
     private void DeleteRange(int mode, DateTime date)
@@ -171,7 +173,7 @@ public sealed class HistoryManagementForm : Form
         DateTime? to = mode == 3 ? date.ToUniversalTime() : now;
         string label = mode == 3 ? $"before {date:d}" : _deletePreset.Text.ToLowerInvariant();
         if (MessageBox.Show(this, $"Delete local events for {label}?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-        _store.Delete(from, to); RefreshRows();
+        _store.Delete(from, to); _clearRuntimeHistory(from, to); RefreshRows();
     }
 
     private static void ConfigurePicture(PictureBox picture) { picture.Dock = DockStyle.Fill; picture.SizeMode = PictureBoxSizeMode.Zoom; picture.BackColor = Color.Black; }

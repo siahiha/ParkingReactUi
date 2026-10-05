@@ -474,14 +474,19 @@ Drawingهای زندهٔ SVG نباید داخل فایل artifact ذخیره‌
 
 ## ۱۰. تریگرها `/triggers`
 
-در ابتدای همین صفحه، `ClientSubscriptionTester` برای تست policy همان اتصال وب قرار دارد. این بخش تنظیمات دوربین یا trigger سرویس را تغییر نمی‌دهد و فقط با `sessionStorage` ذخیره می‌شود و هنگام اعمال، subscription SignalR و query تاریخچهٔ همان صفحه را به‌روزرسانی می‌کند.
+در ابتدای همین صفحه، تنظیم subscription داخلی برنامه قرار دارد. این بخش چند
+profile دارد و برای هر profile محور تشخیص، دوربین‌ها، ROIها، requiredهای
+Face/Plate/Palm، `includeFace`، `includePlate`، `includePalm`، unknown policy،
+artifact و cooldown را مشخص می‌کند. دوربینی که در هیچ profileای scope نشده باشد
+همهٔ تشخیص‌های معتبر پردازش‌شده‌اش را ثبت می‌کند.
 
-گزینه‌های تست شامل `All`، `Plate` و `KnownFace`، پنجرهٔ association،
-`History event cooldown (sec)`، اجباری‌بودن Face/Plate، ارسال چهرهٔ ناشناس و
-محدودکردن به دوربین‌های انتخابی است. cooldown این بخش فقط تاریخچهٔ همان client را
-فیلتر می‌کند و روی database مشترک، تنظیمات ROI یا triggerها اثر ندارد. این تست
-برای شبیه‌سازی clientهای مستقل استفاده می‌شود؛ هر client واقعی باید subscription
-خودش را هنگام `Subscribe` ارسال کند.
+این سناریو فقط هنگام ساخت رخداد canonical روی ثبت تاریخچه اثر دارد و پنل تشخیص،
+تاریخچهٔ وب یا نرم‌افزارهای دیگر را بر اساس آن فیلتر نمی‌کند. بنابراین همهٔ
+دوربین‌ها و همهٔ رخدادهای ثبت‌شده در این نماها دیده می‌شوند. اگر تریگر یک کلاینت
+match شود، رخداد کامل شامل componentهای موجود Plate، Face و Palm برای آن کلاینت
+ارسال می‌شود. subscription SignalR یک policy تحویل مستقل برای همان connection
+است؛ trigger مسیر ارسال به کلاینت را کنترل می‌کند و `includePalm` در payload
+کامل آن مانند Face و Plate حفظ می‌شود.
 
 دکمهٔ `تریگر جدید` در ردیف اکشن بالای صفحه قرار دارد. ستون چپ فهرست
 تعریف‌های سرویس و cooldown را نشان می‌دهد؛ ستون راست فرم انتخاب‌شده را دارد.

@@ -376,7 +376,13 @@ GET /api/v1/events/{eventId}/artifacts/{artifactId}
 SignalR: /hubs/detections
 ```
 
-پارامترهای `clientMode`، `faceRequired`، `plateRequired`، `includeUnknownFace`، `windowMs`، `clientCameraIds` و `clientRoiIds` برای فیلتر connection-specific در `GET /api/v1/events` پشتیبانی می‌شوند. association تاریخی خودرو/شخص و API مستقل آن هنوز roadmap است.
+پارامترهای `clientMode`، `faceRequired`، `plateRequired`، `palmRequired`،
+`includeFace`، `includePlate`، `includePalm`، `includeUnknownFace`،
+`includeUnknownPalm`، `windowMs`، `clientCooldownSeconds`، `clientCameraIds` و
+`clientRoiIds` برای مصرف‌کننده‌ای که عمداً فیلتر connection-specific می‌خواهد در
+`GET /api/v1/events` پشتیبانی می‌شوند. UI عمومی این پارامترها را ارسال نمی‌کند و
+همهٔ رخدادهای تاریخچه را می‌خواند. association تاریخی خودرو/شخص و API مستقل آن
+هنوز roadmap است.
 
 
 ## 13. معیار پذیرش قرارداد

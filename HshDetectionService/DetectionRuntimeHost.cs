@@ -693,43 +693,57 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
         if (triggerEvaluation.Matched.Count == 0 && triggerEvaluation.Suppressed.Count > 0)
             return;
 
-        int detectionCooldownSeconds = GetDetectionHistoryCooldownSeconds(work.Components);
-        string historyKey = BuildCanonicalHistoryKey(work);
+        // A matched trigger is an explicit request for the complete detection
+        // context. Otherwise the application-owned subscription decides which
+        // processed components are recorded. Neither path changes inference or
+        // filters the public dashboard/history query.
+        HistorySelection selection = triggerEvaluation.Matched.Count > 0
+            ? new HistorySelection(work.Components, 0, true)
+            : SelectHistoryComponents(service.HistorySubscription, camera.Id, work.Components);
+        if (selection.Components.Count == 0)
+            return;
+
+        IReadOnlyList<PendingComponent> historyComponents = selection.Components;
+        int detectionCooldownSeconds = Math.Max(selection.CooldownSeconds, GetDetectionHistoryCooldownSeconds(historyComponents));
+        string historyKey = BuildCanonicalHistoryKey(work.CameraId, historyComponents);
         if (triggerEvaluation.Matched.Count == 0 && detectionCooldownSeconds > 0 &&
             _eventStore.HasRecentDetectionEvent(historyKey, DateTime.UtcNow.AddSeconds(-detectionCooldownSeconds)))
             return;
 
-        DetectionEventEnvelope envelope = BuildEvent(work, eventId, service, triggerEvaluation);
+        DetectionEventEnvelope envelope = BuildEvent(work, historyComponents, eventId, service, triggerEvaluation);
 
-        var savedFullFrames = new HashSet<long>();
-        bool firstFrame = true;
-        foreach (PendingComponent component in work.Components)
+        if (selection.IncludeArtifacts)
         {
-            if (savedFullFrames.Add(component.SourceFrameSequence))
+            var savedFullFrames = new HashSet<long>();
+            bool firstFrame = true;
+            foreach (PendingComponent component in historyComponents)
             {
-                envelope.Artifacts.Add(_artifactStore.SaveBitmap(
-                    eventId,
-                    firstFrame ? "FullFrameRaw" : "AssociatedFrameRaw",
-                    component.FullFrame,
-                    component.SourceFrameSequence,
-                    retention));
-                firstFrame = false;
-            }
+                if (savedFullFrames.Add(component.SourceFrameSequence))
+                {
+                    envelope.Artifacts.Add(_artifactStore.SaveBitmap(
+                        eventId,
+                        firstFrame ? "FullFrameRaw" : "AssociatedFrameRaw",
+                        component.FullFrame,
+                        component.SourceFrameSequence,
+                        retention));
+                    firstFrame = false;
+                }
 
-            string cropType = component.Detection.Kind switch
-            {
-                AnalysisKind.Face => "DetectionCrop",
-                AnalysisKind.Palm => "PalmCrop",
-                _ => "PlateCrop"
-            };
-            envelope.Artifacts.Add(_artifactStore.SaveBitmap(eventId, cropType, component.Crop, component.SourceFrameSequence, retention));
+                string cropType = component.Detection.Kind switch
+                {
+                    AnalysisKind.Face => "DetectionCrop",
+                    AnalysisKind.Palm => "PalmCrop",
+                    _ => "PlateCrop"
+                };
+                envelope.Artifacts.Add(_artifactStore.SaveBitmap(eventId, cropType, component.Crop, component.SourceFrameSequence, retention));
 
-            if (TryGetMetadataBytes(component.Detection, "AlignedFaceJpeg", out byte[]? alignedFace) && alignedFace is not null)
-            {
-                using var stream = new MemoryStream(alignedFace, writable: false);
-                using var decoded = new Bitmap(stream);
-                using var aligned = new Bitmap(decoded);
-                envelope.Artifacts.Add(_artifactStore.SaveBitmap(eventId, "FaceAlignedCrop", aligned, component.SourceFrameSequence, retention));
+                if (TryGetMetadataBytes(component.Detection, "AlignedFaceJpeg", out byte[]? alignedFace) && alignedFace is not null)
+                {
+                    using var stream = new MemoryStream(alignedFace, writable: false);
+                    using var decoded = new Bitmap(stream);
+                    using var aligned = new Bitmap(decoded);
+                    envelope.Artifacts.Add(_artifactStore.SaveBitmap(eventId, "FaceAlignedCrop", aligned, component.SourceFrameSequence, retention));
+                }
             }
         }
 
@@ -742,19 +756,20 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
 
     private DetectionEventEnvelope BuildEvent(
         DetectionWork work,
+        IReadOnlyList<PendingComponent> components,
         string eventId,
         ServiceSettingsDocument service,
         TriggerEvaluation triggerEvaluation)
     {
         CameraSettings camera = _settings.Cameras.FirstOrDefault(item => item.Id.Equals(work.CameraId, StringComparison.OrdinalIgnoreCase)) ?? new CameraSettings { Id = work.CameraId };
-        PendingComponent primary = work.Components[0];
+        PendingComponent primary = components[0];
         string taskId = GetMetadataString(primary.Detection, "ProcessingItemId") ?? string.Empty;
         string taskName = GetMetadataString(primary.Detection, "ProcessingItemName") ?? string.Empty;
         string roiName = GetMetadataString(primary.Detection, "RoiName") ?? string.Empty;
         string roiId = GetMetadataString(primary.Detection, "RoiId") ?? string.Empty;
-        bool hasPlate = work.Components.Any(item => item.Detection.Kind == AnalysisKind.Plate);
-        bool hasFace = work.Components.Any(item => item.Detection.Kind == AnalysisKind.Face);
-        bool hasPalm = work.Components.Any(item => item.Detection.Kind == AnalysisKind.Palm);
+        bool hasPlate = components.Any(item => item.Detection.Kind == AnalysisKind.Plate);
+        bool hasFace = components.Any(item => item.Detection.Kind == AnalysisKind.Face);
+        bool hasPalm = components.Any(item => item.Detection.Kind == AnalysisKind.Palm);
 
         var envelope = new DetectionEventEnvelope
         {
@@ -777,7 +792,7 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
                     : hasPlate && hasPalm
                         ? "PlatePalmAssociation"
                         : hasFace ? "FaceRecognition" : hasPalm ? "PalmRecognition" : "PlateOnly",
-            OccurredAtUtc = work.Timestamp,
+            OccurredAtUtc = components.Min(item => item.Timestamp),
             ReceivedAtUtc = DateTime.UtcNow,
             Source = new JsonObject
             {
@@ -787,14 +802,14 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
                 ["cameraCode"] = camera.CameraCode,
                 ["taskId"] = taskId,
                 ["taskName"] = taskName,
-                ["taskIds"] = new JsonArray(work.Components.Select(item => GetMetadataString(item.Detection, "ProcessingItemId")).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).Select(value => JsonValue.Create(value)).ToArray()),
+                ["taskIds"] = new JsonArray(components.Select(item => GetMetadataString(item.Detection, "ProcessingItemId")).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).Select(value => JsonValue.Create(value)).ToArray()),
                 ["roiId"] = roiId,
                 ["roiName"] = roiName,
-                ["roiIds"] = new JsonArray(work.Components.Select(item => GetMetadataString(item.Detection, "RoiId")).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).Select(value => JsonValue.Create(value)).ToArray()),
+                ["roiIds"] = new JsonArray(components.Select(item => GetMetadataString(item.Detection, "RoiId")).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).Select(value => JsonValue.Create(value)).ToArray()),
                 ["sourceFrameSequence"] = primary.SourceFrameSequence,
-                ["sourceFrameSequences"] = new JsonArray(work.Components.Select(item => JsonValue.Create(item.SourceFrameSequence)).Distinct().ToArray()),
-                ["associationType"] = work.AssociationType,
-                ["associationAgeMs"] = (int)Math.Max(0, Math.Round((work.Components.Max(item => item.Timestamp) - work.Components.Min(item => item.Timestamp)).TotalMilliseconds)),
+                ["sourceFrameSequences"] = new JsonArray(components.Select(item => JsonValue.Create(item.SourceFrameSequence)).Distinct().ToArray()),
+                ["associationType"] = components.Count > 1 ? work.AssociationType : "Standalone",
+                ["associationAgeMs"] = (int)Math.Max(0, Math.Round((components.Max(item => item.Timestamp) - components.Min(item => item.Timestamp)).TotalMilliseconds)),
                 ["frameWidth"] = primary.FullFrame.Width,
                 ["frameHeight"] = primary.FullFrame.Height
             },
@@ -809,7 +824,7 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
             }
         };
 
-        foreach (PendingComponent component in work.Components)
+        foreach (PendingComponent component in components)
         {
             string key = component.Detection.Kind switch
             {
@@ -1060,33 +1075,124 @@ public sealed class DetectionRuntimeHost : IAsyncDisposable
 
     private static string NormalizeTriggerKeyPart(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
 
+    private sealed record HistorySelection(
+        IReadOnlyList<PendingComponent> Components,
+        int CooldownSeconds,
+        bool IncludeArtifacts);
+
+    private static IReadOnlyList<ClientSubscriptionFilter> GetHistoryProfiles(ClientSubscription? subscription)
+    {
+        if (subscription is null) return [];
+        if (subscription.Profiles.Count > 0)
+            return subscription.Profiles.Cast<ClientSubscriptionFilter>().ToArray();
+
+        // Keep the legacy single-profile shape valid for existing service-settings
+        // files. A completely empty/default subscription means all cameras and all
+        // processed components are recorded.
+        bool hasLegacyFilter = !subscription.Mode.Equals("All", StringComparison.OrdinalIgnoreCase) ||
+            subscription.CameraIds.Count > 0 || subscription.RoiIds.Count > 0 ||
+            subscription.FaceRequired || subscription.PlateRequired || subscription.PalmRequired ||
+            !subscription.IncludeFace || !subscription.IncludePlate || !subscription.IncludePalm ||
+            !subscription.IncludeUnknownFace || !subscription.IncludeUnknownPalm ||
+            !subscription.IncludeArtifacts || subscription.WindowMs != 1500 || subscription.CooldownSeconds > 0;
+        return hasLegacyFilter ? [subscription] : [];
+    }
+
+    private static HistorySelection SelectHistoryComponents(
+        ClientSubscription? subscription,
+        string cameraId,
+        IReadOnlyList<PendingComponent> components)
+    {
+        ClientSubscriptionFilter[] profiles = GetHistoryProfiles(subscription).ToArray();
+        if (profiles.Length == 0)
+            return new HistorySelection(components, 0, true);
+
+        ClientSubscriptionFilter[] scoped = profiles.Where(profile =>
+            profile.CameraIds.Count == 0 || profile.CameraIds.Contains(cameraId, StringComparer.OrdinalIgnoreCase)).ToArray();
+        // A camera without any subscription scope keeps its normal behavior.
+        if (scoped.Length == 0)
+            return new HistorySelection(components, 0, true);
+
+        ClientSubscriptionFilter[] matched = scoped.Where(profile => MatchesHistoryProfile(profile, components)).ToArray();
+        if (matched.Length == 0)
+            return new HistorySelection([], 0, true);
+
+        PendingComponent[] selected = components
+            .Where(component => matched.Any(profile => HistoryComponentAllowed(profile, component)))
+            .ToArray();
+        return new HistorySelection(
+            selected,
+            matched.Max(profile => Math.Clamp(profile.CooldownSeconds, 0, 3600)),
+            matched.Any(profile => profile.IncludeArtifacts));
+    }
+
+    private static bool MatchesHistoryProfile(ClientSubscriptionFilter profile, IReadOnlyList<PendingComponent> components)
+    {
+        profile.NormalizeFields();
+        if (profile.RoiIds.Count > 0 &&
+            !components.Any(component => profile.RoiIds.Contains(component.RoiKey, StringComparer.OrdinalIgnoreCase))) return false;
+        int associationAgeMs = components.Count == 0
+            ? 0
+            : (int)Math.Max(0, Math.Round((components.Max(item => item.Timestamp) - components.Min(item => item.Timestamp)).TotalMilliseconds));
+        if (profile.WindowMs > 0 && associationAgeMs > profile.WindowMs) return false;
+
+        bool hasPlate = components.Any(item => item.Detection.Kind == AnalysisKind.Plate);
+        bool hasFace = components.Any(item => item.Detection.Kind == AnalysisKind.Face);
+        bool hasPalm = components.Any(item => item.Detection.Kind == AnalysisKind.Palm);
+        bool knownFace = components.Any(item => item.Detection.Kind == AnalysisKind.Face && !IsUnknown(item.Detection));
+        bool knownPalm = components.Any(item => item.Detection.Kind == AnalysisKind.Palm && !IsUnknown(item.Detection));
+        bool eligibleFace = hasFace && (profile.IncludeUnknownFace || knownFace);
+        bool eligiblePalm = hasPalm && (profile.IncludeUnknownPalm || knownPalm);
+        if (profile.FaceRequired && !eligibleFace) return false;
+        if (profile.PlateRequired && !hasPlate) return false;
+        if (profile.PalmRequired && !eligiblePalm) return false;
+
+        return profile.Mode.Equals("Plate", StringComparison.OrdinalIgnoreCase) ? hasPlate :
+            profile.Mode.Equals("Palm", StringComparison.OrdinalIgnoreCase) ? hasPalm :
+            profile.Mode.Equals("KnownFace", StringComparison.OrdinalIgnoreCase) ? knownFace :
+            profile.Mode.Equals("KnownPalm", StringComparison.OrdinalIgnoreCase) ? knownPalm :
+            hasPlate || eligibleFace || eligiblePalm;
+    }
+
+    private static bool HistoryComponentAllowed(ClientSubscriptionFilter profile, PendingComponent component)
+    {
+        if (profile.RoiIds.Count > 0 && !profile.RoiIds.Contains(component.RoiKey, StringComparer.OrdinalIgnoreCase)) return false;
+        return component.Detection.Kind switch
+        {
+            AnalysisKind.Face => profile.IncludeFace && (profile.IncludeUnknownFace || !IsUnknown(component.Detection)),
+            AnalysisKind.Palm => profile.IncludePalm && (profile.IncludeUnknownPalm || !IsUnknown(component.Detection)),
+            AnalysisKind.Plate => profile.IncludePlate,
+            _ => false
+        };
+    }
+
     private static int GetDetectionHistoryCooldownSeconds(IReadOnlyList<PendingComponent> components) =>
         components.Select(item => GetMetadataInt(item.Detection, "HistoryEventCooldownSeconds"))
             .DefaultIfEmpty(0)
             .Max(value => Math.Clamp(value, 0, 3600));
 
-    private static string BuildCanonicalHistoryKey(DetectionWork work)
+    private static string BuildCanonicalHistoryKey(string cameraId, IReadOnlyList<PendingComponent> components)
     {
-        string roi = string.Join(",", work.Components
+        string roi = string.Join(",", components
             .Select(item => NormalizeTriggerKeyPart(item.RoiKey))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
-        string plates = string.Join(",", work.Components
+        string plates = string.Join(",", components
             .Where(item => item.Detection.Kind == AnalysisKind.Plate)
             .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "PlateText") ?? item.Detection.Label))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
-        string faces = string.Join(",", work.Components
+        string faces = string.Join(",", components
             .Where(item => item.Detection.Kind == AnalysisKind.Face)
             .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "IdentityId") ?? item.Detection.Label))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
-        string palms = string.Join(",", work.Components
+        string palms = string.Join(",", components
             .Where(item => item.Detection.Kind == AnalysisKind.Palm)
             .Select(item => NormalizeTriggerKeyPart(GetMetadataString(item.Detection, "IdentityId") ?? item.Detection.Label))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item, StringComparer.OrdinalIgnoreCase));
-        return string.Join("\u001f", NormalizeTriggerKeyPart(work.CameraId), roi, plates, faces, palms);
+        return string.Join("\u001f", NormalizeTriggerKeyPart(cameraId), roi, plates, faces, palms);
     }
 
     private static JsonObject TriggerKeysJson(IReadOnlyDictionary<string, string> keys)

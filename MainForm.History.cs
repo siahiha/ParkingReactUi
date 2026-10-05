@@ -9,62 +9,26 @@ public sealed partial class MainForm
             DisposePlateCard(control);
         }
 
-        var items = _cameras.Values
-            .SelectMany(camera => camera.History.Select(item => new
-            {
-                Camera = camera.Settings.Name,
-                Label = item.Text,
-                Crop = item.Crop,
-                Confidence = item.Confidence,
-                Timestamp = item.Timestamp,
-                Archived = false
-            }))
-            .Concat(_cameras.Values.SelectMany(camera => camera.ArchivedHistory.Select(item => new
-            {
-                Camera = camera.Settings.Name,
-                Label = item.Text,
-                Crop = item.Crop,
-                Confidence = item.Confidence,
-                Timestamp = item.Timestamp,
-                Archived = true
-            })) )
-            .Concat(_cameras.Values.SelectMany(camera => camera.AnalysisHistory.Select(item => new
-            {
-                Camera = camera.Settings.Name,
-                Label = FormatAnalysisLabel(item.Detection),
-                Crop = item.Crop,
-                Confidence = item.Detection.Confidence,
-                Timestamp = item.Timestamp,
-                Archived = false
-            })))
-            .Concat(_cameras.Values.SelectMany(camera => camera.ArchivedAnalysisHistory.Select(item => new
-            {
-                Camera = camera.Settings.Name,
-                Label = FormatAnalysisLabel(item.Detection),
-                Crop = item.Crop,
-                Confidence = item.Detection.Confidence,
-                Timestamp = item.Timestamp,
-                Archived = true
-            })))
-            .OrderByDescending(entry => entry.Timestamp)
-            .Take(100)
-            .ToArray();
-
-        foreach (var entry in items.Reverse())
+        foreach (DesktopEventRecord entry in _eventStore.Query(limit: 100).Reverse())
         {
-            try
-            {
-                AddPlateCard(
-                    new Bitmap(entry.Crop),
-                    entry.Camera,
-                    entry.Label,
-                    entry.Confidence,
-                    entry.Timestamp);
-            }
-            finally
-            {
-                if (entry.Archived) entry.Crop.Dispose();
-            }
+            Bitmap? crop = LoadEventCrop(entry.CropPath);
+            if (crop is null) continue;
+            AddPlateCard(crop, entry.CameraName, entry.Label, entry.Confidence, entry.OccurredAtUtc.ToLocalTime());
+        }
+    }
+
+    private static Bitmap? LoadEventCrop(string? path)
+    {
+        string fullPath = DesktopEventStore.ResolvePath(path);
+        if (!File.Exists(fullPath)) return null;
+        try
+        {
+            using Image image = Image.FromFile(fullPath);
+            return new Bitmap(image);
+        }
+        catch
+        {
+            return null;
         }
     }
 

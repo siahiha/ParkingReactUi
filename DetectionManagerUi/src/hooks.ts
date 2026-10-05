@@ -1,39 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { api, serviceUrl } from './api'
 import type { EventDeletionRange } from './api'
-import type { CameraSettings, ClientSubscription, ClientSubscriptionProfile, DetectionEvent, InvocationDefinition, TriggerDefinition } from './types'
+import type { CameraSettings, DetectionEvent, InvocationDefinition, TriggerDefinition } from './types'
 export const keys = { status: ['status'], cameras: ['cameras'], settings: ['settings'], capabilities: ['capabilities'], models: ['models'], people: ['people'], triggers: ['triggers'], invocations: ['invocations'], invocationLogs: ['invocation-logs'], events: ['events'] }
-export const clientSubscriptionKey = 'hsh-client-subscription'
-export const defaultClientSubscriptionProfile = (): ClientSubscriptionProfile => ({ id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '') : `${Date.now()}${Math.random()}`, name: 'پروفایل جدید', mode: 'All', cameraIds: [], roiIds: [], faceRequired: false, plateRequired: false, palmRequired: false, includeFace: true, includePlate: true, includePalm: true, includeUnknownFace: true, includeUnknownPalm: true, includeArtifacts: true, windowMs: 1500, cooldownSeconds: 0 })
-export const defaultClientSubscription = (): ClientSubscription => ({ profiles: [] })
-export function readClientSubscription(): ClientSubscription {
-  try {
-    const value = JSON.parse(sessionStorage.getItem(clientSubscriptionKey) ?? 'null') as Partial<ClientSubscription> | null
-    if (Array.isArray(value?.profiles)) return { profiles: value.profiles.map(profile => ({ ...defaultClientSubscriptionProfile(), ...(profile as Partial<ClientSubscriptionProfile>) })) }
-    // Migrate the previous single-profile shape stored by older UI builds.
-    const legacyValue = value as unknown as Partial<ClientSubscriptionProfile> | null
-    if (legacyValue && typeof legacyValue.mode === 'string') {
-      const legacy = legacyValue as ClientSubscriptionProfile
-      return { profiles: [{ ...defaultClientSubscriptionProfile(), ...legacy, id: legacy.id ?? 'legacy', name: legacy.name ?? 'پروفایل فعلی' }] }
-    }
-    return defaultClientSubscription()
-  } catch { return defaultClientSubscription() }
-}
-export function saveClientSubscription(value: ClientSubscription) {
-  sessionStorage.setItem(clientSubscriptionKey, JSON.stringify(value))
-  window.dispatchEvent(new Event('hsh-client-subscription-changed'))
-}
-export function useClientSubscription() {
-  const [value, setValue] = useState<ClientSubscription>(() => readClientSubscription())
-  useEffect(() => {
-    const update = () => setValue(readClientSubscription())
-    window.addEventListener('hsh-client-subscription-changed', update)
-    return () => window.removeEventListener('hsh-client-subscription-changed', update)
-  }, [])
-  return value
-}
 export function useServiceStatus() { return useQuery({ queryKey: keys.status, queryFn: api.status, refetchInterval: 5000 }) }
 export function useCameras() { return useQuery({ queryKey: keys.cameras, queryFn: api.cameras, refetchInterval: 5000 }) }
 export function useCamera(id?: string) { return useQuery({ queryKey: ['camera', id], queryFn: () => api.camera(id!), enabled: Boolean(id) }) }
@@ -50,12 +21,13 @@ export function usePersonSamples(id?: string) { return useQuery({ queryKey: ['sa
 export function usePersonPalmSamples(id?: string) { return useQuery({ queryKey: ['palm-samples', id], queryFn: () => api.palmSamples(id!), enabled: Boolean(id) }) }
 export function usePersonPlates(id?: string) { return useQuery({ queryKey: ['person-plates', id], queryFn: () => api.personPlates(id!), enabled: Boolean(id) }) }
 export function useEvents(query = '', limit = 200) {
-  const subscription = useClientSubscription()
-  const subscriptionKey = JSON.stringify(subscription)
   const client = useQueryClient()
-  const queryKey = [...keys.events, query, limit, subscriptionKey]
+  const queryKey = [...keys.events, query, limit]
   return useQuery({ queryKey, queryFn: async () => {
-    const batch = await api.events(query, subscription, limit)
+    // The public dashboard/history views always consume the canonical event
+    // stream. Client trigger subscriptions must not hide other cameras from
+    // these views.
+    const batch = await api.events(query, undefined, limit)
     // REST polling may return an older page while SignalR has already added
     // a newer event to the same cache. Merge both sets so a live card is not
     // removed by the next five-second polling refresh.
@@ -92,8 +64,7 @@ export function useDetectionStream() {
       if (stopped || pending.length === 0) return
       const batch = pending
       pending = []
-      const subscriptionKey = JSON.stringify(readClientSubscription())
-      client.setQueryData<DetectionEvent[]>([...keys.events, '', 200, subscriptionKey], old => {
+       client.setQueryData<DetectionEvent[]>([...keys.events, '', 200], old => {
         const merged = new Map<string, DetectionEvent>()
         for (const item of old ?? []) merged.set(item.eventId, item)
         for (const item of batch) merged.set(item.eventId, item)
@@ -106,7 +77,7 @@ export function useDetectionStream() {
       pending.push(item)
       if (flushTimer === undefined) flushTimer = window.setTimeout(flush, 50)
     }
-    const subscribe = () => connection.invoke('Subscribe', last, readClientSubscription()).catch(() => undefined)
+    const subscribe = () => connection.invoke('Subscribe', last, { profiles: [] }).catch(() => undefined)
     const resync = async () => {
       try {
         const status = await api.status()
@@ -122,8 +93,6 @@ export function useDetectionStream() {
     connection.on('cursorExpired', () => { void client.invalidateQueries({ queryKey: keys.events }); void resync() })
     connection.on('replayStarted', () => undefined)
     connection.on('replayCompleted', (message: { lastSequence?: number }) => { if (message?.lastSequence) { last = Math.max(last, message.lastSequence); sessionStorage.setItem(key, String(last)) } })
-    const onSubscriptionChanged = () => { void subscribe(); void client.invalidateQueries({ queryKey: keys.events }) }
-    window.addEventListener('hsh-client-subscription-changed', onSubscriptionChanged)
     const connect = async () => {
       try {
         await connection.start()
@@ -143,7 +112,7 @@ export function useDetectionStream() {
     }
     connection.onreconnected(() => { void subscribe() })
     void connect()
-    return () => { stopped = true; if (flushTimer !== undefined) window.clearTimeout(flushTimer); pending = []; window.removeEventListener('hsh-client-subscription-changed', onSubscriptionChanged); connection.off('detection', apply); void connection.stop() }
+    return () => { stopped = true; if (flushTimer !== undefined) window.clearTimeout(flushTimer); pending = []; connection.off('detection', apply); void connection.stop() }
   })
 }
 function useEffectOnce(effect: () => void | (() => void)) { useEffect(effect, []) }

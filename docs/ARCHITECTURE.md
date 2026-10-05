@@ -54,6 +54,16 @@ Source → frame slot/queue → latest-preview slot → preview worker (≤15 FP
        → detection / overlay / history / UI event
 ```
 
+در Windows، مسیر ثبت رخداد از مسیر پردازش تصویر جداست: `MainForm` نتیجهٔ هر دوربین
+را به `DesktopHistorySubscriptionMatcher` می‌دهد و فقط وقتی profile آن دوربین/ROI
+و محور/requiredها را پاس کند، رکورد نهایی را به `DesktopEventStore` می‌فرستد.
+برای requiredهای ترکیبی، component خام در رکورد staging نگه‌داری می‌شود؛ مثلاً
+`Mode=Plate` با `FaceRequired=true` و `PlateRequired=true` تا زمان pair شدن در
+`WindowMs` صبر می‌کند و سپس یک رکورد `PlateFace` می‌سازد. staging هرگز در query،
+پنل تشخیص یا تاریخچهٔ Windows نمایش داده نمی‌شود. پنل تشخیص و بازسازی تاریخچه از
+رکوردهای نهایی Event Store می‌خوانند، در حالی که `TriggerDefinition` مسیر مستقل
+ارسال payload کامل موجود به کلاینت است و `includePalm` را نیز حفظ می‌کند.
+
 هر دوربین یک `CameraRuntime`، یک `FrameSource`، setting، state Motion و یک `CameraPipelineCoordinator` مستقل دارد. reader مربوط به RTSP فقط فریم را دریافت و در slotهای latest-frame می‌گذارد؛ ساخت preview، resize، overlay و callback UI در worker مستقل و با سقف ۱۵ FPS انجام می‌شود تا کندی UI یا تبدیل `Bitmap` خواندن stream را متوقف نکند. `FrameSource` با `BufferCount = 0` فقط جدیدترین فریم را نگه می‌دارد؛ مقدار مثبت صف محدود همان دوربین را فعال می‌کند.
 
 ## مسیرهای capture و کلاینت وب
@@ -122,7 +132,8 @@ timer فعال نگه نمی‌دارند. این محدودسازی فقط مص
 - `CameraPipelineCoordinator` برای هر ROI فعال فهرست pipeline مستقل می‌سازد و ROIها را موازی اجرا می‌کند؛ Plate، Face و Palm هر سه از `ProcessingRegistry` و registration ماژول خود ساخته می‌شوند. `ProcessingMode` در هر ROI تعیین می‌کند pipelineهای داخل آن زنجیره‌ای (`Sequential`) یا همزمان (`Parallel`) باشند. در حالت موازی، هر pipeline ورودی مستقل دارد و به خروجی/تصویر pipeline دیگر وابسته نیست. `CameraRuntime` فقط lifecycle/capture، Motion، هندسهٔ ROI و policy خروجی را نگه می‌دارد و به concrete type یا factory مخصوص قابلیت‌ها وابسته نیست. state، tracker و محدودیت FPS بین ROIها مشترک نیستند.
 - graph پردازش در `CameraPipelineCoordinator` به‌صورت immutable و قابل تعویض نگه‌داری می‌شود. اجرای inference یک lease کوتاه روی graph می‌گیرد، اما قفل coordinator را در طول inference نگه نمی‌دارد؛ بنابراین status/API پشت اجرای ONNX منتظر نمی‌مانند. هنگام rebuild، graph قبلی فقط پس از پایان inferenceهای فعال dispose می‌شود.
 - صف event ذخیره‌سازی bounded است و ظرفیت آن از `Service.Runtime.MaxEventQueueLength` می‌آید. در صورت پرشدن صف، artifactهای رخداد جدید آزاد و شمارندهٔ `droppedEventCount` افزایش می‌یابد تا فشار ذخیره‌سازی باعث رشد بی‌نهایت حافظه نشود.
-- سه سطح cooldown از هم مستقل‌اند: `EventCooldownSeconds` در هر processing item برای ثبت canonical history، `ClientSubscription.CooldownSeconds` برای فیلتر replay/live همان اتصال، و `TriggerDefinition.CooldownSeconds` برای اجرای همان تریگر. برای سطح اول، `DetectionHistory(HistoryKey, OccurredAtUtc)` با ایندکس lookup بررسی می‌شود و در صورت تکراری‌بودن، `DetectionEvents` جدید ساخته نمی‌شود؛ برای سطح trigger، `TriggerHistory(TriggerId, TriggerKey, OccurredAtUtc)` فقط رکوردهای موفق همان تریگر را بررسی می‌کند. هر دو ردیف در transaction رخداد ثبت و هنگام حذف رخداد پاک می‌شوند.
+- cooldownها مستقل‌اند: `EventCooldownSeconds` در هر processing item و `HistorySubscription.Profiles[].CooldownSeconds` برای ثبت داخلی canonical history، `ClientSubscription.CooldownSeconds` برای تحویل replay/live همان اتصال، و `TriggerDefinition.CooldownSeconds` برای اجرای همان تریگر. در سرویس، `HistorySubscription` فقط سناریوی ثبت داخلی است و فیلتر نمایش عمومی نیست؛ در Windows نیز filter پس از query نیست، بلکه قبل از ساخت رکورد نهایی اعمال می‌شود و پنل از همان رکوردهای نهایی Event Store می‌خواند. برای ثبت داخلی، `DetectionHistory(HistoryKey, OccurredAtUtc)` با ایندکس lookup بررسی می‌شود؛ برای trigger، `TriggerHistory(TriggerId, TriggerKey, OccurredAtUtc)` فقط رکوردهای موفق همان تریگر را بررسی می‌کند. هر دو ردیف در transaction رخداد ثبت و هنگام حذف رخداد پاک می‌شوند.
+- در Windows مستقل نیز `DesktopHistorySubscriptionMatcher` قبل از append داخلی همین جداسازی را اعمال می‌کند، staging را از query کنار می‌گذارد و `DesktopAutomationEngine` trigger را مستقل ارزیابی می‌کند؛ اگر trigger match شود، subscription داخلی مانع ارسال payload کامل نمی‌شود. حذف از `Detection history` علاوه بر Event Store، archive و history حافظهٔ runtime را پاک می‌کند.
 - لایسنس featureمحور جلوی ساخت detector/Pipeline غیرمجاز را می‌گیرد، اما مانع مطلق مهندسی معکوس روی دستگاه مشتری نیست.
 ### استقلال detector پلاک و OCR
 

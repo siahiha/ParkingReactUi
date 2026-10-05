@@ -4,7 +4,18 @@
 
 > **مرز implementation فعلی:** `EventStore` و replay ترتیبی SignalR فعال هستند و event قبل از broadcast در SQLite ثبت می‌شود. outbox مستقل، dispatcher webhook و API gap جداگانه در نسخهٔ فعلی وجود ندارند و بخش‌های مربوط به آن‌ها در این سند roadmap محسوب می‌شوند.
 
-هر connection در Hub subscription مستقل دارد. `Subscribe(lastSequence, ClientSubscription)` فیلترهای `All`، `Plate`، `Palm`، `KnownFace` و `KnownPalm`، اجباری‌بودن componentها، unknown face/palm، scope دوربین/ROI، پنجرهٔ association و `CooldownSeconds` را برای همان کلاینت اعمال می‌کند. این cooldown فقط replay/live همان connection است و با cooldown ثبت canonical یا cooldown تریگر قاطی نمی‌شود.
+هر connection در Hub subscription مستقل دارد. `Subscribe(lastSequence, ClientSubscription)`
+فقط سیاست تحویل همان کلاینت را اعمال می‌کند و می‌تواند mode، required، scope،
+unknown policy و `includeFace`، `includePlate` و `includePalm` را مشخص کند. این
+فیلتر روی پنل عمومی یا Event Store اثر ندارد. `CooldownSeconds` فقط replay/live
+همان connection است و با سناریوی ثبت تاریخچه، cooldown ثبت canonical یا cooldown
+تریگر قاطی نمی‌شود.
+
+سناریوی ثبت داخلی برنامه جدا از Hub در `ServiceSettingsDocument.HistorySubscription`
+ذخیره می‌شود. profileهای آن با mode، camera/ROI scope، requiredها و includeهای
+Face/Plate/Palm مشخص می‌کنند چه componentهایی وارد Event Store شوند. این policy
+روی پنل عمومی یا query تاریخچه فیلتر اعمال نمی‌کند. `TriggerDefinition` مسیر مستقل
+ارسال به کلاینت است؛ trigger match‌شده context کامل موجود، شامل Palm، را تحویل می‌دهد.
 
 ارسال live به UI به‌تنهایی قابل‌اعتماد نیست. UI ممکن است خاموش، قطع شبکه یا در حال restart باشد. بنابراین سرویس باید مستقل از وضعیت UI تشخیص بدهد، event را ذخیره کند و بعداً امکان replay بدهد.
 

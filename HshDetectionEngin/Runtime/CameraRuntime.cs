@@ -85,6 +85,40 @@ public class CameraRuntime : IDisposable
     public IReadOnlyList<HistoryItem> ArchivedHistory => CameraHistoryArchive.LoadPlate(Settings.Id);
     public IReadOnlyList<AnalysisHistoryItem> ArchivedAnalysisHistory => CameraHistoryArchive.LoadAnalysis(Settings.Id);
 
+    public void ClearDetectionHistory(DateTime? fromUtc = null, DateTime? toUtc = null)
+    {
+        DateTime? from = fromUtc?.ToUniversalTime();
+        DateTime? to = toUtc?.ToUniversalTime();
+        bool clearAll = !from.HasValue && !to.HasValue;
+
+        lock (_historyGate)
+        {
+            foreach (HistoryItem item in _history.Where(item => IsInRange(item.Timestamp, from, to)).ToArray())
+                item.Crop.Dispose();
+            _history.RemoveAll(item => IsInRange(item.Timestamp, from, to));
+        }
+
+        lock (_analysisHistoryGate)
+        {
+            foreach (AnalysisHistoryItem item in _analysisHistory.Where(item => IsInRange(item.Timestamp, from, to)).ToArray())
+                item.Crop.Dispose();
+            _analysisHistory.RemoveAll(item => IsInRange(item.Timestamp, from, to));
+        }
+
+        if (clearAll)
+        {
+            lock (_overlayGate) _analysisHistoryTimes.Clear();
+        }
+
+        CameraHistoryArchive.Remove(Settings.Id, from, to);
+    }
+
+    private static bool IsInRange(DateTime timestamp, DateTime? fromUtc, DateTime? toUtc)
+    {
+        DateTime utc = timestamp.ToUniversalTime();
+        return (!fromUtc.HasValue || utc >= fromUtc.Value) && (!toUtc.HasValue || utc <= toUtc.Value);
+    }
+
     /// <summary>
     /// Returns the raw source frame captured for the latest detection pass.
     /// This is separate from FrameReady, which may contain ROI and detection
@@ -1407,6 +1441,18 @@ internal static class CameraHistoryArchive
     public static IReadOnlyList<CameraRuntime.AnalysisHistoryItem> LoadFace(string cameraId) => LoadAnalysis(cameraId, AnalysisKind.Face);
     public static IReadOnlyList<CameraRuntime.AnalysisHistoryItem> LoadPalm(string cameraId) => LoadAnalysis(cameraId, AnalysisKind.Palm);
 
+    public static void Remove(string cameraId, DateTime? fromUtc, DateTime? toUtc)
+    {
+        lock (Gate)
+        {
+            List<Entry> entries = ReadEntries().ToList();
+            entries.RemoveAll(entry => entry.CameraId == cameraId &&
+                (!fromUtc.HasValue || entry.Timestamp.ToUniversalTime() >= fromUtc.Value) &&
+                (!toUtc.HasValue || entry.Timestamp.ToUniversalTime() <= toUtc.Value));
+            WriteEntries(entries);
+        }
+    }
+
     private static bool TryAppend(Entry entry)
     {
         if (string.IsNullOrWhiteSpace(entry.CropBase64)) return false;
@@ -1424,10 +1470,7 @@ internal static class CameraHistoryArchive
                 entries.RemoveAll(item => item.CameraId == entry.CameraId);
                 entries.AddRange(cameraEntries);
 
-                string path = FilePath;
-                string tempPath = path + ".tmp";
-                File.WriteAllText(tempPath, JsonSerializer.Serialize(entries, JsonOptions), Encoding.UTF8);
-                File.Move(tempPath, path, true);
+                WriteEntries(entries);
                 return true;
             }
             catch
@@ -1448,6 +1491,14 @@ internal static class CameraHistoryArchive
         {
             return [];
         }
+    }
+
+    private static void WriteEntries(IReadOnlyList<Entry> entries)
+    {
+        string path = FilePath;
+        string tempPath = path + ".tmp";
+        File.WriteAllText(tempPath, JsonSerializer.Serialize(entries, JsonOptions), Encoding.UTF8);
+        File.Move(tempPath, path, true);
     }
 
     private static string EncodeCrop(Bitmap bitmap)

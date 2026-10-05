@@ -15,13 +15,13 @@
 | Event type/scenario | حالت‌های recognized/unknown، standalone و associationهای پشتیبانی‌شده نام‌گذاری و در backend، API، وب و Windows یکسان استفاده شوند. |
 | Association | association با هر modality سازگار موجود (حداقل Plate و modalityهای identity) در same-frame، temporal و standalone بررسی شود؛ اگر از نظر دامنه معتبر نیست، دلیل در قرارداد نوشته شود. |
 | Trigger | فیلتر نوع تشخیص، recognized/unknown، label، identity، confidence، similarity، camera/task/ROI و cooldown/history key پشتیبانی شود. UI نباید تنها راه تنظیم modality باشد؛ runtime باید آن را مستقل ارزیابی کند. |
-| Client subscription | mode، required، include/exclude و unknown policy برای modality اضافه شود؛ eventِ فقط همان modality باید از REST و SignalR تحویل بگیرد. |
+| Client subscription | mode، required، camera/ROI scope، `includeFace`/`includePlate`/`includePalm` و unknown policy برای subscription داخلی و تحویل کلاینت پشتیبانی شود؛ subscription داخلی نباید پنل عمومی یا تاریخچهٔ عمومی را فیلتر کند و trigger باید مسیر مستقل ارسال با payload کامل باشد. |
 | Invocation | event type، فیلترها، sourceهای JSON، sourceهای باینری/Base64 و crop اختصاصی در mapping editor و delivery runtime موجود باشد. |
 | Web UI | Dashboard، Events، Event detail، search/filter، preview artifact، Trigger editor، Client Subscription و Invocation editor نمایش و تنظیم شوند. |
 | Windows UI | live event، history/rebuild، trigger، invocation، association و identity tools modality را با نام و وضعیت درست نمایش دهند. هیچ متن hardcode‌شدهٔ Face/Plate نباید برای modality جدید استفاده شود. |
 | API/SDK types | مدل‌های TypeScript و C#، queryهای legacy، serialization و backward compatibility به‌روزرسانی شوند. |
 | Documentation | event contract، API، triggers، invocations، README و این چک‌لیست به‌روزرسانی شوند و نمونهٔ payload واقعی اضافه شود. |
-| Tests | حداقل unit/integration برای payload، subscriptionِ standalone، trigger recognized/unknown، cooldown key، invocation crop و هر دو UI build اجرا شود. |
+| Tests | حداقل unit/integration برای payload کامل Plate/Face/Palm، سناریوی تاریخچهٔ هر دوربین، subscription تحویل کلاینت با `includePalm`، trigger recognized/unknown، cooldown key، invocation crop و هر دو UI build اجرا شود. |
 
 ## ترتیب اجباری پیاده‌سازی
 

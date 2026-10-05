@@ -82,9 +82,6 @@ import {
   useSettings,
   useTriggerMutation,
   useTriggers,
-  defaultClientSubscriptionProfile,
-  readClientSubscription,
-  saveClientSubscription,
 } from "./hooks";
 import type {
   Artifact,
@@ -5183,7 +5180,7 @@ function Triggers() {
           </Button>
         }
       />
-      <ClientSubscriptionTester cameras={(cameras.data ?? []).filter((camera) => camera.enabled !== false)} />
+      <HistorySubscriptionEditor cameras={(cameras.data ?? []).filter((camera) => camera.enabled !== false)} />
       <div className="triggers-layout">
         <section className="panel trigger-list">
           <div className="panel-head compact">
@@ -5257,114 +5254,113 @@ function Triggers() {
   );
 }
 
-function ClientSubscriptionTester({ cameras }: { cameras: CameraStatus[] }) {
-  const [draft, setDraft] = useState<ClientSubscription>(() => readClientSubscription());
+function HistorySubscriptionEditor({ cameras }: { cameras: CameraStatus[] }) {
+  const settings = useSettings();
+  const client = useQueryClient();
+  const [draft, setDraft] = useState<ClientSubscription>({ profiles: [] });
   const [activeProfileId, setActiveProfileId] = useState<string>();
-  const cameraTitle = (profile: ClientSubscriptionProfile) => {
-    const names = profile.cameraIds
-      .map((id) => cameras.find((camera) => camera.id === id)?.name ?? id)
-      .filter(Boolean);
-    return names.length ? names.join("، ") : "همهٔ دوربین‌ها";
-  };
+  const [saving, setSaving] = useState(false);
+  const defaultProfile = (): ClientSubscriptionProfile => ({
+    id: newId(), name: "سناریوی جدید", mode: "All", cameraIds: [], roiIds: [],
+    faceRequired: false, plateRequired: false, palmRequired: false,
+    includeFace: true, includePlate: true, includePalm: true,
+    includeUnknownFace: true, includeUnknownPalm: true, includeArtifacts: true,
+    windowMs: 1500, cooldownSeconds: 0,
+  });
+  useEffect(() => {
+    const source = settings.data?.service.historySubscription;
+    if (source) setDraft(clone(source));
+  }, [settings.data?.revision]);
   useEffect(() => {
     if (!draft.profiles.some((profile) => profile.id === activeProfileId)) {
       setActiveProfileId(draft.profiles[0]?.id);
     }
   }, [draft.profiles, activeProfileId]);
   const updateProfile = (id: string, patch: Partial<ClientSubscriptionProfile>) =>
-    setDraft((current) => ({
-      profiles: current.profiles.map((profile) => profile.id === id ? { ...profile, ...patch } : profile),
-    }));
+    setDraft((current) => ({ profiles: current.profiles.map((profile) => profile.id === id ? { ...profile, ...patch } : profile) }));
   const addProfile = () => {
-    const profile = defaultClientSubscriptionProfile();
-    profile.name = `پروفایل ${draft.profiles.length + 1}`;
+    const profile = defaultProfile();
+    profile.name = `سناریو ${draft.profiles.length + 1}`;
     setDraft((current) => ({ profiles: [...current.profiles, profile] }));
+    setActiveProfileId(profile.id);
   };
-  const removeProfile = (id: string) =>
-    setDraft((current) => ({ profiles: current.profiles.filter((profile) => profile.id !== id) }));
-  const toggleCamera = (profile: ClientSubscriptionProfile, cameraId: string) =>
-    updateProfile(profile.id, {
-      cameraIds: profile.cameraIds.includes(cameraId)
-        ? profile.cameraIds.filter((item) => item !== cameraId)
-        : [...profile.cameraIds, cameraId],
-    });
-  const apply = () => saveClientSubscription(draft);
+  const removeProfile = (id: string) => setDraft((current) => ({ profiles: current.profiles.filter((profile) => profile.id !== id) }));
+  const toggleCamera = (profile: ClientSubscriptionProfile, cameraId: string) => updateProfile(profile.id, {
+    cameraIds: profile.cameraIds.includes(cameraId) ? profile.cameraIds.filter((item) => item !== cameraId) : [...profile.cameraIds, cameraId],
+  });
+  const save = async () => {
+    if (!settings.data) return;
+    setSaving(true);
+    try {
+      await api.saveSettings({
+        revision: settings.data.revision,
+        service: { ...settings.data.service, historySubscription: draft },
+      });
+      await client.invalidateQueries({ queryKey: keys.settings });
+    } finally {
+      setSaving(false);
+    }
+  };
+  const activeId = activeProfileId ?? draft.profiles[0]?.id;
+  const cameraTitle = (profile: ClientSubscriptionProfile) => {
+    const names = profile.cameraIds.map((id) => cameras.find((camera) => camera.id === id)?.name ?? id).filter(Boolean);
+    return names.length ? names.join("، ") : "همهٔ دوربین‌ها";
+  };
   return (
     <section className="panel client-subscription-panel">
       <div className="panel-head compact">
         <div>
-          <h3>آزمایش subscription کلاینت</h3>
-          <span>
-            چند پروفایل مستقل تعریف کنید؛ رخداد در صورت انطباق با حداقل یکی از آن‌ها نمایش داده می‌شود. این تنظیم فقط eventهای همین اتصال UI را فیلتر می‌کند.
-          </span>
+          <h3>subscription برنامه برای ثبت داخلی</h3>
+          <span>این پروفایل‌ها فقط تعیین می‌کنند کدام تشخیص‌ها در event store ثبت شوند؛ نمای کلی و تاریخچه بر اساس subscription فیلتر نمی‌شوند. تریگرها مسیر مستقل ارسال به کلاینت هستند.</span>
         </div>
         <div className="title-actions">
-          <Button variant="soft" icon={Plus} onClick={addProfile}>پروفایل جدید</Button>
-          <Button icon={Radio} onClick={apply}>اعمال برای اتصال جاری</Button>
+          <Button variant="soft" icon={Plus} onClick={addProfile}>سناریوی جدید</Button>
+          <Button icon={Save} onClick={() => void save()} disabled={saving || !settings.data}>{saving ? "در حال ذخیره..." : "ذخیره subscription"}</Button>
         </div>
       </div>
       {draft.profiles.length > 0 && (
-        <div className="subscription-tabs" role="tablist" aria-label="پروفایل‌های subscription">
+        <div className="subscription-tabs" role="tablist" aria-label="سناریوهای subscription">
           {draft.profiles.map((profile) => (
-            <button
-              className={`subscription-tab ${profile.id === (activeProfileId ?? draft.profiles[0]?.id) ? "active" : ""}`}
-              key={profile.id}
-              role="tab"
-              aria-selected={profile.id === (activeProfileId ?? draft.profiles[0]?.id)}
-              onClick={() => setActiveProfileId(profile.id)}
-            >
-              <b>{cameraTitle(profile)}</b>
-              <small>{profile.name}</small>
+            <button className={`subscription-tab ${profile.id === activeId ? "active" : ""}`} key={profile.id} role="tab" aria-selected={profile.id === activeId} onClick={() => setActiveProfileId(profile.id)}>
+              <b>{cameraTitle(profile)}</b><small>{profile.name}</small>
             </button>
           ))}
         </div>
       )}
       <div className="subscription-profiles">
-        {draft.profiles.filter((profile) => profile.id === (activeProfileId ?? draft.profiles[0]?.id)).map((profile) => (
+        {draft.profiles.filter((profile) => profile.id === activeId).map((profile) => (
           <div className="subscription-profile" key={profile.id}>
             <div className="subscription-profile-head">
-              <Field label="نام پروفایل">
-                <input value={profile.name} onChange={(e) => updateProfile(profile.id, { name: e.target.value })} />
-              </Field>
-              <button className="icon-button danger-icon" title="حذف پروفایل" onClick={() => removeProfile(profile.id)}><Trash2 size={15} /></button>
+              <Field label="نام سناریو"><input value={profile.name} onChange={(e) => updateProfile(profile.id, { name: e.target.value })} /></Field>
+              <button className="icon-button danger-icon" title="حذف سناریو" onClick={() => removeProfile(profile.id)}><Trash2 size={15} /></button>
             </div>
             <div className="form-grid">
-              <Field label="رخداد پایه">
+              <Field label="محور تشخیص">
                 <select value={profile.mode} onChange={(e) => updateProfile(profile.id, { mode: e.target.value as ClientSubscriptionProfile["mode"] })}>
-                  <option value="All">همهٔ رخدادها</option>
-                  <option value="Plate">پلاک‌محور</option>
-                  <option value="Palm">کف دست‌محور</option>
-                  <option value="KnownFace">چهرهٔ شناخته‌شده</option>
-                  <option value="KnownPalm">کف دست شناخته‌شده</option>
+                  <option value="All">همهٔ تشخیص‌ها</option><option value="Plate">پلاک‌محور</option><option value="Palm">کف دست‌محور</option><option value="KnownFace">چهرهٔ شناخته‌شده</option><option value="KnownPalm">کف دست شناخته‌شده</option>
                 </select>
               </Field>
-              <Field label="پنجرهٔ association (ms)">
-                <input type="number" min="0" max="10000" step="100" value={profile.windowMs} onChange={(e) => updateProfile(profile.id, { windowMs: Number(e.target.value) })} />
-              </Field>
-              <Field label="History event cooldown (sec)" hint="فقط برای همین پروفایل و اتصال UI">
-                <input type="number" min="0" max="3600" value={profile.cooldownSeconds} onChange={(e) => updateProfile(profile.id, { cooldownSeconds: Number(e.target.value) })} />
-              </Field>
+              <Field label="پنجره association (ms)"><input type="number" min="0" max="10000" step="100" value={profile.windowMs} onChange={(e) => updateProfile(profile.id, { windowMs: Number(e.target.value) })} /></Field>
+              <Field label="فاصله ثبت داخلی (sec)"><input type="number" min="0" max="3600" value={profile.cooldownSeconds} onChange={(e) => updateProfile(profile.id, { cooldownSeconds: Number(e.target.value) })} /></Field>
               <Field label="چهره الزامی باشد"><Toggle checked={profile.faceRequired} onChange={(value) => updateProfile(profile.id, { faceRequired: value })} /></Field>
               <Field label="پلاک الزامی باشد"><Toggle checked={profile.plateRequired} onChange={(value) => updateProfile(profile.id, { plateRequired: value })} /></Field>
               <Field label="کف دست الزامی باشد"><Toggle checked={profile.palmRequired} onChange={(value) => updateProfile(profile.id, { palmRequired: value })} /></Field>
-              <Field label="چهرهٔ ناشناس هم ارسال شود"><Toggle checked={profile.includeUnknownFace} onChange={(value) => updateProfile(profile.id, { includeUnknownFace: value })} /></Field>
-              <Field label="کف دست ناشناس هم ارسال شود"><Toggle checked={profile.includeUnknownPalm} onChange={(value) => updateProfile(profile.id, { includeUnknownPalm: value })} /></Field>
+              <Field label="ثبت چهره"><Toggle checked={profile.includeFace} onChange={(value) => updateProfile(profile.id, { includeFace: value })} /></Field>
+              <Field label="ثبت پلاک"><Toggle checked={profile.includePlate} onChange={(value) => updateProfile(profile.id, { includePlate: value })} /></Field>
+              <Field label="ثبت کف دست"><Toggle checked={profile.includePalm} onChange={(value) => updateProfile(profile.id, { includePalm: value })} /></Field>
+              <Field label="چهره ناشناس هم ثبت شود"><Toggle checked={profile.includeUnknownFace} onChange={(value) => updateProfile(profile.id, { includeUnknownFace: value })} /></Field>
+              <Field label="کف دست ناشناس هم ثبت شود"><Toggle checked={profile.includeUnknownPalm} onChange={(value) => updateProfile(profile.id, { includeUnknownPalm: value })} /></Field>
+              <Field label="تصاویر و artifacts هم ذخیره شود"><Toggle checked={profile.includeArtifacts} onChange={(value) => updateProfile(profile.id, { includeArtifacts: value })} /></Field>
+              <Field label="شناسه ROIها" hint="خالی یعنی همهٔ ROIها"><input value={profile.roiIds.join(", ")} onChange={(e) => updateProfile(profile.id, { roiIds: e.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} placeholder="roi-1, roi-2" /></Field>
             </div>
             <div className="trigger-scope">
-              <b>دوربین‌های این پروفایل</b>
-              <div>
-                {cameras.map((camera) => (
-                  <label key={camera.id} className="scope-chip">
-                    <input type="checkbox" checked={profile.cameraIds.includes(camera.id)} onChange={() => toggleCamera(profile, camera.id)} />
-                    <span>{camera.name}</span>
-                  </label>
-                ))}
-              </div>
-              <small>خالی‌بودن یعنی همهٔ دوربین‌ها.</small>
+              <b>دوربین‌های این سناریو</b>
+              <div>{cameras.map((camera) => <label key={camera.id} className="scope-chip"><input type="checkbox" checked={profile.cameraIds.includes(camera.id)} onChange={() => toggleCamera(profile, camera.id)} /><span>{camera.name}</span></label>)}</div>
+              <small>خالی‌بودن یعنی همهٔ دوربین‌ها. دوربینی که هیچ سناریوی subscription روی آن scope نشده باشد، همهٔ تشخیص‌های معتبر پردازش‌شده‌اش را ثبت می‌کند.</small>
             </div>
           </div>
         ))}
-        {!draft.profiles.length && <Empty icon={Radio} title="پروفایلی تعریف نشده" text="برای هر سناریو یک پروفایل جدید بسازید." />}
+        {!draft.profiles.length && <Empty icon={Radio} title="سناریویی تعریف نشده" text="در این حالت همهٔ تشخیص‌های معتبر پردازش‌شده در تاریخچه ثبت می‌شوند." />}
       </div>
     </section>
   );

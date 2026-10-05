@@ -99,11 +99,33 @@ FrameSource (به‌صورت پیش‌فرض فقط جدیدترین Mat؛ با 
 
 ROI معتبر حداقل سه نقطه و bounding box حداقل `32×32` دارد. Motion روی تصویر خاکستری `320×180` اجرا می‌شود و بیرون polygon را mask می‌کند. پس از تشخیص حرکت، وضعیت active تا `MotionHoldMs` می‌ماند؛ در حالت idle، `IdleDetectionFps = 0` یعنی inference متوقف است. نرخ فراخوانی runtime با نرخ Active/Idle کنترل می‌شود و هر Plate/Face نیز سقف `MaxFps` مستقل خودش را روی همان آیتم اعمال می‌کند؛ `CameraSettings.MaxFps` فقط default سازگاری برای ساخت آیتم جدید است و سقف پنهان آیتم‌های موجود نیست. با خاموش‌بودن Motion Gate، وضعیت همیشه active است.
 
-`History event cooldown (sec)` سه کاربرد مستقل دارد. در هر task Plate/Face زیر ROI
+`History event cooldown (sec)` چهار کاربرد مستقل دارد. در هر task Plate/Face زیر ROI
 با `EventCooldownSeconds` ثبت canonical history برای همان دوربین، ROI و مقدار
 تشخیص کنترل می‌شود؛ اگر تریگری match نشده باشد، رکورد تکراری در `DetectionHistory`
 باعث insert دوبارهٔ `DetectionEvents` نمی‌شود. در `ClientSubscription` همین فیلد
-با `CooldownSeconds` فقط replay/live و گرید تاریخچهٔ همان اتصال را فیلتر می‌کند.
+با `CooldownSeconds` فقط تحویل replay/live همان اتصال کلاینت را کنترل می‌کند و
+گرید عمومی تاریخچه را فیلتر نمی‌کند. سناریوی componentهای تاریخچهٔ برنامه در
+`ServiceSettingsDocument.HistorySubscription.Profiles[]` تعیین می‌شود؛ هر profile
+محور (`Mode`)، camera/ROI scope، requiredهای Face/Plate/Palm، includeهای
+`IncludeFace`/`IncludePlate`/`IncludePalm`، unknown policy، artifact، window و
+cooldown دارد. دوربین خارج از scope همهٔ تشخیص‌های معتبر پردازش‌شده را ثبت می‌کند.
+در رخداد match‌شدهٔ trigger، subscription داخلی bypass می‌شود و context کامل
+Plate/Face/Palm برای کلاینت باقی می‌ماند.
+
+در برنامهٔ مستقل Windows همین قرارداد در `desktop-automation.json` و بخش
+`HistorySubscription.Profiles[]` پیاده می‌شود. تب `Application subscription` در
+فرم `Triggers and workflows` برای هر profile محور، camera/ROI scope، requiredها،
+`IncludeFace`/`IncludePlate`/`IncludePalm`، unknown policy، artifact و cooldown را
+ویرایش می‌کند و برای camera scope امکان انتخاب چند دوربین واقعی را دارد. این تنظیم
+فیلتر پس از query نیست؛ policy ساخت رکورد نهایی `desktop-events.json` و پنل Windows
+است. اگر profile مثلاً `Mode=Plate` و `FaceRequired=true` و `PlateRequired=true`
+باشد، componentهای خام تا `WindowMs` staging می‌شوند و فقط association نهایی
+`PlateFace` در Event Store، پنل تشخیص و تاریخچه دیده می‌شود؛ staging قابل query نیست.
+دوربینی که در هیچ profileای scope نشده باشد، همهٔ تشخیص‌های معتبر پردازش‌شده‌اش را
+ثبت می‌کند. trigger با `HasEnabledTriggerMatch` مستقل از subscription ارزیابی می‌شود
+و در صورت match، payload کامل موجود Plate/Face/Palm، با `includePalm`، حفظ و ارسال
+می‌شود. حذف تاریخچهٔ Windows نیز هم Event Store و هم archive/history runtime را پاک
+می‌کند.
 در `TriggerDefinition` با `CooldownSeconds`، Runtime قبل از match کردن تریگر، Event
 Store را برای همان trigger و هویت‌های لازم بررسی می‌کند. برای `PlateRecognition`
 کلید شامل پلاک است و چهرهٔ اختیاری وارد آن نمی‌شود؛ برای `PlateFaceMatch` یا

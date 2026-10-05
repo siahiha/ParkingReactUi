@@ -39,6 +39,8 @@ public sealed class ServiceSettingsStore
             _service.Runtime ??= new ServiceRuntimeSettings();
             _service.Association ??= new ServiceAssociationSettings();
             _service.Retention ??= new ServiceRetentionSettings();
+            _service.HistorySubscription ??= new ClientSubscription();
+            _service.HistorySubscription.Normalize();
             _service.Triggers ??= [];
             _service.Invocations ??= [];
             NormalizeTriggers(_service.Triggers);
@@ -90,7 +92,10 @@ public sealed class ServiceSettingsStore
             settings.Http.ListenUrls ??= ["http://127.0.0.1:5080"];
             settings.Http.CorsOrigins ??= ["http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:5081", "http://localhost:5081"];
             settings.Runtime ??= new ServiceRuntimeSettings();
+            settings.Association ??= new ServiceAssociationSettings();
             settings.Retention ??= new ServiceRetentionSettings();
+            settings.HistorySubscription ??= new ClientSubscription();
+            settings.HistorySubscription.Normalize();
             settings.Triggers ??= [];
             settings.Invocations ??= [];
             NormalizeTriggers(settings.Triggers);

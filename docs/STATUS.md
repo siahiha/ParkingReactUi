@@ -13,7 +13,7 @@
 - Face با YuNet، IoU tracking، preprocessing مستقل، SFace اختیاری و FaceDatabase؛ Unknownهای runtime به‌صورت افراد `Unknown #NNNN` با crop و embedding در database دائمی ذخیره می‌شوند و برای هر نفر حداکثر ۱۰ نمونه ثبت می‌شود.
 - Face database پیشرفته با SQLite، ذخیرهٔ BLOB تصویر crop‌شده و embedding، تاریخ ایجاد، `PersonNumber` مشترک، سقف 10 نمونه برای هر نفر، گرید تصویری، ورود پوشه‌ای، بررسی تشابه، ادغام اشخاص و export تصاویر جفت‌شده/گزارش CSV.
 - Identity database مرکزی با `People`، `PersonPlates`، `FaceSamples` و `PalmSamples`؛ هر شخص یک `PersonId` مشترک دارد و فرم Windows تب‌های مشخصات، پلاک، چهره و کف دست را مدیریت می‌کند.
-- Event Store و automation محلی Windows: رخدادهای Plate/Face/Palm با crop، فریم خام، metadata و payload در فایل‌های local ذخیره می‌شوند؛ فرم‌های `Detection history` و `Triggers and workflows` جست‌وجو، preview، حذف، trigger، Webhook/HTTP، SQLite، retry و log را بدون اتصال به سرویس وب ارائه می‌کنند.
+- Event Store و automation محلی Windows: رخدادهای Plate/Face/Palm با crop، فریم خام، metadata و payload در فایل‌های local ذخیره می‌شوند؛ فرم‌های `Detection history` و `Triggers and workflows` جست‌وجو، preview، حذف، trigger، Webhook/HTTP، SQLite، retry و log را بدون اتصال به سرویس وب ارائه می‌کنند. تب `Application subscription` در Windows همان مدل چندپروفایلی را برای ثبت داخلی، camera/ROI scope، محور تشخیص، required/includeهای Face/Plate/Palm، unknown policy، artifact، window و cooldown فراهم می‌کند.
 - Palm با BlazePalm/RTMDet، tracker، enrollment و شناسایی اختیاری CCNet/PPNet؛ هر کف‌دست پذیرفته‌شده در `identity-database.db` جست‌وجو می‌شود، match شناخته‌شده با نام/metadata به overlay و history می‌رود و match‌نشده به‌صورت `Unknown Palm #NNNN` ذخیره می‌شود. اگر مدل recognition موجود نباشد، crop تشخیص‌داده‌شده به‌صورت رکورد ناشناس بدون embedding ذخیره می‌شود تا در فرم Windows یا صفحهٔ وب `مدیریت افراد` قابل مشاهده و انتساب به شخص باشد؛ همهٔ مدل‌های انتخاب‌پذیر Palm در `Models/Palm` به‌صورت `.hshmodel` قرار می‌گیرند.
 - settings چنددوربینه با ROIهای نام‌گذاری‌شده و فهرست مستقل `NamedRoi.Processing` برای هر دوربین.
 - packageهای `.hshmodel` برای همهٔ قابلیت‌ها، مدل‌های خام توسعه فقط در `HshDetectionEngin.Tools/RawModels/{Plate,Face,Palm}`، لایسنس RSA دستگاه‌محور و featureهای Plate/Face/Palm.
@@ -27,7 +27,20 @@
 - مسیر کم‌تاخیر MediaMTX در وب با WHEP خام و Overlay جداگانه: ویدئو مستقیماً از MediaMTX به مرورگر می‌رود و ROI ثابت، motion ROI، کادر تشخیص، label، confidence و primitiveهای پردازشی سمت کلاینت رسم می‌شوند؛ ویدئو برای Drawing دوباره encode نمی‌شود.
 - endpoint سبک `GET /api/v1/streams/{cameraId}/overlay` برای هماهنگ‌کردن Overlay با WHEP و endpointهای WHEP خام برای path MediaMTX؛ مسیر `WebRtcGateway` کامپوزیت‌شده برای legacy حفظ شده است.
 - association پلاک/چهره در runtime فعال است و از همان فریم یا پنجرهٔ زمانی حداکثر `Association.MaxWindowMs` (پیش‌فرض 1500ms) استفاده می‌کند؛ خروجی با `SameFrame`، `TemporalAssociation` یا `Standalone` مشخص می‌شود. در حالت پیش‌فرض `RequireSameRoi=true`، هر دو component باید در یک ROI باشند؛ با خاموش‌کردن آن، pair شدن بین ROIهای متفاوت همان دوربین ممکن است. این منطق association مکانی/مالکیتی نیست و برای حالت مبهمِ چند پلاک یا چند چهره pair قطعی تولید نمی‌کند.
-- subscription هر کلاینت مستقل است و از طریق `ClientSubscription`/SignalR یا پارامترهای Event API فیلتر می‌شود؛ `faceRequired=false` و `plateRequired=false` component اختیاری را حذف نمی‌کنند.
+- `ServiceSettingsDocument.HistorySubscription` سناریوهای چندپروفایلی ثبت داخلی را
+  نگه می‌دارد؛ هر profile می‌تواند محور، دوربین، ROI، requiredها، includeهای Face/
+  Plate/Palm، unknown policy، artifact و cooldown خودش را داشته باشد. این policy
+  فقط هنگام ساخت event canonical اعمال می‌شود؛ پنل تشخیص و تاریخچهٔ عمومی بر اساس
+  آن فیلتر نمی‌شوند و رخدادهای همهٔ دوربین‌ها را نشان می‌دهند. `TriggerDefinition`
+  مسیر مستقل ارسال به کلاینت است و trigger match‌شده payload کامل موجود، از جمله
+  Palm، را ارسال می‌کند.
+- در Windows مستقل، هر profile فقط برای دوربین‌ها/ROIهای انتخاب‌شده تصمیم می‌گیرد
+  چه رخداد نهایی در `desktop-events.json` ساخته شود. در سناریوی ترکیبی مانند
+  `Mode=Plate` همراه `FaceRequired=true` و `PlateRequired=true`، componentهای خام
+  موقتاً staging می‌شوند و پس از pair شدن در `WindowMs` فقط رکورد `PlateFace`
+  وارد Event Store و پنل تشخیص می‌شود؛ staging در query، پنل و تاریخچه نمایش داده
+  نمی‌شود. `Detection history` از همین رکوردهای نهایی بازسازی می‌شود و حذف همه/بازه
+  علاوه بر Event Store، archive و history حافظهٔ دوربین را نیز پاک می‌کند.
 - برای کنترل مصرف حافظه، بررسی metadata مدل‌ها cache می‌شود و association از کپی تکراری فریم کامل برای تشخیص‌های تکراری جلوگیری می‌کند.
 - UI اصلی دو زبانهٔ فارسی/انگلیسی است؛ دکمهٔ زبان در نوار بالا انتخاب را در `ui-language.txt` ذخیره می‌کند و برای اعمال کامل زبان، برنامه را restart می‌کند. متن فارسی نام چهره روی preview با رسم Unicode/GDI+ نمایش داده می‌شود.
 - مرجع مستندات یکپارچه برای بازسازی و اسناد تخصصی کوتاه‌تر.
@@ -35,7 +48,9 @@
 ## محدودیت‌ها و backlog آگاهانه
 
 - `CameraPipelineCoordinator` برای هر ROI فعال فهرست pipeline مستقل می‌سازد و آن‌ها را طبق `NamedRoi.Processing` اجرا می‌کند؛ `CameraRuntime` capture، Motion، lifecycle و policy خروجی را نگه می‌دارد.
-- history تازهٔ Runtime محدود به ۱۵ رخداد در حافظه است؛ رخدادهای خارج‌شده با crop در `history-archive.json` کنار executable آرشیو می‌شوند و UI برای بازسازی تا ۱۰۰ کارت از آرشیو و حافظه استفاده می‌کند.
+- history تازهٔ Runtime محدود به ۱۵ رخداد در حافظه است؛ اما پنل Windows برای بازسازی
+  از رکوردهای نهایی Event Store استفاده می‌کند و staging را کنار می‌گذارد. حذف تاریخچه
+  از فرم `Detection history` هم Event Store و هم history/archive runtime را پاک می‌کند.
 - discovery خودکار DLL وجود ندارد؛ registration قابلیت‌ها در Composition Root به‌صورت مرکزی انجام می‌شود. UI نوع‌ها و descriptorها را از registry می‌گیرد و برای Plate/Face یا قابلیت جدید branch اختصاصی ندارد؛ فقط editor اختصاصی نیازمند wiring جداگانه است.
 - `BufferCount = 0` حالت newest-frame است؛ مقدار مثبت صف محدود فریم را برای هر دو pipeline همان دوربین فعال می‌کند و در صورت پرشدن قدیمی‌ترین فریم حذف می‌شود.
 - تنظیمات Face، از جمله record confidence، cooldown، مدل، input size و thresholdها، برای هر آیتم در `CameraProcessingSettings` نگه‌داری و در Runtime از همان آیتم اعمال می‌شوند؛ مقدارهای سطح دوربین فقط default ساخت آیتم جدید هستند. `Threads` نیز برای هر آیتم به‌صورت `IntraOpNumThreads` اعمال می‌شود و UI کنترل‌های Plate و Face را برای آیتم انتخاب‌شده sync می‌کند.

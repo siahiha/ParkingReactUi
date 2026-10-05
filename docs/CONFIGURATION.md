@@ -43,12 +43,34 @@
 | Motion و نمایش | `DrawBoxes`، `DetectionOverlayHoldMs`، `MotionGateEnabled`، `MotionFps`، `MotionThreshold`، `MotionChangedPercent`، `MotionRoiScalePercent`، `MotionHoldMs`، `ActiveDetectionFps`، `IdleDetectionFps` | `DetectionOverlayHoldMs` مدت نمایش آخرین کادر/نتیجهٔ تشخیص برحسب میلی‌ثانیه است و مقدار پیش‌فرض آن `2500` است؛ برای هر نوع تشخیص مستقل اعمال می‌شود. در idle با مقدار `0` برای `IdleDetectionFps` inference متوقف می‌شود. |
 | ROI و هدف پردازش | `Rois[]`، `Rois[].Points`، `Rois[].ProcessingMode`، `Rois[].Processing[]` و `RoiEnabled` | بدون ROI هیچ inferenceای انجام نمی‌شود. ROIهای یک دوربین موازی‌اند؛ هر ROI می‌تواند صفر، یک یا چند آیتم Plate/Face/Palm با مدل و ورودی مستقل داشته باشد. در `Sequential` taskهای همان ROI زنجیره می‌شوند و در `Parallel` مستقل اجرا می‌شوند. |
 
-## سه سطح cooldown تاریخچه
+## چهار سطح cooldown تاریخچه و تحویل
 
-این فیلد در سه محل مستقل وجود دارد و هر محل policy خودش را کنترل می‌کند:
+این فیلد در چهار محل مستقل وجود دارد و هر محل policy خودش را کنترل می‌کند:
 
 - در `Cameras[].Rois[].Processing[].Options` برای هر آیتم Plate یا Face، `EventCooldownSeconds` cooldown ثبت canonical در تاریخچه است. وقتی هیچ تریگری برای تشخیص match نشده باشد، runtime برای کلید همان دوربین، ROI و مقدار تشخیص (`plate`، `face` یا هر دو) در جدول indexed تاریخچه جست‌وجو می‌کند؛ رکورد تکراری در این بازه اصلاً در `DetectionEvents` ثبت نمی‌شود. مقدار `0` یعنی بدون محدودیت.
-- در `ClientSubscription.CooldownSeconds` (فیلد UI بخش «آزمایش subscription کلاینت») cooldown فقط برای همان اتصال/گرید تاریخچه اعمال می‌شود. این مقدار database مشترک را تغییر نمی‌دهد و روی تریگرها اثر ندارد؛ replay و eventهای live همان client برای plate-only، face-only و plate+face با یک کلید مستقل فیلتر می‌شوند.
+- در `ClientSubscription.CooldownSeconds` cooldown فقط برای replay/live همان اتصال
+  کلاینت اعمال می‌شود و روی پنل عمومی، گرید تاریخچه، database مشترک یا triggerها
+  اثر ندارد. برای تحویل کلاینت، `includeFace`، `includePlate` و `includePalm`
+  هم‌سطح هستند و `includePalm` باید در subscription کلاینت نیز ارسال شود.
+- در `ServiceSettingsDocument.HistorySubscription.Profiles[]` سناریوهای ثبت داخلی
+  برنامه تعیین می‌شوند. هر profile می‌تواند `mode`، `cameraIds`، `roiIds`،
+  requiredهای Face/Plate/Palm، `includeFace`، `includePlate`، `includePalm`،
+  unknown policy، `includeArtifacts`، `windowMs` و `cooldownSeconds` داشته باشد.
+  دوربینی که در هیچ profileای scope نشده باشد، همهٔ تشخیص‌های معتبر پردازش‌شده‌اش
+  را ثبت می‌کند. این policy پنل نمای کلی و تاریخچهٔ عمومی را فیلتر نمی‌کند.
+- در برنامهٔ مستقل Windows همین تنظیمات در `desktop-automation.json` و
+  `HistorySubscription.Profiles[]` ذخیره می‌شوند. تب `Application subscription`
+  امکان انتخاب چند دوربین واقعی و ROI، تعیین محور (`Mode`)، requiredهای
+  `Face/Plate/Palm`، `IncludeFace`/`IncludePlate`/`IncludePalm`، unknown policy،
+  artifact، `WindowMs` و cooldown را می‌دهد. این profile فیلتر query نیست؛ policy
+  ساخت رکورد نهایی Windows است. برای profile ترکیبی، مثلاً محور Plate با
+  `FaceRequired=true` و `PlateRequired=true`، componentها تا `WindowMs` در staging
+  می‌مانند و فقط association نهایی `PlateFace` در `desktop-events.json`، پنل تشخیص
+  و تاریخچه دیده می‌شود. دوربین خارج از scope همهٔ تشخیص‌های معتبر خودش را ثبت می‌کند.
+- `TriggerDefinition` مسیر مستقل ارسال به کلاینت است. اگر trigger match شود،
+  رخداد با context کامل تشخیص‌های موجود، شامل Plate، Face و Palm، ساخته و به
+  action/کلاینت تحویل می‌شود؛ subscription داخلی نمی‌تواند این payload را ناقص کند
+  و `includePalm` باید در هر مسیر تحویل کلاینت نیز صریحاً پشتیبانی شود.
 - در `TriggerDefinition.CooldownSeconds` cooldown اجرای همان تریگر است. هنگام ارزیابی هر تریگر، runtime در `TriggerHistory` جست‌وجو می‌کند و فقط اگر برای همان `triggerId` و همان کلید هویتی در بازهٔ cooldown رکورد موفق قبلی وجود نداشته باشد، تریگر را match و ثبت می‌کند. اگر فقط تریگرهای موجود suppressed باشند، رخداد تکراری جدید ساخته نمی‌شود.
 
 کلیدهای trigger بر اساس سناریو ساخته می‌شوند: `PlateRecognition` فقط دوربین، ROI و پلاک را در نظر می‌گیرد؛ `FaceRecognition` فقط دوربین، ROI و هویت چهره را؛ و `PlateFaceMatch` یا `PlateFaceAssociation` هر دو مقدار پلاک و چهره را لازم دارد. برای cooldown پردازش و client نیز کلید canonical شامل دوربین، ROI و componentهای موجود است؛ بنابراین plate-only، face-only و plate+face مستقل‌اند و cooldown تریگرهای دیگر با هم تداخل ندارند.
@@ -66,7 +88,7 @@
 | Face recognition / unknown threshold | `0.40` / `0.35` |
 | Face match IoU / max misses | `0.25` / `10` |
 | Plate / Face history event cooldown | `60` / `60` ثانیه برای هر processing item |
-| Client subscription history cooldown | `0` ثانیه |
+| Client delivery subscription cooldown | `0` ثانیه |
 | Motion FPS / threshold / changed percent | `8` / `20` / `0.7` |
 | Motion hold / ROI scale | `1200` ms / `85%` |
 | Active / idle detection FPS | `8` / `0` |
