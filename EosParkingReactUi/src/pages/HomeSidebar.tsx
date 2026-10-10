@@ -23,24 +23,36 @@ export function HomeSidebar({ appName, systemMenu, currentParkingSectionTitle, r
   const currentParkingSubgroups = visibleParkingMenuGroups.filter((group) => group.key === 'operations' || group.key === 'integrations');
   const reportsGroup = visibleParkingMenuGroups.find((group) => group.key === 'reports');
   const activeParkingSubgroup = currentParkingSubgroups.find((group) => group.items.some((item) => item.key === activeParkingMenu));
+  const activeParkingSubgroupKey = activeParkingSubgroup?.key;
+  const activeParkingMenuIsReport = Boolean(activeParkingMenu && reportsGroup?.items.some((item) => item.key === activeParkingMenu));
   const parkingGroupIcons = { definitions: <SettingsRoundedIcon />, operations: <TrafficRoundedIcon />, integrations: <SyncRoundedIcon />, reports: <AssessmentRoundedIcon /> };
 
   useEffect(() => {
-    if (managementSection) setExpandedMenuGroup('system');
-    if (activeParkingMenu && reportsGroup?.items.some((item) => item.key === activeParkingMenu)) setExpandedMenuGroup('reports-root');
-    if (activeParkingMenu && !reportsGroup?.items.some((item) => item.key === activeParkingMenu)) {
-      setExpandedMenuGroup('definitions-root');
-      if (activeParkingSubgroup) {
-        setExpandedSubgroups((current) => ({ ...current, [activeParkingSubgroup.key]: true }));
-      }
+    if (managementSection) {
+      setExpandedMenuGroup('system');
+      setExpandedSubgroups({});
+      return;
     }
-  }, [activeParkingMenu, activeParkingSubgroup?.key, managementSection, reportsGroup]);
+    if (!activeParkingMenu) return;
+    if (activeParkingMenuIsReport) {
+      setExpandedMenuGroup('reports-root');
+      setExpandedSubgroups({});
+      return;
+    }
+    setExpandedMenuGroup('definitions-root');
+    setExpandedSubgroups(activeParkingSubgroupKey ? { [activeParkingSubgroupKey]: true } : {});
+  }, [activeParkingMenu, activeParkingMenuIsReport, activeParkingSubgroupKey, managementSection]);
 
   const navigate = (path: string) => { onNavigate(path); onMobileClose(); };
   const openCompactGroup = (group: string) => {
     onCollapsedChange(false);
-    if (group === 'system' || group === 'reports-root' || group === 'definitions-root') setExpandedMenuGroup(group);
-    else { setExpandedMenuGroup('definitions-root'); setExpandedSubgroups((current) => ({ ...current, [group]: true })); }
+    if (group === 'system' || group === 'reports-root' || group === 'definitions-root') {
+      setExpandedMenuGroup(group);
+      setExpandedSubgroups({});
+    } else {
+      setExpandedMenuGroup('definitions-root');
+      setExpandedSubgroups({ [group]: true });
+    }
   };
   const renderParkingGroup = (group: HomeMenuGroup) => {
     const isExpanded = Boolean(expandedSubgroups[group.key]);
