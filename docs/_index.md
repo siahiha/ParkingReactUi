@@ -18,7 +18,7 @@
 
 | کلیدواژه/حوزه | سند اصلی | منابع تکمیلی |
 |---|---|---|
-| login، session، dashboard | `01-authentication.md` | `02-dashboard-and-navigation.md`، `21-implementation-progress-and-regression-policy.md` |
+| login، session، dashboard | `01-authentication.md` | `02-dashboard-and-navigation.md`، `19-ui-visual-review-and-progress.md`، `21-implementation-progress-and-regression-policy.md` |
 | MainForm، permission، parking context | `03-main-form-overview.md` | `04-users-and-access.md`، `16-final-review-and-delivery-gates.md` |
 | parking، floor، section، space، zone | `03-parking-configuration.md`، `23-parking-zones.md` | `11-remaining-forms.md` |
 | user، access level | `04-1-access-level-form.md`، `04-2-users-form.md` | `04-users-and-access.md` |
