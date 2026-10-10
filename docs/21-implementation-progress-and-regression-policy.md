@@ -30,7 +30,8 @@
 | Login، session و Home | پیاده‌سازی شده و تست regression دارد | `src/App.tsx`، `src/features/auth`، `src/pages/Home.tsx` | قابل استفاده با قرارداد فعلی |
 | فهرست پارکینگ‌ها | CRUD پیاده‌سازی شده | `ParkingDirectoryWorkspace.tsx` | پیاده‌سازی UI؛ API کامل نیازمند تأیید Backend |
 | کاربران و سطوح دسترسی | CRUD پیاده‌سازی شده | `UserManagementWorkspace.tsx`، `AccessLevelWorkspace.tsx` | پیاده‌سازی UI؛ مجوز نهایی با Backend |
-| مشخصات پارکینگ، کارت‌ها و تجهیزات | workflow اصلی پیاده‌سازی شده | `ParkingDetailsWorkspace.tsx`، `CardManagementWorkspace.tsx`، `CameraEquipmentWorkspace.tsx` | API و مجوزهای رسمی هنوز نیازمند تأیید |
+| مشخصات پارکینگ | فرم تب‌بندی‌شده با گزینه‌های فعال‌سازی تب‌ها و `EosTimeOnDayPicker` برای ساعت‌های روزانه‌ی شیفت | `ParkingFormFields.tsx`، `EosTimeOnDayPicker.tsx`، `ParkingDetailsWorkspace.tsx`، `ParkingDirectoryWorkspace.tsx`؛ جزئیات در سند ۰۳ | propertyهای `IsCommercialParking` و `HasUserShifts` به `ParkingEntity` در سورس Backend افزوده شده و دیتابیس با EF automatic migrations به‌روز می‌شود؛ اعمال در محیط اجرا نیازمند build/deploy Backend است. ذخیره‌ی پارکینگ بدون شیفت همچنان به‌علت non-null بودن ساعت شیفت اول نیازمند تصمیم Backend است |
+| کارت‌ها و تجهیزات | workflow اصلی پیاده‌سازی شده | `CardManagementWorkspace.tsx`، `CameraEquipmentWorkspace.tsx` | API و مجوزهای رسمی هنوز نیازمند تأیید |
 | انواع جای‌پارک، طبقات، زون‌ها و انواع عضویت | CRUD و حالت‌های اصلی پیاده‌سازی شده | `ParkingDefinitionsCrudWorkspace.tsx` | زون‌ها طبق سند ۲۳ تطبیق شده‌اند؛ خطاهای رسمی API ناقص است |
 | تعرفه‌ها و اعضا | workflow ایجاد، ویرایش، حذف و ثبت/لغو اصلی پیاده‌سازی شده | `features/tariffs`، `features/members` | قراردادهای خطا، مجوز و برخی عملیات Windows ناقص است |
 | مجوز خروج | فهرست، فیلتر و تغییر مجوز پیاده‌سازی شده | `ExitPermissionWorkspace.tsx` | قرارداد Backend و audit نیازمند تأیید |

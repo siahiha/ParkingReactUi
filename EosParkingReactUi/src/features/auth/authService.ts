@@ -4,13 +4,14 @@ import type { HomeUser } from '../../pages/homeTypes';
 
 export type LoginResult = { token: string | null; user: HomeUser; preferences?: SsoUserPreferences };
 
-function parseUserLoginResponse(raw: unknown, fallbackUsername: string): LoginResult {
+function parseUserLoginResponse(raw: unknown, fallbackUsername: string, failureStatus = 401): LoginResult {
   const response = parseLoginResponse(raw);
   const value = readLoginUser(response);
   const responseType = response.ResponseResultType ?? response.responseResultType;
   const userId = value?.Id ?? value?.id ?? 0;
   if ((!isSuccessfulLegacyResponse(responseType) && !(responseType === undefined && Boolean(value))) || !value || userId === 0) {
-    throw new ApiError(401, { message: response.Message ?? response.message ?? response.RealMessage ?? response.realMessage });
+    const message = response.Message ?? response.message ?? response.RealMessage ?? response.realMessage;
+    throw new ApiError(failureStatus, { message, responseResultType: responseType }, message || 'ورود با SSO ناموفق بود.');
   }
   const permissions = readLoginPermissions(response, value);
   const permissionPart1 = String(value.AccessPermissionValuePart1 ?? value.accessPermissionValuePart1 ?? 0);
@@ -44,7 +45,7 @@ export async function login(username: string, password: string): Promise<LoginRe
 }
 
 export async function loginWithSso(input: {
-  issueCode: string;
+  authorizationCode: string;
   clientId: string;
   redirectUri: string;
   codeVerifier: string;
@@ -52,11 +53,14 @@ export async function loginWithSso(input: {
   const raw = await apiRequest<unknown>('api/user/SsoLogin', {
     method: 'POST',
     body: JSON.stringify({
-      IssueCode: input.issueCode,
+      authorizationCode: input.authorizationCode,
       ClientId: input.clientId,
       RedirectUri: input.redirectUri,
       CodeVerifier: input.codeVerifier,
     }),
   });
-  return parseUserLoginResponse(raw, '');
+  // The endpoint returns an HTTP 200 wrapper even when the upstream SSO
+  // exchange fails. Do not present that application-level failure as an HTTP
+  // 401, because it hides the actual SSO response from the callback page.
+  return parseUserLoginResponse(raw, '', 502);
 }

@@ -76,6 +76,7 @@
 
 - هدف: تخصیص کاربر به شیفت و درب فعال پارکینگ.
 - UI: انتخاب کاربر، درب، شیفت/بازه و جدول تخصیص‌ها؛ عملیات ایجاد، ویرایش، حذف و ذخیره.
+- بازه‌های جستجو و تاریخ مقصد رونوشت، تاریخِ تنها هستند و در React با `EosDateTimePicker` و `dateOnly` انتخاب می‌شوند. این workspace ورودی ساعتِ تنها ندارد؛ ساعت شروع/پایان هر شیفت از تنظیمات `ParkingEntity` می‌آید و در عنوان ستون‌ها نمایش داده می‌شود. تعریف این ساعت‌ها در تب شیفت‌های مشخصات پارکینگ با `EosTimeOnDayPicker` انجام می‌شود.
 - APIها: `UserApi.Get`، `ParkingApi.GetParkingDoors`، `UserApi.GetUserWorkShifts`، `UserApi.SaveUserWorkShifts`.
 - workflow: دریافت کاربران و درب‌ها، دریافت شیفت‌ها، انتخاب تخصیص، اعتبارسنجی تعارض و ذخیره.
 - اثر سیستم: `CurrentUser.CurrentParking` و درب/شیفت تعیین‌شده، پیش‌شرط ورود و خروج دستی است.
@@ -194,13 +195,14 @@
 ### `ManageTrafficRecordForm`
 
 - هدف: جستجو و اصلاح سوابق ورود/خروج بدون ورود به workflow زنده‌ی `ManualTrafficControlForm`.
+- مرزبندی: این فرم مربوط به منوی «مدیریت ورودها و خروج‌ها» است، نه منوی عملیاتی «کنترل ورود و خروج»؛ منوی عملیاتی از `ManualTrafficControlForm` استفاده می‌کند.
 - ورودی: `ParkingEntity`؛ فهرست تعرفه و درب‌ها برای فرم بارگذاری می‌شود.
 - UI: فیلتر بازه/درب/تعرفه، جدول صفحه‌بندی‌شده‌ی تردد، جستجوی خودرو با پلاک/کارت/کد عضو، پنل ایجاد یا ویرایش و عملیات حذف.
 - ایجاد دستی: پلاک، پارکینگ، نوع خودرو، زمان ورود/خروج و درب با `CreateManualDump` ارسال می‌شود.
 - **تصمیم محصول:** اگر اپراتور در workflow خروج، ورود متناظر پیدا نکند، UI همین صفحه را برای تعیین/ثبت ورود باز می‌کند؛ UI نباید ورود ساختگی خودکار ایجاد کند. API باید مجوز این اقدام را کنترل و در صورت نداشتن دسترسی پاسخ منع‌شده برگرداند.
 - ویرایش: اطلاعات رکورد با `TrafficApi.Save` ذخیره می‌شود؛ لغو تغییرات پنل را می‌بندد.
 - حذف: فقط رکوردهایی که ورود و خروج آن‌ها توسط کاربر ثبت شده باشد قابل حذف‌اند؛ پس از تأیید `TrafficApi.DeleteById` فراخوانی می‌شود.
-- APIها: `TariffApi.GetByParkingId`، `ParkingApi.GetParkingDoors`، `TrafficApi.GetAllTraffics`، `GetCarTrafficInfo`، `CreateManualDump`، `Save` و `DeleteById`.
+- APIها: `TariffApi.GetByParkingId`، `ParkingApi.GetParkingDoors`، `TrafficApi.GetAllTraffics`، `GetCarTrafficInfo`، `CreateManualDump`، `Save` و `DeleteById`. این فرم از `TrafficApi.GetTraffics` که فهرست ترددهای درب جاری فرم کنترل است استفاده نمی‌کند.
 - وضعیت‌ها: loading، empty، validation، خطای API و تعارض حذف؛ status code و مجوز جزئی اصلاح/حذف نیازمند backend است.
 - ارتباط با دو فرم مستثناشده: این فرم workflow ثبت زنده‌ی `ManualTrafficControlForm` را اجرا نمی‌کند، اما از مدل تردد و تعرفه/درب مشترک استفاده می‌کند.
 

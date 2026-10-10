@@ -114,8 +114,11 @@ export const memberApi = {
 };
 
 export const trafficApi = {
+  getTraffics: (doorId: number) => apiRequest<unknown>(`api/traffic/GetTraffics?doorId=${doorId}`),
   getAllTraffics: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/GetAllTraffics', { method: 'POST', body: JSON.stringify(payload) }),
   saveTraffic: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/Save', { method: 'POST', body: JSON.stringify(payload) }),
+  doExitDump: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/DoExitDump', { method: 'POST', body: JSON.stringify(payload) }),
+  payDump: (dumpId: number, payType = 1, transactionResponse = '') => apiRequest<unknown>(`api/traffic/PayDump?dumpId=${dumpId}&payType=${payType}&transactionResponse=${encodeURIComponent(transactionResponse)}`),
   createManualDump: (params: { plate: string; parkingId: number; carType: number; enterDateTime: string | null; exitDateTime: string | null; doorId: number }) => {
     const query = new URLSearchParams({ plate: params.plate, parkingId: String(params.parkingId), carType: String(params.carType), enterDateTime: params.enterDateTime ?? 'null', exitDateTime: params.exitDateTime ?? 'null', doorId: String(params.doorId) });
     return apiRequest<unknown>(`api/traffic/CreateManualDump?${query.toString()}`);
@@ -129,4 +132,10 @@ export const trafficApi = {
     return apiRequest<unknown>(`api/traffic/GetPermissions?doorId=${doorId}&carExited=false${setPermission}${dateFilter}`);
   },
   updateExitPermission: (dumpId: number, allowed: boolean, userId: number) => apiRequest<unknown>(`api/traffic/TrafficDumpUpdatePermission?dumpID=${dumpId}&exitPermission=${allowed}&exitPermissionPersistBy=${userId}`, { method: 'GET' }),
+};
+
+export const cargoApi = {
+  getRequiredData: () => apiRequest<unknown>('api/Cargo/GetCargoRequiredData'),
+  isRegistered: (trafficDumpId: number, isOutBoundCargo: boolean) => apiRequest<unknown>(`api/Cargo/IsCargoRegistered?trafficDumpId=${trafficDumpId}&isOutBoundCargo=${isOutBoundCargo}`),
+  save: (payload: ApiPayload) => apiRequest<unknown>('api/Cargo/Save', { method: 'POST', body: JSON.stringify(payload) }),
 };

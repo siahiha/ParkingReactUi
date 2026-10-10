@@ -1,8 +1,10 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Button, IconButton, InputAdornment, Popover, TextField, Typography, type TextFieldProps } from '@mui/material';
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import { EosTimeOnDayPicker } from './EosTimeOnDayPicker';
+import { translations } from '../i18n';
 
 type Language = 'fa' | 'en';
 export type EosDateTimePickerProps = Omit<TextFieldProps, 'value' | 'onChange' | 'type'> & { value: string; onChange: (value: string) => void; language?: Language; dateOnly?: boolean };
@@ -25,12 +27,100 @@ function g2j(input: string): string {
 }
 const jMonthDays = (y: number, m: number) => m <= 6 ? 31 : m <= 11 ? 30 : (j2g(`${y + 1}/01/01`) && j2g(`${y}/01/01`) && Math.round((Date.parse(`${j2g(`${y + 1}/01/01`)}T00:00:00Z`) - Date.parse(`${j2g(`${y}/01/01`)}T00:00:00Z`)) / 86400000) === 366 ? 30 : 29);
 
+function parseTimeMinutes(value: string): number | null {
+  const match = /^(\d{2}):([0-5]\d)$/.exec(value);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  return hour <= 23 ? hour * 60 + Number(match[2]) : null;
+}
+
+function formatTimeMinutes(value: number): string {
+  return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+}
+
 export function EosDateTimePicker({ value, onChange, label, language = 'fa', dateOnly = false, ...props }: EosDateTimePickerProps) {
-  const fa = language === 'fa'; const today = new Date(); const fallback = iso(today.getFullYear(), today.getMonth() + 1, today.getDate()); const date = value.slice(0, 10) || fallback; const time = value.includes('T') ? value.slice(11, 16) : '';
-  const initial = (fa ? g2j(date) : date).split(/[/-]/).map(Number); const [open, setOpen] = useState(false); const [anchor, setAnchor] = useState<HTMLElement | null>(null); const [year, setYear] = useState(initial[0]); const [month, setMonth] = useState(initial[1]);
-  useEffect(() => { if (!open) return; const next = (fa ? g2j(date) : date).split(/[/-]/).map(Number); setYear(next[0]); setMonth(next[1]); }, [open, date, fa]);
-  const months = fa ? ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'] : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; const weeks = fa ? ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']; const first = fa ? j2g(`${year}/${String(month).padStart(2, '0')}/01`) : iso(year, month, 1); const offset = first ? (fa ? (new Date(`${first}T00:00:00Z`).getUTCDay() + 1) % 7 : new Date(`${first}T00:00:00Z`).getUTCDay()) : 0; const days = fa ? jMonthDays(year, month) : new Date(Date.UTC(year, month, 0)).getUTCDate(); const selected = Number((fa ? g2j(date) : date).split(/[/-]/)[2]);
-  const setDay = (day: number) => { const next = fa ? j2g(`${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`) ?? '' : iso(year, month, day); onChange(`${next}${dateOnly ? '' : `T${time || '00:00'}`}`); setOpen(false); }; const setTime = (e: ChangeEvent<HTMLInputElement>) => onChange(`${value.slice(0, 10) || fallback}T${e.target.value}`); const move = (n: number) => { let m = month + n; let y = year; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } setMonth(m); setYear(y); };
-  return <Box sx={{ display: 'grid', gridTemplateColumns: dateOnly ? '1fr' : 'minmax(0, 1fr) auto', gap: 1, alignItems: 'start' }}><TextField {...props} fullWidth type="text" label={label} value={value ? (fa ? g2j(date) : date) : ''} placeholder={fa ? '۱۴۰۴/۰۱/۰۱' : 'YYYY-MM-DD'} onClick={(e) => { setAnchor(e.currentTarget); setOpen(true); }} slotProps={{ input: { readOnly: true, endAdornment: <InputAdornment position="end"><IconButton size="small" aria-label={String(label)} onClick={(e) => { setAnchor(e.currentTarget); setOpen(true); }}><CalendarMonthRoundedIcon /></IconButton></InputAdornment> } }} />{!dateOnly && <TextField {...props} fullWidth type="time" label="" value={time} onChange={setTime} slotProps={{ htmlInput: { 'aria-label': `${String(label)} - ${fa ? 'ساعت' : 'time'}` } }} />}
-    <Popover open={open} anchorEl={anchor} onClose={() => setOpen(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}><Box dir={fa ? 'rtl' : 'ltr'} sx={{ p: 1.5, width: 280 }}><Box className="inline-status-row" sx={{ justifyContent: 'space-between', mb: 1 }}><IconButton size="small" onClick={() => move(fa ? 1 : -1)}><ChevronLeftRoundedIcon /></IconButton><Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{months[month - 1]} {year}</Typography><IconButton size="small" onClick={() => move(fa ? -1 : 1)}><ChevronRightRoundedIcon /></IconButton></Box><Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.25, textAlign: 'center' }}>{weeks.map((w, i) => <Typography key={`${w}-${i}`} variant="caption" color="text.secondary" sx={{ p: 0.5, fontWeight: 800 }}>{w}</Typography>)}{Array.from({ length: offset + days }, (_, i) => i < offset ? <Box key={`empty-${i}`} /> : <Button key={i} size="small" onClick={() => setDay(i - offset + 1)} variant={selected === i - offset + 1 ? 'contained' : 'text'} sx={{ minWidth: 0, p: 0.5 }}>{i - offset + 1}</Button>)}</Box></Box></Popover></Box>;
+  const fa = language === 'fa';
+  const today = new Date();
+  const fallback = iso(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  const date = value.slice(0, 10) || fallback;
+  const parsedTime = parseTimeMinutes(value.includes('T') ? value.slice(11, 16) : '');
+  const time = parsedTime === null ? '' : formatTimeMinutes(parsedTime);
+  const timeValue = parsedTime;
+  const initial = (fa ? g2j(date) : date).split(/[/-]/).map(Number);
+  const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [year, setYear] = useState(initial[0]);
+  const [month, setMonth] = useState(initial[1]);
+
+  useEffect(() => {
+    if (!open) return;
+    const next = (fa ? g2j(date) : date).split(/[/-]/).map(Number);
+    setYear(next[0]);
+    setMonth(next[1]);
+  }, [open, date, fa]);
+
+  const months = fa
+    ? ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
+    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const weeks = fa ? ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const first = fa ? j2g(`${year}/${String(month).padStart(2, '0')}/01`) : iso(year, month, 1);
+  const offset = first ? (fa ? (new Date(`${first}T00:00:00Z`).getUTCDay() + 1) % 7 : new Date(`${first}T00:00:00Z`).getUTCDay()) : 0;
+  const days = fa ? jMonthDays(year, month) : new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const selected = Number((fa ? g2j(date) : date).split(/[/-]/)[2]);
+
+  const setDay = (day: number) => {
+    const next = fa ? j2g(`${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`) ?? '' : iso(year, month, day);
+    onChange(`${next}${dateOnly ? '' : `T${time || '00:00'}`}`);
+    setOpen(false);
+  };
+  const setTime = (minutes: number | null) => {
+    onChange(`${value.slice(0, 10) || fallback}T${formatTimeMinutes(minutes ?? 0)}`);
+  };
+  const move = (amount: number) => {
+    let nextMonth = month + amount;
+    let nextYear = year;
+    if (nextMonth < 1) { nextMonth = 12; nextYear--; }
+    if (nextMonth > 12) { nextMonth = 1; nextYear++; }
+    setMonth(nextMonth);
+    setYear(nextYear);
+  };
+
+  return <Box sx={{ display: 'grid', gridTemplateColumns: dateOnly ? '1fr' : 'minmax(0, 1fr) minmax(110px, 0.6fr)', gap: 1, alignItems: 'start' }}>
+    <TextField
+      {...props}
+      fullWidth
+      type="text"
+      label={label}
+      value={value ? (fa ? g2j(date) : date) : ''}
+      placeholder={fa ? '۱۴۰۴/۰۱/۰۱' : 'YYYY-MM-DD'}
+      onClick={(event) => { setAnchor(event.currentTarget); setOpen(true); }}
+      slotProps={{ input: { readOnly: true, endAdornment: <InputAdornment position="end"><IconButton size="small" aria-label={String(label)} onClick={(event) => { setAnchor(event.currentTarget); setOpen(true); }}><CalendarMonthRoundedIcon /></IconButton></InputAdornment> } }}
+    />
+    {!dateOnly && <EosTimeOnDayPicker
+      label={translations[language].time}
+      value={timeValue}
+      onChange={setTime}
+      unit="minutes"
+      language={language}
+      clearable={false}
+      size={props.size}
+      disabled={props.disabled}
+      error={props.error}
+    />}
+    <Popover open={open} anchorEl={anchor} onClose={() => setOpen(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
+      <Box dir={fa ? 'rtl' : 'ltr'} sx={{ p: 1.5, width: 280 }}>
+        <Box className="inline-status-row" sx={{ justifyContent: 'space-between', mb: 1 }}>
+          <IconButton size="small" onClick={() => move(fa ? 1 : -1)}><ChevronLeftRoundedIcon /></IconButton>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{months[month - 1]} {year}</Typography>
+          <IconButton size="small" onClick={() => move(fa ? -1 : 1)}><ChevronRightRoundedIcon /></IconButton>
+        </Box>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.25, textAlign: 'center' }}>
+          {weeks.map((week, index) => <Typography key={`${week}-${index}`} variant="caption" color="text.secondary" sx={{ p: 0.5, fontWeight: 800 }}>{week}</Typography>)}
+          {Array.from({ length: offset + days }, (_, index) => index < offset
+            ? <Box key={`empty-${index}`} />
+            : <Button key={index} size="small" onClick={() => setDay(index - offset + 1)} variant={selected === index - offset + 1 ? 'contained' : 'text'} sx={{ minWidth: 0, p: 0.5 }}>{index - offset + 1}</Button>)}
+        </Box>
+      </Box>
+    </Popover>
+  </Box>;
 }

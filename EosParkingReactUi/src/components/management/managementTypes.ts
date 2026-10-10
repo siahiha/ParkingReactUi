@@ -7,6 +7,10 @@ export type RecordValue = Record<string, Primitive>;
 export type ParkingForm = {
   Id: number;
   ParkingName: string;
+  IsCommercialParking: boolean;
+  HasUserShifts: boolean;
+  IsShift2Enabled: boolean;
+  IsShift3Enabled: boolean;
   Address: string;
   PhonNumber: string;
   TaxRate: string;
@@ -71,6 +75,10 @@ export type ModuleDefinition = {
 export const emptyParkingForm: ParkingForm = {
   Id: 0,
   ParkingName: '',
+  IsCommercialParking: false,
+  HasUserShifts: false,
+  IsShift2Enabled: false,
+  IsShift3Enabled: false,
   Address: '',
   PhonNumber: '',
   TaxRate: '0',
@@ -186,9 +194,21 @@ export function parkingTimeValue(value: Primitive): string {
 }
 
 export function parkingFormFromRow(row: RecordValue, fallbackId: number): ParkingForm {
+  const Shift1FromTime = parkingTimeValue(recordValue(row, 'Shift1FromTime'));
+  const Shift1ToTime = parkingTimeValue(recordValue(row, 'Shift1ToTime'));
+  const Shift2ToTime = parkingTimeValue(recordValue(row, 'Shift2ToTime'));
+  const Shift3ToTime = parkingTimeValue(recordValue(row, 'Shift3ToTime'));
+  const IsShift2Enabled = Boolean(Shift2ToTime);
+  const IsShift3Enabled = Boolean(Shift3ToTime && IsShift2Enabled);
+  const Shift2FromTime = IsShift2Enabled ? nextMinuteTime(Shift1ToTime) : '';
+  const Shift3FromTime = IsShift3Enabled ? nextMinuteTime(Shift2ToTime) : '';
   return {
     Id: Number(recordValue(row, 'Id') ?? fallbackId),
     ParkingName: String(recordValue(row, 'ParkingName') ?? ''),
+    IsCommercialParking: Boolean(recordValue(row, 'IsCommercialParking')),
+    HasUserShifts: Boolean(recordValue(row, 'HasUserShifts')),
+    IsShift2Enabled,
+    IsShift3Enabled,
     Address: String(recordValue(row, 'Address') ?? ''),
     PhonNumber: String(recordValue(row, 'PhonNumber') ?? ''),
     TaxRate: String(recordValue(row, 'TaxRate') ?? 0),
@@ -200,12 +220,12 @@ export function parkingFormFromRow(row: RecordValue, fallbackId: number): Parkin
     HasBillControl: Boolean(recordValue(row, 'HasBillControl')),
     RoundingMoneyBorder: String(recordValue(row, 'RoundingMoneyBorder') ?? 0),
     RoundingMoneyValue: String(recordValue(row, 'RoundingMoneyValue') ?? 0),
-    Shift1FromTime: parkingTimeValue(recordValue(row, 'Shift1FromTime')),
-    Shift1ToTime: parkingTimeValue(recordValue(row, 'Shift1ToTime')),
-    Shift2FromTime: parkingTimeValue(recordValue(row, 'Shift2FromTime')),
-    Shift2ToTime: parkingTimeValue(recordValue(row, 'Shift2ToTime')),
-    Shift3FromTime: parkingTimeValue(recordValue(row, 'Shift3FromTime')),
-    Shift3ToTime: parkingTimeValue(recordValue(row, 'Shift3ToTime')),
+    Shift1FromTime,
+    Shift1ToTime,
+    Shift2FromTime,
+    Shift2ToTime,
+    Shift3FromTime,
+    Shift3ToTime,
   };
 }
 
@@ -215,13 +235,21 @@ export function timeMinutes(value: string): number | null {
   return hours * 60 + minutes;
 }
 
+export function nextMinuteTime(value: string): string {
+  const minutes = timeMinutes(value);
+  if (minutes === null || minutes >= 23 * 60 + 59) return '';
+  const nextMinute = minutes + 1;
+  return `${String(Math.floor(nextMinute / 60)).padStart(2, '0')}:${String(nextMinute % 60).padStart(2, '0')}`;
+}
+
 export function timePayload(value: string): string | null {
   return value ? `${value}:00` : null;
 }
 
 export function parkingPayload(form: ParkingForm) {
+  const { IsShift2Enabled, IsShift3Enabled, ...payload } = form;
   return {
-    ...form,
+    ...payload,
     ParkingName: form.ParkingName.trim(),
     TaxRate: Number(form.TaxRate) || 0,
     CostOfCard: Number(form.CostOfCard) || 0,
@@ -232,10 +260,10 @@ export function parkingPayload(form: ParkingForm) {
     RoundingMoneyValue: Number(form.RoundingMoneyValue) || 0,
     Shift1FromTime: timePayload(form.Shift1FromTime),
     Shift1ToTime: timePayload(form.Shift1ToTime),
-    Shift2FromTime: timePayload(form.Shift2FromTime),
-    Shift2ToTime: timePayload(form.Shift2ToTime),
-    Shift3FromTime: timePayload(form.Shift3FromTime),
-    Shift3ToTime: timePayload(form.Shift3ToTime),
+    Shift2FromTime: IsShift2Enabled ? timePayload(form.Shift2FromTime) : null,
+    Shift2ToTime: IsShift2Enabled ? timePayload(form.Shift2ToTime) : null,
+    Shift3FromTime: IsShift3Enabled ? timePayload(form.Shift3FromTime) : null,
+    Shift3ToTime: IsShift3Enabled ? timePayload(form.Shift3ToTime) : null,
   };
 }
 

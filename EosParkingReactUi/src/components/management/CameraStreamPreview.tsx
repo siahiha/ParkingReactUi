@@ -30,6 +30,8 @@ export type CameraStreamPreviewProps = {
   showConnectionButton?: boolean;
   /** Shows the small protocol-switch arrow in the toolbar. */
   showModeSwitcher?: boolean;
+  /** Connects to the camera as soon as the preview is mounted. */
+  autoConnect?: boolean;
   /** Allows the caller to hide ROI action while keeping the preview reusable. */
   showRoiAction?: boolean;
   /** Uses reduced spacing when the preview is placed in a constrained monitoring panel. */
@@ -138,7 +140,7 @@ function backendErrorMessage(cause: unknown, language: Language) {
   return rawMessage || null;
 }
 
-export function CameraStreamPreview({ camera, language, viewer, size = 200, showPlaybackControls = false, showStatus = true, showConnectionButton = true, showModeSwitcher = true, showRoiAction = true, compact = false }: CameraStreamPreviewProps) {
+export function CameraStreamPreview({ camera, language, viewer, size = 200, showPlaybackControls = false, showStatus = true, showConnectionButton = true, showModeSwitcher = true, autoConnect = false, showRoiAction = true, compact = false }: CameraStreamPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const readerRef = useRef<{ close: () => void } | null>(null);
@@ -386,6 +388,10 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   const previewSize = typeof size === 'number' ? { width: size, height: size } : size;
   const hasToolbar = showConnectionButton || showModeSwitcher || showRoiAction;
   const switchMode = () => void connect(streamMode === 'WebRTC' ? 'Hls' : 'WebRTC');
+
+  useEffect(() => {
+    if (autoConnect) void connect();
+  }, [autoConnect, camera.cameraId]);
 
   const mediaFrameSize = previewSize.height === undefined ? { aspectRatio: '16 / 9' } : { height: previewSize.height };
   const mediaSize = { width: '100%', height: '100%' };
