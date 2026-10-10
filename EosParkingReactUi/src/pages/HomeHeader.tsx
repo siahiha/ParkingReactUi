@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { AppBar, Avatar, Box, Divider, FormControl, IconButton, ListItemIcon, Menu, MenuItem, Select, Toolbar, Tooltip } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
-import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import KeyRoundedIcon from '@mui/icons-material/KeyRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
@@ -64,7 +64,7 @@ export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalet
         <Tooltip title={t.selectCurrentParking} arrow><IconButton className="home-header-utility-button home-header-search-button" aria-label={t.selectCurrentParking}><SearchRoundedIcon /></IconButton></Tooltip>
       </Box>
       <Box className="home-user-area home-header-primary-actions">
-        <Tooltip title={t.home} arrow><IconButton className="home-header-utility-button" onClick={onHome} aria-label={t.home}><CalendarMonthRoundedIcon /></IconButton></Tooltip>
+        <Tooltip title={t.home} arrow><IconButton className="home-header-utility-button" onClick={onHome} aria-label={t.home}><HomeRoundedIcon /></IconButton></Tooltip>
         <Tooltip title={themeMode === 'light' ? t.nightMode : t.dayMode} arrow><IconButton className="home-header-utility-button" onClick={onThemeToggle} aria-label={themeMode === 'light' ? t.nightMode : t.dayMode}>{themeMode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}</IconButton></Tooltip>
         <Tooltip title={`${t.user}: ${user.userName}`} arrow><IconButton className="home-header-avatar-button" onClick={(event) => setUserMenuAnchor(event.currentTarget)} aria-label={`${t.user}: ${user.userName}`} aria-controls={userMenuAnchor ? 'user-profile-menu' : undefined} aria-haspopup="true" aria-expanded={userMenuAnchor ? 'true' : undefined}><Avatar className="home-header-avatar"><AccountCircleRoundedIcon /></Avatar></IconButton></Tooltip>
       </Box>
