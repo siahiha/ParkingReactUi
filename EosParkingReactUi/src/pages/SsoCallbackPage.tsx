@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import type { Language } from '../i18n';
 import { loginWithSso } from '../features/auth/authService';
-import { consumeSsoCallback } from '../features/auth/sso';
+import { clearPendingSso, consumeSsoCallback } from '../features/auth/sso';
 import type { LoginResult } from '../features/auth/authService';
 
 type Props = {
@@ -21,6 +21,9 @@ export function SsoCallbackPage({ language, onAuthenticated }: Props) {
       try {
         const callback = consumeSsoCallback();
         const result = await loginWithSso(callback);
+        // Keep the PKCE verifier available while SsoLogin is in flight so a
+        // transient backend failure does not turn a retry into "expired".
+        clearPendingSso();
         onAuthenticated(result);
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : 'خطا در ورود با SSO');

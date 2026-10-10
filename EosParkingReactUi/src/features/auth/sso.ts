@@ -93,11 +93,11 @@ export function consumeSsoCallback() {
   const error = query.get('error');
   if (error) throw new Error(query.get('error_description') || error);
 
-  const issueCode = query.get('code');
-  if (!issueCode) throw new Error('SSO authorization code was not returned.');
+  // Accept the current provider name and the older OAuth callback name.
+  const authorizationCode = query.get('authorizationCode') ?? query.get('code');
+  if (!authorizationCode) throw new Error('SSO authorization code was not returned.');
 
   const rawPending = window.sessionStorage.getItem(pendingSsoKey);
-  window.sessionStorage.removeItem(pendingSsoKey);
   if (!rawPending) throw new Error('The SSO login request has expired.');
 
   let pending: PendingSso;
@@ -120,5 +120,9 @@ export function consumeSsoCallback() {
     throw new Error('The SSO state is invalid.');
   }
 
-  return { issueCode, ...pending };
+  return { authorizationCode, ...pending };
+}
+
+export function clearPendingSso() {
+  window.sessionStorage.removeItem(pendingSsoKey);
 }

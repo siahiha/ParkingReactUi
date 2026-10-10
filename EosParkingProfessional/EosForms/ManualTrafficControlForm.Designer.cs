@@ -1346,7 +1346,7 @@ namespace EosParkingProfessional.EosForms
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(1);
-            this.tabPage2.Size = new System.Drawing.Size(465, 0);
+            this.tabPage2.Size = new System.Drawing.Size(465, 51);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "دوربین خروجی";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -1371,7 +1371,7 @@ namespace EosParkingProfessional.EosForms
             this.eosExitIpCamView2.Plate = null;
             this.eosExitIpCamView2.PlateDetectorAddress = "http://192.168.10.138:8080";
             this.eosExitIpCamView2.Port = 80;
-            this.eosExitIpCamView2.Size = new System.Drawing.Size(463, 0);
+            this.eosExitIpCamView2.Size = new System.Drawing.Size(463, 49);
             this.eosExitIpCamView2.StretchVideo = false;
             this.eosExitIpCamView2.TabIndex = 7;
             this.eosExitIpCamView2.UserName = null;

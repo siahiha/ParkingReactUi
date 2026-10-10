@@ -1316,7 +1316,8 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   gap: 16px;
 }
 
-.parking-shift-row > .MuiTextField-root {
+.parking-shift-row > .MuiTextField-root,
+.parking-shift-row > .MuiPickersTextField-root {
   flex: 1 1 220px;
 }
 
@@ -1358,6 +1359,39 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   overflow-wrap: anywhere;
   word-break: break-word;
   text-align: start;
+}
+
+.traffic-details-section .app-data-grid {
+  table-layout: fixed;
+}
+
+.traffic-details-section .app-data-grid .MuiTableCell-root {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.traffic-details-section .app-data-grid .app-data-grid-compact-cell {
+  padding-inline: 3px;
+}
+
+.traffic-control-grid .app-data-grid .app-data-grid-compact-cell {
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+  padding-inline: 0;
+  overflow: visible;
+}
+
+.traffic-control-grid .app-data-grid .app-data-grid-compact-cell .MuiIconButton-root {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 2px;
+  color: var(--app-primary);
+  opacity: 1;
+  visibility: visible;
 }
 
 .app-data-grid .MuiTableCell-root:first-child {
@@ -3075,7 +3109,7 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .traffic-entry-section,
 .traffic-details-section {
   display: grid;
-  gap: 12px;
+  gap: 5px;
 }
 
 .traffic-details-section {
@@ -3087,46 +3121,198 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   border-block-end: 1px solid var(--app-divider);
 }
 
+.traffic-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 5px;
+  align-items: stretch;
+  direction: rtl;
+}
+
+.traffic-top-grid > .traffic-entry-panel,
+.traffic-top-grid > .traffic-camera-panel,
+.traffic-top-grid > .traffic-last-traffic-panel {
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.traffic-last-traffic-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.traffic-operation-latest-panel {
+  min-width: 0;
+}
+
+.traffic-operation-tall {
+  grid-row: span 2;
+}
+
+.traffic-operation-latest-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(150px, .85fr);
+  gap: 10px;
+  height: 100%;
+  min-width: 0;
+}
+
+.traffic-operation-content,
+.traffic-last-traffic-inline {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.traffic-last-traffic-inline .traffic-last-traffic-placeholder {
+  min-height: 78px;
+  flex: 1;
+}
+
+.traffic-last-traffic-placeholder {
+  flex: 1;
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border: 1px dashed var(--app-divider);
+  background: var(--app-surface-muted, #fafafa);
+}
+
 .traffic-entry-layout {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 5px;
+  align-items: stretch;
+  direction: rtl;
+}
+
+.traffic-entry-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .traffic-entry-identity {
-  display: -webkit-inline-box;
-  gap: 8px;
-  align-items: end;
-  flex-wrap: wrap;
+  align-items: stretch;
 }
 
-.traffic-entry-operation {
+.traffic-vehicle-identification-grid {
   display: grid;
-  grid-template-columns: minmax(190px, 360px) minmax(120px, 180px);
-  gap: 8px;
-  align-items: end;
-  justify-content: start;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 5px;
+  min-width: 0;
   direction: ltr;
 }
 
-.traffic-entry-operation > :nth-child(1),
-.traffic-entry-operation > :nth-child(2),
-.traffic-entry-operation > :nth-child(3) { grid-column: 1; }
-.traffic-entry-operation > :nth-child(2),
-.traffic-entry-operation > :nth-child(3) { width: 360px; max-width: 100%; }
-.traffic-entry-operation > :nth-child(1) { width: 240px; max-width: 100%; }
-.traffic-entry-operation > :nth-child(4) { grid-column: 2; }
+.traffic-card-member-fields {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 5px;
+  min-width: 0;
+  direction: rtl;
+}
 
-.traffic-entry-identity > .MuiBox-root:first-child,
-.traffic-entry-identity .iranian-plate-field,
-.traffic-entry-identity .iranian-plate-control { width: 190px; max-width: 100%; }
+.traffic-card-member-fields .traffic-card-field,
+.traffic-card-member-fields .traffic-member-field {
+  width: 100%;
+}
+
+.traffic-vehicle-identification-grid > .traffic-plate-field {
+  width: 100%;
+  min-width: 0;
+  align-self: center;
+  direction: rtl;
+}
+
+.traffic-vehicle-identification-grid > .traffic-plate-field .iranian-plate-field,
+.traffic-vehicle-identification-grid > .traffic-plate-field .iranian-plate-control {
+  width: 100%;
+  max-width: 100%;
+}
+
+.traffic-entry-operation {
+  align-items: stretch;
+  direction: rtl;
+}
+
+.traffic-entry-identity .MuiTextField-root,
+.traffic-entry-operation .MuiButton-root {
+  width: 100%;
+}
+
+.traffic-vehicle-details-panel {
+  min-width: 0;
+  margin: 12px 0 0;
+  padding: 8px 12px 10px;
+}
+
+.traffic-control-vehicle-details-panel {
+  margin-top: 5px;
+  padding: 4px 8px 5px;
+}
+
+.traffic-vehicle-details-title {
+  margin-inline: 5px;
+  padding-inline: 4px;
+  font-size: .72rem !important;
+  line-height: 1.1;
+}
+
+.traffic-vehicle-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.traffic-control-vehicle-details-panel .traffic-vehicle-details-grid {
+  gap: 2px 5px;
+}
+
+.traffic-vehicle-details-grid .MuiTypography-root {
+  line-height: 1.25;
+}
+
+.traffic-entry-operation .MuiButton-root {
+  margin-top: auto;
+}
 
 @media (max-width: 680px) {
-  .traffic-entry-identity,
-  .traffic-entry-operation { grid-template-columns: 1fr; }
-  .traffic-entry-operation > :nth-child(3),
-  .traffic-entry-operation > :nth-child(4) { grid-column: 1; }
+  .traffic-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .traffic-operation-latest-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .traffic-last-traffic-inline .traffic-last-traffic-placeholder {
+    min-height: 64px;
+  }
+
+  .traffic-entry-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .traffic-vehicle-identification-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .traffic-entry-identity .iranian-plate-field,
+  .traffic-entry-identity .iranian-plate-control {
+    width: 100%;
+  }
+
+  .traffic-vehicle-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .monitoring-door-grid .app-data-grid .MuiTableCell-root {
@@ -3846,4 +4032,149 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .app-root .home-shell-with-sidebar .home-toolbar .home-sidebar-collapse-button:hover,
 .app-root .home-shell-with-sidebar .home-toolbar .home-sidebar-collapse-button:focus-visible {
   background: color-mix(in srgb, var(--app-surface) 14%, transparent) !important;
+}
+
+/* Reference top appbar: a neutral, compact utility bar with no branded fill. */
+.app-root .home-shell-with-sidebar {
+  padding-block-start: 64px;
+}
+
+.app-root .home-shell-with-sidebar .home-header {
+  height: 64px;
+  min-height: 64px;
+  background: var(--app-surface) !important;
+  border-block-start: 4px solid color-mix(in srgb, var(--app-text) 88%, var(--app-surface)) !important;
+  border-block-end: 1px solid color-mix(in srgb, var(--app-text) 35%, var(--app-surface)) !important;
+  box-shadow: none !important;
+}
+
+.app-root .home-shell-with-sidebar .home-toolbar {
+  height: 60px;
+  min-height: 60px !important;
+  padding: 7px 16px !important;
+  gap: 0;
+  color: var(--app-muted-text);
+}
+
+.app-root .home-header-primary-actions,
+.app-root .home-header-middle-tools,
+.app-root .home-header-parking-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.app-root .home-header-primary-actions {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.app-root .home-header-middle-tools {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+}
+.app-root .home-header-search-button { justify-self: center; }
+.app-root .home-header-navigation-and-parking {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.app-root .home-header-parking-control { min-width: 150px; }
+.app-root .home-header-spacer { display: none; }
+.app-root .home-header-user-menu { display: contents; }
+
+.app-root .home-header-avatar-button,
+.app-root .home-header-utility-button {
+  width: 36px;
+  height: 36px;
+  padding: 5px !important;
+  color: #687078 !important;
+  border-radius: 3px !important;
+}
+
+.app-root .home-header-avatar-button:hover,
+.app-root .home-header-avatar-button:focus-visible,
+.app-root .home-header-utility-button:hover,
+.app-root .home-header-utility-button:focus-visible {
+  color: var(--app-text) !important;
+  background: color-mix(in srgb, var(--app-text) 8%, var(--app-surface)) !important;
+}
+
+.app-root .home-header-avatar-button { width: 46px; height: 46px; padding: 3px !important; }
+.app-root .home-header-avatar {
+  width: 40px;
+  height: 40px;
+  color: #59636c;
+  background: color-mix(in srgb, var(--app-primary) 12%, var(--app-surface));
+  border: 1px solid color-mix(in srgb, var(--app-text) 42%, var(--app-surface));
+}
+.app-root .home-header-avatar .MuiSvgIcon-root { font-size: 28px; }
+.app-root .home-header-utility-button .MuiSvgIcon-root { font-size: 22px; }
+
+.app-root .home-shell-with-sidebar .home-header-parking-select {
+  min-width: 150px;
+  width: 150px;
+  margin: 0;
+}
+.app-root .home-header-parking-select .MuiOutlinedInput-root {
+  min-height: 36px;
+  padding-inline: 6px;
+  background: transparent !important;
+  border-radius: 3px;
+}
+.app-root .home-header-parking-select .MuiOutlinedInput-notchedOutline { border-color: transparent; }
+.app-root .home-header-parking-select .MuiSelect-select {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  min-height: 36px;
+  padding-block: 0 !important;
+  padding-inline: 8px 30px !important;
+  text-align: start;
+  line-height: 1.2;
+}
+.app-root .home-header-parking-select .MuiSelect-icon { display: block; }
+
+.app-root .home-shell-with-sidebar .home-header-navigation-button {
+  display: inline-flex !important;
+  position: static;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 5px !important;
+  color: #687078 !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+}
+
+.app-root .home-shell-with-sidebar .home-header-navigation-button:hover,
+.app-root .home-shell-with-sidebar .home-header-navigation-button:focus-visible {
+  background: color-mix(in srgb, var(--app-text) 8%, var(--app-surface)) !important;
+}
+
+.app-root .home-shell-with-sidebar .home-toolbox-search { display: none; }
+.app-root .home-shell-with-sidebar .home-sidebar,
+.app-root .home-shell-with-sidebar .home-sidebar .MuiDrawer-paper,
+.app-root .home-shell-with-sidebar .home-sidebar-paper {
+  inset-block-start: 64px !important;
+  height: calc(100vh - 64px) !important;
+}
+.app-root .home-shell-with-sidebar .home-body { min-height: calc(100vh - 64px); }
+.app-root .home-sidebar-drawer { inset-block-start: 64px !important; height: calc(100vh - 64px) !important; }
+
+.app-root.app-theme-dark .home-shell-with-sidebar .home-header {
+  background: var(--app-surface) !important;
+  border-block-start-color: color-mix(in srgb, var(--app-text) 88%, var(--app-surface)) !important;
+}
+
+@media (max-width: 560px) {
+  .app-root .home-shell-with-sidebar .home-toolbar { padding-inline: 8px !important; }
+  .app-root .home-header-primary-actions { gap: 2px; }
+  .app-root .home-shell-with-sidebar .home-header-parking-select { display: none; }
 }

@@ -26,8 +26,8 @@ export function encryptLegacyPassword(password: string) {
 }
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, public readonly body: unknown) {
-    super(`API request failed with status ${status}`);
+  constructor(public readonly status: number, public readonly body: unknown, message?: string) {
+    super(message ?? `API request failed with status ${status}`);
     this.name = 'ApiError';
   }
 }

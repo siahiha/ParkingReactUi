@@ -31,6 +31,7 @@ export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingI
   if (itemKey === 'equipment') return <CameraEquipmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'monitoring') return <MonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'shifts') return <ShiftAssignmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'manual-traffic') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} showCameras />;
   if (itemKey === 'traffic-records') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'anpr-monitoring') return <AnprMonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'integration-settings') return <IntegrationSettingsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;

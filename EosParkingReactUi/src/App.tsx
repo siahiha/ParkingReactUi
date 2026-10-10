@@ -1,9 +1,13 @@
 import { useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { enUS, faIR } from '@mui/x-date-pickers/locales';
 import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
 import rtlPlugin from 'stylis-plugin-rtl';
+import 'dayjs/locale/fa';
 import { prefixer } from 'stylis';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { type Language, translations } from './i18n';
@@ -91,6 +95,10 @@ export function App() {
   const activeThemeColors = resolveThemeColorOverrides(themeColors, themeMode);
   const activeTokens = getPaletteTokens(themeMode, activePalette, activeThemeColors);
   const theme = useMemo(() => createAppTheme(direction, themeMode, activePalette, shapeSettings, activeThemeColors), [direction, themeMode, activePalette, shapeSettings, activeThemeColors]);
+  const pickerLocaleText = useMemo(() => {
+    const localeText = (language === 'fa' ? faIR : enUS).components.MuiLocalizationProvider.defaultProps.localeText;
+    return { ...localeText, fieldHoursPlaceholder: () => 'HH', fieldMinutesPlaceholder: () => 'mm' };
+  }, [language]);
 
   useLayoutEffect(() => {
     window.localStorage.setItem(themeStorageKey, themeMode);
@@ -143,10 +151,10 @@ export function App() {
   const themeVars = themeMode === 'dark'
     ? { surface: activeThemeColors.surface ?? '#29333d', shell: activeThemeColors.shell ?? '#202830', text: activeThemeColors.text ?? '#f3f5f7', mutedText: activeThemeColors.mutedText ?? '#b7c1ca', border: activeThemeColors.border ?? '#3d4b58', input: activeThemeColors.input ?? '#202b35' }
     : { surface: activeThemeColors.surface ?? '#ffffff', shell: activeThemeColors.shell ?? '#f3f5f7', text: activeThemeColors.text ?? '#18212b', mutedText: activeThemeColors.mutedText ?? '#687482', border: activeThemeColors.border ?? '#d7dce2', input: activeThemeColors.input ?? '#fbfcfd' };
-  return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><CssBaseline /><Routes>
+  return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language} localeText={pickerLocaleText}><CssBaseline /><Routes>
     <Route path="/home/*" element={authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} /> : <Navigate to="/" replace />} />
     <Route path="/sso/callback" element={<SsoCallbackPage language={language} onAuthenticated={authenticate} />} />
     <Route path="/" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="*" element={<Navigate to={authenticated ? '/home' : '/'} replace />} />
-  </Routes></ThemeProvider></RTL></Box>;
+  </Routes></LocalizationProvider></ThemeProvider></RTL></Box>;
 }
