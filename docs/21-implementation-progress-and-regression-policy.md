@@ -27,7 +27,7 @@
 
 | حوزه | وضعیت فعلی در UI | منبع کد/مستند | وضعیت تحویل |
 |---|---|---|---|
-| Login، session و Home | پیاده‌سازی شده و تست regression دارد | `src/App.tsx`، `src/features/auth`، `src/pages/Home.tsx` | قابل استفاده با قرارداد فعلی |
+| Login، session و Home | پیاده‌سازی شده و تست regression دارد؛ نمای Login و متن‌های فارسی/انگلیسی در حال حاضر responsive و در لایه‌ی ترجمه نگهداری می‌شوند | `src/pages/LoginPage.tsx`، `src/i18n.ts`، `src/styles.css`، `src/features/auth`، `src/pages/Home.tsx`؛ جزئیات Login در سندهای ۰۱ و ۱۹ | قابل استفاده با قرارداد فعلی؛ دیاگرام پارکینگ نمایشی است و داده‌ی زنده نیست |
 | فهرست پارکینگ‌ها | CRUD پیاده‌سازی شده | `ParkingDirectoryWorkspace.tsx` | پیاده‌سازی UI؛ API کامل نیازمند تأیید Backend |
 | کاربران و سطوح دسترسی | CRUD پیاده‌سازی شده | `UserManagementWorkspace.tsx`، `AccessLevelWorkspace.tsx` | پیاده‌سازی UI؛ مجوز نهایی با Backend |
 | مشخصات پارکینگ | فرم تب‌بندی‌شده با گزینه‌های فعال‌سازی تب‌ها و `EosTimeOnDayPicker` برای ساعت‌های روزانه‌ی شیفت | `ParkingFormFields.tsx`، `EosTimeOnDayPicker.tsx`، `ParkingDetailsWorkspace.tsx`، `ParkingDirectoryWorkspace.tsx`؛ جزئیات در سند ۰۳ | propertyهای `IsCommercialParking` و `HasUserShifts` به `ParkingEntity` در سورس Backend افزوده شده و دیتابیس با EF automatic migrations به‌روز می‌شود؛ اعمال در محیط اجرا نیازمند build/deploy Backend است. ذخیره‌ی پارکینگ بدون شیفت همچنان به‌علت non-null بودن ساعت شیفت اول نیازمند تصمیم Backend است |

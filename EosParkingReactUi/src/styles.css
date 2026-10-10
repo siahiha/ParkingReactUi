@@ -306,18 +306,12 @@ body {
 .showcase-copy h2 span { color: #b9d5e8; }
 .showcase-copy .MuiTypography-body2 { color: #d2dfeb; line-height: 2; }
 .parking-diagram { height: 150px; margin: 24px -14px 18px; border-block: 1px solid rgba(255,255,255,.12); overflow: hidden; }
-.diagram-road { position: absolute; height: 26px; background: rgba(255,255,255,.10); border-block: 1px solid rgba(255,255,255,.18); transform: rotate(-18deg); }
-.diagram-road-one { width: 120%; top: 48px; left: -10%; }
-.diagram-road-two { width: 120%; top: 96px; left: -10%; transform: rotate(16deg); }
-.diagram-gate { position: absolute; width: 28px; height: 28px; left: 43%; top: 62px; border: 2px solid #b9d5e8; border-radius: 50%; background: #1b3f63; }
-.diagram-gate-arm { width: 42px; height: 3px; position: absolute; left: 12px; top: 11px; background: #e4b45c; transform-origin: left center; transform: rotate(-22deg); }
+.diagram-road { position: absolute; height: 20px; background: rgba(255,255,255,.10); border-block: 1px solid rgba(255,255,255,.18); }
+.diagram-gate { position: absolute; border: 2px solid #b9d5e8; border-radius: 50%; background: #1b3f63; }
+.diagram-gate-arm { height: 2px; position: absolute; background: #e4b45c; }
 .diagram-car { position: absolute; color: #f6f8fa; opacity: .92; }
-.diagram-car svg { font-size: 24px; }
-.diagram-car-one { top: 24px; left: 18%; transform: rotate(-18deg); }
-.diagram-car-two { bottom: 22px; right: 18%; transform: rotate(16deg); }
 .diagram-node { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #6fc28a; box-shadow: 0 0 0 5px rgba(111,194,138,.16); }
-.diagram-node-one { top: 31px; right: 22%; }.diagram-node-two { bottom: 32px; left: 22%; }
-.diagram-label { position: absolute; font-size: 9px !important; letter-spacing: .12em; color: #b6cadb; }.diagram-label-one { top: 16px; right: 27%; }.diagram-label-two { bottom: 17px; left: 24%; }
+.diagram-label { position: absolute; font-size: 9px !important; letter-spacing: .12em; color: #b6cadb; }
 .showcase-features { margin-top: auto; }
 .showcase-features > div { display: flex; align-items: center; gap: 10px; color: #d2dfeb; }.showcase-features svg { font-size: 17px; color: #b9d5e8; }.showcase-features .MuiTypography-root { font-size: 11px; }
 .showcase-footer { margin-top: 28px; color: #86a8c2; font-size: 9px; letter-spacing: .14em; }.showcase-footer span { color: #d0a34f; padding: 0 6px; }
@@ -441,44 +435,599 @@ body {
   .home-status-strip { align-items: flex-start; flex-direction: column; }
 }
 
-/* Signature composition: the parking plan is the hero, the login console is secondary. */
-.login-layout { width: min(100%, 1180px); grid-template-columns: minmax(0, 1.62fr) minmax(350px, .78fr); min-height: 700px; overflow: hidden; background: #123552; box-shadow: 0 28px 72px rgba(14,37,58,.2); }
-.login-showcase { min-height: 700px; padding: 48px 58px 32px; background: #123552; border: 0; }
-.login-showcase::before { width: 560px; height: 560px; left: -250px; bottom: -220px; border-color: rgba(182,211,232,.13); box-shadow: 0 0 0 38px rgba(182,211,232,.035), 0 0 0 76px rgba(182,211,232,.025), 0 0 0 114px rgba(182,211,232,.018); }
-.login-showcase::after { width: 410px; height: 410px; right: -205px; top: -190px; border-color: rgba(182,211,232,.08); }
-.showcase-number { position: absolute; right: 42px; top: 112px; margin: 0; color: rgba(185,213,232,.08); font-size: clamp(9rem, 20vw, 16rem) !important; line-height: .8; font-weight: 900 !important; letter-spacing: -.12em; }
-.showcase-copy { margin-top: 80px; max-width: 390px; }
-.showcase-copy h2 { font-size: clamp(2.25rem, 4.4vw, 4rem); line-height: 1.34; margin: 12px 0 18px; }
-.showcase-copy .MuiTypography-body2 { max-width: 320px; font-size: .9rem; }
-.parking-diagram { height: 232px; margin: 28px -4px 22px; border-block: 1px solid rgba(255,255,255,.14); }
-.diagram-parking-field { position: absolute; display: grid; grid-template-columns: repeat(4, 48px); grid-template-rows: repeat(2, 58px); gap: 9px; left: 18%; top: 52px; transform: rotate(-7deg); z-index: 1; }
-.diagram-slot { display: grid; place-items: center; border: 1px solid rgba(212,230,242,.38); color: rgba(212,230,242,.7); font-size: 9px; letter-spacing: .08em; background: rgba(16,49,78,.36); }
-.diagram-slot::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #6fc28a; position: absolute; margin: -34px 0 0 29px; box-shadow: 0 0 0 4px rgba(111,194,138,.13); }
-.diagram-slot.is-occupied::after { background: #d7a049; box-shadow: 0 0 0 4px rgba(215,160,73,.13); }
-.diagram-slot.is-active { border-color: #b9d5e8; color: #fff; box-shadow: inset 0 0 0 2px rgba(185,213,232,.2); }
-.diagram-slot.is-active::after { background: #b9d5e8; }
-.diagram-road-one { top: 62px; transform: rotate(-13deg); opacity: .9; }
-.diagram-road-two { top: 137px; transform: rotate(13deg); opacity: .7; }
-.diagram-gate { top: 101px; left: 68%; width: 35px; height: 35px; }
-.diagram-gate-arm { width: 52px; top: 14px; }
-.diagram-car-one { top: 24px; left: 8%; }.diagram-car-two { bottom: 22px; right: 8%; }
-.diagram-node-one { top: 30px; right: 14%; }.diagram-node-two { bottom: 35px; left: 15%; }
-.showcase-features { position: relative; max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.showcase-features > div { min-height: 54px; padding: 10px 9px; border-top: 1px solid rgba(255,255,255,.18); display: block; }
-.showcase-features svg { display: block; margin-bottom: 7px; }
-.showcase-features .MuiTypography-root { color: #b7ccdc; line-height: 1.6; }
-.showcase-footer { margin-top: auto; }
-.login-layout .login-card { margin: 28px; min-height: 644px; border: 1px solid #d4dbe2; border-top: 3px solid var(--app-primary); }
-.login-layout .login-card-kicker { margin-bottom: 22px; }
+/* Login: a quiet, responsive split layout with short and useful motion feedback. */
+.login-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 32px 24px;
+  background: var(--app-shell, #f3f5f7);
+}
+
+.login-page-toolbar {
+  width: min(100%, 1120px);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.login-page-sso .login-page-toolbar { width: min(100%, 448px); }
+.login-page-toolbar .language-button { position: static !important; inset: auto; z-index: auto; }
+
+.login-layout {
+  width: min(100%, 1120px);
+  min-height: 620px;
+  grid-template-columns: minmax(0, 1.18fr) minmax(340px, .82fr);
+  overflow: hidden;
+  border: 1px solid var(--app-divider, #d7dce2);
+  border-radius: var(--app-control-radius, 4px);
+  background: var(--app-surface, #fff);
+  box-shadow: 0 18px 48px rgba(24, 33, 43, .12);
+  animation: login-arrive 200ms ease-out both;
+}
+
+.login-showcase {
+  min-width: 0;
+  min-height: 620px;
+  padding: 32px;
+  background: #123552;
+}
+
+.login-showcase::before {
+  width: 520px;
+  height: 520px;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  inset-inline-start: -245px;
+  inset-block-end: -250px;
+  border-color: rgba(182, 211, 232, .13);
+  box-shadow: 0 0 0 36px rgba(182, 211, 232, .035), 0 0 0 72px rgba(182, 211, 232, .025);
+}
+
+.login-showcase::after {
+  width: 320px;
+  height: 320px;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  inset-inline-end: -176px;
+  inset-block-start: -140px;
+  border-color: rgba(182, 211, 232, .09);
+}
+
+.showcase-brand-mark { border-radius: var(--app-control-radius, 4px); }
+.showcase-brand-caption,
+.showcase-eyebrow { letter-spacing: .06em; }
+.showcase-number {
+  position: absolute;
+  margin: 0;
+  left: auto;
+  right: auto;
+  inset-inline-end: 30px;
+  inset-block-start: 100px;
+  color: rgba(185, 213, 232, .07);
+  font-size: clamp(7rem, 13vw, 11rem) !important;
+  letter-spacing: -.08em;
+}
+
+.showcase-copy { max-width: 370px; margin-block-start: 32px; }
+.showcase-title {
+  margin: 8px 0 12px;
+  font-size: clamp(2rem, 3.5vw, 2.8rem) !important;
+  line-height: 1.45 !important;
+  letter-spacing: -.02em;
+}
+.showcase-copy .MuiTypography-body2 { max-width: 330px; line-height: 1.9; }
+
+.parking-diagram {
+  position: relative;
+  height: 168px;
+  margin: 16px -4px;
+  border-block-color: rgba(255, 255, 255, .16);
+  direction: inherit;
+  isolation: isolate;
+}
+.diagram-parking-field {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(4, 44px);
+  grid-template-rows: repeat(2, 38px);
+  gap: 6px;
+  left: auto;
+  right: auto;
+  inset-inline-start: 16%;
+  inset-inline-end: auto;
+  top: 42px;
+  transform: none;
+  z-index: 2;
+}
+.diagram-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  overflow: hidden;
+  direction: inherit;
+  border: 1px solid rgba(212, 230, 242, .42);
+  color: rgba(235, 243, 249, .88);
+  background: rgba(16, 49, 78, .72);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  animation: bay-reveal 420ms cubic-bezier(.2, .75, .3, 1) both;
+}
+.diagram-slot:nth-child(1) { animation-delay: 80ms; }
+.diagram-slot:nth-child(2) { animation-delay: 130ms; }
+.diagram-slot:nth-child(3) { animation-delay: 180ms; }
+.diagram-slot:nth-child(4) { animation-delay: 230ms; }
+.diagram-slot:nth-child(5) { animation-delay: 280ms; }
+.diagram-slot:nth-child(6) { animation-delay: 330ms; }
+.diagram-slot:nth-child(7) { animation-delay: 380ms; }
+.diagram-slot:nth-child(8) { animation-delay: 430ms; }
+.diagram-road { left: auto; right: auto; inset-inline-start: -4%; inset-inline-end: auto; width: 108%; height: 20px; transform: none; }
+.diagram-road-one { top: 7px; }
+.diagram-road-two { top: 137px; }
+.login-page[dir='rtl'] .diagram-road { transform: none; }
+.diagram-gate { left: auto; right: auto; inset-inline-start: 3%; inset-inline-end: auto; top: 21px; width: 12px; height: 12px; z-index: 3; }
+.diagram-gate-arm { left: auto; right: auto; inset-inline-start: 50%; inset-inline-end: auto; top: calc(50% - 1px); width: 26px; transform: rotate(-90deg); transform-origin: left center; animation: gate-cycle-ltr 5400ms 650ms linear both; }
+.login-page[dir='rtl'] .diagram-gate-arm { transform: rotate(90deg); transform-origin: right center; animation-name: gate-cycle-rtl; }
+.diagram-car { z-index: 2; }
+.diagram-car svg { display: block; width: 32px; height: 18px; filter: drop-shadow(0 1px 1px rgba(3, 20, 34, .35)); }
+.login-page[dir='rtl'] .diagram-car svg { transform: scaleX(-1); }
+.diagram-car-one {
+  --car-entry-top: 8px;
+  --car-road-top: 8px;
+  --car-lower-top: 138px;
+  --car-park-top: 96px;
+  --car-turn-inline: calc(16% + 206px);
+  --car-park-inline: calc(16% + 156px);
+  --car-road-angle: 0deg;
+  --car-down-angle: 90deg;
+  --car-return-angle: 180deg;
+  --car-park-angle: 270deg;
+  left: auto;
+  right: auto;
+  inset-inline-start: -8%;
+  inset-inline-end: auto;
+  top: var(--car-entry-top);
+  transform: rotate(var(--car-road-angle));
+  animation: car-park 5400ms 650ms linear both;
+}
+.login-page[dir='rtl'] .diagram-car-one {
+  --car-road-angle: 0deg;
+  --car-down-angle: -90deg;
+  --car-return-angle: -180deg;
+  --car-park-angle: -270deg;
+}
+.diagram-car-two { left: auto; right: auto; inset-inline-start: 8%; inset-inline-end: auto; top: 138px; transform: rotate(0deg); }
+.login-page[dir='rtl'] .diagram-car { transform: rotate(0deg); }
+.diagram-node-one { left: auto; right: auto; top: 28px; inset-inline-start: calc(3% + 15px); inset-inline-end: auto; }
+.diagram-node-two { left: auto; right: auto; bottom: 31px; inset-inline-end: 8%; inset-inline-start: auto; }
+.diagram-label-one { left: auto; right: auto; top: 38px; inset-inline-start: 1%; inset-inline-end: auto; }
+.diagram-label-two { left: auto; right: auto; bottom: 13px; inset-inline-end: 8%; inset-inline-start: auto; }
+.diagram-label { z-index: 2; direction: inherit; letter-spacing: 0; }
+
+.showcase-features {
+  max-width: 440px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.showcase-features > div { min-height: 56px; padding: 8px; }
+.showcase-features .MuiTypography-root { font-size: .7rem; }
+.showcase-footer {
+  margin-block-start: auto;
+  padding-block-start: 20px;
+  letter-spacing: .04em;
+}
+
+.login-layout .login-card {
+  width: auto;
+  min-height: 572px;
+  margin: 24px;
+  padding: 32px 24px 24px;
+  border: 1px solid var(--app-divider, #d7dce2);
+  border-block-start: 3px solid var(--app-primary);
+  border-radius: var(--app-control-radius, 4px);
+  background: var(--app-surface, #fff) !important;
+  box-shadow: 0 8px 24px rgba(24, 33, 43, .07);
+  animation: login-arrive 200ms 40ms ease-out both;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.login-layout .login-card:hover { box-shadow: 0 12px 30px rgba(24, 33, 43, .1); }
+.login-card-kicker {
+  width: fit-content;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 20px;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--app-primary) 22%, transparent);
+  border-radius: var(--app-control-radius, 4px);
+  background: var(--app-primary-soft);
+  letter-spacing: 0;
+}
+.login-card-kicker svg { font-size: 17px; }
+.login-title { text-align: start; letter-spacing: 0; }
+.login-subtitle { margin-block-start: 8px; text-align: start; line-height: 1.8; }
+.login-form-fields { gap: 16px; }
+.login-card .MuiOutlinedInput-root { transition: background 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
+.login-card .MuiOutlinedInput-root.Mui-focused { box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-primary) 14%, transparent); }
+.login-card .MuiButton-contained {
+  min-height: 44px;
+  margin-block-start: 4px;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--app-primary) 18%, transparent);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.login-card .MuiButton-contained:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 17px color-mix(in srgb, var(--app-primary) 23%, transparent);
+}
+.login-card .MuiButton-contained:focus-visible { outline: 3px solid color-mix(in srgb, var(--app-primary) 45%, transparent); outline-offset: 2px; }
+.login-card .MuiIconButton-root:focus-visible { outline: 2px solid var(--app-primary); outline-offset: 2px; }
+.login-card .remember-control { align-self: start; }
+.login-card .login-footer { margin-block-start: auto; padding-block-start: 24px; text-align: start; }
+.login-sso-state { min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 12px; margin-block-start: 24px; }
+.login-sso-state .MuiAlert-root { width: 100%; }
+.login-form-fields > .MuiAlert-root { animation: login-feedback 180ms ease-out both; }
+
+.login-page[dir='rtl'] .showcase-brand-caption,
+.login-page[dir='rtl'] .showcase-eyebrow,
+.login-page[dir='rtl'] .showcase-footer,
+.login-page[dir='rtl'] .showcase-title { letter-spacing: 0; }
+
+@keyframes login-arrive {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-feedback {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bay-reveal {
+  from { opacity: 0; transform: translateY(7px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes gate-cycle-ltr {
+  0%, 4%, 22%, 100% { transform: rotate(-90deg); }
+  9%, 17% { transform: rotate(0deg); }
+}
+
+@keyframes gate-cycle-rtl {
+  0%, 4%, 22%, 100% { transform: rotate(90deg); }
+  9%, 17% { transform: rotate(0deg); }
+}
+
+@keyframes car-park {
+  0% { opacity: .15; inset-inline-start: -8%; top: var(--car-entry-top); transform: rotate(var(--car-road-angle)); }
+  6% { opacity: .95; }
+  53% { opacity: .95; inset-inline-start: var(--car-turn-inline); top: var(--car-road-top); transform: rotate(var(--car-road-angle)); }
+  55% { inset-inline-start: var(--car-turn-inline); top: var(--car-road-top); transform: rotate(var(--car-down-angle)); }
+  77% { inset-inline-start: var(--car-turn-inline); top: var(--car-lower-top); transform: rotate(var(--car-down-angle)); }
+  79% { inset-inline-start: var(--car-turn-inline); top: var(--car-lower-top); transform: rotate(var(--car-return-angle)); }
+  89% { inset-inline-start: var(--car-park-inline); top: var(--car-lower-top); transform: rotate(var(--car-return-angle)); }
+  91% { inset-inline-start: var(--car-park-inline); top: var(--car-lower-top); transform: rotate(var(--car-park-angle)); }
+  100% { opacity: .95; inset-inline-start: var(--car-park-inline); top: var(--car-park-top); transform: rotate(var(--car-park-angle)); }
+}
+
+@media (max-width: 900px) {
+  .login-layout { grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); }
+  .login-showcase { padding-inline: 24px; }
+  .login-layout .login-card { margin: 16px; padding-inline: 24px; }
+}
 
 @media (max-width: 760px) {
-  .login-layout { min-height: 0; }
-  .login-showcase { min-height: 300px; padding: 28px 24px; }
-  .showcase-number { right: 14px; top: 62px; font-size: 8rem !important; }
-  .showcase-copy { margin-top: 46px; }.showcase-copy h2 { font-size: 2rem; }
-  .parking-diagram { display: block; height: 80px; margin: 14px 0 0; }.diagram-parking-field, .diagram-road, .diagram-gate, .diagram-car, .diagram-node, .diagram-label { display: none; }
-  .showcase-features, .showcase-footer { display: none; }
-  .login-layout .login-card { margin: 0; min-height: 0; border-top: 0; }
+  .login-page { justify-content: flex-start; gap: 12px; padding: 24px 20px; }
+  .login-page-toolbar { width: min(100%, 540px); }
+  .login-layout { width: min(100%, 540px); min-height: 0; display: block; }
+  .login-showcase { min-height: 0; padding: 24px; }
+  .showcase-number { left: auto; right: auto; inset-inline-end: 14px; inset-block-start: 52px; font-size: 6rem !important; }
+  .showcase-copy { max-width: 420px; margin-block-start: 24px; }
+  .showcase-title { font-size: 1.75rem !important; }
+  .showcase-copy .MuiTypography-body2 { display: block; max-width: 360px; }
+  .parking-diagram { display: block; height: 142px; margin: 12px 0 0; }
+  .diagram-parking-field { grid-template-columns: repeat(4, 34px); grid-template-rows: repeat(2, 31px); gap: 5px; inset-inline-start: 17%; top: 42px; }
+  .diagram-slot { font-size: 9px; }
+  .diagram-road { height: 16px; inset-inline-start: -3%; width: 106%; transform: none; }
+  .login-page[dir='rtl'] .diagram-road { transform: none; }
+  .diagram-car-one,
+  .diagram-car-two { transform: rotate(0deg); }
+  .login-page[dir='rtl'] .diagram-car { transform: rotate(0deg); }
+  .diagram-road-one { top: 7px; }
+  .diagram-road-two { top: 119px; }
+  .diagram-gate { inset-inline-start: 3%; top: 18px; width: 10px; height: 10px; }
+  .diagram-gate-arm { width: 22px; animation-duration: 4700ms; animation-delay: 540ms; }
+  .diagram-node-one { top: 28px; }
+  .diagram-label-one { top: 38px; }
+  .diagram-car-one {
+    --car-entry-top: 7px;
+    --car-road-top: 7px;
+    --car-lower-top: 119px;
+    --car-park-top: 85.5px;
+    --car-turn-inline: calc(17% + 163px);
+    --car-park-inline: calc(17% + 120px);
+    --car-road-angle: 0deg;
+    --car-down-angle: 90deg;
+    --car-return-angle: 180deg;
+    --car-park-angle: 270deg;
+    animation-duration: 4700ms;
+    animation-delay: 540ms;
+  }
+  .login-page[dir='rtl'] .diagram-car-one { --car-road-angle: 0deg; --car-down-angle: -90deg; --car-return-angle: -180deg; --car-park-angle: -270deg; }
+  .diagram-car-one svg { width: 28px; height: 16px; }
+  .diagram-car-two { top: 119px; }
+  .diagram-node-two { bottom: 24px; }
+  .diagram-label-two { bottom: 8px; }
+  .showcase-features,
+  .showcase-footer { display: none; }
+  .login-layout .login-card { min-height: 0; margin: 0; padding: 24px; border-block-start: 0; }
+  .login-card .login-footer { padding-block-start: 22px; }
+}
+
+@media (max-width: 480px) {
+  .login-page { padding-inline: 16px; }
+  .login-showcase { padding-inline: 16px; }
+  .showcase-title { font-size: 1.55rem !important; }
+  .login-layout .login-card { padding-inline: 16px; }
+}
+
+/* Keep the login surface inside the visible viewport at every size. */
+.login-page {
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding-block: clamp(8px, 2.5vh, 24px);
+  gap: clamp(8px, 1.8vh, 16px);
+}
+.login-page-toolbar { flex: 0 0 32px; min-height: 32px; }
+.login-layout { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+.login-showcase { min-height: 0; padding-block: clamp(18px, 3vh, 32px); }
+.login-layout .login-card { min-height: 0; margin: clamp(10px, 1.5vh, 16px); padding-block: clamp(16px, 2.4vh, 28px); }
+
+@media (max-height: 680px) and (min-width: 761px) {
+  .login-page { padding-block: 8px; gap: 8px; }
+  .login-page-toolbar { flex-basis: 24px; min-height: 24px; }
+  .login-showcase { padding: 16px 20px; }
+  .showcase-copy { margin-block-start: 12px; }
+  .showcase-title { font-size: 1.65rem !important; line-height: 1.25 !important; margin-block: 4px 8px; }
+  .showcase-features,
+  .showcase-footer { display: none; }
+  .parking-diagram { height: clamp(104px, 20vh, 132px); margin: 8px -4px 0; }
+  .diagram-parking-field {
+    grid-template-columns: repeat(4, 34px);
+    grid-template-rows: repeat(2, 26px);
+    gap: 4px;
+    inset-inline-start: calc(50% - 74px);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+  }
+  .diagram-road-one { top: 4px; }
+  .diagram-road-two { top: auto; bottom: 4px; }
+  .diagram-gate { top: 18px; width: 10px; height: 10px; }
+  .diagram-gate-arm { width: 24px; }
+  .diagram-car-one {
+    --car-entry-top: 5px;
+    --car-road-top: 5px;
+    --car-lower-top: calc(100% - 23px);
+    --car-park-top: calc(50% + 6px);
+    --car-turn-inline: calc(50% + 86px);
+    --car-park-inline: calc(50% + 41px);
+    --car-road-angle: 0deg;
+    --car-down-angle: 90deg;
+    --car-return-angle: 180deg;
+    --car-park-angle: 270deg;
+  }
+  .diagram-car-two { top: calc(100% - 23px); }
+  .login-layout .login-card { margin: 8px; padding: 14px 20px; }
+  .login-card-kicker { margin-block-end: 8px; }
+  .login-layout .login-title { font-size: 1.6rem !important; }
+  .login-subtitle { margin-block-start: 4px; }
+  .login-card form { margin-block-start: 12px !important; }
+  .login-form-fields { gap: 8px; }
+  .login-card .login-footer { display: none; }
+}
+
+@media (max-width: 760px) {
+  .login-page { justify-content: flex-start; padding: 10px 16px; gap: 8px; }
+  .login-page-toolbar { flex: 0 0 24px; min-height: 24px; width: min(100%, 540px); }
+  .login-page-toolbar .language-button { min-height: 24px; padding-block: 0; }
+  .login-layout { display: flex; flex-direction: column; width: min(100%, 540px); min-height: 0; overflow: hidden; }
+  .login-showcase { flex: 0 0 auto; min-height: 0; padding: 12px 18px; }
+  .showcase-number { display: none; }
+  .showcase-copy { max-width: none; margin-block-start: 8px; }
+  .showcase-title { font-size: 1.25rem !important; line-height: 1.25 !important; margin-block: 4px; }
+  .showcase-copy .MuiTypography-body2 { display: none; }
+  .parking-diagram { height: 142px; margin: 8px 0 0; }
+  .showcase-features,
+  .showcase-footer { display: none; }
+  .login-layout .login-card { flex: 1 1 auto; min-height: 0; margin: 0; padding: 16px 20px 12px; border-block-start: 0; justify-content: center; }
+  .login-card-kicker { margin-block-end: 10px; }
+  .login-card form { margin-block-start: 16px !important; }
+  .login-form-fields { gap: 10px; }
+  .login-card .login-footer { margin-block-start: auto; padding-block-start: 12px; }
+}
+
+@media (max-width: 760px) and (max-height: 720px) {
+  .login-showcase { padding-block: 8px; }
+  .showcase-copy { margin-block-start: 4px; }
+  .parking-diagram { display: block; }
+  .login-layout .login-card { padding-block: 12px; }
+  .login-card-kicker { margin-block-end: 6px; }
+  .login-card form { margin-block-start: 10px !important; }
+  .login-form-fields { gap: 8px; }
+  .login-card .login-footer { padding-block-start: 8px; }
+  .parking-diagram { height: clamp(104px, 18vh, 126px); margin-block-start: 8px; }
+  .diagram-parking-field {
+    grid-template-columns: repeat(4, 22px);
+    grid-template-rows: repeat(2, 22px);
+    gap: 3px;
+    inset-inline-start: calc(50% - 48px);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+  }
+  .diagram-road-one { top: 4px; }
+  .diagram-road-two { top: auto; bottom: 3px; }
+  .diagram-gate { top: 15px; width: 10px; height: 10px; }
+  .diagram-gate-arm { width: 22px; }
+  .diagram-car-one {
+    --car-entry-top: 4px;
+    --car-road-top: 4px;
+    --car-lower-top: calc(100% - 19px);
+    --car-park-top: calc(50% + 4px);
+    --car-turn-inline: calc(50% + 61px);
+    --car-park-inline: calc(50% + 25px);
+    animation-duration: 4700ms;
+  }
+  .diagram-car-two { top: calc(100% - 19px); }
+}
+
+@media (max-width: 760px) and (max-height: 520px) {
+  .login-page { padding-block: 6px; gap: 4px; }
+  .login-page-toolbar { flex-basis: 22px; min-height: 22px; }
+  .login-showcase { padding: 6px 14px; }
+  .showcase-copy,
+  .login-card-kicker,
+  .login-card .login-footer { display: none; }
+  .parking-diagram { height: clamp(68px, 19vh, 96px); margin-block-start: 8px; }
+  .diagram-parking-field {
+    grid-template-columns: repeat(4, 20px);
+    grid-template-rows: repeat(2, 17px);
+    gap: 2px;
+    inset-inline-start: calc(50% - 43px);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+  }
+  .diagram-slot { font-size: 7px; }
+  .diagram-road { height: 12px; }
+  .diagram-road-one { top: 3px; }
+  .diagram-road-two { top: auto; bottom: 3px; }
+  .diagram-gate { top: 10px; width: 9px; height: 9px; }
+  .diagram-gate-arm { width: 18px; }
+  .diagram-node-one { top: 24px; inset-inline-start: calc(3% + 10px); }
+  .diagram-label-one { top: 32px; }
+  .diagram-car-one {
+    --car-entry-top: 1px;
+    --car-road-top: 1px;
+    --car-lower-top: calc(100% - 16px);
+    --car-park-top: calc(50% + 2px);
+    --car-turn-inline: calc(50% + 55px);
+    --car-park-inline: calc(50% + 21px);
+  }
+  .diagram-car-one svg { width: 24px; height: 14px; }
+  .diagram-car-two { display: none; }
+  .login-layout .login-card { padding: 8px 16px; }
+  .login-layout .login-title { font-size: 1.35rem !important; line-height: 1.2 !important; }
+  .login-subtitle { margin-block-start: 2px; font-size: .8rem !important; }
+  .login-card form { margin-block-start: 8px !important; }
+  .login-form-fields { gap: 6px; }
+  .login-card .MuiOutlinedInput-root { min-height: 44px; }
+  .login-card .MuiButton-contained { min-height: 40px; }
+  .login-card .remember-control { min-height: 28px; margin-block: 0; }
+}
+
+@media (max-width: 760px) and (max-height: 400px) {
+  .login-showcase { padding-block: 4px; }
+  .showcase-brand { display: none; }
+  .login-subtitle { display: none; }
+  .parking-diagram { height: 44px; margin-block-start: 0; }
+  .diagram-parking-field {
+    grid-template-columns: repeat(4, 16px);
+    grid-template-rows: repeat(2, 12px);
+    gap: 2px;
+    inset-inline-start: calc(50% - 35px);
+  }
+  .diagram-slot { font-size: 6px; }
+  .diagram-road { height: 8px; }
+  .diagram-road-one { top: 2px; }
+  .diagram-road-two { bottom: 2px; }
+  .diagram-gate { top: 6px; width: 8px; height: 8px; }
+  .diagram-gate-arm { width: 14px; }
+  .diagram-node,
+  .diagram-label { display: none; }
+  .diagram-car-one {
+    --car-entry-top: 0px;
+    --car-road-top: 0px;
+    --car-lower-top: calc(100% - 12px);
+    --car-park-top: calc(50% + 1px);
+    --car-turn-inline: calc(50% + 47px);
+    --car-park-inline: calc(50% + 17px);
+  }
+  .diagram-car-one svg { width: 20px; height: 12px; }
+}
+
+@media (max-height: 540px) and (min-width: 761px) {
+  .login-page { padding-block: 6px; gap: 4px; }
+  .login-page-toolbar { flex-basis: 22px; min-height: 22px; }
+  .login-layout { width: min(100%, 760px); grid-template-columns: minmax(180px, .78fr) minmax(320px, 1.22fr); }
+  .login-showcase { padding: 8px 14px; }
+  .showcase-number,
+  .showcase-copy { display: none; }
+  .parking-diagram { height: clamp(72px, 16vh, 86px); margin: auto -4px 0; }
+  .diagram-parking-field {
+    grid-template-columns: repeat(4, 24px);
+    grid-template-rows: repeat(2, 16px);
+    gap: 2px;
+    inset-inline-start: calc(50% - 50px);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+  }
+  .diagram-slot { font-size: 7px; }
+  .diagram-road { height: 10px; }
+  .diagram-road-one { top: 3px; }
+  .diagram-road-two { top: auto; bottom: 3px; }
+  .diagram-gate { top: 8px; width: 9px; height: 9px; }
+  .diagram-gate-arm { width: 17px; }
+  .diagram-node-one { top: 19px; inset-inline-start: calc(3% + 10px); }
+  .diagram-label-one { top: 27px; }
+  .diagram-car-one {
+    --car-entry-top: 1px;
+    --car-road-top: 1px;
+    --car-lower-top: calc(100% - 15px);
+    --car-park-top: calc(50% + 2px);
+    --car-turn-inline: calc(50% + 64px);
+    --car-park-inline: calc(50% + 28px);
+  }
+  .diagram-car-one svg { width: 24px; height: 14px; }
+  .diagram-car-two { display: none; }
+  .login-layout .login-card { margin: 0; padding: 8px 16px; }
+  .login-card-kicker,
+  .login-card .login-footer { display: none; }
+  .login-layout .login-title { font-size: 1.35rem !important; line-height: 1.2 !important; }
+  .login-subtitle { margin-block-start: 2px; font-size: .8rem !important; }
+  .login-card form { margin-block-start: 8px !important; }
+  .login-form-fields { gap: 6px; }
+  .login-card .MuiOutlinedInput-root { min-height: 44px; }
+  .login-card .MuiButton-contained { min-height: 40px; }
+  .login-card .remember-control { min-height: 28px; margin-block: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-layout,
+  .login-layout .login-card,
+  .login-form-fields > .MuiAlert-root,
+  .diagram-slot,
+  .diagram-gate-arm,
+  .diagram-car-one {
+    animation: none !important;
+    transition: none !important;
+  }
+  .diagram-car-one { inset-inline-start: var(--car-park-inline); top: var(--car-park-top); transform: rotate(var(--car-park-angle)); opacity: .95; }
+  .login-page[dir='rtl'] .diagram-car-one { transform: rotate(var(--car-park-angle)); }
+  .login-card .MuiButton-contained:hover:not(:disabled) { transform: none; }
 }
 
 /* Home command-center composition. */
