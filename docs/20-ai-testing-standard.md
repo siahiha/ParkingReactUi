@@ -45,7 +45,9 @@ npm run test:e2e
 3. پاسخ malformed یا بدون token موفق تلقی نمی‌شود.
 4. ورود موفق فقط با permission نام‌دار، منوی مربوط را قابل مشاهده می‌کند.
 5. session نامعتبر پس از refresh صفحه به Login برمی‌گردد.
-6. logout token، session و route محافظت‌شده را پاک می‌کند.
+6. requestها `credentials: include` دارند و token در header، query string یا
+   browser storage قابل مشاهده نیست.
+7. logout token سمت Backend را revoke، cookie را پاک و route محافظت‌شده را می‌بندد.
 
 ### API و پایداری
 

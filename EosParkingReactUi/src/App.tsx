@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -9,16 +9,17 @@ import createCache from '@emotion/cache';
 import rtlPlugin from 'stylis-plugin-rtl';
 import 'dayjs/locale/fa';
 import { prefixer } from 'stylis';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { type Language, translations } from './i18n';
 import { parseAuthSession, resolveCanManageDashboard, type SsoUserPreferences } from './api/contracts';
-import { apiRequest, getAuthToken, setAuthToken } from './api/client';
+import { apiRequest } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
 import { SsoCallbackPage } from './pages/SsoCallbackPage';
 import type { LoginResult } from './features/auth/authService';
 import { useNavigationGuard } from './pages/NavigationGuardContext';
+import i18n from './i18n/instance';
 import { createAppTheme, defaultThemeShape, getPaletteTokens, resolvePaletteNames, resolveThemeColorOverrides, type ThemeMode, type ThemeShapeSettings } from './theme';
 
 type PaletteName = 'blue' | 'green' | 'slate';
@@ -35,23 +36,21 @@ const cacheRtl = createCache({ key: 'muirtl', stylisPlugins: [prefixer, rtlPlugi
 type RTLProps = { locale: Language; children: ReactNode };
 const RTL = ({ locale, children }: RTLProps) => locale === 'fa' ? <CacheProvider value={cacheRtl}>{children}</CacheProvider> : <>{children}</>;
 
-function readAuthSession(): { token: string | null; user: HomeUser } | null {
+function readAuthSession(): { user: HomeUser } | null {
   try {
     const stored = window.sessionStorage.getItem(authSessionStorageKey);
     if (!stored) return null;
     const session = parseAuthSession(JSON.parse(stored));
     if (!session) return null;
-    return { token: session.token, user: { ...session.user, canManageDashboard: resolveCanManageDashboard(session.user) } };
+    // Migrate sessions created by the previous implementation: remove the
+    // legacy token while retaining only the non-sensitive user snapshot.
+    window.sessionStorage.setItem(authSessionStorageKey, JSON.stringify({ user: session.user }));
+    return { user: { ...session.user, canManageDashboard: resolveCanManageDashboard(session.user) } };
   } catch { return null; }
 }
 
 function initializeAuthSession() {
-  const session = readAuthSession();
-  // Route children start their data effects immediately after mount. Set the
-  // request token during initialization so a restored session never issues an
-  // unauthenticated first request after a browser refresh.
-  setAuthToken(session?.token ?? null);
-  return session;
+  return readAuthSession();
 }
 
 function normalizeLanguage(value: unknown): Language | undefined {
@@ -88,6 +87,7 @@ export function App() {
   });
   const [authenticated, setAuthenticated] = useState(Boolean(initialAuthSession));
   const [homeUser, setHomeUser] = useState<HomeUser | null>(initialAuthSession?.user ?? null);
+  const location = useLocation();
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
   const direction = translations[language].direction;
@@ -100,7 +100,8 @@ export function App() {
     return { ...localeText, fieldHoursPlaceholder: () => 'HH', fieldMinutesPlaceholder: () => 'mm' };
   }, [language]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    void i18n.changeLanguage(language);
     window.localStorage.setItem(themeStorageKey, themeMode);
     window.localStorage.setItem(ssoThemeStorageKey, themeMode);
     window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
@@ -109,7 +110,7 @@ export function App() {
     window.localStorage.setItem(ssoLocaleStorageKey, language);
     if (themeColors !== undefined) window.localStorage.setItem(ssoThemeColorsStorageKey, JSON.stringify(themeColors));
   }, [themeMode, lightPalette, darkPalette, shapeSettings, language, themeColors]);
-  const authenticate = ({ token, user, preferences }: LoginResult) => {
+  const authenticate = ({ user, preferences }: LoginResult) => {
     if (preferences) {
       const nextTheme = normalizeThemeMode(preferences.theme);
       if (nextTheme) setThemeMode(nextTheme);
@@ -122,8 +123,9 @@ export function App() {
         if (palettes.dark) setDarkPalette(palettes.dark);
       }
     }
-    setAuthToken(token);
-    window.sessionStorage.setItem(authSessionStorageKey, JSON.stringify({ token, user }));
+    // The token is set by the Backend as an HttpOnly cookie. Only the
+    // non-sensitive user snapshot is kept to restore the shell after refresh.
+    window.sessionStorage.setItem(authSessionStorageKey, JSON.stringify({ user }));
     setAuthenticated(true);
     setHomeUser(user);
     requestNavigation(() => navigate('/home'));
@@ -131,14 +133,13 @@ export function App() {
   const clearLocalSession = () => {
     setAuthenticated(false);
     setHomeUser(null);
-    setAuthToken(null);
     window.sessionStorage.removeItem(authSessionStorageKey);
     navigate('/');
   };
   const logout = () => requestNavigation(() => {
     void (async () => {
       try {
-        if (getAuthToken()) await apiRequest('api/user/Logout', { method: 'POST' });
+        await apiRequest('api/user/Logout', { method: 'POST' });
       } catch {
         // Clear the browser session even if the API or SSO provider is offline.
       } finally {
@@ -151,10 +152,12 @@ export function App() {
   const themeVars = themeMode === 'dark'
     ? { surface: activeThemeColors.surface ?? '#29333d', shell: activeThemeColors.shell ?? '#202830', text: activeThemeColors.text ?? '#f3f5f7', mutedText: activeThemeColors.mutedText ?? '#b7c1ca', border: activeThemeColors.border ?? '#3d4b58', input: activeThemeColors.input ?? '#202b35' }
     : { surface: activeThemeColors.surface ?? '#ffffff', shell: activeThemeColors.shell ?? '#f3f5f7', text: activeThemeColors.text ?? '#18212b', mutedText: activeThemeColors.mutedText ?? '#687482', border: activeThemeColors.border ?? '#d7dce2', input: activeThemeColors.input ?? '#fbfcfd' };
+  const isOutsideAppRoutes = location.pathname !== '/' && location.pathname !== '/sso/callback' && !location.pathname.startsWith('/home');
+  const homeElement = (unknownRoute = false) => authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} unknownRoute={unknownRoute || isOutsideAppRoutes} /> : <Navigate to="/" replace />;
   return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language} localeText={pickerLocaleText}><CssBaseline /><Routes>
-    <Route path="/home/*" element={authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} /> : <Navigate to="/" replace />} />
+    <Route path="/home/*" element={homeElement()} />
     <Route path="/sso/callback" element={<SsoCallbackPage language={language} onAuthenticated={authenticate} />} />
     <Route path="/" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
-    <Route path="*" element={<Navigate to={authenticated ? '/home' : '/'} replace />} />
+    <Route path="*" element={homeElement(true)} />
   </Routes></LocalizationProvider></ThemeProvider></RTL></Box>;
 }

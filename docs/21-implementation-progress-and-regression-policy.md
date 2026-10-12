@@ -19,6 +19,36 @@
 دامنه است. موارد زیر فقط وضعیت قابلیت‌هایی را ثبت می‌کنند که در کد فعلی route یا workspace
 واقعی دارند.
 
+## قرارداد اجباری ترجمهٔ UI
+
+این پروژه برای ترجمهٔ UI فقط از `i18next` و `react-i18next` استفاده می‌کند. resource هر
+زبان باید در فایل مستقل خود در `src/locales/` قرار گیرد و از طریق instance مشترک در
+`src/i18n/instance.ts` بارگذاری شود. componentها باید از `useTranslation()`/`t()` و کد
+خارج از React از `i18n.t()` استفاده کنند.
+
+الگوهای زیر مجاز نیستند و نباید در کد جدید یا refactor باقی‌مانده استفاده شوند:
+
+- انتخاب متن با `language === 'fa' ? '...' : '...'` یا هر شرط زبان مشابه؛
+- helperهایی مانند `text(fa, en)` یا سیستم resource/ترجمهٔ موازی؛
+- متن نمایشی hard-code در JSX، hook، handler و مدل view؛
+- fallback متنی inline برای مخفی‌کردن کلید مفقود یا ساخت کلید ترجمه در runtime.
+
+شرط زبان فقط برای direction، formatter و منطق فنی مجاز است. route، API key، enum،
+identifier، URL، کد خطا و نام پروتکل مقدار فنی هستند و از این قرارداد مستثنا هستند؛ اما
+اگر به کاربر نمایش داده شوند، متن نمایشی آن‌ها نیز باید از resource بیاید.
+
+افزودن زبان جدید فقط با ساخت resource مستقل و تکمیل همان قرارداد کلیدها، ثبت زبان در
+`supportedLngs` و تعیین fallback رسمی انجام می‌شود. وجود کلید مفقود، resource ناقص،
+متن hard-code یا روش ترجمهٔ جایگزین، blocker تحویل و regression محسوب می‌شود و باید در
+بازبینی، type-check و تست missing-key کنترل شود. تا زمان انتقال کامل موارد پراکندهٔ
+قبلی، مهاجرت ترجمه پایان‌یافته تلقی نمی‌شود.
+
+برای حذف تکی و گروهی، `window.confirm` و دیالوگ native مرورگر ممنوع است. تمام workspaceها
+باید از `ConfirmDialog` مشترک استفاده کنند؛ انتخاب رکورد یا رکوردها در state موقت نگهداری
+شود، حذف فقط در `onConfirm` انجام شود و هنگام درخواست async با `busy` از بستن یا تأیید
+مجدد جلوگیری شود. باقی‌ماندن هر `window.confirm` برای حذف، خطای قرارداد UI و blocker تحویل
+است.
+
 ## آخرین تطبیق مستندات با کد UI
 
 این بخش نتیجه‌ی تطبیق مستقیم مستندات با مسیرها و componentهای موجود در
@@ -27,7 +57,7 @@
 
 | حوزه | وضعیت فعلی در UI | منبع کد/مستند | وضعیت تحویل |
 |---|---|---|---|
-| Login، session و Home | پیاده‌سازی شده و تست regression دارد؛ نمای Login و متن‌های فارسی/انگلیسی در حال حاضر responsive و در لایه‌ی ترجمه نگهداری می‌شوند | `src/pages/LoginPage.tsx`، `src/i18n.ts`، `src/styles.css`، `src/features/auth`، `src/pages/Home.tsx`؛ جزئیات Login در سندهای ۰۱ و ۱۹ | قابل استفاده با قرارداد فعلی؛ دیاگرام پارکینگ نمایشی است و داده‌ی زنده نیست |
+| Login، session و Home | پیاده‌سازی شده و تست regression دارد؛ نمای Login و متن‌های فارسی/انگلیسی در لایه‌ی i18next نگهداری می‌شوند | `src/pages/LoginPage.tsx`، `src/i18n/instance.ts`، `src/locales/fa.ts`، `src/locales/en.ts`، `src/styles.css`، `src/features/auth`، `src/pages/Home.tsx`؛ جزئیات Login در سندهای ۰۱ و ۱۹ | قابل استفاده با قرارداد فعلی؛ دیاگرام پارکینگ نمایشی است و داده‌ی زنده نیست |
 | فهرست پارکینگ‌ها | CRUD پیاده‌سازی شده | `ParkingDirectoryWorkspace.tsx` | پیاده‌سازی UI؛ API کامل نیازمند تأیید Backend |
 | کاربران و سطوح دسترسی | CRUD پیاده‌سازی شده | `UserManagementWorkspace.tsx`، `AccessLevelWorkspace.tsx` | پیاده‌سازی UI؛ مجوز نهایی با Backend |
 | مشخصات پارکینگ | فرم تب‌بندی‌شده با گزینه‌های فعال‌سازی تب‌ها و `EosTimeOnDayPicker` برای ساعت‌های روزانه‌ی شیفت | `ParkingFormFields.tsx`، `EosTimeOnDayPicker.tsx`، `ParkingDetailsWorkspace.tsx`، `ParkingDirectoryWorkspace.tsx`؛ جزئیات در سند ۰۳ | propertyهای `IsCommercialParking` و `HasUserShifts` به `ParkingEntity` در سورس Backend افزوده شده و دیتابیس با EF automatic migrations به‌روز می‌شود؛ اعمال در محیط اجرا نیازمند build/deploy Backend است. ذخیره‌ی پارکینگ بدون شیفت همچنان به‌علت non-null بودن ساعت شیفت اول نیازمند تصمیم Backend است |
@@ -41,30 +71,47 @@
 | گزارش‌های پارکینگ | آیتم‌های منو وجود دارند، اما مقصدها عمدتاً placeholder/read-only هستند | `homeMenuModel.tsx`، `HomeFormRoutes.tsx` | باز و نیازمند تکمیل مستقل |
 | دوربین RTSP | اتصال WebRTC/HLS، وضعیت، lifecycle مقاوم در برابر unmount و overlay ROI پایه پیاده‌سازی شده | سند ۲۴، `CameraStreamPreview.tsx` و تست lifecycle | drag/edit/delete تعاملی ROI هنوز انجام نشده است |
 
-### نقص route guard
+### رفتار route guard و مسیرهای غیرمجاز
 
-در وضعیت فعلی، `ParkingPage` آیتم‌های پارکینگ را با فهرست قابل مشاهده تطبیق می‌دهد،
-اما `ManagementPage` برای مسیرهای `users`، `access` و `exit` پیش از render بررسی
-نمی‌کند که بخش در `visibleManagementItems` وجود دارد. بنابراین ورود مستقیم به URL
-می‌تواند صفحه‌ی مدیریت را در UI باز کند، حتی اگر آیتم در منوی کاربر نمایش داده
-نشود. این موضوع جایگزین authorization سمت Backend نیست، اما با الزام route guard
-و action guard استاندارد سازگار نیست.
+**وضعیت:** اصلاح‌شده در UI.
 
-**وضعیت:** ناقص/نیازمند اصلاح UI. تا زمان اصلاح، تست مستقیم URL برای کاربر بدون
-مجوز باید در معیار تحویل باقی بماند و Backend باید مجوز نهایی را enforce کند.
+- نبودن یا انقضای session همچنان کاربر را به Login می‌فرستد؛ این تنها حالت redirect به Login است.
+- route ناشناخته یا خارج از قرارداد `/home/*` بدون تغییر URL داخل پوسته‌ی Home نمایش داده می‌شود و پیام «این مسیر وجود ندارد» می‌گیرد؛ به این ترتیب Home unmount نمی‌شود و تب‌های باز از بین نمی‌روند.
+- route شناخته‌شده اما غیرمجاز، داخل پوسته‌ی Home باقی می‌ماند؛ تب آن route باز می‌شود و workspace به‌جای داده، پیام «شما به این قسمت دسترسی ندارید» و مسیر بازگشت به Home را نمایش می‌دهد.
+- این guard فقط کنترل UX و navigation است و جایگزین authorization سمت Backend نیست؛ پاسخ‌های 401/403 همچنان باید در API client و featureها مدیریت شوند.
+- تست مستقیم URL برای کاربر بدون مجوز باید در معیار تحویل باقی بماند.
 
-### JavaScript خام و استثنای فنی
+### JavaScript خام و استثنای فنی مصوب
 
 `src/vendor/mediamtx-reader.js` در `CameraStreamPreview.tsx` استفاده می‌شود. این فایل
 برای اتصال WebRTC یک وابستگی فنی خارجی/خام محسوب می‌شود و با خط قرمز JavaScript خام
 در بخش ۱۰.۱۰ استاندارد تعارض دارد.
 
-**وضعیت:** ناقص/نیازمند تصمیم. یکی از این دو اقدام باید انجام شود:
+**وضعیت:** استثنای فنی مصوب؛ فعلاً بدون تغییر کد.
 
-1. wrapper و کد قابل نگهداری به TypeScript منتقل شود؛ یا
-2. استثنای فنی با مالک، دلیل، محدوده و برنامه‌ی حذف/جایگزینی در همین سند ثبت شود.
+انتقال کامل این reader به TypeScript در این مرحله انجام نمی‌شود؛ زیرا فایل فقط یک
+helper ساده نیست و منطق WHEP/WebRTC، مذاکره‌ی SDP و codec، ICE، authentication،
+retry و مدیریت session را در بر می‌گیرد. بازنویسی بدون تست معادل می‌تواند اتصال
+دوربین، سازگاری codec یا cleanup session را دچار regression کند. reader رسمی
+MediaMTX برای همین سناریو در نظر گرفته شده و مسیر HLS نیز به‌عنوان fallback در UI
+وجود دارد.
 
-تا تعیین تکلیف، این مورد مانع تأیید کامل feature دوربین است.
+مشخصات استثنا:
+
+- **دلیل فنی:** استفاده از reader رسمی MediaMTX برای پخش WHEP/WebRTC در مرورگر؛
+  API native مرورگر به‌تنهایی WHEP و منطق signaling این سرویس را فراهم نمی‌کند.
+- **محدوده:** فقط `src/vendor/mediamtx-reader.js` و فقط مسیر پخش WebRTC در
+  `CameraStreamPreview.tsx`؛ این استثنا مجوز افزودن JavaScript خام جدید در سایر
+  بخش‌های پروژه نیست.
+- **مالک:** تیم Frontend با هماهنگی مالک زیرساخت و سرویس MediaMTX.
+- **ریسک‌ها:** وابستگی به نسخه و API reader، تفاوت پشتیبانی codec/مرورگر،
+  مدیریت retry و احتمال باقی‌ماندن session در صورت cleanup ناقص.
+- **کنترل‌ها:** نگهداری فایل در مسیر vendor، حفظ declaration TypeScript، بستن
+  reader در unmount/disconnect، استفاده از HLS به‌عنوان fallback، و اجرای تست
+  lifecycle دوربین پیش از تحویل.
+- **برنامه بازبینی:** در صورت تغییر نسخه MediaMTX، تغییر WHEP endpoint، رخداد
+  امنیتی یا نیاز به کنترل بیشتر روی lifecycle، adapter TypeScript و جایگزینی
+  reader دوباره ارزیابی شود. تا آن زمان فایل خام عمداً بازنویسی نمی‌شود.
 
 ## تغییرات انجام‌شده تا این مرحله
 
@@ -86,6 +133,20 @@
 - ردکردن کاربر نامعتبر یا شناسه کاربر صفر؛
 - نگهداری سازگاری با `ResponseResultTypes.Ok = 1` در Backend قدیمی؛
 - حفظ سازگاری با پاسخ‌های Legacy که `ResponseResultType` را ارسال نمی‌کنند، مشروط به معتبر بودن user.
+
+### نشست و نگهداری token
+
+- token نشست از Login و SSO توسط Backend در cookie `EosSession` صادر می‌شود؛ cookie
+  `HttpOnly` و `SameSite=Lax` است و production باید `AuthCookieSecure=true` و HTTPS
+  داشته باشد؛
+- UI token را در `sessionStorage`/`localStorage` ذخیره نمی‌کند و در header یا query
+  string ارسال نمی‌کند؛ client مشترک همه requestها را با `credentials: include` می‌فرستد؛
+- snapshot غیرحساس کاربر در `sessionStorage` فقط برای بازسازی سریع پوسته نگهداری
+  می‌شود و اعتبار نشست را تعیین نمی‌کند؛
+- Backend برای گذار کم‌ریسک header `UserToken` را موقتاً می‌پذیرد، اما این مسیر
+  legacy نباید در قابلیت جدید یا کد UI استفاده شود؛
+- CORS باید origin دقیق UI را allow کند؛ استفاده از `Access-Control-Allow-Origin: *`
+  همراه credential ممنوع است.
 
 ### Permission و Home
 
@@ -157,14 +218,15 @@ Fallback قدیمی برگردانده شد و تست نمایش منوی مدی
 در بازبینی اخیر، موارد زیر برای انطباق با بخش ۱۰.۱۰ استاندارد اصلاح شدند:
 
 - درخواست Login از صفحه خارج و به `features/auth/authService.ts` و hook اختصاصی منتقل شد؛
-- مدیریت theme و direction از دستکاری `document` به state، props و ThemeProvider/DOM declarative منتقل شد؛
+- مدیریت theme، direction، زبان و font از دستکاری مستقیم `document.documentElement` به state، props، `ThemeProvider` و ریشهٔ declarative React منتقل شده است؛ `App.tsx` نباید برای این stateهای UI مستقیماً `document` یا style آن را تغییر دهد؛
 - routeهای workspace با `lazy` و `Suspense` بارگذاری می‌شوند؛
 - gradient، حرکت نمایشی کارت‌ها و shadowهای سنگین از styleهای اصلی حذف یا محدود شدند؛
 - کلید رمزنگاری Legacy دیگر در source قرار ندارد و فقط از پیکربندی محیطی خوانده می‌شود؛ نبودن آن باید با خطای امن متوقف شود؛
 - password در هیچ storage مرورگر ذخیره نمی‌شود. مقادیر موجود در test setup صرفاً fixture تستی هستند و نباید وارد production شوند.
 
-موارد باز این بازبینی—route guard مدیریت، تعیین تکلیف `mediamtx-reader.js`، تکمیل
-workflowهای خارج از دامنه‌ی این snapshot و بهینه‌سازی chunkهای بزرگ—هنوز اصلاح نشده‌اند و
-نباید به‌عنوان موارد انجام‌شده گزارش شوند.
+موارد باز این بازبینی—تکمیل workflowهای خارج از دامنه‌ی این snapshot و بهینه‌سازی
+chunkهای بزرگ—هنوز اصلاح نشده‌اند و نباید به‌عنوان موارد انجام‌شده گزارش شوند.
+`mediamtx-reader.js` دیگر مورد بلاتکلیف نیست و طبق استثنای فنی مصوب بالا فعلاً
+بدون تغییر نگهداری می‌شود.
 
 این تغییرات باید در هر feature جدید نیز رعایت شوند؛ هر دستکاری imperative UI، secret ثابت، ذخیره password یا API مستقیم در page، مانع تحویل است.

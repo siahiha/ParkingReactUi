@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box } from '@mui/material';
 import type { Language } from '../i18n';
 import type { PaletteName } from '../components/homeProfileTypes';
@@ -19,7 +19,7 @@ import { HomeTabs, type HomeTab } from './HomeTabs';
 export type { HomeUser } from './homeTypes';
 export type { HomeLabels } from './homeCopy';
 
-type HomeProps = { language: Language; user: HomeUser; themeMode: ThemeMode; lightPalette: PaletteName; darkPalette: PaletteName; shapeSettings: ThemeShapeSettings; onShapeSettingsChange: (settings: ThemeShapeSettings) => void; onThemeToggle: () => void; onLightPaletteChange: (palette: PaletteName) => void; onDarkPaletteChange: (palette: PaletteName) => void; onLogout: () => void; onToggleLanguage: () => void };
+type HomeProps = { language: Language; user: HomeUser; themeMode: ThemeMode; lightPalette: PaletteName; darkPalette: PaletteName; shapeSettings: ThemeShapeSettings; onShapeSettingsChange: (settings: ThemeShapeSettings) => void; onThemeToggle: () => void; onLightPaletteChange: (palette: PaletteName) => void; onDarkPaletteChange: (palette: PaletteName) => void; onLogout: () => void; onToggleLanguage: () => void; unknownRoute?: boolean };
 const navigationModeStorageKey = 'eos-parking-navigation-mode';
 type ParkingOption = { id: number; name: string };
 
@@ -27,7 +27,7 @@ function hasBit(value: string | number | undefined, bit: bigint) {
   try { return (BigInt(String(value ?? 0)) & bit) === bit; } catch { return false; }
 }
 
-export function Home({ language, user, themeMode, lightPalette, darkPalette, shapeSettings, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage }: HomeProps) {
+export function Home({ language, user, themeMode, lightPalette, darkPalette, shapeSettings, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, unknownRoute = false }: HomeProps) {
   const t = homeCopy[language];
   const direction = language === 'fa' ? 'rtl' : 'ltr';
   const location = useLocation();
@@ -48,10 +48,16 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   });
   const hasPart1 = (bit: bigint, normalizedName?: string) => Boolean(normalizedName && user.permissions.includes(normalizedName)) || hasBit(user.permissionPart1, bit);
   const hasPart2 = (bit: bigint) => hasBit(user.permissionPart2, bit);
-  const managementItems = createManagementItems(t);
+  const managementItems = useMemo(() => createManagementItems(t), [t]);
+  const allParkingMenuGroups = useMemo(() => createParkingMenuGroups(language), [language]);
+  const allParkingMenuItems = useMemo(() => allParkingMenuGroups.flatMap((group) => group.items), [allParkingMenuGroups]);
+  const isKnownHomePath = location.pathname === '/home'
+    || managementItems.some((item) => location.pathname === `/home/management/${item.key}`)
+    || allParkingMenuItems.some((item) => location.pathname === `/home/parking/${item.key}`);
+  const isOutsideAppRoutes = window.location.pathname !== '/' && window.location.pathname !== '/sso/callback' && !window.location.pathname.startsWith('/home');
+  const shouldShowUnknownRoute = unknownRoute || isOutsideAppRoutes || !isKnownHomePath;
   const visibleManagement = filterManagementItems(user, managementItems, hasPart1, hasPart2);
-  const menuGroups = createParkingMenuGroups(language);
-  const visibleParking = visibleParkingGroups(user, menuGroups, hasPart1, hasPart2);
+  const visibleParking = visibleParkingGroups(user, allParkingMenuGroups, hasPart1, hasPart2);
   const activeParkingMenuItem = visibleParking.flatMap((group) => group.items).find((item) => item.key === activeParkingMenu);
   const hasSidebar = user.canManageDashboard || visibleManagement.length > 0 || visibleParking.length > 0;
   const firstVisibleParkingItem = visibleParking.flatMap((group) => group.items)[0];
@@ -60,9 +66,9 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   const [navigationMode, setNavigationMode] = useState<NavigationMode>(() => window.localStorage.getItem(navigationModeStorageKey) === 'classic' ? 'classic' : 'tabs');
   const labelForPath = (path: string) => {
     if (path === '/home') return t.home;
-    const managementItem = visibleManagement.find((item) => path === `/home/management/${item.key}`);
+    const managementItem = managementItems.find((item) => path === `/home/management/${item.key}`);
     if (managementItem) return managementItem.label;
-    const parkingItem = visibleParking.flatMap((group) => group.items).find((item) => path === `/home/parking/${item.key}`);
+    const parkingItem = allParkingMenuItems.find((item) => path === `/home/parking/${item.key}`);
     return parkingItem?.label ?? t.home;
   };
   const openNavigationTab = (path: string) => {
@@ -78,10 +84,13 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   };
 
   useEffect(() => {
-    if (navigationMode === 'tabs' && location.pathname.startsWith('/home')) {
+    const isKnownHomePath = location.pathname === '/home'
+      || managementItems.some((item) => location.pathname === `/home/management/${item.key}`)
+      || allParkingMenuItems.some((item) => location.pathname === `/home/parking/${item.key}`);
+    if (navigationMode === 'tabs' && isKnownHomePath) {
       setOpenTabs((current) => current.some((tab) => tab.path === location.pathname) ? current : [...current, { path: location.pathname, label: labelForPath(location.pathname) }]);
     }
-  }, [location.pathname, navigationMode]);
+  }, [location.pathname, navigationMode, managementItems, allParkingMenuItems]);
   useEffect(() => { window.localStorage.setItem(navigationModeStorageKey, navigationMode); }, [navigationMode]);
 
   useEffect(() => {
@@ -109,8 +118,8 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   }, [user.currentParking, language]);
 
   useEffect(() => {
-    if (!user.canManageDashboard && !activeParkingMenu && !showManagement && firstVisibleParkingItem) guardedNavigate(`/home/parking/${firstVisibleParkingItem.key}`, { replace: true });
-  }, [user.canManageDashboard, activeParkingMenu, showManagement, firstVisibleParkingItem, navigate, requestNavigation]);
+    if (!shouldShowUnknownRoute && !user.canManageDashboard && !activeParkingMenu && !showManagement && firstVisibleParkingItem) guardedNavigate(`/home/parking/${firstVisibleParkingItem.key}`, { replace: true });
+  }, [shouldShowUnknownRoute, user.canManageDashboard, activeParkingMenu, showManagement, firstVisibleParkingItem, navigate, requestNavigation]);
   useEffect(() => { window.localStorage.setItem('eos-parking-sidebar-collapsed', String(sidebarCollapsed)); }, [sidebarCollapsed]);
 
   return <Box className={`home-shell ${hasSidebar ? 'home-shell-with-sidebar' : ''} ${sidebarCollapsed ? 'home-shell-sidebar-collapsed' : ''}`} dir={language === 'fa' ? 'rtl' : 'ltr'}>
@@ -121,7 +130,7 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
       <Box component="main" className="home-main">
         {!showManagement && !activeParkingMenu && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{t.homeTitle}</h1><p className="home-page-description">{t.homeDescription}</p></Box></Box>}
         {parkingLoadError && <Alert severity="warning" sx={{ m: 2 }}>{parkingLoadError}</Alert>}
-        {(showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} visibleParkingMenuItems={visibleParking.flatMap((group) => group.items)} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : selectedParking ? <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} /> : <Alert severity="info">{language === 'fa' ? 'پارکینگی برای نمایش در دسترس نیست.' : 'No parking is available to display.'}</Alert>}
+        {shouldShowUnknownRoute ? <Alert severity="warning" role="alert">{t.unknownRouteTitle}: {t.unknownRouteMessage}</Alert> : (showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} allManagementItems={managementItems} visibleParkingMenuItems={visibleParking.flatMap((group) => group.items)} allParkingMenuItems={allParkingMenuItems} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : selectedParking ? <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} /> : <Alert severity="info">{language === 'fa' ? 'پارکینگی برای نمایش در دسترس نیست.' : 'No parking is available to display.'}</Alert>}
       </Box>
     </Box>
   </Box>;

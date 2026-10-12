@@ -96,7 +96,7 @@ export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode 
   },
   shape: { borderRadius: shape.controlRadius },
   typography: {
-    fontFamily: 'Vazirmatn, Tahoma, Arial, sans-serif',
+    fontFamily: "var(--app-font-family, 'VazirFD', 'Vazir', Tahoma, Arial, sans-serif)",
     h1: { fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.4 },
     h2: { fontSize: '1.15rem', fontWeight: 800, lineHeight: 1.45 },
     h6: { fontSize: '.9rem', fontWeight: 800, lineHeight: 1.5 },

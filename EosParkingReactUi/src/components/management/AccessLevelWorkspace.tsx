@@ -5,10 +5,12 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import { accessLevelApi } from '../../api/management';
 import { CrudDialog } from '../CrudDialog';
+import { ConfirmDialog } from '../ConfirmDialog';
 import { AppDataGrid } from '../AppDataGrid';
 import { AccessLevelFormFields } from './AccessLevelFormFields';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
+import i18n from '../../i18n/instance';
 import { asBigInt, asRows, accessPermissionTotals, emptyAccessLevelForm, markAccessNodes, normalizeAccessNodes, recordValue, setAccessNodeState, type AccessLevelForm, type AccessPermissionNode, type Language, type RecordValue } from './managementTypes';
 
 type Props = { title: string; pageTitle?: string; language: Language };
@@ -33,6 +35,9 @@ export function AccessLevelWorkspace({ title, pageTitle, language }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [cascade, setCascade] = useState(true);
+  const [deleteRows, setDeleteRows] = useState<RecordValue[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -97,32 +102,41 @@ export function AccessLevelWorkspace({ title, pageTitle, language }: Props) {
     }
   };
 
-  const remove = async () => {
+  const requestRemove = () => {
     const removable = rows.filter((row, index) => selectedIds.includes(Number(recordValue(row, 'Id') ?? index)) && !Boolean(recordValue(row, 'IsSystemType')) && Number(recordValue(row, 'Id') ?? 0) > 0);
     if (removable.length === 0) {
       setError(copy.systemDelete);
       return;
     }
-    const confirmation = removable.length > 1 ? (language === 'fa' ? `آیا از حذف ${removable.length} سطح دسترسی انتخاب‌شده مطمئن هستید؟` : `Delete ${removable.length} selected access levels?`) : copy.removeConfirm;
-    if (!window.confirm(confirmation)) return;
+    setDeleteRows(removable);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmRemove = async () => {
+    setDeleting(true);
     try {
-      for (const row of removable) await accessLevelApi.remove(Number(recordValue(row, 'Id')));
+      for (const row of deleteRows) await accessLevelApi.remove(Number(recordValue(row, 'Id')));
       setSelectedId(null);
       setSelectedIds([]);
       await load();
+      setDeleteDialogOpen(false);
+      setDeleteRows([]);
     } catch {
       setError(copy.saveError);
+    } finally {
+      setDeleting(false);
     }
   };
 
   return (
-    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${language === 'fa' ? 'رکورد' : 'records'}`} language={language} loading={loading} onRefresh={() => void load()} toolbar={<><Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.edit} onClick={() => { const row = rows.find((item, index) => Number(recordValue(item, 'Id') ?? index) === selectedId); if (row) edit(row); }} disabled={!selectedId || selectedIds.length !== 1}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={copy.remove} onClick={() => void remove()} disabled={selectedIds.length === 0}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}>
+    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${language === 'fa' ? 'رکورد' : 'records'}`} language={language} loading={loading} onRefresh={() => void load()} toolbar={<><Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.edit} onClick={() => { const row = rows.find((item, index) => Number(recordValue(item, 'Id') ?? index) === selectedId); if (row) edit(row); }} disabled={!selectedId || selectedIds.length !== 1}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={copy.remove} onClick={requestRemove} disabled={selectedIds.length === 0}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}>
       <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving} maxWidth="lg">
         <AccessLevelFormFields form={form} setForm={setForm} message={message} nodes={nodes} cascade={cascade} onCascadeChange={setCascade} onToggle={(key, checked) => setNodes((current) => setAccessNodeState(current, key, checked, cascade))} labels={{ saved: copy.saved, name: copy.name, description: copy.description, permissions: copy.permissions, selectDescendants: language === 'fa' ? 'زیرمجموعه‌ها هم انتخاب شوند' : 'Select descendants' }} />
       </CrudDialog>
       <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel={language === 'fa' ? 'رکوردی برای نمایش وجود ندارد.' : 'No records to display.'}>
         <AppDataGrid direction={language === 'fa' ? 'rtl' : 'ltr'} rows={rows} rowKey={(row, index) => Number(recordValue(row, 'Id') ?? index)} selectedKey={selectedId} selectedKeys={selectedIds} onSelectionChange={(keys) => { const ids = keys.map(Number); setSelectedIds(ids); setSelectedId(ids.length === 1 ? ids[0] : null); }} onRowClick={(row, index) => { const id = Number(recordValue(row, 'Id') ?? index); setSelectedId(id); setSelectedIds([id]); }} columns={[{ key: 'Name', label: copy.name, render: (row) => String(recordValue(row, 'Name') ?? '—') }, { key: 'Description', label: copy.description, render: (row) => String(recordValue(row, 'Description') ?? '—') }, { key: 'IsSystemType', label: language === 'fa' ? 'سیستمی' : 'System', render: (row) => Boolean(recordValue(row, 'IsSystemType')) ? (language === 'fa' ? 'بله' : 'Yes') : (language === 'fa' ? 'خیر' : 'No') }]} />
       </ResourceState>
+      <ConfirmDialog open={deleteDialogOpen} title={copy.remove} message={deleteRows.length > 1 ? i18n.t('access.deleteManyConfirm', { count: deleteRows.length, lng: language }) : i18n.t('access.deleteConfirm', { lng: language })} cancelLabel={copy.cancel} confirmLabel={copy.remove} busy={deleting} onClose={() => { if (!deleting) { setDeleteDialogOpen(false); setDeleteRows([]); } }} onConfirm={() => void confirmRemove()} />
     </ManagementWorkspaceFrame>
   );
 }

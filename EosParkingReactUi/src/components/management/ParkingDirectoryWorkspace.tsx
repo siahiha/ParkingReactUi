@@ -8,12 +8,14 @@ import TagRoundedIcon from '@mui/icons-material/TagRounded';
 import { ApiError } from '../../api/client';
 import { parkingApi } from '../../api/management';
 import { CrudDialog } from '../CrudDialog';
+import { ConfirmDialog } from '../ConfirmDialog';
 import { AppRecordCard } from '../AppRecordCard';
 import { ParkingFormFields, type ParkingFormState } from './ParkingFormFields';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import { asRows, emptyParkingForm, parkingFormFromRow, parkingPayload, type Language, type ParkingForm, type RecordValue } from './managementTypes';
 import { parkingCopy, validateParkingForm } from './parkingCopy';
+import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; language: Language };
 
@@ -27,6 +29,9 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
   const [editorOpen, setEditorOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [deleteRow, setDeleteRow] = useState<RecordValue | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -85,15 +90,27 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
     }
   };
 
-  const remove = async (row: RecordValue) => {
+  const requestRemove = (row: RecordValue) => {
     const id = Number(row.Id ?? row.id ?? 0);
-    if (!id || !window.confirm(copy.removeConfirm)) return;
+    if (!id) return;
+    setDeleteRow(row);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmRemove = async () => {
+    const id = Number(deleteRow?.Id ?? deleteRow?.id ?? 0);
+    if (!id) return;
+    setDeleting(true);
     setError('');
     try {
       await parkingApi.remove(id);
       await load();
+      setDeleteDialogOpen(false);
+      setDeleteRow(null);
     } catch {
       setError(copy.saveError);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -106,7 +123,7 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
         <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel={language === 'fa' ? 'رکوردی برای نمایش وجود ندارد.' : 'No records to display.'}>
           <Box className="parking-directory-list">{rows.map((row, index) => {
             const id = Number(row.Id ?? row.id ?? index);
-            return <AppRecordCard key={id} className="parking-directory-card" contentClassName="parking-card-content" actionsClassName="parking-card-actions" actions={<><Tooltip title={copy.edit}><IconButton aria-label={copy.edit} onClick={() => edit(row)}><EditRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.remove}><IconButton color="error" aria-label={copy.remove} onClick={() => void remove(row)}><DeleteOutlineRoundedIcon /></IconButton></Tooltip></>}>
+            return <AppRecordCard key={id} className="parking-directory-card" contentClassName="parking-card-content" actionsClassName="parking-card-actions" actions={<><Tooltip title={copy.edit}><IconButton aria-label={copy.edit} onClick={() => edit(row)}><EditRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.remove}><IconButton color="error" aria-label={copy.remove} onClick={() => requestRemove(row)}><DeleteOutlineRoundedIcon /></IconButton></Tooltip></>}>
               <Typography variant="h6" className="parking-card-title">{String(row.ParkingName ?? row.parkingName ?? (language === 'fa' ? 'پارکینگ بدون نام' : 'Unnamed parking'))}</Typography>
               <Typography variant="body2" color="text.secondary" className="parking-card-address">{String(row.Address ?? row.address ?? '—')}</Typography>
               <Divider sx={{ my: 1.5 }} />
@@ -115,6 +132,7 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
           })}</Box>
         </ResourceState>
       </Box>
+      <ConfirmDialog open={deleteDialogOpen} title={copy.remove} message={i18n.t('parking.deleteConfirm', { lng: language })} cancelLabel={copy.cancel} confirmLabel={copy.remove} busy={deleting} onClose={() => { if (!deleting) { setDeleteDialogOpen(false); setDeleteRow(null); } }} onConfirm={() => void confirmRemove()} />
     </ManagementWorkspaceFrame>
   );
 }

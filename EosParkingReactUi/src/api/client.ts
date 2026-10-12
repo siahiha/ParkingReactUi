@@ -1,8 +1,6 @@
 import { appConfig } from '../config';
 import CryptoJS from 'crypto-js';
 
-let authToken: string | null = null;
-
 // Compatibility with the existing Windows Login contract.
 // The Backend expects UserPassEncrypted=true and this exact legacy AES setup.
 const legacyEncryptionPassword = import.meta.env.VITE_LEGACY_ENCRYPTION_PASSWORD;
@@ -37,19 +35,10 @@ export type ApiRequestOptions = RequestInit & {
   timeoutMs?: number;
 };
 
-export function setAuthToken(token: string | null) {
-  authToken = token;
-}
-
-export function getAuthToken() {
-  return authToken;
-}
-
 export async function apiRequest<T>(path: string, init: ApiRequestOptions = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-  if (authToken) headers.set(appConfig.authTokenHeader, authToken);
 
   const controller = new AbortController();
   const timeoutMs = init.timeoutMs ?? 15_000;
@@ -64,6 +53,7 @@ export async function apiRequest<T>(path: string, init: ApiRequestOptions = {}):
   try {
     const response = await fetch(`${appConfig.apiBaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
       ...init,
+      credentials: init.credentials ?? 'include',
       signal: controller.signal,
       headers,
     });

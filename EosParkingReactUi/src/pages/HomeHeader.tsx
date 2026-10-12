@@ -9,7 +9,6 @@ import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import PaletteRoundedIcon from '@mui/icons-material/PaletteRounded';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import SwapHorizRoundedIcon from '@mui/icons-material/SwapHorizRounded';
 import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import { ChangePasswordDialog } from '../components/ChangePasswordDialog';
@@ -54,15 +53,13 @@ export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalet
   const [profileDialog, setProfileDialog] = useState<'password' | 'theme' | null>(null);
   const isMobile = useMediaQuery('(max-width:899px)');
   const { values, setValues, message, messageSeverity, saving, save, resetMessage } = useChangePassword(user, t);
-  return <AppBar position="static" color="transparent" elevation={0} className="home-header" dir={direction}>
+  return <AppBar position="static" color="transparent" elevation={0} className="home-header home-header-top-panel" dir={direction}>
     <Toolbar className="home-toolbar" dir={direction}>
       <Box className="home-header-navigation-and-parking">
         <Tooltip title={isMobile ? navigationLabel : navigationToggleLabel} arrow><IconButton className="home-header-utility-button home-header-navigation-button" onClick={isMobile ? onNavigationOpen : onNavigationToggle} aria-label={isMobile ? navigationLabel : navigationToggleLabel}><MenuRoundedIcon /></IconButton></Tooltip>
         <Box className="home-header-parking-control"><FormControl size="small" className="home-header-parking-select"><Select value={parkingOptions.some((parking) => parking.id === selectedParkingId) ? selectedParkingId : ''} onChange={(event) => onParkingChange(Number(event.target.value))} displayEmpty disabled={parkingOptions.length === 0} inputProps={{ 'aria-label': t.selectCurrentParking }}><MenuItem value="" disabled>{t.selectCurrentParking}</MenuItem>{parkingOptions.map((parking) => <MenuItem key={parking.id} value={parking.id}>{parking.name}</MenuItem>)}</Select></FormControl></Box>
       </Box>
-      <Box className="home-header-middle-tools">
-        <Tooltip title={t.selectCurrentParking} arrow><IconButton className="home-header-utility-button home-header-search-button" aria-label={t.selectCurrentParking}><SearchRoundedIcon /></IconButton></Tooltip>
-      </Box>
+      <Box className="home-header-middle-tools" aria-hidden="true" />
       <Box className="home-user-area home-header-primary-actions">
         <Tooltip title={t.home} arrow><IconButton className="home-header-utility-button" onClick={onHome} aria-label={t.home}><HomeRoundedIcon /></IconButton></Tooltip>
         <Tooltip title={themeMode === 'light' ? t.nightMode : t.dayMode} arrow><IconButton className="home-header-utility-button" onClick={onThemeToggle} aria-label={themeMode === 'light' ? t.nightMode : t.dayMode}>{themeMode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}</IconButton></Tooltip>

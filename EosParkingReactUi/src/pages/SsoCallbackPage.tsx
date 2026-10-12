@@ -4,6 +4,8 @@ import type { Language } from '../i18n';
 import { loginWithSso } from '../features/auth/authService';
 import { clearPendingSso, consumeSsoCallback } from '../features/auth/sso';
 import type { LoginResult } from '../features/auth/authService';
+import { useTranslation } from 'react-i18next';
+import '../i18n/instance';
 
 type Props = {
   language: Language;
@@ -11,8 +13,11 @@ type Props = {
 };
 
 export function SsoCallbackPage({ language, onAuthenticated }: Props) {
+  const { t, i18n } = useTranslation();
   const [error, setError] = useState('');
   const started = useRef(false);
+
+  useEffect(() => { void i18n.changeLanguage(language); }, [i18n, language]);
 
   useEffect(() => {
     if (started.current) return;
@@ -26,7 +31,7 @@ export function SsoCallbackPage({ language, onAuthenticated }: Props) {
         clearPendingSso();
         onAuthenticated(result);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'خطا در ورود با SSO');
+        setError(cause instanceof Error ? cause.message : t('auth.ssoFailed'));
       }
     };
     void authenticate();
@@ -34,7 +39,7 @@ export function SsoCallbackPage({ language, onAuthenticated }: Props) {
 
   return <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 3 }} dir={language === 'fa' ? 'rtl' : 'ltr'}>
     <Box sx={{ width: 'min(460px, 100%)', textAlign: 'center' }}>
-      {error ? <Alert severity="error">{error}</Alert> : <><CircularProgress /><Typography sx={{ mt: 2 }}>در حال تکمیل ورود با سیستم مرکزی...</Typography></>}
+      {error ? <Alert severity="error">{error}</Alert> : <><CircularProgress /><Typography sx={{ mt: 2 }}>{t('auth.ssoLoading')}</Typography></>}
     </Box>
   </Box>;
 }

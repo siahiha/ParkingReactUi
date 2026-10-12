@@ -19,24 +19,54 @@ function renderApp() {
 describe('login', () => {
   afterEach(() => { cleanup(); vi.restoreAllMocks(); window.sessionStorage.clear(); window.history.replaceState({}, '', '/'); });
 
-  it('restores the token before loading an authenticated route after refresh', async () => {
-    const token = 'restored-token';
+  it('restores the non-sensitive user shell while the cookie authenticates API calls after refresh', async () => {
     window.history.replaceState({}, '', '/home/management/access');
     window.sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({
-      token,
       user: { id: 7, userName: 'operator', currentParking: 1, permissions: [], legacyAccessLevelId: 1 },
     }));
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input, init) => {
-      const requestToken = new Headers(init?.headers).get('UserToken');
-      if (requestToken !== token) return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
-      return new Response(JSON.stringify({ Values: [] }), { status: 200, headers: { 'content-type': 'application/json' } });
-    });
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ Values: [] }), { status: 200, headers: { 'content-type': 'application/json' } }));
 
     renderApp();
 
     expect(await screen.findByRole('heading', { name: 'سطوح دسترسی' }, { timeout: 5000 })).toBeVisible();
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(screen.queryByText('دریافت سطوح دسترسی از API ناموفق بود.')).not.toBeInTheDocument();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    for (const [, init] of fetchMock.mock.calls) {
+      expect(init?.credentials).toBe('include');
+      expect(new Headers(init?.headers).get('UserToken')).toBeNull();
+    }
+  });
+
+  it('keeps an authenticated user in Home and opens the denied route tab', async () => {
+    window.history.replaceState({}, '', '/home/management/users');
+    window.sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({
+      token: 'operator-token',
+      user: { id: 9, userName: 'operator', currentParking: 1, permissions: [], legacyAccessLevelId: 2 },
+    }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ Values: [] }), { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    renderApp();
+
+    expect(await screen.findByRole('heading', { name: 'دسترسی به این بخش مجاز نیست' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'کاربران و دسترسی' })).toBeVisible();
+    expect(window.location.pathname).toBe('/home/management/users');
+    expect(screen.queryByLabelText('نام کاربری')).not.toBeInTheDocument();
+  });
+
+  it('keeps Home mounted for an unknown route without navigating away', async () => {
+    window.history.replaceState({}, '', '/not-a-real-route');
+    window.sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({
+      token: 'operator-token',
+      user: { id: 9, userName: 'operator', currentParking: 1, permissions: [], legacyAccessLevelId: 1, canManageDashboard: true },
+    }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ Values: [] }), { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    renderApp();
+
+    expect(window.location.pathname).toBe('/not-a-real-route');
+    expect(await screen.findByText(/این مسیر وجود ندارد/)).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'خانه' })).toBeVisible();
+    expect(window.location.pathname).toBe('/not-a-real-route');
+    expect(screen.queryByLabelText('نام کاربری')).not.toBeInTheDocument();
   });
 
   it('shows field errors and does not call the API for empty credentials', async () => {

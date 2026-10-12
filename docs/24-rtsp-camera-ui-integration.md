@@ -283,6 +283,20 @@ new window.MediaMTXWebRTCReader({
 
 reader باید در cleanup با `reader.close()` بسته شود. هنگام disconnect نیز ابتدا reader بسته شود و سپس API disconnect فراخوانی شود. WebRTC به‌دلیل استفاده از session مستقل برای هر viewer، pause یا قطع یک client نباید تصویر client دیگر را متوقف کند.
 
+### استثنای فنی JavaScript خام
+
+`src/vendor/mediamtx-reader.js` به‌عنوان reader رسمی MediaMTX برای WHEP/WebRTC
+استفاده می‌شود و مشمول استثنای فنی ثبت‌شده در سند پیشرفت پروژه است. این فایل فعلاً
+بازنویسی یا به TypeScript منتقل نمی‌شود؛ چون منطق مذاکره‌ی SDP، codec، ICE،
+authentication، retry و session را در خود دارد و بازنویسی بدون تست معادل ریسک
+خرابی پخش را افزایش می‌دهد.
+
+این استثنا فقط به همین فایل و مسیر WebRTC محدود است. مالک آن تیم Frontend با
+هماهنگی مالک زیرساخت/MediaMTX است. کنترل‌های اجباری شامل نگهداری فایل در مسیر
+vendor، حفظ declaration TypeScript، cleanup در unmount/disconnect، وجود HLS به‌عنوان
+fallback و اجرای تست lifecycle است. با تغییر نسخه یا endpoint MediaMTX، رخداد
+امنیتی، یا نیاز جدید lifecycle، امکان ایجاد adapter TypeScript دوباره بررسی می‌شود.
+
 ### قطع اتصال
 
 ```http
