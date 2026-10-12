@@ -1,6 +1,5 @@
 import jquery from 'jquery';
 import { appConfig } from '../config';
-import { getAuthToken } from './client';
 
 export type AnprRealtimeRecord = Record<string, unknown>;
 export type AnprRealtimeErrorHandler = (error: unknown) => void;
@@ -20,7 +19,7 @@ type SignalRProxy = {
 };
 
 type SignalRJQuery = typeof jquery & {
-  hubConnection: (url: string, options: { qs: Record<string, string>; useDefaultPath: boolean }) => SignalRConnection;
+  hubConnection: (url: string, options: { qs: Record<string, string>; useDefaultPath: boolean; withCredentials: boolean }) => SignalRConnection;
 };
 
 export class AnprRealtimeConnection {
@@ -69,8 +68,9 @@ export class AnprRealtimeConnection {
     try {
       const signalR = await this.loadClient();
       const connection = signalR.hubConnection(this.url, {
-        qs: { UserToken: getAuthToken() || '' },
+        qs: {},
         useDefaultPath: false,
+        withCredentials: true,
       });
       const proxy = connection.createHubProxy('anprHub');
       proxy.on('anprDetected', record => this.onRecord(record));

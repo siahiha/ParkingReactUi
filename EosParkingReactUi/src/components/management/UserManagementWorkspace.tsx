@@ -6,11 +6,13 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import { encryptLegacyPassword } from '../../api/client';
 import { userApi } from '../../api/management';
 import { CrudDialog } from '../CrudDialog';
+import { ConfirmDialog } from '../ConfirmDialog';
 import { AppDataGrid } from '../AppDataGrid';
 import { UserFormFields, type UserFormLabels } from './UserFormFields';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import { asRows, emptyUserForm, recordValue, type Language, type RecordValue, type UserForm, userTypeOptions } from './managementTypes';
+import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; language: Language };
 
@@ -33,6 +35,9 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [deleteRows, setDeleteRows] = useState<RecordValue[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -128,21 +133,29 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
     }
   };
 
-  const remove = async () => {
+  const requestRemove = () => {
     const removable = rows.filter((row, index) => selectedIds.includes(Number(recordValue(row, 'Id') ?? index)) && !Boolean(recordValue(row, 'IsSystemType')) && Number(recordValue(row, 'Id') ?? 0) > 0);
     if (removable.length === 0) {
       setError(copy.systemDelete);
       return;
     }
-    const confirmation = removable.length > 1 ? (language === 'fa' ? `آیا از حذف ${removable.length} کاربر انتخاب‌شده مطمئن هستید؟` : `Delete ${removable.length} selected users?`) : copy.removeConfirm;
-    if (!window.confirm(confirmation)) return;
+    setDeleteRows(removable);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmRemove = async () => {
+    setDeleting(true);
     try {
-      for (const row of removable) await userApi.remove(Number(recordValue(row, 'Id')));
+      for (const row of deleteRows) await userApi.remove(Number(recordValue(row, 'Id')));
       setSelectedId(null);
       setSelectedIds([]);
       await load();
+      setDeleteDialogOpen(false);
+      setDeleteRows([]);
     } catch {
       setError(copy.saveError);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -166,7 +179,7 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
   };
 
   return (
-    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${language === 'fa' ? 'رکورد' : 'records'}`} language={language} loading={loading} onRefresh={() => void load()} toolbar={<><Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.edit} onClick={() => { const row = rows.find((item, index) => Number(recordValue(item, 'Id') ?? index) === selectedId); if (row) edit(row); }} disabled={!selectedId || selectedIds.length > 1}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={copy.remove} onClick={() => void remove()} disabled={selectedIds.length === 0}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}>
+    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${language === 'fa' ? 'رکورد' : 'records'}`} language={language} loading={loading} onRefresh={() => void load()} toolbar={<><Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.edit} onClick={() => { const row = rows.find((item, index) => Number(recordValue(item, 'Id') ?? index) === selectedId); if (row) edit(row); }} disabled={!selectedId || selectedIds.length > 1}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={copy.remove} onClick={requestRemove} disabled={selectedIds.length === 0}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}>
       <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving} maxWidth="lg">
         <UserFormFields form={form} setForm={setForm} message={message} editingId={editingId} accessLevels={accessLevels} userTypes={userTypeOptions} language={language} labels={labels} />
       </CrudDialog>
@@ -179,6 +192,7 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
           { key: 'IsActive', label: language === 'fa' ? 'وضعیت' : 'Status', trueLabel: language === 'fa' ? 'فعال' : 'Active', falseLabel: language === 'fa' ? 'غیرفعال' : 'Inactive' },
         ]} />
       </ResourceState>
+      <ConfirmDialog open={deleteDialogOpen} title={copy.remove} message={deleteRows.length > 1 ? i18n.t('users.deleteManyConfirm', { count: deleteRows.length, lng: language }) : i18n.t('users.deleteConfirm', { lng: language })} cancelLabel={copy.cancel} confirmLabel={copy.remove} busy={deleting} onClose={() => { if (!deleting) { setDeleteDialogOpen(false); setDeleteRows([]); } }} onConfirm={() => void confirmRemove()} />
     </ManagementWorkspaceFrame>
   );
 }

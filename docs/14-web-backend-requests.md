@@ -27,7 +27,10 @@
 - فعال‌سازی Swagger برای تمام Controllerها؛
 - ثبت request و response واقعی؛
 - ثبت enumها و مقدار عددی/متنی آن‌ها؛
-- ثبت Header `UserToken`؛
+- صدور نشست در cookie `EosSession` با `HttpOnly`، `SameSite=Lax` و `Secure=true`
+  در production؛
+- پذیرش موقت Header `UserToken` فقط برای سازگاری کلاینت‌های legacy؛ UI جدید نباید
+  آن را ارسال کند؛
 - ثبت خطاهای HTTP و `ResponseResultType`؛
 - ارائه فایل نسخه‌دار مانند `openapi-v1.json`.
 
@@ -72,7 +75,8 @@ UI بتواند خطاهای فنی، احراز هویت و خطاهای کسب
 ### درخواست
 
 - تعریف originهای مجاز UI؛
-- اجازه‌ی Header `UserToken`؛
+- origin دقیق UI (بدون `*`) و `Access-Control-Allow-Credentials: true`؛
+- اجازه‌ی Header `UserToken` فقط برای سازگاری legacy؛
 - پشتیبانی preflight؛
 - اجرای API روی HTTPS؛
 - محدودکردن سرویس ویندوزی به شبکه امن؛
@@ -389,7 +393,7 @@ POST api/traffic/SaveUserSettings
 
 ## ۱۳. قرارداد session و refresh — P1
 
-در کنار `UserToken` فعلی، endpointهای زیر برای وب لازم است:
+در کنار token فعلی که اکنون در cookie مدیریت‌شده‌ی Backend قرار می‌گیرد، endpointهای زیر برای وب لازم است:
 
 ```http
 POST api/user/refresh
@@ -504,7 +508,7 @@ Backend باید علاوه بر endpointها، یک تصمیم معماری م�
 1. `openapi.json`
 2. فایل enumها و مدل‌های TypeScript یا JSON Schema
 3. آدرس محیط staging
-4. روش login و Header token
+4. روش login، نام cookie، تنظیمات `HttpOnly/SameSite/Secure` و سیاست CORS
 5. context نمونه
 6. داده تستی کامل
 7. قرارداد realtime

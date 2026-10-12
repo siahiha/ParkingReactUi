@@ -156,14 +156,21 @@
 
 ### ۱۰.۳. typography، spacing و tokenها
 
-- خوانایی و تراکم اطلاعات بر typography نمایشی مقدم است. از stack مشترک
-  `Vazirmatn, Tahoma, Arial, sans-serif` و اندازه‌های کوچک و منسجم استفاده شود.
-- spacing فقط بر مقیاس `4 / 8 / 12 / 16 / 20 / 24 / 32px` باشد. تراکم به معنی
-  فشردگی و کاهش خوانایی نیست.
-- MUI theme مرجع tokenهای رنگ، font، border، radius، elevation، transition و ابعاد
-  component است. رنگ، shadow، radius یا dimension دلخواه در featureها نسازید.
-- مقادیر پیش‌فرض فعلی: radius پایه 4px، ارتفاع کنترل فرم 34px، حداقل ارتفاع button
-  32px، radius dialog برابر 5px و duration حرکت 120 تا 200ms است.
+- خوانایی و تراکم اطلاعات بر typography نمایشی مقدم است. فونت مرجع فارسی برنامه
+  `VazirFD` با fallback `Vazir, Tahoma, Arial, sans-serif` است؛ این انتخاب برای
+  حفظ نمایش صحیح اعداد فارسی و سازگاری با UI فعلی قطعی است. `Vazirmatn` در این
+  پروژه مرجع فونت فارسی محسوب نمی‌شود.
+- spacing سفارشی مستقلی در `src/theme.ts` تعریف نشده است؛ مبنای spacing در MUI همان
+  واحد پیش‌فرض `8px` است و مقادیر مشترک فعلی در `src/theme.ts` و `src/styles.css`
+  نگهداری می‌شوند. بنابراین سند نباید یک مقیاس مستقل مانند `4/8/12/16/20/24/32`
+  یا `4/8/12/16/24/32/48` را به‌عنوان token تثبیت‌شده ادعا کند.
+- مقادیر فعلی shape در `defaultThemeShape` مرجع هستند: `controlRadius=4px`،
+  `buttonRadius=3px` و `popupRadius=5px`. radius عمومی دیگری، از جمله بازه‌ی
+  `6 تا 10px` برای کارت‌های عملیاتی، جزو قرارداد فعلی نیست.
+- MUI theme و قراردادهای مشترک CSS مرجع tokenهای رنگ، font، border، radius، elevation،
+  transition و ابعاد component هستند. مقدار جدید در feature فقط با reuse مقدار مشترک
+  موجود مجاز است؛ اگر token spacing یا shape جدید لازم شد، ابتدا باید در Theme تعریف
+  و در همین سند ثبت شود.
 - فقط از palette معنایی موجود (`primary`، `secondary`، `success`، `warning`،
   `error`، `info`، `background`، `text` و `divider`) استفاده شود. رنگ برای انتقال
   معنی است، نه تزئین.
@@ -207,6 +214,28 @@
 - همهٔ متن‌های قابل مشاهده باید از لایهٔ ترجمه بیایند. date، time، currency، count و
   تبدیل ارقام فارسی/لاتین نیز باید formatter مشترک داشته باشند، نه پیاده‌سازی موردی
   در component.
+- تنها منبع مجاز برای ترجمهٔ متن UI در React، `i18next` به‌همراه
+  `react-i18next` است. منابع هر زبان باید در فایل مستقل داخل `src/locales/` نگهداری
+  شوند و instance مشترک i18next در `src/i18n/` پیکربندی شود. در componentها از
+  `useTranslation()` و `t()` استفاده شود؛ کدهای خارج از component می‌توانند از
+  instance مشترک `i18n.t()` استفاده کنند.
+- استفاده از روش‌های موازی یا جایگزین برای متن UI ممنوع است؛ از جمله
+  `language === 'fa' ? '...' : '...'`، الگوی `text(fa, en)`، helper ترجمهٔ سفارشی،
+  مقدار پیش‌فرض inline برای پنهان‌کردن کلید مفقود و هر متن قابل مشاهدهٔ hard-code
+  داخل JSX، hook، handler یا مدل view. شرط زبان فقط برای direction، formatter و
+  منطق فنی مجاز است، نه برای انتخاب متن نمایشی.
+- کلیدهای ترجمه باید معنادار و مشترک بین منابع زبان باشند. اضافه‌کردن زبان جدید
+  مستلزم ساخت resource مستقل با همان قرارداد کلیدها، ثبت زبان در `supportedLngs`
+  و تعیین fallback رسمی است؛ ترجمهٔ زبان جدید نباید با fallback یا ternary جایگزین
+  شود.
+- وجود یکی از الگوهای ممنوع، کلید مفقود، resource ناقص یا استفاده از سیستم ترجمهٔ
+  دوم، blocker تحویل است. بازبینی باید با جست‌وجوی الگوهای ممنوع، type-check منابع
+  و تست missing-key انجام شود و مورد استثنا فقط با ثبت دلیل، مالک، ریسک و برنامهٔ
+  حذف/جایگزینی پذیرفته شود.
+- برای عملیات مخرب، به‌خصوص حذف، استفاده از `window.confirm` و هر دیالوگ native
+  مرورگر ممنوع است. تمام تأییدهای حذف باید با `ConfirmDialog` مشترک انجام شوند؛
+  اجرای API حذف فقط در `onConfirm` مجاز است و در زمان درخواست async باید dialog با
+  `busy` قفل شود. این قاعده شامل حذف تکی و گروهی و همهٔ workspaceهاست.
 - responsive صرفاً کوچک‌کردن desktop نیست: در صفحهٔ باریک فرم‌ها stack، کنترل‌های
   ثانویهٔ toolbar جمع و navigation به drawer تبدیل شوند. tableها با scroll محصور،
   اولویت ستون یا detail فشرده خوانا بمانند و page-level overflow ایجاد نکنند.
@@ -250,7 +279,8 @@
   global نشود.
 - API call مستقیم در page/UI ممنوع است. زنجیرهٔ مرجع: `UI → custom hook → feature
   service → src/api/client.ts → External Backend API`.
-- همهٔ requestها از client مشترک و header/token/timeout/cancellation آن عبور کنند.
+- همهٔ requestها از client مشترک و cookie/timeout/cancellation آن عبور کنند؛ ارسال
+  token از UI در header یا query string برای قابلیت‌های جدید ممنوع است.
   endpoint، request، schema پاسخ و mapping به domain/UI کنار feature یا در `src/api`
   قرار بگیرند و در UI پراکنده نشوند.
 - پاسخ API untrusted است و هرجا shape آن بر رفتار UI اثر دارد با Zod در boundary
@@ -263,7 +293,10 @@
   باید disabled/idempotent باشد و request قدیمی در unmount یا تغییر filter نادیده یا
   cancel شود.
 - هیچ secret، private key، token یا password جدیدی در source، URL، log یا browser
-  storage ذخیره نشود. سازگاری legacy موجود باید isolate، دلیل‌دار و test‌شده باشد و
+  storage ذخیره نشود. token نشست باید توسط Backend در cookie `HttpOnly`، با
+  `SameSite=Lax`، `Path=/` و در production با `Secure` روی HTTPS صادر شود؛ UI نباید
+  token را بخواند، در `localStorage`/`sessionStorage` بنویسد یا در header/query
+  بفرستد. سازگاری legacy موجود باید isolate، دلیل‌دار و test‌شده باشد و
   نباید الگوی featureهای جدید شود.
 - validation سمت client امنیت نیست؛ Backend مرجع authorization است. permission check
   سمت UI فقط UX را کنترل می‌کند و UI همچنان 401/403 را به‌درستی مدیریت می‌کند.
@@ -317,8 +350,9 @@
 - **ذخیرهٔ password مطلقاً ممنوع است.** password، رمز عبور فعلی/جدید، PIN، secret
   معادل یا هر مقدار قابل‌بازسازی آن نباید در `localStorage` یا `sessionStorage`،
   cookie، URL، source، log، cache یا state ماندگار مرورگر ذخیره شود. این ممنوعیت
-  شامل remember-me و refresh نیز است؛ فقط token/session غیرحساس طبق قرارداد امنیتی
-  مجاز است. password باید فقط در حافظهٔ کوتاه‌عمر فرم و تا زمان ارسال امن باقی بماند
+  شامل remember-me و refresh نیز است. نگهداری snapshot غیرحساس کاربر برای بازسازی
+  پوسته مجاز است، اما جایگزین اعتبارسنجی cookie نیست. password باید فقط در حافظهٔ
+  کوتاه‌عمر فرم و تا زمان ارسال امن باقی بماند
   و پس از submit، success، خطا یا unmount پاک شود.
 - **کنترل تحویل:** هر Pull Request یا تغییر feature باید صریحاً بررسی کند که هیچ
   JavaScript خام بدون مجوز، دستکاری imperative رابط، ذخیرهٔ password یا نقض اصول

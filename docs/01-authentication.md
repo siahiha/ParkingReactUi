@@ -238,4 +238,9 @@ LoginForm
 
 ### ماندگاری نشست در refresh
 
-پس از ورود موفق، context کاربر و token دریافت‌شده باید در `sessionStorage` نشست جاری ذخیره شوند تا refresh صفحه باعث خروج کاربر نشود. هنگام Logout، این داده‌ها باید حذف و کاربر به Login برگردانده شود. این رفتار با ذخیره‌ی username برای پیشنهاد ورود بعدی متفاوت است و نباید به ذخیره‌ی رمز عبور منجر شود.
+پس از ورود موفق، Backend token را در cookie امن و `HttpOnly` صادر می‌کند؛ UI حق
+خواندن یا ذخیره‌کردن token در `localStorage`/`sessionStorage` و ارسال آن در header
+یا query string را ندارد. UI فقط snapshot غیرحساس کاربر را برای بازسازی پوسته پس از
+refresh نگه می‌دارد و تمام requestها را با `credentials: include` می‌فرستد. Logout
+باید endpoint Backend را صدا بزند تا token سمت سرور باطل و cookie پاک شود، سپس
+snapshot محلی حذف و کاربر به Login برگردانده شود.

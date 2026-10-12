@@ -1,18 +1,61 @@
 @font-face {
-  font-family: 'Vazirmatn';
-  src: local('Vazirmatn'), local('Vazir');
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VazirFD';
+  src: url('/fonts/VazirFD-Regular.woff') format('woff');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VazirFD';
+  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700 800;
   font-display: swap;
 }
 
 :root {
   color-scheme: light;
+  --app-font-family: 'VazirFD', 'Vazir', Tahoma, Arial, sans-serif;
   --app-primary: #234b78;
   --app-primary-hover: #193a60;
   --app-primary-soft: #edf2f7;
   --app-divider: #d7dce2;
 }
 
+.app-root[lang='fa'] {
+  --app-font-family: 'VazirFD', 'Vazir', Tahoma, Arial, sans-serif;
+}
+
+.app-root[lang='en'] {
+  --app-font-family: 'Vazir', 'VazirFD', Tahoma, Arial, sans-serif;
+}
+
 * { box-sizing: border-box; }
+
+html,
+body,
+#root,
+.app-root {
+  font-family: var(--app-font-family);
+  font-synthesis: none;
+}
 
 body {
   margin: 0;
@@ -42,7 +85,10 @@ body {
 .app-root.app-theme-dark .home-header-action { background: transparent !important; border-color: transparent !important; color: #d7dce2 !important; }
 .app-root.app-theme-dark .home-header-action:hover { background: var(--app-primary-soft) !important; border-color: var(--app-primary-hover) !important; color: var(--app-primary-hover) !important; }
 
-button, input { font-family: inherit; }
+button, input, select, textarea {
+  font-family: inherit;
+  font-synthesis: none;
+}
 
 .login-page {
   min-height: 100vh;
@@ -2867,7 +2913,7 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .iranian-plate-main .MuiInputBase-root,
 .iranian-plate-main .MuiAutocomplete-root { min-width: 0; }
 .iranian-plate-main .MuiInputBase-input,
-.iranian-plate-region .MuiInputBase-input { box-sizing: border-box; width: 100%; height: 22px; padding: 0 2px; color: #111; border-bottom: 2px solid #888; text-align: center; font-family: Vazirmatn, Tahoma, Arial, sans-serif; font-size: 13px; font-weight: 600; }
+.iranian-plate-region .MuiInputBase-input { box-sizing: border-box; width: 100%; height: 22px; padding: 0 2px; color: #111; border-bottom: 2px solid #888; text-align: center; font-family: var(--app-font-family); font-size: 13px; font-weight: 600; }
 .iranian-plate-main .MuiAutocomplete-root .MuiInputBase-root { height: 22px; }
 .iranian-plate-main .MuiAutocomplete-root .MuiInputBase-input { min-width: 0; }
 /* MUI reserves 30px for Autocomplete's end adornment in RTL. The plate's
@@ -4726,4 +4772,140 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   .app-root .home-shell-with-sidebar .home-toolbar { padding-inline: 8px !important; }
   .app-root .home-header-primary-actions { gap: 2px; }
   .app-root .home-shell-with-sidebar .home-header-parking-select { display: none; }
+}
+
+/* Top panel redesign from the supplied Apple Design skill. The existing logical
+   button order remains: navigation/parking → flexible middle space → home/theme/user. */
+.app-root .home-header-top-panel {
+  position: relative !important;
+  z-index: 50;
+  height: 64px;
+  min-height: 64px;
+  overflow: visible;
+  background: color-mix(in srgb, var(--app-surface) 84%, transparent) !important;
+  border-block-start: 2px solid var(--app-primary) !important;
+  border-block-end: 1px solid color-mix(in srgb, var(--app-text) 18%, transparent) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--app-text) 10%, transparent) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+.app-root .home-header-top-panel::after {
+  content: '';
+  position: absolute;
+  inset-inline: 14px;
+  inset-block-end: -7px;
+  height: 7px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--app-text) 9%, transparent), transparent);
+  opacity: .35;
+}
+
+.app-root .home-header-top-panel .home-toolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  min-height: 60px !important;
+  box-sizing: border-box;
+  gap: 10px;
+  padding: 7px 14px !important;
+  direction: inherit;
+}
+
+.app-root .home-header-top-panel .home-header-navigation-and-parking {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-width: 0;
+  direction: inherit;
+}
+
+.app-root .home-header-top-panel .home-header-navigation-button,
+.app-root .home-header-top-panel .home-header-utility-button,
+.app-root .home-header-top-panel .home-header-avatar-button {
+  transition: transform 160ms cubic-bezier(.2,.8,.2,1), background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.app-root .home-header-top-panel .home-header-navigation-button:active,
+.app-root .home-header-top-panel .home-header-utility-button:active,
+.app-root .home-header-top-panel .home-header-avatar-button:active { transform: scale(.94); }
+
+.app-root .home-header-top-panel .home-header-parking-select { width: 150px; min-width: 150px; }
+.app-root .home-header-top-panel .home-header-parking-select .MuiOutlinedInput-root { min-height: 36px; border: 1px solid color-mix(in srgb, var(--app-primary) 28%, var(--app-divider)); border-radius: 9px; background: color-mix(in srgb, var(--app-primary) 5%, var(--app-surface)) !important; transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease; }
+.app-root .home-header-top-panel .home-header-parking-select .MuiOutlinedInput-notchedOutline { border: 0; }
+.app-root .home-header-top-panel .home-header-parking-select .MuiOutlinedInput-root:hover,
+.app-root .home-header-top-panel .home-header-parking-select .MuiOutlinedInput-root.Mui-focused { border-color: var(--app-primary); background: var(--app-surface) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-primary) 12%, transparent); }
+.app-root .home-header-top-panel .home-header-parking-select .MuiSelect-select { min-height: 36px; box-sizing: border-box; padding-block: 0 !important; font-size: .72rem; font-weight: 800; }
+
+.app-root .home-header-top-panel .home-header-middle-tools { display: flex; align-items: center; justify-content: center; flex: 1 1 auto; min-width: 0; direction: inherit; }
+
+.app-root .home-header-top-panel .home-header-primary-actions { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; direction: inherit; }
+.app-root .home-header-top-panel .home-header-utility-button { width: 34px; height: 34px; border: 1px solid transparent; border-radius: 9px !important; }
+.app-root .home-header-top-panel .home-header-utility-button:hover,
+.app-root .home-header-top-panel .home-header-utility-button:focus-visible { border-color: color-mix(in srgb, var(--app-primary) 28%, transparent); color: var(--app-primary) !important; background: color-mix(in srgb, var(--app-primary) 8%, var(--app-surface)) !important; }
+.app-root .home-header-top-panel .home-header-avatar-button { width: 40px; height: 40px; padding: 3px !important; border: 1px solid color-mix(in srgb, var(--app-primary) 22%, var(--app-divider)); border-radius: 12px !important; background: color-mix(in srgb, var(--app-primary) 6%, var(--app-surface)); }
+.app-root .home-header-top-panel .home-header-avatar { width: 32px; height: 32px; border: 0; color: var(--app-primary); background: transparent; }
+.app-root .home-header-top-panel .home-header-avatar .MuiSvgIcon-root { font-size: 28px; }
+
+@media (max-width: 760px) {
+  .app-root .home-header-top-panel .home-toolbar { gap: 6px; padding-inline: 9px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-root .home-header-top-panel *,
+  .app-root .home-header-top-panel *::before,
+  .app-root .home-header-top-panel *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-root .home-header-top-panel { background: var(--app-surface) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* Keep the top panel and its hamburger control visually anchored to the page
+   heading surface, with a touch more contrast than the workspace background. */
+:root,
+.app-root {
+  --home-page-header-surface: #f4f8fa;
+  --home-page-header-border: #d8e0e5;
+}
+
+html:has(.app-root.app-theme-dark) {
+  --home-page-header-surface: #26333e;
+  --home-page-header-border: #3d4b58;
+}
+
+.app-root.app-theme-dark {
+  --home-page-header-surface: #26333e;
+  --home-page-header-border: #3d4b58;
+}
+
+.app-root .home-header-top-panel,
+.app-root .home-shell-with-sidebar .home-header-top-panel {
+  background: var(--home-page-header-surface) !important;
+  border-block-end-color: var(--home-page-header-border) !important;
+}
+
+.app-root.app-theme-dark .home-shell-with-sidebar .home-header-top-panel {
+  background: var(--home-page-header-surface) !important;
+}
+
+.app-root .home-header-top-panel .home-header-navigation-button {
+  color: var(--app-primary) !important;
+  border: 1px solid var(--home-page-header-border) !important;
+  background: color-mix(in srgb, var(--home-page-header-surface) 78%, var(--app-primary) 22%) !important;
+}
+
+.app-root .home-header-top-panel .home-header-navigation-button:hover,
+.app-root .home-header-top-panel .home-header-navigation-button:focus-visible {
+  color: var(--app-primary-hover) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 42%, var(--home-page-header-border)) !important;
+  background: color-mix(in srgb, var(--home-page-header-surface) 64%, var(--app-primary) 36%) !important;
+}
+
+.home-sidebar-drawer,
+.app-root .home-shell-with-sidebar .home-sidebar-paper {
+  background: var(--home-page-header-surface) !important;
+  border-color: var(--home-page-header-border) !important;
 }

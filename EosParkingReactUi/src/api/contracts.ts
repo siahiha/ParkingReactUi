@@ -99,7 +99,7 @@ export type AuthSession = {
 };
 
 const authSessionSchema = z.object({
-  token: z.string().nullable(),
+  token: z.string().nullable().optional(),
   user: z.object({
     id: z.number().int().nonnegative(),
     userName: z.string().min(1),
@@ -118,7 +118,7 @@ export function parseLoginResponse(input: unknown): LoginApiResponse {
 
 export function parseAuthSession(input: unknown): AuthSession | null {
   const result = authSessionSchema.safeParse(input);
-  return result.success ? result.data : null;
+  return result.success ? { ...result.data, token: result.data.token ?? null } : null;
 }
 
 export function isSuccessfulLegacyResponse(responseType: string | number | null | undefined): boolean {
