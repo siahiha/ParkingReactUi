@@ -25,6 +25,7 @@
 | member، membership، card | `05-members-and-cards.md` | `10-shared-ui-components.md`، `11-remaining-forms.md` |
 | traffic، payment، exit، manual traffic | `06-traffic-and-payment.md`، `12-manual-traffic-control-form.md` | `14-web-backend-requests.md` |
 | monitoring، equipment، RTSP، WebRTC، HLS، ROI | `07-monitoring-and-devices.md`، `24-rtsp-camera-ui-integration.md` | `11-remaining-forms.md` |
+| plate، Trigger، HshDetectionService، SignalR، تصویر رخداد | `25-plate-detection-trigger-ui-integration.md` | `12-manual-traffic-control-form.md`، `24-rtsp-camera-ui-integration.md` |
 | reports | `08-reports.md` | `02-dashboard-and-navigation.md`، `11-remaining-forms.md` |
 | shared components، grid، filter، plate، money | `10-shared-ui-components.md` | `18-ui-design-system.md` |
 | backend contract، missing endpoint، status code | `14-web-backend-requests.md` | سند تخصصی همان feature |

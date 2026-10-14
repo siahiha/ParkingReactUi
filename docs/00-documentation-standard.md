@@ -193,8 +193,16 @@
   پاک‌کردن همهٔ فیلترها را ارائه کنند. فرم‌هایی که نیاز عملیاتی به نمایش فوری فیلتر
   دارند می‌توانند `defaultFilterOpen` را فعال کنند؛ پیاده‌سازی جداگانهٔ فیلتر در
   featureها مجاز نیست.
-- buttonها hierarchy روشن داشته باشند: فقط عمل اصلی dominant است، label باید عمل را
-  توضیح دهد و destructive styling متمایز باشد.
+- buttonها hierarchy روشن داشته باشند: فقط عمل اصلی dominant است و destructive styling
+  متمایز باشد. در toolbar بالای هر Grid، همهٔ دکمه‌های عملیاتی و CRUD الزاماً
+  icon-only هستند؛ متن داخل دکمه نمایش داده نمی‌شود و نام عمل باید هم‌زمان با
+  `Tooltip` و `aria-label` ارائه شود. ترتیب CRUD مرجع `جدید`، `ویرایش`، `حذف` است؛
+  ایجاد/جدید با رنگ primary، ویرایش خنثی و حذف با رنگ error نمایش داده می‌شود.
+  دکمهٔ ویرایش فقط با انتخاب دقیقاً یک ردیف و دکمهٔ حذف فقط با انتخاب ردیف فعال
+  می‌شوند. دکمهٔ icon-only باید از component مشترک و اندازه/spacing مشترک toolbar
+  استفاده کند و برای Tooltip در حالت disabled داخل wrapper مناسب قرار بگیرد.
+  این الزام فقط برای toolbar بالای Grid است؛ دکمه‌های فرم و Dialog می‌توانند label
+  متنی داشته باشند.
 - فرم‌ها label روشن، گروه‌بندی منطقی، required field مشخص، input type مناسب و خطای
   نزدیک به field داشته باشند. validation باید صریح و متمرکز باشد.
 - از toast، alert، inline validation، confirmation و progress به‌صورت فوری و

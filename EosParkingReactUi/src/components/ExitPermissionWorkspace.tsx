@@ -3,6 +3,7 @@ import { Alert, Box, Button, CircularProgress, Divider, IconButton, InputAdornme
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
@@ -169,8 +170,8 @@ export function ExitPermissionWorkspace({ parkingId, language, userId }: { parki
       <Tooltip title={copy.refresh} arrow><IconButton className="workspace-refresh-button" aria-label={copy.refresh} disabled={loading} onClick={() => void load()}><RefreshRoundedIcon /></IconButton></Tooltip>
     </Box>
     <WorkspaceToolbar ariaLabel={language === 'fa' ? 'ابزارهای مجوز خروج' : 'Exit permission actions'}>
-        <Tooltip title={copy.approve} arrow><span><IconButton color="success" aria-label={copy.approve} disabled={!selected || saving} onClick={() => void updatePermission(true)}><CheckRoundedIcon /></IconButton></span></Tooltip>
-        <Tooltip title={copy.reject} arrow><span><IconButton color="error" aria-label={copy.reject} disabled={!selected || saving} onClick={() => void updatePermission(false)}><CloseRoundedIcon /></IconButton></span></Tooltip>
+        <Tooltip title={copy.approve} arrow><span><IconButton className="workspace-toolbar-icon-button" color="success" aria-label={copy.approve} disabled={!selected || saving} onClick={() => void updatePermission(true)}><CheckRoundedIcon /></IconButton></span></Tooltip>
+        <Tooltip title={copy.reject} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={copy.reject} disabled={!selected || saving} onClick={() => void updatePermission(false)}><CloseRoundedIcon /></IconButton></span></Tooltip>
       </WorkspaceToolbar>
     <Divider sx={{ my: 2 }} />
     <Box className="exit-permission-toolbar" sx={{ mb: 2 }}>
@@ -179,7 +180,7 @@ export function ExitPermissionWorkspace({ parkingId, language, userId }: { parki
       <Select size="small" value={status} onChange={(event) => setStatus(event.target.value as typeof status)} aria-label={copy.status}>
         <MenuItem value="pending">{copy.pending}</MenuItem><MenuItem value="approved">{copy.approved}</MenuItem><MenuItem value="all">{copy.all}</MenuItem>
       </Select>
-      <Button variant="outlined" onClick={() => void load()} disabled={loading}>{copy.apply}</Button>
+      <Tooltip title={copy.apply} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.apply} onClick={() => void load()} disabled={loading}><SearchRoundedIcon /></IconButton></span></Tooltip>
     </Box>
     {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

@@ -1,10 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, CircularProgress, Paper, Tab, Tabs, Typography } from '@mui/material';
 import { parkingApi, type Camera } from '../../api/management';
+import {
+  HshDetectionConnection,
+  parseHshDetectionConfig,
+  type HshDetectionHandler,
+  type HshDetectionStatus,
+} from '../../api/hshDetectionRealtime';
 import { CameraStreamPreview } from './CameraStreamPreview';
 import type { Language } from './managementTypes';
 
-type Props = { doorId: string; language: Language };
+type Props = {
+  doorId: string;
+  language: Language;
+  onDetection?: HshDetectionHandler;
+};
 type RecordValue = Record<string, unknown>;
 type CameraTab = 'entry' | 'exit';
 
@@ -50,7 +60,7 @@ function linkedCameraRows(input: unknown): Array<{ row: RecordValue; trafficType
   return rows.filter((item): item is { row: RecordValue; trafficType: unknown } => item !== null);
 }
 
-function cameraFrom(input: unknown, fallbackName: string): Camera | null {
+function cameraFrom(input: unknown, fallbackName: string, direction: Camera['direction']): Camera | null {
   const initial = record(input);
   const row = record(field(initial, 'Key', 'Equipment', 'Device')) ?? initial;
   if (!row) return null;
@@ -59,12 +69,15 @@ function cameraFrom(input: unknown, fallbackName: string): Camera | null {
   return {
     cameraId: String(id),
     name: String(field(row, 'DeviceName', 'CameraName', 'CameraTitle', 'Name') ?? fallbackName),
+    rtspUrl: String(field(row, 'RtspUrl', 'RTSPUrl', 'RTSPURL') ?? '').trim() || undefined,
     enabled: field(row, 'Disabled') !== true && String(field(row, 'Disabled') ?? '').toLowerCase() !== 'true',
+    detectionServerAddress: String(field(row, 'DetectionServerAddress') ?? ''),
+    direction,
   };
 }
 
 function viewerId() {
-  const key = 'parking-traffic-control-viewer-id';
+  const key = 'parking-viewer-id';
   try {
     const existing = sessionStorage.getItem(key);
     if (existing) return existing;
@@ -76,12 +89,13 @@ function viewerId() {
   }
 }
 
-export function TrafficCameraPanels({ doorId, language }: Props) {
+export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
   const [entryCamera, setEntryCamera] = useState<Camera | null>(null);
   const [exitCamera, setExitCamera] = useState<Camera | null>(null);
   const [activeTab, setActiveTab] = useState<CameraTab>('entry');
   const [cameraLoading, setCameraLoading] = useState(false);
   const [error, setError] = useState('');
+  const [detectionError, setDetectionError] = useState('');
   const [viewer] = useState(viewerId);
 
   useEffect(() => {
@@ -96,19 +110,63 @@ export function TrafficCameraPanels({ doorId, language }: Props) {
       const row = record(response);
       const entryLabel = text(language, 'دوربین ورودی', 'Entry camera');
       const exitLabel = text(language, 'دوربین خروجی', 'Exit camera');
-      const directEntry = cameraFrom(field(row, 'EnteranceCamera', 'EntranceCamera'), entryLabel);
-      const directExit = cameraFrom(field(row, 'ExitCamera'), exitLabel);
+      const directEntry = cameraFrom(field(row, 'EnteranceCamera', 'EntranceCamera'), entryLabel, 'entry');
+      const directExit = cameraFrom(field(row, 'ExitCamera'), exitLabel, 'exit');
       const linked = linkedCameraRows(response);
       const devices = listFrom(devicesResponse).map((item) => record(item)).filter((item): item is RecordValue => Boolean(item && isCamera(item)));
       const entryLinked = linked.find((item) => String(item.trafficType ?? '') === '0')?.row;
       const exitLinked = linked.find((item) => String(item.trafficType ?? '') === '1')?.row;
-      const entry = directEntry ?? cameraFrom(entryLinked ?? devices[0], entryLabel);
-      const exit = directExit ?? cameraFrom(exitLinked ?? devices[1], exitLabel);
+      const entry = directEntry ?? cameraFrom(entryLinked ?? devices[0], entryLabel, 'entry');
+      const exit = directExit ?? cameraFrom(exitLinked ?? devices[1], exitLabel, 'exit');
       if (active) { setEntryCamera(entry); setExitCamera(exit); setActiveTab(entry ? 'entry' : 'exit'); }
     }).catch(() => { if (active) setError(text(language, 'اطلاعات دوربین‌های درب دریافت نشد.', 'Camera information could not be loaded.')); })
       .finally(() => { if (active) setCameraLoading(false); });
     return () => { active = false; };
   }, [doorId, language]);
+
+  useEffect(() => {
+    const cameras = [entryCamera, exitCamera].filter((camera): camera is Camera => Boolean(camera?.cameraId));
+    if (!onDetection || cameras.length === 0) return undefined;
+
+    let active = true;
+    const connections: HshDetectionConnection[] = [];
+    setDetectionError('');
+
+    const start = async () => {
+      await Promise.all(cameras.map(async (camera) => {
+        const configValue = camera.detectionServerAddress?.trim();
+        if (!configValue) return;
+        const config = parseHshDetectionConfig(configValue);
+        if (!config) {
+          if (active) setDetectionError(text(language, 'قالب سرویس تشخیص پلاک دوربین معتبر نیست.', 'The camera plate-detection setting is invalid.'));
+          return;
+        }
+        const connection = new HshDetectionConnection(config, camera.cameraId);
+        connections.push(connection);
+        const handleDetection: HshDetectionHandler = (event, loadArtifact) => onDetection(
+          {
+            ...event,
+            source: { ...event.source, direction: camera.direction },
+          },
+          loadArtifact,
+        );
+        await connection.start(handleDetection, (status: HshDetectionStatus) => {
+          if (!active) return;
+          if (status.state === 'error' || status.state === 'cursor-expired') {
+            setDetectionError(text(language, 'ارتباط سرویس تشخیص پلاک برقرار نشد.', 'The plate-detection service is unavailable.'));
+          } else if (status.state === 'connected') {
+            setDetectionError('');
+          }
+        });
+      }));
+    };
+
+    void start();
+    return () => {
+      active = false;
+      void Promise.all(connections.map((connection) => connection.stop()));
+    };
+  }, [entryCamera, exitCamera, language, onDetection]);
 
   const activeCamera = activeTab === 'entry' ? entryCamera : exitCamera;
   const hasBothCameras = Boolean(entryCamera && exitCamera);
@@ -121,6 +179,7 @@ export function TrafficCameraPanels({ doorId, language }: Props) {
         <Tab value="exit" label={text(language, 'خروجی', 'Exit')} sx={{ minHeight: 34, py: 0.25 }} />
       </Tabs>}
       {error && <Alert severity="warning" sx={{ mb: 1 }}>{error}</Alert>}
+      {detectionError && <Alert severity="warning" sx={{ mb: 1 }}>{detectionError}</Alert>}
       {cameraLoading && <Box className="inline-status-row"><CircularProgress size={18} /><Typography variant="body2">{text(language, 'در حال دریافت دوربین...', 'Loading camera...')}</Typography></Box>}
       {!cameraLoading && !error && !entryCamera && !exitCamera && <Typography variant="body2" color="text.secondary">{text(language, 'برای این درب دوربین فعالی تعریف نشده است.', 'No active camera is configured for this door.')}</Typography>}
       {!cameraLoading && activeCamera && <Box className="traffic-camera-preview-box" sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><Box sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><CameraStreamPreview key={`${doorId}-${activeCamera.cameraId}`} camera={{ ...activeCamera, name: `${selectedLabel}: ${activeCamera.name}` }} language={language} viewer={viewer} size={{ width: '100%', height: 210 }} showConnectionButton={false} showModeSwitcher={false} showRoiAction={false} autoConnect compact /></Box></Box>}

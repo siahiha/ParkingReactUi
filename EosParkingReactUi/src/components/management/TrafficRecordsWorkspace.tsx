@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Alert,
   Box,
@@ -17,7 +17,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ExitToAppRoundedIcon from "@mui/icons-material/ExitToAppRounded";
@@ -25,6 +24,10 @@ import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import { ApiError } from "../../api/client";
 import { cargoApi, parkingApi, trafficApi } from "../../api/management";
+import type {
+  HshDetectionEvent,
+  HshDetectionHandler,
+} from "../../api/hshDetectionRealtime";
 import { AppDataGrid } from "../AppDataGrid";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { EosDateTimePicker } from "../EosDateTimePicker";
@@ -211,10 +214,42 @@ export function TrafficRecordsWorkspace({
   const [lookupLoading, setLookupLoading] = useState(false);
   const [exitBill, setExitBill] = useState<RecordValue | null>(null);
   const [billOpen, setBillOpen] = useState(false);
+  const [latestDetection, setLatestDetection] = useState<{
+    event: HshDetectionEvent;
+    fullFrameUrl: string | null;
+    plateImageUrl: string | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const handleDetection = useCallback<HshDetectionHandler>(async (event, loadArtifact) => {
+    const nextPlate = normalizeIranianPlateValue(event.plateText);
+    const [fullFrameUrl, plateImageUrl] = await Promise.all([
+      loadArtifact("FullFrameRaw").catch(() => null),
+      loadArtifact("PlateCrop").catch(() => null),
+    ]);
+    setLatestDetection((previous) => ({ event, fullFrameUrl, plateImageUrl }));
+    if (nextPlate) setPlate(nextPlate);
+    setCarInfo(null);
+    setMemberCredit(null);
+    setExitBill(null);
+    setOperationMode("idle");
+    const detectedAt = inputDateTime(event.occurredAtUtc);
+    if (event.source.direction === "exit") setExitDateTime(detectedAt);
+    else setEntryDateTime(detectedAt);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (latestDetection?.fullFrameUrl) URL.revokeObjectURL(latestDetection.fullFrameUrl);
+      if (latestDetection?.plateImageUrl) URL.revokeObjectURL(latestDetection.plateImageUrl);
+    };
+  }, [latestDetection?.fullFrameUrl, latestDetection?.plateImageUrl]);
+
+  useEffect(() => {
+    setLatestDetection(null);
+  }, [entryDoorId]);
   const copy = isPersian
     ? {
         count: "رکورد",
@@ -1179,6 +1214,44 @@ export function TrafficRecordsWorkspace({
                     {operationHint}
                   </Typography>
                 )}
+                <Box className="traffic-operation-details" aria-label={isPersian ? "مشخصات پلاک انتخاب‌شده" : "Selected plate details"}>
+                  <Typography variant="body2" className="traffic-operation-detail-row">
+                    <span>{isPersian ? "پلاک" : "Plate"}</span>
+                    <strong dir="ltr">{plate || "—"}</strong>
+                  </Typography>
+                  {carInfo && (
+                    <>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "عضو" : "Member"}</span>
+                        <strong>{String(valueOf(carInfo, "MemberFullName") ?? valueOf(carInfo, "Name") ?? "—")}</strong>
+                      </Typography>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "کد عضویت" : "Member code"}</span>
+                        <strong>{String(valueOf(carInfo, "MemberCode") ?? "—")}</strong>
+                      </Typography>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "خودرو" : "Vehicle"}</span>
+                        <strong>{String(valueOf(carInfo, "CarName") ?? valueOf(carInfo, "CarModel") ?? "—")}</strong>
+                      </Typography>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "رنگ" : "Color"}</span>
+                        <strong>{String(valueOf(carInfo, "CarColor") ?? "—")}</strong>
+                      </Typography>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "تردد باز" : "Open traffic"}</span>
+                        <strong dir="ltr">{dateTime(valueOf(carInfo, "EnterDateTime"), isPersian)}</strong>
+                      </Typography>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "تعرفه" : "Tariff"}</span>
+                        <strong>{String(valueOf(carInfo, "MemberTariffName") ?? valueOf(carInfo, "TariffName") ?? valueOf(carInfo, "TarrifTitle") ?? "—")}</strong>
+                      </Typography>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "اعتبار" : "Credit"}</span>
+                        <strong>{String(valueOf(memberCredit ?? {}, "Credit") ?? valueOf(memberCredit ?? {}, "CurrentCredit") ?? valueOf(carInfo, "CashAmount") ?? "—")}</strong>
+                      </Typography>
+                    </>
+                  )}
+                </Box>
                 {operationMode === "exit" && (
                   <Typography variant="body2" sx={{ mb: 1.5 }}>
                     {isPersian ? "زمان ورود: " : "Entry time: "}
@@ -1208,20 +1281,15 @@ export function TrafficRecordsWorkspace({
                 )}
                 <Button
                   variant="contained"
-                  startIcon={<AddRoundedIcon />}
+                  color="primary"
+                  fullWidth
                   onClick={handleOperation}
-                  disabled={
-                    working || lookupLoading || operationMode === "idle"
-                  }
+                  disabled={working || lookupLoading || operationMode === "idle"}
                 >
                   {operationMode === "exit"
-                    ? isPersian
-                      ? "محاسبه مبلغ و خروج"
-                      : "Calculate and exit"
+                    ? (isPersian ? "محاسبه مبلغ و ثبت خروج" : "Calculate amount and register exit")
                     : operationMode === "enter"
-                      ? isPersian
-                        ? "ثبت ورود"
-                        : "Register entry"
+                      ? (isPersian ? "ثبت ورود" : "Register entry")
                       : copy.register}
                 </Button>
               </Box>
@@ -1232,13 +1300,54 @@ export function TrafficRecordsWorkspace({
                   arrow
                 >
                   <Box className="traffic-last-traffic-inline">
-                    <Box className="traffic-last-traffic-placeholder">
-                      <Typography variant="body2" color="text.secondary">
-                        {isPersian
-                          ? "محل نمایش آخرین تصویر و مشخصات تردد"
-                          : "Latest image and traffic details will appear here"}
-                      </Typography>
-                    </Box>
+                    {latestDetection ? (
+                      <>
+                        <Typography variant="body2" className="traffic-latest-detail-row">
+                          <span>{isPersian ? "تاریخ و ساعت" : "Date and time"}</span>
+                          <strong dir="ltr">{dateTime(latestDetection.event.occurredAtUtc, isPersian)}</strong>
+                        </Typography>
+                        <Typography variant="body2" className="traffic-latest-detail-row">
+                          <span>{isPersian ? "پلاک" : "Plate"}</span>
+                          <strong dir="ltr">{latestDetection.event.plateText || "—"}</strong>
+                        </Typography>
+                        <Box className="traffic-latest-image-stack">
+                          <Box className="traffic-plate-preview">
+                            {latestDetection.plateImageUrl ? (
+                              <Box
+                                component="img"
+                                src={latestDetection.plateImageUrl}
+                                alt={isPersian ? "تصویر پلاک آخرین تشخیص" : "Latest plate crop"}
+                              />
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                {isPersian ? "تصویر پلاک موجود نیست" : "Plate image unavailable"}
+                              </Typography>
+                            )}
+                          </Box>
+                          <Box className="traffic-fullframe-preview">
+                            {latestDetection.fullFrameUrl ? (
+                              <Box
+                                component="img"
+                                src={latestDetection.fullFrameUrl}
+                                alt={isPersian ? "تصویر کامل آخرین تشخیص پلاک" : "Latest full-frame detection"}
+                              />
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                {isPersian ? "تصویر Full Frame موجود نیست" : "Full-frame image unavailable"}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </>
+                    ) : (
+                      <Box className="traffic-last-traffic-placeholder">
+                        <Typography variant="body2" color="text.secondary">
+                          {isPersian
+                            ? "تصویر آخرین تشخیص در دسترس نیست"
+                            : "Latest detection image is unavailable"}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Tooltip>
               )}
@@ -1246,83 +1355,13 @@ export function TrafficRecordsWorkspace({
           </Paper>
         </Tooltip>
         {showCameras && (
-          <TrafficCameraPanels doorId={entryDoorId} language={language} />
+          <TrafficCameraPanels
+            doorId={entryDoorId}
+            language={language}
+            onDetection={handleDetection}
+          />
         )}
       </Box>
-      {carInfo && (
-        <Paper
-          component="fieldset"
-          variant="outlined"
-          className={`traffic-vehicle-details-panel ${showCameras ? "traffic-control-vehicle-details-panel" : ""}`}
-        >
-          <Typography
-            component="legend"
-            className="traffic-vehicle-details-title"
-          >
-            {isPersian
-              ? "اطلاعات خودرو و عضو"
-              : "Vehicle and member information"}
-          </Typography>
-          <Box className="traffic-vehicle-details-grid">
-            <Typography variant="body2">
-              {isPersian ? "عضو: " : "Member: "}
-              <strong>
-                {String(
-                  valueOf(carInfo, "MemberFullName") ??
-                    valueOf(carInfo, "Name") ??
-                    "—",
-                )}
-              </strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "کد عضویت: " : "Member code: "}
-              <strong>{String(valueOf(carInfo, "MemberCode") ?? "—")}</strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "خودرو: " : "Vehicle: "}
-              <strong>
-                {String(
-                  valueOf(carInfo, "CarName") ??
-                    valueOf(carInfo, "CarModel") ??
-                    "—",
-                )}
-              </strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "رنگ: " : "Color: "}
-              <strong>{String(valueOf(carInfo, "CarColor") ?? "—")}</strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "تردد باز: " : "Open traffic: "}
-              <strong>
-                {String(valueOf(carInfo, "EnterDateTime") ?? "—")}
-              </strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "تعرفه: " : "Tariff: "}
-              <strong>
-                {String(
-                  valueOf(carInfo, "MemberTariffName") ??
-                    valueOf(carInfo, "TariffName") ??
-                    valueOf(carInfo, "TarrifTitle") ??
-                    "—",
-                )}
-              </strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "اعتبار: " : "Credit: "}
-              <strong>
-                {String(
-                  valueOf(memberCredit ?? {}, "Credit") ??
-                    valueOf(memberCredit ?? {}, "CurrentCredit") ??
-                    valueOf(carInfo, "CashAmount") ??
-                    "—",
-                )}
-              </strong>
-            </Typography>
-          </Box>
-        </Paper>
-      )}
       <Box
         className={`traffic-details-section ${showCameras ? "traffic-control-grid" : "traffic-records-grid"}`}
       >

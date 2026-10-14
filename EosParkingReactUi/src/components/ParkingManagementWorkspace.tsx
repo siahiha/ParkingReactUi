@@ -5,6 +5,7 @@ import { ParkingDirectoryWorkspace } from './management/ParkingDirectoryWorkspac
 import { ReadOnlyModuleWorkspace } from './management/ReadOnlyModuleWorkspace';
 import { UserManagementWorkspace } from './management/UserManagementWorkspace';
 import { CameraEquipmentWorkspace } from './management/CameraEquipmentWorkspace';
+import { ParkingDoorWorkspace } from './management/ParkingDoorWorkspace';
 import { MonitoringWorkspace } from './management/MonitoringWorkspace';
 import { ShiftAssignmentWorkspace } from './management/ShiftAssignmentWorkspace';
 import { TrafficRecordsWorkspace } from './management/TrafficRecordsWorkspace';
@@ -19,16 +20,19 @@ type Props = {
   pageTitle?: string;
   parkingId: number;
   language: Language;
+  canEdit?: boolean;
+  canDelete?: boolean;
 };
 
 /** Route-level composition only. Each resource owns its own state, API workflow and form. */
-export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingId, language }: Props) {
+export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingId, language, canEdit = true, canDelete = true }: Props) {
   if (itemKey === 'parking-list') return <ParkingDirectoryWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'parking-details') return <ParkingDetailsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'users') return <UserManagementWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'access') return <AccessLevelWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'cards') return <CardManagementWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'equipment') return <CameraEquipmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
+  if (itemKey === 'doors') return <ParkingDoorWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} canEdit={canEdit} canDelete={canDelete} />;
   if (itemKey === 'monitoring') return <MonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'shifts') return <ShiftAssignmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'manual-traffic') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} showCameras />;

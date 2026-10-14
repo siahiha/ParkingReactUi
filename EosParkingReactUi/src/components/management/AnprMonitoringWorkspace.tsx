@@ -62,7 +62,12 @@ const toCamera = (row: Row): Camera | null => {
   if (id === undefined || id === null || id === '') return null;
   if (!isCameraType(field(row, 'DeviceType', 'EquipmentType', 'Type')) && field(row, 'CameraId') === undefined) return null;
   const cameraId = String(field(row, 'CameraId') ?? field(row, 'Id', 'DeviceId', 'EquipmentId'));
-  return { cameraId, name: String(field(row, 'DeviceName', 'CameraName', 'CameraTitle', 'Name') ?? cameraId), enabled: !bool(field(row, 'Disabled')) };
+  return {
+    cameraId,
+    name: String(field(row, 'DeviceName', 'CameraName', 'CameraTitle', 'Name') ?? cameraId),
+    rtspUrl: String(field(row, 'RtspUrl', 'RTSPUrl', 'RTSPURL') ?? '').trim() || undefined,
+    enabled: !bool(field(row, 'Disabled')),
+  };
 };
 const imageMime = (bytes: Uint8Array) => {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';

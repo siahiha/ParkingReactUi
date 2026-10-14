@@ -17,6 +17,7 @@
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
+    "@microsoft/signalr": "^10.0.11",
     "@mui/icons-material": "latest",
     "@mui/material": "latest",
     "@mui/x-date-pickers": "^9.15.0",
