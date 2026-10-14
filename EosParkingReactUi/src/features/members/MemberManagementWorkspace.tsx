@@ -3,6 +3,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import {
   Alert,
@@ -722,7 +723,7 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
       language={language}
       loading={loading || saving}
       onRefresh={() => void load()}
-      toolbar={<><Button size="small" variant="contained" startIcon={<AddRoundedIcon />} onClick={startNew}>{t.new}</Button><Button size="small" variant="outlined" startIcon={<EditRoundedIcon />} onClick={() => startEdit()} disabled={!selected}>{t.edit}</Button><Tooltip title={t.remove}><span><IconButton color="error" aria-label={t.remove} onClick={() => setDeleteOpen(true)} disabled={!selected}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}
+      toolbar={<><Tooltip title={t.new} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={t.new} onClick={startNew}><AddRoundedIcon /></IconButton></span></Tooltip><Tooltip title={t.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={t.edit} onClick={() => startEdit()} disabled={!selected}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={t.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={t.remove} onClick={() => setDeleteOpen(true)} disabled={!selected}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}
     >
       {message && <Alert severity="success" sx={{ mb: 1 }}>{message}</Alert>}
       {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
@@ -742,7 +743,7 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
           {content ? <>
             <Box className="member-detail-heading">
               <Box><Typography variant="subtitle2">{draft ? t.details : `${content.Name} ${content.Family}`}</Typography><Typography variant="caption" color="text.secondary">{t.code}: <span dir="ltr">{content.Code || '—'}</span></Typography></Box>
-              {draft && <Stack direction="row" spacing={1}><Button size="small" onClick={() => setDraft(null)}>{t.cancel}</Button><Button size="small" variant="contained" startIcon={<SaveRoundedIcon />} onClick={() => void saveMember(true)} disabled={saving}>{t.save}</Button></Stack>}
+              {draft && <Stack direction="row" spacing={1}><Tooltip title={t.cancel} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={t.cancel} onClick={() => setDraft(null)} disabled={saving}><CancelOutlinedIcon /></IconButton></span></Tooltip><Tooltip title={t.save} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={t.save} onClick={() => void saveMember(true)} disabled={saving}><SaveRoundedIcon /></IconButton></span></Tooltip></Stack>}
             </Box>
             <Divider />
             <Tabs value={tab} onChange={(_, value) => selectTab(value)} variant="scrollable" scrollButtons="auto"><Tab label={t.details} /><Tab label={t.cars} /><Tab label={t.membership} /><Tab label={t.spaces} /></Tabs>
@@ -778,11 +779,11 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
 }
 
 function MemberCars({ rows, t, editable, onAdd }: { rows: Car[]; t: ReturnType<typeof copy>; editable: boolean; onAdd: () => void }) {
-  return <Box className="member-tab-content">{editable && <Button size="small" variant="outlined" startIcon={<AddRoundedIcon />} onClick={onAdd}>{t.addCar}</Button>}{rows.length ? <AppDataGrid rows={rows} rowKey={(row, index) => row.Id || index} columns={[{ key: 'Plate', label: t.plate, render: (row) => <span dir="ltr">{row.Plate}</span> }, { key: 'CarType', label: t.type, render: (row) => row.CarType || '—' }, { key: 'Name', label: t.carName, render: (row) => row.Name || '—' }, { key: 'DtoViewCarModelTitle', label: t.model, render: (row) => row.DtoViewCarModelTitle || '—' }]} /> : <Typography variant="body2" color="text.secondary">{t.carsEmpty}</Typography>}</Box>;
+  return <Box className="member-tab-content">{editable && <Tooltip title={t.addCar} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={t.addCar} onClick={onAdd}><AddRoundedIcon /></IconButton></span></Tooltip>}{rows.length ? <AppDataGrid rows={rows} rowKey={(row, index) => row.Id || index} columns={[{ key: 'Plate', label: t.plate, render: (row) => <span dir="ltr">{row.Plate}</span> }, { key: 'CarType', label: t.type, render: (row) => row.CarType || '—' }, { key: 'Name', label: t.carName, render: (row) => row.Name || '—' }, { key: 'DtoViewCarModelTitle', label: t.model, render: (row) => row.DtoViewCarModelTitle || '—' }]} /> : <Typography variant="body2" color="text.secondary">{t.carsEmpty}</Typography>}</Box>;
 }
 
 function Memberships({ rows, cashAmount, t, language, editable, onAdd, onCancel }: { rows: Membership[]; cashAmount: number; t: ReturnType<typeof copy>; language: Language; editable: boolean; onAdd: () => void; onCancel: (membership: Membership) => void }) {
-  return <Box className="member-tab-content"><Box className="member-membership-toolbar">{editable && <Button size="small" variant="outlined" startIcon={<AddRoundedIcon />} onClick={onAdd}>{t.addMembership}</Button>}<Typography variant="body2" color="text.secondary">{t.balance}: <strong dir="ltr">{formatMoney(cashAmount)} {t.rial}</strong></Typography></Box>{rows.length ? <AppDataGrid rows={rows} direction={language === 'fa' ? 'rtl' : 'ltr'} rowKey={(row, index) => row.Id || index} columns={[{ key: 'MemberRegisterKindTitle', label: t.type, render: (row) => row.MemberRegisterKindTitle || '—' }, { key: 'CreditAmount', label: t.credit, render: (row) => <span dir="ltr">{formatMoney(row.CreditAmount)} {t.rial}</span> }, { key: 'StartDate', label: t.start, render: (row) => formatDateTime(row.StartDate, language) }, { key: 'EndDate', label: t.end, render: (row) => formatDateTime(row.EndDate, language) }, { key: 'IsActive', label: t.status, compact: true, trueLabel: t.active, falseLabel: t.makeReservation }, { key: 'actions', label: t.actions, compact: true, filterable: false, render: (row) => <Tooltip title={t.cancellation}><span><IconButton size="small" color="error" aria-label={`${t.cancellation}: ${row.MemberRegisterKindTitle}`} onClick={() => onCancel(row)} disabled={!row.Id}><CancelOutlinedIcon fontSize="small" /></IconButton></span></Tooltip> }]} /> : <Typography variant="body2" color="text.secondary">{t.membershipEmpty}</Typography>}</Box>;
+  return <Box className="member-tab-content"><Box className="member-membership-toolbar">{editable && <Tooltip title={t.addMembership} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={t.addMembership} onClick={onAdd}><AddRoundedIcon /></IconButton></span></Tooltip>}<Typography variant="body2" color="text.secondary">{t.balance}: <strong dir="ltr">{formatMoney(cashAmount)} {t.rial}</strong></Typography></Box>{rows.length ? <AppDataGrid rows={rows} direction={language === 'fa' ? 'rtl' : 'ltr'} rowKey={(row, index) => row.Id || index} columns={[{ key: 'MemberRegisterKindTitle', label: t.type, render: (row) => row.MemberRegisterKindTitle || '—' }, { key: 'CreditAmount', label: t.credit, render: (row) => <span dir="ltr">{formatMoney(row.CreditAmount)} {t.rial}</span> }, { key: 'StartDate', label: t.start, render: (row) => formatDateTime(row.StartDate, language) }, { key: 'EndDate', label: t.end, render: (row) => formatDateTime(row.EndDate, language) }, { key: 'IsActive', label: t.status, compact: true, trueLabel: t.active, falseLabel: t.makeReservation }, { key: 'actions', label: t.actions, compact: true, filterable: false, render: (row) => <Tooltip title={t.cancellation}><span><IconButton size="small" color="error" aria-label={`${t.cancellation}: ${row.MemberRegisterKindTitle}`} onClick={() => onCancel(row)} disabled={!row.Id}><CancelOutlinedIcon fontSize="small" /></IconButton></span></Tooltip> }]} /> : <Typography variant="body2" color="text.secondary">{t.membershipEmpty}</Typography>}</Box>;
 }
 
 function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, loading, error, notice, selectedAssignedKeys, onAssignedSelectionChange, onAssign, onRelease, onReleaseSelected, onRetry }: {
@@ -820,7 +821,7 @@ function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, 
   const rowKey = (row: ParkingSpace, index: number) => row.ParkSpaceId || row.Id || index;
 
   return <Box className="member-tab-content member-parking-spaces">
-    {error && <Alert severity="error" action={<Button color="inherit" size="small" onClick={onRetry}>{t.retry}</Button>}>{error}</Alert>}
+    {error && <Alert severity="error" action={<Tooltip title={t.retry} arrow><span><IconButton size="small" color="inherit" aria-label={t.retry} onClick={onRetry}><RefreshRoundedIcon fontSize="small" /></IconButton></span></Tooltip>}>{error}</Alert>}
     {notice && <Alert severity="info">{notice}</Alert>}
     <Box className="member-parking-space-grids">
       <AppGroupBox title={`${t.availableSpaces} (${availableRows.length})`} className="member-parking-space-group">
@@ -831,7 +832,7 @@ function ParkingSpaces({ rows, availableRows, t, language, editable, canManage, 
             : <Typography variant="body2" color="text.secondary">{t.availableSpacesEmpty}</Typography>}
       </AppGroupBox>
       <AppGroupBox title={`${t.assignedSpaces} (${rows.length})`} className="member-parking-space-group">
-        {selectionEnabled && <Box className="member-parking-space-toolbar"><Button size="small" color="error" variant="outlined" startIcon={<DeleteOutlineRoundedIcon />} onClick={onReleaseSelected} disabled={!selectedAssignedKeys.length}>{t.releaseSpace}</Button></Box>}
+        {selectionEnabled && <Box className="member-parking-space-toolbar"><Tooltip title={t.releaseSpace} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={t.releaseSpace} onClick={onReleaseSelected} disabled={!selectedAssignedKeys.length}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></Box>}
         {rows.length
           ? <AppDataGrid rows={rows} direction={direction} rowKey={rowKey} selectedKeys={selectionEnabled ? selectedAssignedKeys : []} onSelectionChange={selectionEnabled ? (keys) => onAssignedSelectionChange(keys.map(String)) : undefined} columns={gridColumns('release')} />
           : <Typography variant="body2" color="text.secondary">{t.spacesEmpty}</Typography>}

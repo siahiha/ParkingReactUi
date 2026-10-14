@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
-import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, TextField } from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControlLabel, IconButton, MenuItem, TextField, Tooltip } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VideocamRoundedIcon from '@mui/icons-material/VideocamRounded';
 import { ApiError } from '../../api/client';
 import { cameraApi, type Camera, parkingApi } from '../../api/management';
+import { parseHshDetectionConfig } from '../../api/hshDetectionRealtime';
 import { AppDataGrid } from '../AppDataGrid';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { CrudDialog } from '../CrudDialog';
 import { CameraStreamPreview } from './CameraStreamPreview';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
+import { WorkspaceToolbar } from '../WorkspaceToolbar';
 import { asRows, recordValue, type Language, type RecordValue } from './managementTypes';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
@@ -50,10 +52,11 @@ function fromRow(row: RecordValue): Draft {
 
 function toCamera(draft: Draft): Camera {
   const cameraId = draft.id > 0 ? String(draft.id) : draft.name.trim().replace(/[^A-Za-z0-9_.:-]+/g, '-') || 'camera';
-  // The persisted camera id is enough for the Backend to load IP, port and
-  // credentials from the database. Do not place those credentials in a
-  // browser request or in the component state used for connection testing.
-  return { cameraId, name: draft.name.trim() || cameraId, enabled: !draft.disabled };
+  // The explicit endpoint is required when testing a newly entered camera
+  // before it has been persisted as equipment. The Backend also supports
+  // resolving a saved camera by its persisted equipment id.
+  const rtspUrl = draft.rtspUrl.trim();
+  return { cameraId, name: draft.name.trim() || cameraId, enabled: !draft.disabled, ...(rtspUrl ? { rtspUrl } : {}) };
 }
 
 export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language }: Props) {
@@ -106,6 +109,10 @@ export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language
       setError(text(language, 'نام و اطلاعات ارتباطی معتبر الزامی است.', 'Name and valid connection details are required.'));
       return;
     }
+    if (camera && draft.detectionServerAddress.trim() && !parseHshDetectionConfig(draft.detectionServerAddress)) {
+      setError(text(language, 'فرمت سرویس تشخیص پلاک باید مانند Eos|http://192.168.1.20:5080|customer-gate-plate باشد.', 'Use the plate-detection format Eos|http://192.168.1.20:5080|customer-gate-plate.'));
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -148,7 +155,7 @@ export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language
     }
   };
 
-  const field = (key: keyof Draft, label: string, options?: { dir?: 'ltr' | 'rtl'; type?: string }) => <TextField label={label} value={String(draft[key])} type={options?.type} dir={options?.dir} onChange={(event: ChangeEvent<HTMLInputElement>) => update(key, event.target.value as never)} />;
+  const field = (key: keyof Draft, label: string, options?: { dir?: 'ltr' | 'rtl'; type?: string; placeholder?: string; helperText?: string }) => <TextField label={label} value={String(draft[key])} type={options?.type} dir={options?.dir} placeholder={options?.placeholder} helperText={options?.helperText} onChange={(event: ChangeEvent<HTMLInputElement>) => update(key, event.target.value as never)} />;
   const camera = draft.deviceType === '0';
   const tcp = draft.connectionType === '1';
   const deviceTypes = [
@@ -165,7 +172,7 @@ export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language
   ];
 
   return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${text(language, 'تجهیز', 'equipment')}`} language={language} loading={loading || busy} onRefresh={() => void load()}>
-    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}><Button variant="contained" size="small" startIcon={<AddRoundedIcon />} onClick={openCreate}>{text(language, 'جدید', 'New')}</Button><Button size="small" startIcon={<EditRoundedIcon />} onClick={openEdit} disabled={!selectedRow || busy}>{text(language, 'ویرایش', 'Edit')}</Button><Button size="small" color="error" startIcon={<DeleteOutlineRoundedIcon />} onClick={() => setPendingDelete(selectedRow ?? null)} disabled={!selectedRow || busy}>{text(language, 'حذف', 'Delete')}</Button></Box>
+    <WorkspaceToolbar ariaLabel={text(language, 'عملیات تجهیزات', 'Equipment actions')}><Tooltip title={text(language, 'جدید', 'New')} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={text(language, 'جدید', 'New')} onClick={openCreate} disabled={busy}><AddRoundedIcon /></IconButton></span></Tooltip><Tooltip title={text(language, 'ویرایش', 'Edit')} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={text(language, 'ویرایش', 'Edit')} onClick={openEdit} disabled={!selectedRow || busy}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={text(language, 'حذف', 'Delete')} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={text(language, 'حذف', 'Delete')} onClick={() => setPendingDelete(selectedRow ?? null)} disabled={!selectedRow || busy}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></WorkspaceToolbar>
     {message && <Alert severity="success" sx={{ mb: 1 }}>{message}</Alert>}{error && rows.length > 0 && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
     <ResourceState loading={loading} error={rows.length === 0 ? error : ''} empty={!error && rows.length === 0} loadingLabel={text(language, 'در حال دریافت تجهیزات...', 'Loading equipment...')} emptyLabel={text(language, 'تجهیزی برای نمایش وجود ندارد.', 'No equipment found.')}><AppDataGrid<RecordValue> direction={language === 'fa' ? 'rtl' : 'ltr'} defaultFilterOpen rows={rows} rowKey={(row, index) => String(value(row, 'Id') ?? index)} selectedKeys={selectedKeys} selectedKey={selectedKeys[0] ?? null} onSelectionChange={(keys) => setSelectedKeys(keys.map(String))} onRowClick={(row, index) => setSelectedKeys([String(value(row, 'Id') ?? index)])} onRowDoubleClick={(row) => { const next = fromRow(row); setDraft(next); setOriginal(next); setDialogOpen(true); }} columns={[{ key: 'DeviceName', label: text(language, 'نام تجهیز', 'Device name'), render: (row) => String(value(row, 'DeviceName') ?? '—') }, { key: 'DeviceType', label: text(language, 'نوع تجهیز', 'Device type'), render: (row) => equipmentTypeLabel(value(row, 'DeviceType'), language) }, { key: 'Ip', label: 'IP', render: (row) => <span dir="ltr">{String(value(row, 'Ip') ?? '—')}</span> }, { key: 'Port', label: text(language, 'پورت', 'Port'), render: (row) => <span dir="ltr">{String(value(row, 'Port') ?? '—')}</span> }, { key: 'Disabled', label: text(language, 'وضعیت', 'Status'), boolean: true, getBooleanValue: (row) => !bool(value(row, 'Disabled')), trueLabel: text(language, 'فعال', 'Active'), falseLabel: text(language, 'غیرفعال', 'Disabled') }]} /></ResourceState>
     <CrudDialog open={dialogOpen} title={draft.id ? text(language, 'ویرایش تجهیز', 'Edit equipment') : text(language, 'ایجاد تجهیز', 'Create equipment')} onClose={closeDialog} onConfirm={() => void save()} cancelLabel={text(language, 'لغو', 'Cancel')} confirmLabel={text(language, 'تأیید', 'Save')} busy={busy} maxWidth="lg">
@@ -182,7 +189,7 @@ export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
             {!camera && <TextField select label={text(language, 'نوع ارتباط', 'Connection type')} value={draft.connectionType} onChange={(event) => update('connectionType', event.target.value)}><MenuItem value="0">{text(language, 'سریال', 'Serial')}</MenuItem><MenuItem value="1">TCP/IP</MenuItem></TextField>}
             {camera ? <>{field('ip', text(language, 'آدرس دوربین', 'Camera address'), { dir: 'ltr' })}{field('port', text(language, 'پورت دوربین', 'Camera port'), { dir: 'ltr' })}{field('username', text(language, 'نام کاربری', 'Username'), { dir: 'ltr' })}{field('password', text(language, 'رمز عبور', 'Password'), { dir: 'ltr', type: 'password' })}{field('rtspUrl', 'RTSP URL', { dir: 'ltr' })}</> : <>{tcp ? <>{field('ip', text(language, 'آدرس دستگاه', 'Device address'), { dir: 'ltr' })}{field('port', text(language, 'پورت', 'Port'), { dir: 'ltr' })}</> : <>{field('comPort', 'COM', { dir: 'ltr' })}{field('baudRate', text(language, 'نرخ انتقال داده', 'Baud rate'), { dir: 'ltr' })}</>}{field('relay', text(language, 'رله', 'Relay'), { dir: 'ltr' })}{field('readTimeout', text(language, 'انتظار برای خواندن', 'Read timeout'), { dir: 'ltr' })}{field('writeTimeout', text(language, 'انتظار برای نوشتن', 'Write timeout'), { dir: 'ltr' })}{<FormControlLabel control={<Checkbox size="small" checked={draft.pcCheck} onChange={(event) => update('pcCheck', event.target.checked)} />} label={text(language, 'کنترل PC', 'PC check')} />}{draft.deviceType === '1' && <FormControlLabel control={<Checkbox size="small" checked={draft.byService} onChange={(event) => update('byService', event.target.checked)} />} label={text(language, 'کنترل از سرویس', 'By service')} />}</>}
-            {camera && <Box sx={{ gridColumn: { md: '1 / -1' }, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>{field('detectionServerAddress', text(language, 'سرویس تشخیص پلاک', 'Plate detection service'), { dir: 'ltr' })}{field('detectionLeft', text(language, 'چپ محدوده', 'Detection left'), { dir: 'ltr' })}{field('detectionTop', text(language, 'بالای محدوده', 'Detection top'), { dir: 'ltr' })}{field('detectionWidth', text(language, 'عرض تصویر', 'Detection width'), { dir: 'ltr' })}{field('detectionHeight', text(language, 'ارتفاع تصویر', 'Detection height'), { dir: 'ltr' })}</Box>}
+            {camera && <Box sx={{ gridColumn: { md: '1 / -1' }, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>{field('detectionServerAddress', text(language, 'سرویس تشخیص پلاک', 'Plate detection service'), { dir: 'ltr', placeholder: 'Eos|http://192.168.1.20:5080|customer-gate-plate', helperText: text(language, 'فرمت: Eos|آدرس سرویس|شناسه Trigger', 'Format: Eos|service URL|Trigger ID') })}{field('detectionLeft', text(language, 'چپ محدوده', 'Detection left'), { dir: 'ltr' })}{field('detectionTop', text(language, 'بالای محدوده', 'Detection top'), { dir: 'ltr' })}{field('detectionWidth', text(language, 'عرض تصویر', 'Detection width'), { dir: 'ltr' })}{field('detectionHeight', text(language, 'ارتفاع تصویر', 'Detection height'), { dir: 'ltr' })}</Box>}
           </Box>
           <Box sx={{ mt: 2, display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
             {camera ? <><Button size="small" startIcon={<VideocamRoundedIcon />} onClick={() => setPreview(toCamera(draft))}>{text(language, 'تست ارتباط دوربین', 'Test camera connection')}</Button>{preview && <CameraStreamPreview camera={preview} language={language} viewer={viewer} size={200} />}</> : <Button size="small" onClick={() => setMessage(text(language, 'آماده تست اتصال دستگاه است.', 'The device is ready for connection testing.'))}>{text(language, 'تست اتصال', 'Test connection')}</Button>}

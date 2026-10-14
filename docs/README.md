@@ -57,6 +57,7 @@ Splash
 | وضعیت پیاده‌سازی و سیاست Regression | تغییرات انجام‌شده، regressionهای اصلاح‌شده و الزام حفظ قابلیت‌های قبلی | [21-implementation-progress-and-regression-policy.md](21-implementation-progress-and-regression-policy.md) |
 | زون‌های پارکینگ | تطبیق کامل Windows، Backend و React؛ workflow گرید، تیک‌ها، مدل داده، API و موارد باز | [23-parking-zones.md](23-parking-zones.md) |
 | یکپارچه‌سازی UI دوربین RTSP | قرارداد WebRTC/HLS، کامپوننت `CameraStreamPreview`، وضعیت اتصال، lifecycle، viewer و ROI | [24-rtsp-camera-ui-integration.md](24-rtsp-camera-ui-integration.md) |
+| یکپارچه‌سازی Trigger تشخیص پلاک | تنظیم دوربین، SignalR، فیلتر Trigger، cursor، Artifact تصویر، CORS/Proxy و خطوط قرمز امنیتی | [25-plate-detection-trigger-ui-integration.md](25-plate-detection-trigger-ui-integration.md) |
 
 ## Pipeline پیشنهادی محصول
 

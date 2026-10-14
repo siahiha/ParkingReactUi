@@ -61,6 +61,9 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
   if (crudKinds.has(item.key)) {
     return <ParkingDefinitionsCrudWorkspace kind={item.key as 'space-types' | 'floors' | 'zones' | 'member-kinds'} title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} canEdit={item.key !== 'member-kinds' || user.canManageDashboard || hasPart1(1n << 48n)} canDelete={item.key !== 'member-kinds' || user.canManageDashboard || hasPart1(1n << 49n)} />;
   }
+  if (item.key === 'doors') {
+    return <ParkingManagementWorkspace itemKey="doors" title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} canEdit={user.canManageDashboard || hasPart1(1n << 14n)} canDelete={user.canManageDashboard || hasPart1(1n << 15n)} />;
+  }
   if (item.key === 'tariffs') {
     return <TariffListWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }

@@ -140,6 +140,16 @@ function backendErrorMessage(cause: unknown, language: Language) {
   return rawMessage || null;
 }
 
+function isAlreadyRegisteredError(cause: unknown) {
+  if (!(cause instanceof ApiError) || !cause.body || typeof cause.body !== 'object') return false;
+  const body = cause.body as Record<string, unknown>;
+  return String(body.ExceptionMessage ?? body.Message ?? '').toLowerCase().includes('already registered');
+}
+
+function sharedWebRtcUrl(cameraId: string, viewerId: string) {
+  return `/api/rtspcamera/webrtc/${encodeURIComponent(cameraId)}/whep/${encodeURIComponent(viewerId)}`;
+}
+
 export function CameraStreamPreview({ camera, language, viewer, size = 200, showPlaybackControls = false, showStatus = true, showConnectionButton = true, showModeSwitcher = true, autoConnect = false, showRoiAction = true, compact = false }: CameraStreamPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -176,6 +186,25 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
         await new Promise((resolve) => window.setTimeout(resolve, 300));
       }
     };
+    const reuseActiveSession = async () => {
+      const active = await cameraApi.getStatus(camera.cameraId).then((response) => normalizeStatus(response, initialStatus)).catch(() => null);
+      if (!active || active.state !== 'Connected' || active.viewerCount < 1) return false;
+      const nextStreamUrl = active.streamUrl || `/api/rtspcamera/stream/${encodeURIComponent(camera.cameraId)}/playlist.m3u8`;
+      const nextWebRtcUrl = requestedMode === 'WebRTC' ? (active.webRtcUrl || sharedWebRtcUrl(camera.cameraId, viewer)) : '';
+      const nextStatus = { ...active, webRtcUrl: nextWebRtcUrl || active.webRtcUrl };
+      if (isCancelled()) return true;
+      // The Backend owns the active upstream for this camera. Reuse its HLS
+      // playlist or WHEP endpoint instead of failing because a second caller
+      // supplied a textually different RTSP URL.
+      sessionStarted.current = requestedMode === 'WebRTC';
+      setStatus(nextStatus);
+      setError('');
+      setStreamUrl(nextStreamUrl);
+      setWebRtcUrl(nextWebRtcUrl);
+      const nextRois = await cameraApi.getRois(camera.cameraId, viewer).catch(() => []);
+      if (!isCancelled()) setRois(asRois(nextRois));
+      return true;
+    };
     let lastCause: unknown = null;
     try {
       await releasePreviousSession();
@@ -207,6 +236,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
         } catch (cause) {
           if (isCancelled()) return;
           lastCause = cause;
+          if (isAlreadyRegisteredError(cause) && await reuseActiveSession()) return;
           if (!backendErrorMessage(cause, language) || attempt === 2) throw cause;
           await releasePreviousSession();
           await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)));

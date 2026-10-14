@@ -14,6 +14,8 @@ export const parkingApi = {
   getDoors: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoors?parkingId=${parkingId}`),
   getDoor: (doorId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoor?doorId=${doorId}`),
   getDoorDevices: (doorId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoorDevices?doorId=${doorId}`),
+  saveDoor: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/SaveParkingDoor', { method: 'POST', body: JSON.stringify(payload) }),
+  deleteDoor: (doorId: number) => apiRequest<unknown>(`api/Parking/DeleteParkingDoor?doorId=${doorId}`),
   getDoorsLive: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoorsLive?parkingId=${parkingId}`),
   getMonitoringTraffics: (parkingId: number, count: number, trafficType: number, doorIds: number[], startDateTime = '') => {
     const params = new URLSearchParams({ parkingId: String(parkingId), Count: String(count), trafficType: String(trafficType), startDateTime });
@@ -39,7 +41,7 @@ export const anprApi = {
 
 export type CameraStatusState = 'Disconnected' | 'Connecting' | 'Connected' | 'Failed' | 'Stopping';
 export type CameraStatus = { cameraId: string; state: CameraStatusState; error: string | null; viewerCount: number; streamUrl: string; webRtcUrl?: string; lastStateChangeUtc: string };
-export type Camera = { cameraId: string; name: string; rtspUrl?: string; enabled?: boolean };
+export type Camera = { cameraId: string; name: string; rtspUrl?: string; enabled?: boolean; detectionServerAddress?: string; direction?: 'entry' | 'exit' };
 export type CameraRoi = { id: string; cameraId: string; viewerId: string; text: string; color: string; x: number; y: number; width: number; height: number };
 
 export const cameraApi = {

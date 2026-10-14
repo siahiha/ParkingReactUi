@@ -3762,6 +3762,81 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   gap: 5px;
 }
 
+.traffic-operation-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.traffic-operation-detail-row,
+.traffic-latest-detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.traffic-operation-detail-row strong,
+.traffic-latest-detail-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.traffic-last-traffic-inline {
+  min-height: 0;
+  height: 100%;
+}
+
+.traffic-latest-image-stack {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 0;
+}
+
+.traffic-plate-preview,
+.traffic-fullframe-preview {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--app-divider);
+  border-radius: 4px;
+  background: var(--app-surface-muted, #fafafa);
+  text-align: center;
+}
+
+.traffic-plate-preview {
+  flex: 0 0 58px;
+  height: 58px;
+}
+
+.traffic-fullframe-preview {
+  flex: 1 1 auto;
+  min-height: 150px;
+}
+
+.traffic-plate-preview img,
+.traffic-fullframe-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.traffic-plate-preview img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.traffic-fullframe-preview img {
+  object-fit: fill;
+}
+
 .traffic-last-traffic-inline .traffic-last-traffic-placeholder {
   min-height: 78px;
   flex: 1;
@@ -3879,6 +3954,12 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   margin-top: auto;
 }
 
+.traffic-operation-content > .MuiButton-root {
+  min-height: 38px;
+  margin-top: auto;
+  white-space: nowrap;
+}
+
 @media (max-width: 680px) {
   .traffic-top-grid {
     grid-template-columns: 1fr;
@@ -3890,6 +3971,10 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 
   .traffic-last-traffic-inline .traffic-last-traffic-placeholder {
     min-height: 64px;
+  }
+
+  .traffic-fullframe-preview {
+    min-height: 130px;
   }
 
   .traffic-entry-layout {
