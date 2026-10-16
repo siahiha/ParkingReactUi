@@ -39,7 +39,7 @@ export function ReadOnlyModuleWorkspace({ itemKey, title, pageTitle, parkingId, 
     : { loading: 'Loading...', empty: 'No records to display.', unavailable: 'A reliable Backend endpoint has not been identified for this module yet.', count: 'records' };
 
   return (
-    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={definition ? `${rows.length} ${copy.count}` : copy.unavailable} language={language} loading={loading} onRefresh={definition ? () => void load() : undefined}>
+    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={definition ? () => void load() : undefined}>
       <Box className="workspace-resource-content">
         {!definition && <Typography variant="body2" color="text.secondary">{copy.unavailable}</Typography>}
         {definition && <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={copy.loading} emptyLabel={copy.empty}>

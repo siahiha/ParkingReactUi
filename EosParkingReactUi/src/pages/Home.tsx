@@ -8,7 +8,7 @@ import { HomeFormRoutes } from './HomeFormRoutes';
 import { HomeHeader, type NavigationMode } from './HomeHeader';
 import { HomeSidebar } from './HomeSidebar';
 import { homeCopy, navigationModeCopy } from './homeCopy';
-import { createManagementItems, createParkingMenuGroups, visibleManagementItems as filterManagementItems, visibleParkingGroups, type ManagementSection } from './homeMenuModel';
+import { createManagementItems, createParkingMenuGroups, flattenParkingMenuItems, visibleManagementItems as filterManagementItems, visibleParkingGroups, type ManagementSection } from './homeMenuModel';
 import type { HomeUser, ThemeMode } from './homeTypes';
 import { parkingApi } from '../api/management';
 import { asRows, recordValue } from '../components/management/managementTypes';
@@ -50,7 +50,7 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   const hasPart2 = (bit: bigint) => hasBit(user.permissionPart2, bit);
   const managementItems = useMemo(() => createManagementItems(t), [t]);
   const allParkingMenuGroups = useMemo(() => createParkingMenuGroups(language), [language]);
-  const allParkingMenuItems = useMemo(() => allParkingMenuGroups.flatMap((group) => group.items), [allParkingMenuGroups]);
+  const allParkingMenuItems = useMemo(() => flattenParkingMenuItems(allParkingMenuGroups), [allParkingMenuGroups]);
   const isKnownHomePath = location.pathname === '/home'
     || managementItems.some((item) => location.pathname === `/home/management/${item.key}`)
     || allParkingMenuItems.some((item) => location.pathname === `/home/parking/${item.key}`);
@@ -58,9 +58,9 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
   const shouldShowUnknownRoute = unknownRoute || isOutsideAppRoutes || !isKnownHomePath;
   const visibleManagement = filterManagementItems(user, managementItems, hasPart1, hasPart2);
   const visibleParking = visibleParkingGroups(user, allParkingMenuGroups, hasPart1, hasPart2);
-  const activeParkingMenuItem = visibleParking.flatMap((group) => group.items).find((item) => item.key === activeParkingMenu);
+  const visibleParkingMenuItems = flattenParkingMenuItems(visibleParking);
   const hasSidebar = user.canManageDashboard || visibleManagement.length > 0 || visibleParking.length > 0;
-  const firstVisibleParkingItem = visibleParking.flatMap((group) => group.items)[0];
+  const firstVisibleParkingItem = visibleParkingMenuItems[0];
   const selectedParking = parkingOptions.find((parking) => parking.id === selectedParkingId);
   const [openTabs, setOpenTabs] = useState<HomeTab[]>([{ path: '/home', label: t.home }]);
   const [navigationMode, setNavigationMode] = useState<NavigationMode>(() => window.localStorage.getItem(navigationModeStorageKey) === 'classic' ? 'classic' : 'tabs');
@@ -128,9 +128,9 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
     <Box className={`home-body ${!hasSidebar ? 'home-body-no-sidebar' : ''}`}>
       {hasSidebar && <HomeSidebar appName={t.app} systemMenu={t.systemMenu} currentParkingSectionTitle={language === 'fa' ? 'تعاریف و تنظیمات پارکینگ جاری' : 'Current parking definitions and settings'} reportsSectionTitle={language === 'fa' ? 'گزارش‌ها' : 'Reports'} direction={language === 'fa' ? 'rtl' : 'ltr'} visibleManagementItems={visibleManagement} visibleParkingMenuGroups={visibleParking} activeParkingMenu={activeParkingMenu} managementSection={managementSection} onNavigate={openNavigationTab} canManageDashboard={user.canManageDashboard} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} mobileOpen={mobileNavigationOpen} onMobileClose={() => setMobileNavigationOpen(false)} />}
       <Box component="main" className="home-main">
-        {!showManagement && !activeParkingMenu && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{t.homeTitle}</h1><p className="home-page-description">{t.homeDescription}</p></Box></Box>}
+        {!showManagement && !activeParkingMenu && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{t.homeTitle}</h1></Box></Box>}
         {parkingLoadError && <Alert severity="warning" sx={{ m: 2 }}>{parkingLoadError}</Alert>}
-        {shouldShowUnknownRoute ? <Alert severity="warning" role="alert">{t.unknownRouteTitle}: {t.unknownRouteMessage}</Alert> : (showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} allManagementItems={managementItems} visibleParkingMenuItems={visibleParking.flatMap((group) => group.items)} allParkingMenuItems={allParkingMenuItems} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : selectedParking ? <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} /> : <Alert severity="info">{language === 'fa' ? 'پارکینگی برای نمایش در دسترس نیست.' : 'No parking is available to display.'}</Alert>}
+      {shouldShowUnknownRoute ? <Alert severity="warning" role="alert">{t.unknownRouteTitle}: {t.unknownRouteMessage}</Alert> : (showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} allManagementItems={managementItems} visibleParkingMenuItems={visibleParkingMenuItems} allParkingMenuItems={allParkingMenuItems} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : selectedParking ? <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} /> : <Alert severity="info">{language === 'fa' ? 'پارکینگی برای نمایش در دسترس نیست.' : 'No parking is available to display.'}</Alert>}
       </Box>
     </Box>
   </Box>;

@@ -1107,7 +1107,6 @@ export function TrafficRecordsWorkspace({
     <ManagementWorkspaceFrame
       title={title}
       pageTitle={pageTitle}
-      subtitle={`${visibleRows.length} ${copy.count}`}
       language={language}
       loading={loading}
       onRefresh={() => void load()}

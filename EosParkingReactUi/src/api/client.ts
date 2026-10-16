@@ -30,6 +30,38 @@ export class ApiError extends Error {
   }
 }
 
+export type SessionInvalidationReason = 'http-401' | 'response-result-type-11';
+type SessionInvalidationHandler = (reason: SessionInvalidationReason) => void;
+
+const sessionInvalidationHandlers = new Set<SessionInvalidationHandler>();
+
+export function registerSessionInvalidationHandler(handler: SessionInvalidationHandler) {
+  sessionInvalidationHandlers.add(handler);
+  return () => { sessionInvalidationHandlers.delete(handler); };
+}
+
+function notifySessionInvalidated(reason: SessionInvalidationReason) {
+  sessionInvalidationHandlers.forEach((handler) => handler(reason));
+}
+
+function readResponseResultType(body: unknown): string | number | undefined {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return undefined;
+  const record = body as Record<string, unknown>;
+  const resultType = record.ResponseResultType ?? record.responseResultType;
+  return typeof resultType === 'string' || typeof resultType === 'number' ? resultType : undefined;
+}
+
+function isInvalidSessionResponse(body: unknown) {
+  return String(readResponseResultType(body) ?? '').trim() === '11';
+}
+
+function readApiMessage(body: unknown) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return undefined;
+  const record = body as Record<string, unknown>;
+  const message = record.Message ?? record.message ?? record.RealMessage ?? record.realMessage;
+  return typeof message === 'string' && message.trim() ? message : undefined;
+}
+
 export type ApiRequestOptions = RequestInit & {
   /** Prevent an operation from hanging forever when the network is unavailable. */
   timeoutMs?: number;
@@ -65,12 +97,18 @@ export async function apiRequest<T>(path: string, init: ApiRequestOptions = {}):
       } catch {
         body = await response.text().catch(() => null);
       }
+      if (response.status === 401) notifySessionInvalidated('http-401');
       throw new ApiError(response.status, body);
     }
     if (response.status === 204) return undefined as T;
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.includes('json')) return (await response.text()) as T;
-    return response.json() as Promise<T>;
+    const body = await response.json() as unknown;
+    if (isInvalidSessionResponse(body)) {
+      notifySessionInvalidated('response-result-type-11');
+      throw new ApiError(401, body, readApiMessage(body) ?? 'The authenticated session is no longer valid.');
+    }
+    return body as T;
   } finally {
     globalThis.clearTimeout(timeoutId);
     callerSignal?.removeEventListener('abort', abortFromCaller);

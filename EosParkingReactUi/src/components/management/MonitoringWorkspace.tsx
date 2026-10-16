@@ -163,7 +163,7 @@ export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: P
     { key: 'SendStatus', label: text(language, 'ارسال', 'Sent'), width: 56, minWidth: 56, render: (row: TrafficRow) => sendStatusCell(value(row, 'SendStatus'), language) },
   ];
 
-  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={text(language, 'ترددهای زنده و وضعیت درب‌های پارکینگ', 'Live traffic and parking door status')} language={language} loading={loadingDoors || loadingTraffic} onRefresh={() => { void loadDoors(); void loadTraffic(true); }}>
+  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loadingDoors || loadingTraffic} onRefresh={() => { void loadDoors(); void loadTraffic(true); }}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(260px, 0.32fr) minmax(0, 1fr)' }, gap: 2, alignItems: 'stretch' }}>
       <Box sx={{ display: 'grid', gap: 2, alignContent: 'start', minWidth: 0 }}>

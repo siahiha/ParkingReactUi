@@ -2363,8 +2363,8 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   gap: 7px;
   padding: 6px 8px;
   border-radius: 6px;
-  border-color: #d6e0e6;
-  background: #f4f7f9;
+  border: 0;
+  background: transparent;
 }
 
 .parking-card-info-item > .MuiSvgIcon-root {
@@ -2378,6 +2378,29 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 
 .parking-card-info-item .MuiTypography-body2 {
   font-size: .72rem;
+}
+
+/* Parking directory metadata stays readable without turning each value into a pill. */
+.parking-card-meta {
+  align-items: center;
+  gap: 0;
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--app-divider);
+}
+
+.parking-card-info-item {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.parking-card-info-item + .parking-card-info-item {
+  margin-inline-start: 14px;
+  padding-inline-start: 14px;
+  border-inline-start: 1px solid var(--app-divider);
 }
 
 .parking-card-actions {
@@ -2639,14 +2662,6 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   line-height: 1.35 !important;
 }
 
-.home-page-description {
-  margin-top: 0 !important;
-  color: #71808b !important;
-  font-size: .7rem !important;
-  line-height: 1.45 !important;
-  white-space: nowrap;
-}
-
 .app-root.app-theme-dark .home-page-header {
   border-color: #3d4b58;
   background: #26333e;
@@ -2656,18 +2671,10 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   color: #e0edf3;
 }
 
-.app-root.app-theme-dark .home-page-description {
-  color: #aebdc6 !important;
-}
-
 @media (max-width: 760px) {
   .home-page-heading-copy {
     flex-wrap: wrap;
     gap: 2px 10px;
-  }
-
-  .home-page-description {
-    white-space: normal;
   }
 }
 
@@ -2845,6 +2852,93 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .workspace-toolbar .workspace-refresh-button {
   width: 28px;
   height: 28px;
+}
+
+/* Report filters use a grid instead of a wrapping flex row. This keeps date
+   pickers, selects and action buttons inside the workspace at narrow widths. */
+.report-filter-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  align-items: end;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.report-filter-toolbar > * {
+  min-width: 0 !important;
+  width: 100%;
+}
+
+.report-filter-toolbar .MuiFormControlLabel-root {
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  min-width: 0;
+}
+
+.report-filter-toolbar .MuiFormControlLabel-label {
+  white-space: normal;
+}
+
+.report-filter-toolbar .MuiSelect-select {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-filter-toolbar > .MuiButton-root {
+  min-width: 140px;
+  width: 100%;
+}
+
+.cargo-report-plate {
+  grid-column: span 2;
+  width: 100% !important;
+}
+
+.management-report-plate {
+  grid-column: span 2;
+  width: 100% !important;
+}
+
+.cargo-report-plate .iranian-plate-field,
+.cargo-report-plate .iranian-plate-control,
+.management-report-plate .iranian-plate-field,
+.management-report-plate .iranian-plate-control {
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .report-filter-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .report-filter-toolbar > .MuiFormControlLabel-root {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-filter-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .report-filter-toolbar > .MuiFormControlLabel-root,
+  .report-filter-toolbar > .MuiButton-root {
+    width: 100%;
+  }
+
+  .cargo-report-plate {
+    grid-column: auto;
+  }
+
+  .management-report-plate {
+    grid-column: auto;
+  }
 }
 
 /* Member workspace preserves the Windows form's list-plus-details hierarchy,
@@ -3042,19 +3136,95 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   color: #aebdc6 !important;
 }
 
-/* Parking cards use a compact square tile instead of a wide list card. */
+/* Parking cards use a calm, content-sized operational surface. */
+.parking-directory-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+}
+
 .parking-directory-card {
-  flex: 0 1 300px;
-  width: 300px;
+  width: auto;
   min-width: 0;
-  max-width: 100%;
-  aspect-ratio: 1.28 / 1;
+  max-width: none;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-control-radius);
+  background: var(--app-surface);
+  box-shadow: none;
+}
+
+.parking-directory-card::before {
+  display: none;
+}
+
+.parking-directory-card:hover {
+  border-color: var(--app-primary);
+  box-shadow: none;
 }
 
 .parking-directory-card .parking-card-content {
   flex: 1 1 auto;
+}
+
+.parking-card-content {
+  padding: 16px !important;
+}
+
+.parking-card-address {
+  min-height: 0;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.parking-card-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-block: 8px 6px;
+}
+
+.parking-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--app-muted-text, #687482);
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.parking-card-status.is-enabled {
+  color: var(--app-primary);
+}
+
+.parking-card-status-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.parking-card-status-icon .MuiSvgIcon-root {
+  font-size: 16px;
+}
+
+.app-root.app-theme-dark .parking-directory-card {
+  border-color: var(--app-divider);
+  background: var(--app-surface);
+  box-shadow: none;
+}
+
+.app-root.app-theme-dark .parking-card-info-item {
+  border: 0;
+  background: transparent;
+}
+
+.app-root.app-theme-dark .parking-card-info-item + .parking-card-info-item {
+  border-inline-start-color: var(--app-divider);
 }
 
 @media (max-width: 760px) {
@@ -4535,16 +4705,25 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   overflow-y: auto;
 }
 
+.app-root .home-sidebar-drawer-root,
+.app-root .home-sidebar-drawer-root .MuiDrawer-paper,
 .app-root .home-sidebar-drawer {
   width: min(320px, 88vw) !important;
   max-width: 88vw;
-  background: var(--app-surface) !important;
+  background: color-mix(in srgb, var(--home-page-header-surface) 65%, var(--app-shell) 35%) !important;
 }
 
 .app-root .home-sidebar-drawer .home-sidebar-drawer-content {
   width: 100%;
   min-height: 100vh;
   padding-inline: 14px;
+}
+
+.app-root .home-sidebar-drawer-surface {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--home-page-header-surface) 65%, var(--app-shell) 35%) !important;
 }
 
 @media (max-width: 899px) {
@@ -4954,32 +5133,35 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .app-root {
   --home-page-header-surface: #f4f8fa;
   --home-page-header-border: #d8e0e5;
+  --home-page-header-fill: color-mix(in srgb, #f4f8fa 65%, #f3f5f7 35%);
 }
 
 html:has(.app-root.app-theme-dark) {
   --home-page-header-surface: #26333e;
   --home-page-header-border: #3d4b58;
+  --home-page-header-fill: color-mix(in srgb, #26333e 65%, #202830 35%);
 }
 
 .app-root.app-theme-dark {
   --home-page-header-surface: #26333e;
   --home-page-header-border: #3d4b58;
+  --home-page-header-fill: color-mix(in srgb, #26333e 65%, #202830 35%);
 }
 
 .app-root .home-header-top-panel,
 .app-root .home-shell-with-sidebar .home-header-top-panel {
-  background: var(--home-page-header-surface) !important;
+  background: var(--home-page-header-fill) !important;
   border-block-end-color: var(--home-page-header-border) !important;
 }
 
 .app-root.app-theme-dark .home-shell-with-sidebar .home-header-top-panel {
-  background: var(--home-page-header-surface) !important;
+  background: var(--home-page-header-fill) !important;
 }
 
 .app-root .home-header-top-panel .home-header-navigation-button {
   color: var(--app-primary) !important;
   border: 1px solid var(--home-page-header-border) !important;
-  background: color-mix(in srgb, var(--home-page-header-surface) 78%, var(--app-primary) 22%) !important;
+  background: var(--home-page-header-fill) !important;
 }
 
 .app-root .home-header-top-panel .home-header-navigation-button:hover,
@@ -4989,8 +5171,32 @@ html:has(.app-root.app-theme-dark) {
   background: color-mix(in srgb, var(--home-page-header-surface) 64%, var(--app-primary) 36%) !important;
 }
 
-.home-sidebar-drawer,
+.app-root .home-sidebar-drawer-root .MuiDrawer-paper,
+.app-root .home-sidebar-drawer,
 .app-root .home-shell-with-sidebar .home-sidebar-paper {
-  background: var(--home-page-header-surface) !important;
+  background: var(--home-page-header-fill) !important;
   border-color: var(--home-page-header-border) !important;
+}
+
+/* Apply the surface directly to the actual MUI Paper nodes used by both drawers. */
+.home-sidebar-paper,
+.home-sidebar-drawer,
+.home-sidebar-drawer-root .MuiDrawer-paper,
+.home-sidebar-drawer-surface {
+  background-color: var(--home-page-header-fill) !important;
+  background: var(--home-page-header-fill) !important;
+}
+
+html:has(.app-root.app-theme-dark) .home-sidebar-paper,
+html:has(.app-root.app-theme-dark) .home-sidebar-drawer,
+html:has(.app-root.app-theme-dark) .home-sidebar-drawer-root .MuiDrawer-paper,
+html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
+  background-color: var(--home-page-header-fill) !important;
+  background: var(--home-page-header-fill) !important;
+}
+
+.app-root .home-shell-with-sidebar .home-sidebar .MuiDrawer-paper,
+.app-root .home-shell-with-sidebar .home-sidebar-paper {
+  background-color: var(--home-page-header-fill) !important;
+  background: var(--home-page-header-fill) !important;
 }

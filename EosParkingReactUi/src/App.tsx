@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -12,7 +12,7 @@ import { prefixer } from 'stylis';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { type Language, translations } from './i18n';
 import { parseAuthSession, resolveCanManageDashboard, type SsoUserPreferences } from './api/contracts';
-import { apiRequest } from './api/client';
+import { apiRequest, registerSessionInvalidationHandler } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
@@ -87,6 +87,7 @@ export function App() {
   });
   const [authenticated, setAuthenticated] = useState(Boolean(initialAuthSession));
   const [homeUser, setHomeUser] = useState<HomeUser | null>(initialAuthSession?.user ?? null);
+  const sessionInvalidationHandled = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
@@ -110,6 +111,17 @@ export function App() {
     window.localStorage.setItem(ssoLocaleStorageKey, language);
     if (themeColors !== undefined) window.localStorage.setItem(ssoThemeColorsStorageKey, JSON.stringify(themeColors));
   }, [themeMode, lightPalette, darkPalette, shapeSettings, language, themeColors]);
+  const clearLocalSession = () => {
+    sessionInvalidationHandled.current = true;
+    setAuthenticated(false);
+    setHomeUser(null);
+    window.sessionStorage.removeItem(authSessionStorageKey);
+    navigate('/', { replace: true });
+  };
+  useEffect(() => registerSessionInvalidationHandler(() => {
+    if (sessionInvalidationHandled.current) return;
+    clearLocalSession();
+  }), [navigate]);
   const authenticate = ({ user, preferences }: LoginResult) => {
     if (preferences) {
       const nextTheme = normalizeThemeMode(preferences.theme);
@@ -126,15 +138,10 @@ export function App() {
     // The token is set by the Backend as an HttpOnly cookie. Only the
     // non-sensitive user snapshot is kept to restore the shell after refresh.
     window.sessionStorage.setItem(authSessionStorageKey, JSON.stringify({ user }));
+    sessionInvalidationHandled.current = false;
     setAuthenticated(true);
     setHomeUser(user);
     requestNavigation(() => navigate('/home'));
-  };
-  const clearLocalSession = () => {
-    setAuthenticated(false);
-    setHomeUser(null);
-    window.sessionStorage.removeItem(authSessionStorageKey);
-    navigate('/');
   };
   const logout = () => requestNavigation(() => {
     void (async () => {

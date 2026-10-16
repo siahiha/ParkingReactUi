@@ -105,6 +105,7 @@ export const cardApi = {
 /** Membership endpoints mirrored from the Windows MemberForm workflow. */
 export const memberApi = {
   list: (parkingId: number) => apiRequest<unknown>(`api/Member/GetByParkingId?parkingId=${parkingId}`),
+  report: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetMemberReport', { method: 'POST', body: JSON.stringify(payload) }),
   save: (payload: ApiPayload) => apiRequest<unknown>('api/Member/Save', { method: 'POST', body: JSON.stringify(payload) }),
   remove: (memberId: number) => apiRequest<unknown>(`api/Member/Delete?id=${memberId}`),
   listRegisterKinds: (parkingId: number) => apiRequest<unknown>(`api/Member/GetMemberRegisterKindsByParkingId?parkingId=${parkingId}`),
@@ -113,6 +114,25 @@ export const memberApi = {
   cancelRegistration: (payload: ApiPayload) => apiRequest<unknown>('api/Member/MembershipCreditCancellation', { method: 'POST', body: JSON.stringify(payload) }),
   checkExternalMembers: (parkingId: number, members: ApiPayload[]) => apiRequest<unknown>(`api/Member/CheckingExternalMember/${parkingId}`, { method: 'POST', body: JSON.stringify(members) }),
   importExternalMembers: (parkingId: number, members: ApiPayload[]) => apiRequest<unknown>(`api/Member/ImportMembersExternalSource/${parkingId}`, { method: 'POST', body: JSON.stringify(members) }),
+};
+
+/** Report endpoints mirrored from the Windows traffic-report filter panels. */
+export const reportApi = {
+  vehicleTraffic: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetTrafficReport', { method: 'POST', body: JSON.stringify(payload) }),
+  dailyDoorTraffic: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetTrafficStatisticReport', { method: 'POST', body: JSON.stringify(payload) }),
+  parkingDailyIncome: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetParkingDailyIncomingReport', { method: 'POST', body: JSON.stringify(payload) }),
+  parkingMonthlyIncome: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetParkingMonthlyIncomingReport', { method: 'POST', body: JSON.stringify(payload) }),
+  parkingYearlyIncome: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetParkingYearIncomingReport', { method: 'POST', body: JSON.stringify(payload) }),
+  memberCash: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetMemberCach', { method: 'POST', body: JSON.stringify(payload) }),
+  membershipIncome: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetMembershipIncomingDetails', { method: 'POST', body: JSON.stringify(payload) }),
+  cargoDetails: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetCargoIOReport', { method: 'POST', body: JSON.stringify(payload) }),
+  freeParkingIncome: (payload: ApiPayload) => apiRequest<unknown>('api/Report/GetIncomingDetailsReport', { method: 'POST', body: JSON.stringify(payload) }),
+  userActivity: (startDate: string, endDate: string, userId = 0) => apiRequest<unknown>(
+    `api/Report/GetUserActivity?startDateTime=${encodeURIComponent(`${startDate}T00:00:00`)}&endDateTime=${encodeURIComponent(`${endDate}T23:59:59`)}&userId=${userId}`,
+  ),
+  occupiedParking: (parkingId: number, startDate: string, endDate: string) => apiRequest<unknown>(
+    `api/Report/GetOccupedHourlyParkByParkingId?parkingId=${parkingId}&startDateTime=${encodeURIComponent(`${startDate}T00:00:00`)}&endDateTime=${encodeURIComponent(`${endDate}T23:59:59`)}`,
+  ),
 };
 
 export const trafficApi = {

@@ -1,8 +1,10 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import HighlightOffRoundedIcon from '@mui/icons-material/HighlightOffRounded';
 import LocalPhoneRoundedIcon from '@mui/icons-material/LocalPhoneRounded';
 import TagRoundedIcon from '@mui/icons-material/TagRounded';
 import { ApiError } from '../../api/client';
@@ -115,7 +117,7 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
   };
 
   return (
-    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${language === 'fa' ? 'رکورد' : 'records'}`} language={language} loading={loading} onRefresh={() => void load()} toolbar={<Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip>}>
+    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => void load()} toolbar={<Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip>}>
       <Box className="workspace-resource-content">
         <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving}>
           <ParkingFormFields form={form} setForm={updateForm} copy={copy} saveMessage={message} language={language} />
@@ -123,8 +125,14 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
         <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel={language === 'fa' ? 'رکوردی برای نمایش وجود ندارد.' : 'No records to display.'}>
           <Box className="parking-directory-list">{rows.map((row, index) => {
             const id = Number(row.Id ?? row.id ?? index);
+            const isCommercialParking = row.IsCommercialParking === true;
+            const hasUserShifts = row.HasUserShifts === true;
             return <AppRecordCard key={id} className="parking-directory-card" contentClassName="parking-card-content" actionsClassName="parking-card-actions" actions={<><Tooltip title={copy.edit}><IconButton aria-label={copy.edit} onClick={() => edit(row)}><EditRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.remove}><IconButton color="error" aria-label={copy.remove} onClick={() => requestRemove(row)}><DeleteOutlineRoundedIcon /></IconButton></Tooltip></>}>
               <Typography variant="h6" className="parking-card-title">{String(row.ParkingName ?? row.parkingName ?? (language === 'fa' ? 'پارکینگ بدون نام' : 'Unnamed parking'))}</Typography>
+              <Box className="parking-card-statuses">
+                <Box component="span" className={`parking-card-status ${isCommercialParking ? 'is-enabled' : 'is-disabled'}`}><span className="parking-card-status-icon" aria-hidden="true">{isCommercialParking ? <CheckCircleOutlineRoundedIcon /> : <HighlightOffRoundedIcon />}</span>{isCommercialParking ? copy.commercialEnabled : copy.commercialDisabled}</Box>
+                <Box component="span" className={`parking-card-status ${hasUserShifts ? 'is-enabled' : 'is-disabled'}`}><span className="parking-card-status-icon" aria-hidden="true">{hasUserShifts ? <CheckCircleOutlineRoundedIcon /> : <HighlightOffRoundedIcon />}</span>{hasUserShifts ? copy.shiftsEnabled : copy.shiftsDisabled}</Box>
+              </Box>
               <Typography variant="body2" color="text.secondary" className="parking-card-address">{String(row.Address ?? row.address ?? '—')}</Typography>
               <Divider sx={{ my: 1.5 }} />
               <Box className="parking-card-meta"><Box className="parking-card-info-item"><LocalPhoneRoundedIcon /><Box><Typography variant="caption">{copy.phone}</Typography><Typography variant="body2">{String(row.PhonNumber ?? row.phonNumber ?? '—')}</Typography></Box></Box><Box className="parking-card-info-item"><TagRoundedIcon /><Box><Typography variant="caption">{language === 'fa' ? 'شناسه' : 'ID'}</Typography><Typography variant="body2">{id}</Typography></Box></Box></Box>

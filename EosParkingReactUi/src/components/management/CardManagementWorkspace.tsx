@@ -295,7 +295,7 @@ export function CardManagementWorkspace({ title, pageTitle, parkingId, language 
   const selectedLabel = selectedRows.length > 0 ? `${selectedRows.length} ${copy.selected}` : '';
 
   return (
-    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={`${rows.length} ${copy.count}`} language={language} loading={loading || saving} onRefresh={() => void load()}>
+    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading || saving} onRefresh={() => void load()}>
       <Box className="card-management-toolbar" role="region" aria-label={language === 'fa' ? 'ابزارهای مدیریت کارت' : 'Card management tools'}>
         <Box className="card-management-command-row">
           <TextField size="small" label={copy.cardNumber} value={draft.CardNumber} onChange={(event) => setDraft((current) => ({ ...current, CardNumber: event.target.value }))} disabled={saving} slotProps={{ htmlInput: { dir: 'ltr', maxLength: 100 } }} />

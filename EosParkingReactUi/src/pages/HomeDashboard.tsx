@@ -12,7 +12,7 @@ type Labels = {
   freeSpaces: string; occupiedSpaces: string; activeSpace: string; controlPanel: string;
   parkingOperations: string; gateReady: string; stableConnection: string; capacityLabel: string;
   openGates: string; quickAccess: string; traffic: string; users: string; occupancy: string;
-  yesterdayComparison: string; todayTraffic: string; registeredTraffic: string; rawNote: string;
+  yesterdayComparison: string; todayTraffic: string; registeredTraffic: string;
 };
 
 type Props = { labels: Labels; selectedParkingName: string; selectedParkingId: number };
@@ -43,7 +43,7 @@ export function HomeDashboard({ labels: t, selectedParkingName, selectedParkingI
         <Paper className="home-metric-card" elevation={0}><Box className="metric-icon metric-icon-green"><DirectionsCarRoundedIcon /></Box><Box><Typography variant="caption" color="text.secondary">{t.todayTraffic}</Typography><Typography variant="h2">1,284</Typography><Typography variant="caption" color="text.secondary">{t.registeredTraffic}</Typography></Box></Paper>
         <Paper className="home-metric-card" elevation={0}><Box className="metric-icon metric-icon-amber"><MeetingRoomRoundedIcon /></Box><Box><Typography variant="caption" color="text.secondary">{t.openGates}</Typography><Typography variant="h2">4 / 4</Typography><Typography variant="caption" color="success.main">{t.stableConnection}</Typography></Box></Paper>
       </Box>
-      <Paper className="home-workspace home-quick-workspace" elevation={0}><Box className="workspace-heading"><Box><Typography variant="h6">{t.quickAccess}</Typography><Typography variant="body2" color="text.secondary">{t.rawNote}</Typography></Box><Box className="workspace-heading-mark"><LocalActivityRoundedIcon /></Box></Box><Divider sx={{ my: 2 }} /><Box className="home-quick-actions home-quick-actions-inline"><Button variant="contained" startIcon={<TrafficRoundedIcon />}>{t.traffic}</Button><Button variant="outlined" startIcon={<PeopleAltRoundedIcon />}>{t.users}</Button></Box></Paper>
+      <Paper className="home-workspace home-quick-workspace" elevation={0}><Box className="workspace-heading"><Typography variant="h6">{t.quickAccess}</Typography><Box className="workspace-heading-mark"><LocalActivityRoundedIcon /></Box></Box><Divider sx={{ my: 2 }} /><Box className="home-quick-actions home-quick-actions-inline"><Button variant="contained" startIcon={<TrafficRoundedIcon />}>{t.traffic}</Button><Button variant="outlined" startIcon={<PeopleAltRoundedIcon />}>{t.users}</Button></Box></Paper>
     </Box>
   );
 }

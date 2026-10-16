@@ -63,7 +63,7 @@ export function ParkingDetailsWorkspace({ title, pageTitle, parkingId, language 
   };
 
   return (
-    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={language === 'fa' ? 'تنظیمات پارکینگ' : 'Parking settings'} language={language} loading={loading} onRefresh={() => void load()}>
+    <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => void load()}>
       <ResourceState loading={loading} error={error} empty={false} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel="">
         <Box className="workspace-resource-content"><ParkingFormFields form={form} setForm={updateForm} copy={copy} saveMessage={message} language={language} /><Button variant="contained" startIcon={<SaveRoundedIcon />} onClick={() => void save()} disabled={saving} aria-busy={saving}>{copy.save}</Button></Box>
       </ResourceState>

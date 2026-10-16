@@ -52,6 +52,37 @@ describe('login', () => {
     expect(screen.queryByLabelText('نام کاربری')).not.toBeInTheDocument();
   });
 
+  it('clears the local session and redirects to login after an HTTP 401', async () => {
+    window.history.replaceState({}, '', '/home/management/access');
+    window.sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({
+      user: { id: 7, userName: 'operator', currentParking: 1, permissions: [], legacyAccessLevelId: 1 },
+    }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 401 }));
+
+    renderApp();
+
+    expect(await screen.findByTestId('login-submit')).toBeVisible();
+    expect(window.location.pathname).toBe('/');
+    expect(window.sessionStorage.getItem('eos-parking-auth-session')).toBeNull();
+  });
+
+  it('clears the local session and redirects to login for ResponseResultType=11', async () => {
+    window.history.replaceState({}, '', '/home/management/access');
+    window.sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({
+      user: { id: 7, userName: 'operator', currentParking: 1, permissions: [], legacyAccessLevelId: 1 },
+    }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ ResponseResultType: 11 }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+
+    renderApp();
+
+    expect(await screen.findByTestId('login-submit')).toBeVisible();
+    expect(window.location.pathname).toBe('/');
+    expect(window.sessionStorage.getItem('eos-parking-auth-session')).toBeNull();
+  });
+
   it('keeps Home mounted for an unknown route without navigating away', async () => {
     window.history.replaceState({}, '', '/not-a-real-route');
     window.sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({
@@ -92,6 +123,7 @@ describe('login', () => {
     await user.click(screen.getByTestId('login-submit'));
 
     expect(await screen.findByText('خانه')).toBeVisible();
+    expect(screen.queryByText('اطلاعات و عملیات پارکینگ انتخاب‌شده در این صفحه نمایش داده می‌شود.')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'مدیریت سامانه' }));
     expect(screen.getByText('مدیریت سامانه')).toBeVisible();
   });

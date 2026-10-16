@@ -71,7 +71,7 @@ export function IntegrationSettingsWorkspace({ title, pageTitle, parkingId, lang
     } finally { setSaving(false); }
   };
 
-  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} subtitle={text(language, 'پیکربندی اتصال پارکینگ جاری به سرویس ETS', 'Configure the current parking connection to ETS')} language={language} loading={loading} onRefresh={() => { void load(); }}>
+  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => { void load(); }}>
     <ResourceState loading={loading} error={error} empty={false} loadingLabel={text(language, 'در حال دریافت تنظیمات...', 'Loading settings...')} emptyLabel="">
       <Box component="form" onSubmit={(event) => { event.preventDefault(); void save(); }} sx={{ maxWidth: 720, display: 'grid', gap: 2 }}>
         <Alert severity="info" icon={<LinkRoundedIcon />}>

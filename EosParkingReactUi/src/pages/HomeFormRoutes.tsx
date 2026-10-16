@@ -8,6 +8,11 @@ const ParkingManagementWorkspace = lazy(() => import('../components/ParkingManag
 const ExitPermissionWorkspace = lazy(() => import('../components/ExitPermissionWorkspace').then((module) => ({ default: module.ExitPermissionWorkspace })));
 const TariffListWorkspace = lazy(() => import('../features/tariffs/TariffListWorkspace').then((module) => ({ default: module.TariffListWorkspace })));
 const MemberManagementWorkspace = lazy(() => import('../features/members/MemberManagementWorkspace').then((module) => ({ default: module.MemberManagementWorkspace })));
+const MemberReportWorkspace = lazy(() => import('../features/reports/MemberReportWorkspace').then((module) => ({ default: module.MemberReportWorkspace })));
+const TrafficReportWorkspace = lazy(() => import('../features/reports/TrafficReportWorkspace').then((module) => ({ default: module.TrafficReportWorkspace })));
+const FinancialReportWorkspace = lazy(() => import('../features/reports/FinancialReportWorkspace').then((module) => ({ default: module.FinancialReportWorkspace })));
+const CargoReportWorkspace = lazy(() => import('../features/reports/CargoReportWorkspace').then((module) => ({ default: module.CargoReportWorkspace })));
+const ManagementReportWorkspace = lazy(() => import('../features/reports/ManagementReportWorkspace').then((module) => ({ default: module.ManagementReportWorkspace })));
 
 type MenuItem = { key: string; label: string };
 type Labels = { parkingManagement: string; listMenu: string; placeholder: string; accessDeniedTitle: string; accessDeniedMessage: string; unknownRouteTitle: string; unknownRouteMessage: string; backHome: string };
@@ -25,6 +30,10 @@ type Props = {
 };
 
 const crudKinds = new Set(['space-types', 'floors', 'zones', 'member-kinds']);
+const memberReportStates = { 'member-report': 'all', 'active-member-report': 'active', 'inactive-member-report': 'inactive' } as const;
+const trafficReportKinds = { 'traffic-reports-list': 'details', 'door-traffic-reports': 'daily', 'average-parking-time': 'average' } as const;
+const financialReportKinds = { 'parking-income': 'parking-income', 'monthly-parking-income': 'monthly-income', 'member-cash': 'member-cash', 'user-performance': 'user-performance', 'membership-income': 'membership-income' } as const;
+const managementReportKinds = { 'management-monthly-income-comparison': 'monthly-income-comparison', 'management-income-comparison': 'income-comparison', 'management-yearly-income-comparison': 'yearly-income-comparison', 'management-user-performance': 'user-performance', 'management-free-parking-income': 'free-parking-income' } as const;
 
 function AccessDenied({ labels }: Pick<Props, 'labels'>) {
   const navigate = useNavigate();
@@ -58,6 +67,21 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
   const item = allParkingMenuItems.find((candidate) => candidate.key === itemKey);
   if (!item) return <UnknownRoute labels={labels} />;
   if (!visibleParkingMenuItems.some((candidate) => candidate.key === itemKey)) return <AccessDenied labels={labels} />;
+  if (itemKey && itemKey in memberReportStates) {
+    return <MemberReportWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} state={memberReportStates[itemKey as keyof typeof memberReportStates]} />;
+  }
+  if (itemKey && itemKey in trafficReportKinds) {
+    return <TrafficReportWorkspace title={item.label} parkingId={selectedParkingId} language={language} kind={trafficReportKinds[itemKey as keyof typeof trafficReportKinds]} />;
+  }
+  if (itemKey && itemKey in financialReportKinds) {
+    return <FinancialReportWorkspace title={item.label} parkingId={selectedParkingId} language={language} kind={financialReportKinds[itemKey as keyof typeof financialReportKinds]} />;
+  }
+  if (itemKey && itemKey in managementReportKinds) {
+    return <ManagementReportWorkspace title={item.label} language={language} kind={managementReportKinds[itemKey as keyof typeof managementReportKinds]} />;
+  }
+  if (itemKey === 'cargo-details') {
+    return <CargoReportWorkspace title={item.label} language={language} />;
+  }
   if (crudKinds.has(item.key)) {
     return <ParkingDefinitionsCrudWorkspace kind={item.key as 'space-types' | 'floors' | 'zones' | 'member-kinds'} title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} canEdit={item.key !== 'member-kinds' || user.canManageDashboard || hasPart1(1n << 48n)} canDelete={item.key !== 'member-kinds' || user.canManageDashboard || hasPart1(1n << 49n)} />;
   }

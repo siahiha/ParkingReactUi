@@ -719,7 +719,6 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
     <ManagementWorkspaceFrame
       title={title}
       pageTitle={pageTitle}
-      subtitle={t.subtitle}
       language={language}
       loading={loading || saving}
       onRefresh={() => void load()}
