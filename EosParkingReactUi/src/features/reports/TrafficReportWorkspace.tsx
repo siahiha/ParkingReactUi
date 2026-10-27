@@ -8,10 +8,10 @@ import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
-import trafficReportTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/TrafficReport.mrt?raw';
-import trafficWithImageTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/TrafficWithImageReport.mrt?raw';
-import trafficStatisticTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/TrafficStatisticChartReport.mrt?raw';
-import totalHourParkingTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/TotalHourParkingReport.mrt?raw';
+import trafficReportTemplate from '../../assets/report-templates/TrafficReport.mrt?raw';
+import trafficWithImageTemplate from '../../assets/report-templates/TrafficWithImageReport.mrt?raw';
+import trafficStatisticTemplate from '../../assets/report-templates/TrafficStatisticChartReport.mrt?raw';
+import totalHourParkingTemplate from '../../assets/report-templates/TotalHourParkingReport.mrt?raw';
 
 type TrafficReportKind = 'details' | 'daily' | 'average';
 type Props = { title: string; parkingId: number; language: Language; kind: TrafficReportKind };

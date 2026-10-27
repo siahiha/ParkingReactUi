@@ -18,6 +18,7 @@ type MenuItem = { key: string; label: string };
 type Labels = { parkingManagement: string; listMenu: string; placeholder: string; accessDeniedTitle: string; accessDeniedMessage: string; unknownRouteTitle: string; unknownRouteMessage: string; backHome: string };
 
 type Props = {
+  basePath?: '/home' | '/home2';
   language: Language;
   user: HomeUser;
   labels: Labels;
@@ -35,21 +36,21 @@ const trafficReportKinds = { 'traffic-reports-list': 'details', 'door-traffic-re
 const financialReportKinds = { 'parking-income': 'parking-income', 'monthly-parking-income': 'monthly-income', 'member-cash': 'member-cash', 'user-performance': 'user-performance', 'membership-income': 'membership-income' } as const;
 const managementReportKinds = { 'management-monthly-income-comparison': 'monthly-income-comparison', 'management-income-comparison': 'income-comparison', 'management-yearly-income-comparison': 'yearly-income-comparison', 'management-user-performance': 'user-performance', 'management-free-parking-income': 'free-parking-income' } as const;
 
-function AccessDenied({ labels }: Pick<Props, 'labels'>) {
+function AccessDenied({ labels, basePath = '/home' }: Pick<Props, 'labels' | 'basePath'>) {
   const navigate = useNavigate();
-  return <Paper className="home-workspace" elevation={0} role="alert"><Typography variant="h6">{labels.accessDeniedTitle}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.accessDeniedMessage}</Typography><Button variant="outlined" size="small" sx={{ mt: 2 }} onClick={() => navigate('/home')}>{labels.backHome}</Button></Paper>;
+  return <Paper className="home-workspace" elevation={0} role="alert"><Typography variant="h6">{labels.accessDeniedTitle}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.accessDeniedMessage}</Typography><Button variant="outlined" size="small" sx={{ mt: 2 }} onClick={() => navigate(basePath)}>{labels.backHome}</Button></Paper>;
 }
 
-function UnknownRoute({ labels }: Pick<Props, 'labels'>) {
+function UnknownRoute({ labels, basePath = '/home' }: Pick<Props, 'labels' | 'basePath'>) {
   const navigate = useNavigate();
-  return <Paper className="home-workspace" elevation={0} role="alert"><Typography variant="h6">{labels.unknownRouteTitle}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.unknownRouteMessage}</Typography><Button variant="outlined" size="small" sx={{ mt: 2 }} onClick={() => navigate('/home')}>{labels.backHome}</Button></Paper>;
+  return <Paper className="home-workspace" elevation={0} role="alert"><Typography variant="h6">{labels.unknownRouteTitle}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.unknownRouteMessage}</Typography><Button variant="outlined" size="small" sx={{ mt: 2 }} onClick={() => navigate(basePath)}>{labels.backHome}</Button></Paper>;
 }
 
-function ManagementPage({ language, labels, selectedParkingId, visibleManagementItems, allManagementItems }: Omit<Props, 'hasPart1' | 'visibleParkingMenuItems' | 'allParkingMenuItems'>) {
+function ManagementPage({ language, labels, selectedParkingId, visibleManagementItems, allManagementItems, basePath }: Omit<Props, 'hasPart1' | 'visibleParkingMenuItems' | 'allParkingMenuItems'>) {
   const { section } = useParams();
   const item = allManagementItems.find((candidate) => candidate.key === section);
-  if (!item) return <UnknownRoute labels={labels} />;
-  if (!visibleManagementItems.some((candidate) => candidate.key === section)) return <AccessDenied labels={labels} />;
+  if (!item) return <UnknownRoute labels={labels} basePath={basePath} />;
+  if (!visibleManagementItems.some((candidate) => candidate.key === section)) return <AccessDenied labels={labels} basePath={basePath} />;
   if (section === 'list') {
       return <ParkingManagementWorkspace itemKey="parking-list" title={labels.listMenu} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }
@@ -62,11 +63,11 @@ function ManagementPage({ language, labels, selectedParkingId, visibleManagement
   return <Paper className="home-workspace" elevation={0}><Typography variant="h6">{visibleManagementItems.find((item) => item.key === section)?.label}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.placeholder}</Typography></Paper>;
 }
 
-function ParkingPage({ language, user, labels, selectedParkingId, visibleParkingMenuItems, allParkingMenuItems, hasPart1 }: Props) {
+function ParkingPage({ language, user, labels, selectedParkingId, visibleParkingMenuItems, allParkingMenuItems, hasPart1, basePath }: Props) {
   const { itemKey } = useParams();
   const item = allParkingMenuItems.find((candidate) => candidate.key === itemKey);
-  if (!item) return <UnknownRoute labels={labels} />;
-  if (!visibleParkingMenuItems.some((candidate) => candidate.key === itemKey)) return <AccessDenied labels={labels} />;
+  if (!item) return <UnknownRoute labels={labels} basePath={basePath} />;
+  if (!visibleParkingMenuItems.some((candidate) => candidate.key === itemKey)) return <AccessDenied labels={labels} basePath={basePath} />;
   if (itemKey && itemKey in memberReportStates) {
     return <MemberReportWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} state={memberReportStates[itemKey as keyof typeof memberReportStates]} />;
   }
@@ -102,7 +103,7 @@ export function HomeFormRoutes(props: Props) {
     <Suspense fallback={<Box className="inline-status-row"><CircularProgress size={20} /><Typography variant="body2">{props.language === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}</Typography></Box>}><Routes>
       <Route path="management/:section" element={<ManagementPage {...props} />} />
       <Route path="parking/:itemKey" element={<ParkingPage {...props} />} />
-      <Route path="*" element={<UnknownRoute labels={props.labels} />} />
+      <Route path="*" element={<UnknownRoute labels={props.labels} basePath={props.basePath} />} />
     </Routes></Suspense>
   );
 }

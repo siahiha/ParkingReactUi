@@ -9,9 +9,9 @@ import { IranianPlateInput } from '../../components/IranianPlateInput';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
-import monthlyIncomeTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/ParkingMonthlyIncomingChartReport.mrt?raw';
-import yearlyIncomeTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/ParkingYearlyComparIncomingChartReport.mrt?raw';
-import freeParkingIncomeTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/TrafficIncomingDetailsReport.mrt?raw';
+import monthlyIncomeTemplate from '../../assets/report-templates/ParkingMonthlyIncomingChartReport.mrt?raw';
+import yearlyIncomeTemplate from '../../assets/report-templates/ParkingYearlyComparIncomingChartReport.mrt?raw';
+import freeParkingIncomeTemplate from '../../assets/report-templates/TrafficIncomingDetailsReport.mrt?raw';
 
 type ManagementReportKind = 'monthly-income-comparison' | 'income-comparison' | 'yearly-income-comparison' | 'user-performance' | 'free-parking-income';
 type Props = { title: string; language: Language; kind: ManagementReportKind };

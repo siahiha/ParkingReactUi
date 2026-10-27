@@ -8,11 +8,11 @@ import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
-import parkingIncomeTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/ParkingIncomingChartReport - Copy.mrt?raw';
-import monthlyIncomeTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/ParkingMonthlyIncomingChartReport.mrt?raw';
-import memberCashTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/MemberCashReport.mrt?raw';
-import userCashTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/UserCashReport.mrt?raw';
-import membershipIncomeTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/MembershipInfoIncomingDetailsReport.mrt?raw';
+import parkingIncomeTemplate from '../../assets/report-templates/ParkingIncomingChartReport - Copy.mrt?raw';
+import monthlyIncomeTemplate from '../../assets/report-templates/ParkingMonthlyIncomingChartReport.mrt?raw';
+import memberCashTemplate from '../../assets/report-templates/MemberCashReport.mrt?raw';
+import userCashTemplate from '../../assets/report-templates/UserCashReport.mrt?raw';
+import membershipIncomeTemplate from '../../assets/report-templates/MembershipInfoIncomingDetailsReport.mrt?raw';
 
 type FinancialReportKind = 'parking-income' | 'monthly-income' | 'member-cash' | 'user-performance' | 'membership-income';
 type Props = { title: string; parkingId: number; language: Language; kind: FinancialReportKind };

@@ -9,7 +9,7 @@ import { IranianPlateInput } from '../../components/IranianPlateInput';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
-import cargoReportTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/CargoIoReport.mrt?raw';
+import cargoReportTemplate from '../../assets/report-templates/CargoIoReport.mrt?raw';
 
 type Props = { title: string; language: Language };
 type ReportRow = Record<string, unknown>;

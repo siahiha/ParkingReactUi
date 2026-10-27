@@ -8,7 +8,7 @@ import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
-import memberReportTemplate from '../../../../EosParkingTools/EosControls/ReportDesign/MembersReport.mrt?raw';
+import memberReportTemplate from '../../assets/report-templates/MembersReport.mrt?raw';
 
 type MemberReportState = 'all' | 'active' | 'inactive';
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language; state: MemberReportState };

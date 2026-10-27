@@ -199,14 +199,18 @@ export function App() {
   const themeVars = themeMode === 'dark'
     ? { surface: activeThemeColors.surface ?? activeTokens.surface, shell: activeThemeColors.shell ?? activeTokens.shell, text: activeThemeColors.text ?? '#f3f5f7', mutedText: activeThemeColors.mutedText ?? '#b7c1ca', border: activeThemeColors.border ?? activeTokens.border, input: activeThemeColors.input ?? activeTokens.input }
     : { surface: activeThemeColors.surface ?? activeTokens.surface, shell: activeThemeColors.shell ?? activeTokens.shell, text: activeThemeColors.text ?? '#18212b', mutedText: activeThemeColors.mutedText ?? '#687482', border: activeThemeColors.border ?? activeTokens.border, input: activeThemeColors.input ?? activeTokens.input };
-  const isOutsideAppRoutes = location.pathname !== '/' && location.pathname !== '/sso/callback' && !location.pathname.startsWith('/home');
-  const homeElement = (unknownRoute = false) => authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={!isSsoEnabled} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} unknownRoute={unknownRoute || isOutsideAppRoutes} /> : <Navigate to="/" replace />;
+  const homeElement = (options: { basePath?: '/home' | '/home2'; variant?: 'default' | 'home2'; unknownRoute?: boolean } = {}) => {
+    const basePath = options.basePath ?? '/home';
+    const isOutsideHomeRoutes = location.pathname !== '/' && location.pathname !== '/sso/callback' && !location.pathname.startsWith(basePath);
+    return authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={!isSsoEnabled} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} basePath={basePath} variant={options.variant ?? 'default'} unknownRoute={options.unknownRoute || isOutsideHomeRoutes} /> : <Navigate to="/" replace />;
+  };
   return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language} localeText={pickerLocaleText}><CssBaseline /><Routes>
     <Route path="/home/*" element={homeElement()} />
+    <Route path="/home2/*" element={homeElement({ basePath: '/home2', variant: 'home2' })} />
     <Route path="/sso/callback" element={<SsoCallbackPage language={language} onAuthenticated={authenticate} />} />
     <Route path="/login2" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="/login" element={<Login2Page language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="/" element={<Login2Page language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
-    <Route path="*" element={homeElement(true)} />
+    <Route path="*" element={homeElement({ unknownRoute: true })} />
   </Routes></LocalizationProvider></ThemeProvider></RTL></Box>;
 }
