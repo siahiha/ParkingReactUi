@@ -198,7 +198,23 @@ button, input, select, textarea {
   .tariff-rate-header { grid-template-columns: repeat(5, minmax(140px, 1fr)); }
 }
 .inline-status-row { display: flex; align-items: center; gap: 8px; }
-.exit-permission-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.exit-permission-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  align-items: end;
+  gap: 10px;
+}
+.exit-permission-toolbar > .MuiFormControl-root,
+.exit-permission-toolbar > .MuiTextField-root,
+.exit-permission-toolbar > .MuiBox-root {
+  width: 100%;
+  min-width: 0;
+}
+.exit-permission-toolbar > .MuiTooltip-root {
+  display: flex;
+  align-items: end;
+  min-width: 0;
+}
 .home-header-action {
   min-height: 34px !important;
   border: 1px solid transparent !important;
@@ -4184,12 +4200,41 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .monitoring-door-grid .app-data-grid .MuiTableHead-root .MuiTableCell-root {
   font-size: .64rem;
 }
-/* Theme settings dialog: paired palette swatches and a compact shape control grid. */
+/* Theme settings dialog: clear sections, paired palette swatches and a compact shape control grid. */
+.theme-settings-dialog .MuiDialog-paper {
+  overflow: hidden;
+}
+.theme-settings-dialog .MuiDialogTitle-root {
+  border-block-end: 1px solid var(--app-divider, #d7dce2);
+  background: var(--app-surface, #fff);
+}
+.theme-settings-content {
+  display: grid;
+  gap: 18px;
+  padding-block: 4px;
+}
+.theme-settings-section {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--app-divider, #d7dce2);
+  border-radius: var(--app-control-radius, 4px);
+  background: color-mix(in srgb, var(--app-surface, #fff) 92%, var(--app-shell, #f3f5f7));
+}
+.theme-settings-section-title {
+  color: var(--app-text, #18212b);
+}
+.theme-settings-section-label {
+  margin-block-start: 2px;
+}
+.theme-palette-grid {
+  flex-wrap: wrap;
+}
 .theme-palette-option {
   position: relative;
   display: inline-flex;
-  min-width: 92px;
-  flex: 1 1 92px;
+  min-width: 88px;
+  flex: 1 1 88px;
   cursor: pointer;
   flex-direction: column;
   align-items: center;
@@ -4200,11 +4245,24 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   color: var(--app-text-secondary, #687482);
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
+.theme-palette-option .MuiRadio-root {
+  position: absolute;
+  inset: 4px auto auto 4px;
+  z-index: 1;
+  padding: 2px;
+  opacity: 0;
+}
+.theme-palette-option:focus-within .MuiRadio-root,
+.theme-palette-option.is-selected .MuiRadio-root {
+  opacity: 1;
+}
 .theme-palette-option:hover,
 .theme-palette-option:focus-within { border-color: var(--app-primary, #234b78); transform: translateY(-1px); }
 .theme-palette-option.is-selected { border-color: var(--app-primary, #234b78); box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary, #234b78) 16%, transparent); color: var(--app-primary, #234b78); }
 .theme-palette-swatches { display: flex; gap: 5px; }
 .theme-palette-swatch { width: 22px; height: 22px; border: 2px solid rgba(255,255,255,.78); border-radius: 50%; box-shadow: 0 1px 4px rgba(20,35,48,.18); }
+.theme-settings-shape-grid { gap: 8px; }
+.app-root.app-theme-dark .theme-settings-section { background: color-mix(in srgb, var(--app-surface, #29333d) 90%, var(--app-shell, #202830)); }
 .app-root .MuiButton-root { border-radius: var(--app-button-radius, 3px); }
 .app-root .MuiOutlinedInput-root,
 .app-root .MuiSelect-select { border-radius: var(--app-control-radius, 4px); }
@@ -5131,21 +5189,21 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
    heading surface, with a touch more contrast than the workspace background. */
 :root,
 .app-root {
-  --home-page-header-surface: #f4f8fa;
-  --home-page-header-border: #d8e0e5;
-  --home-page-header-fill: color-mix(in srgb, #f4f8fa 65%, #f3f5f7 35%);
+  --home-page-header-surface: var(--app-surface, #f4f8fa);
+  --home-page-header-border: var(--app-divider, #d8e0e5);
+  --home-page-header-fill: color-mix(in srgb, var(--home-page-header-surface) 65%, var(--app-shell, #f3f5f7) 35%);
 }
 
 html:has(.app-root.app-theme-dark) {
-  --home-page-header-surface: #26333e;
-  --home-page-header-border: #3d4b58;
-  --home-page-header-fill: color-mix(in srgb, #26333e 65%, #202830 35%);
+  --home-page-header-surface: var(--app-surface, #26333e);
+  --home-page-header-border: var(--app-divider, #3d4b58);
+  --home-page-header-fill: color-mix(in srgb, var(--home-page-header-surface) 65%, var(--app-shell, #202830) 35%);
 }
 
 .app-root.app-theme-dark {
-  --home-page-header-surface: #26333e;
-  --home-page-header-border: #3d4b58;
-  --home-page-header-fill: color-mix(in srgb, #26333e 65%, #202830 35%);
+  --home-page-header-surface: var(--app-surface, #26333e);
+  --home-page-header-border: var(--app-divider, #3d4b58);
+  --home-page-header-fill: color-mix(in srgb, var(--home-page-header-surface) 65%, var(--app-shell, #202830) 35%);
 }
 
 .app-root .home-header-top-panel,
@@ -5200,3 +5258,231 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   background-color: var(--home-page-header-fill) !important;
   background: var(--home-page-header-fill) !important;
 }
+
+/* Palette tokens must reach the complete operational shell, not only active icons. */
+.app-root .home-page-header,
+.app-root .workspace-heading-unified {
+  background: var(--home-page-header-fill) !important;
+  border-color: var(--app-divider) !important;
+  color: var(--app-text) !important;
+}
+
+.app-root .home-page-title,
+.app-root .workspace-page-context h1,
+.app-root .workspace-page-context > .MuiTypography-h6 {
+  color: var(--app-text) !important;
+}
+
+.app-root .home-workspace,
+.app-root .parking-management-workspace,
+.app-root .home-metric-card,
+.app-root .home-preview-panel {
+  background-color: var(--app-surface) !important;
+  border-color: var(--app-divider) !important;
+}
+
+.app-root .home-shell-with-sidebar .home-nav-item:hover,
+.app-root .home-shell-with-sidebar .home-parking-nav-item:hover,
+.app-root .home-shell-with-sidebar .home-menu-group-button:hover,
+.app-root .home-shell-with-sidebar .home-parking-group-button:hover {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+}
+
+.app-root .home-shell-with-sidebar .home-nav-item.active,
+.app-root .home-shell-with-sidebar .home-parking-nav-item.active,
+.app-root .home-shell-with-sidebar .home-menu-group-button.active,
+.app-root .home-shell-with-sidebar .home-parking-group-button.active {
+  color: var(--app-primary) !important;
+  background: var(--app-primary-soft) !important;
+  -webkit-text-fill-color: var(--app-primary);
+}
+
+/* Login2: an atmospheric parking-control entrance with the same live palette tokens as Home. */
+.login2-page {
+  --login2-ink: var(--app-text, #18212b);
+  --login2-muted: var(--app-muted-text, #687482);
+  --login2-line: var(--app-divider, #d7dce2);
+  --login2-paper: var(--app-surface, #fff);
+  --login2-primary: var(--app-primary, #234b78);
+  --login2-soft: var(--app-primary-soft, #edf2f7);
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  padding: clamp(20px, 4vw, 48px) clamp(20px, 6vw, 88px);
+  color: var(--login2-ink);
+  background:
+    radial-gradient(circle at 9% 82%, color-mix(in srgb, var(--login2-primary) 11%, transparent), transparent 27%),
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--login2-primary) 13%, transparent), transparent 30%),
+    var(--app-shell, #f3f5f7);
+}
+.login2-page::before { content: ''; position: absolute; inset: 0; z-index: -2; background: linear-gradient(135deg, color-mix(in srgb, var(--login2-primary) 5%, transparent), transparent 50%); pointer-events: none; }
+.login2-grid { position: absolute; inset: 0; z-index: -1; opacity: .48; pointer-events: none; background-image: linear-gradient(color-mix(in srgb, var(--login2-primary) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--login2-primary) 7%, transparent) 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(135deg, #000 0%, transparent 48%); }
+.login2-orbit { position: absolute; z-index: -1; border: 1px solid color-mix(in srgb, var(--login2-primary) 15%, transparent); border-radius: 50%; pointer-events: none; }
+.login2-orbit-one { width: 660px; height: 660px; inset-inline-end: -370px; inset-block-start: 11%; }
+.login2-orbit-two { width: 360px; height: 360px; inset-inline-start: -220px; inset-block-end: -130px; }
+.login2-topbar { width: min(100%, 1250px); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; position: relative; z-index: 2; }
+.login2-logo, .login2-topbar-actions, .login2-live { display: flex; align-items: center; }
+.login2-logo { gap: 12px; }.login2-logo-mark { width: 42px; height: 42px; display: grid; place-items: center; color: #fff; background: var(--login2-primary); border-radius: 12px; box-shadow: 0 10px 24px color-mix(in srgb, var(--login2-primary) 28%, transparent); }.login2-logo-mark svg { font-size: 26px; }.login2-logo-name { margin: 0 !important; font-size: 1.18rem !important; line-height: 1 !important; font-weight: 900 !important; letter-spacing: .18em; }.login2-logo-caption { margin-top: 5px !important; color: var(--login2-muted); font-size: .57rem !important; font-weight: 800 !important; letter-spacing: .2em; }
+.login2-topbar-actions { gap: 20px; }.login2-live { gap: 8px; color: var(--login2-muted); font-size: .69rem; font-weight: 800; }.login2-live span { width: 8px; height: 8px; border-radius: 50%; background: #2e9c67; box-shadow: 0 0 0 5px color-mix(in srgb, #2e9c67 14%, transparent); animation: login2-pulse 2s ease-in-out infinite; }.login2-language { min-height: 34px !important; color: var(--login2-muted) !important; border: 1px solid var(--login2-line) !important; background: color-mix(in srgb, var(--login2-paper) 72%, transparent) !important; border-radius: 999px !important; padding-inline: 13px !important; text-transform: none !important; }.login2-language:hover { color: var(--login2-primary) !important; border-color: var(--login2-primary) !important; }
+.login2-content { width: min(100%, 1080px); margin: clamp(22px, 4vh, 48px) auto 0; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(340px, .82fr); align-items: center; gap: clamp(28px, 5vw, 68px); position: relative; z-index: 1; }
+.login2-story { min-width: 0; }.login2-eyebrow { color: var(--login2-primary); font-size: .68rem !important; font-weight: 900 !important; letter-spacing: .14em; }.login2-headline { max-width: none; margin: 12px 0 12px !important; color: var(--login2-ink); font-size: clamp(1.95rem, 4.6vw, 4.35rem) !important; font-weight: 900 !important; line-height: 1.12 !important; letter-spacing: -.055em; white-space: nowrap; }.login2-description { max-width: 430px; color: var(--login2-muted); font-size: .84rem !important; line-height: 1.8 !important; }
+.login2-visual { height: 174px; margin: 24px 0 20px; position: relative; border-block: 1px solid color-mix(in srgb, var(--login2-primary) 18%, transparent); overflow: hidden; background: linear-gradient(180deg, transparent 0 35%, color-mix(in srgb, var(--login2-primary) 5%, transparent) 35% 66%, transparent 66%); }
+.login2-road { position: absolute; inset-inline: -5%; height: 34px; border-block: 1px solid color-mix(in srgb, var(--login2-primary) 18%, transparent); background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--login2-primary) 8%, transparent) 0 34px, color-mix(in srgb, var(--login2-primary) 12%, transparent) 34px 68px); }
+.login2-road::after { content: ''; position: absolute; inset-inline: 8%; inset-block-start: 50%; border-block-start: 2px dashed color-mix(in srgb, var(--login2-primary) 28%, transparent); opacity: .72; }
+.login2-road-one { inset-block-start: 67px; }.login2-road-two { inset-block-start: 169px; opacity: .62; }
+.login2-gate { position: absolute; inset-inline-start: 13%; inset-block-start: 75px; width: 18px; height: 18px; border: 2px solid var(--login2-primary); border-radius: 50%; background: var(--login2-paper); box-shadow: 0 0 0 7px color-mix(in srgb, var(--login2-primary) 10%, transparent); }
+.login2-gate-arm { position: absolute; inset-inline-start: 13px; inset-block-start: 6px; width: 76px; height: 4px; border-radius: 4px; background: repeating-linear-gradient(90deg, #d79b35 0 16px, #f0cb77 16px 24px); transform-origin: left center; transform: rotate(-58deg); }
+.login2-page[dir='rtl'] .login2-gate-arm { transform-origin: right center; transform: rotate(58deg); }
+.login2-car { position: absolute; color: var(--login2-primary); filter: drop-shadow(0 4px 5px color-mix(in srgb, var(--login2-primary) 20%, transparent)); }.login2-car svg { font-size: 30px; }.login2-car-one { inset-inline-start: 26%; inset-block-start: 69px; opacity: .94; transform: translateX(0); }.login2-plate { position: absolute; inset-inline-start: 50%; inset-block-start: 22px; transform: translateX(-50%); padding: 1px 4px; color: #16212b; background: #f6f8fa; border: 1px solid #c7d0d8; border-radius: 3px; font-family: Arial, sans-serif; font-size: 6px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+.login2-camera { position: absolute; inset-inline-end: 14%; inset-block-start: 35px; display: grid; place-items: center; width: 30px; height: 30px; color: #2e9c67; border: 1px solid color-mix(in srgb, #2e9c67 34%, transparent); border-radius: 9px; background: color-mix(in srgb, #2e9c67 9%, transparent); }.login2-camera svg { font-size: 18px; }
+.login2-bays { position: absolute; inset-inline-start: 40%; inset-block-end: 17px; display: flex; gap: 6px; }.login2-bays > div { width: 40px; height: 29px; display: grid; place-items: center; border: 1px dashed color-mix(in srgb, var(--login2-primary) 34%, transparent); color: var(--login2-muted); font-size: .57rem; font-weight: 800; }.login2-bays > div.is-filled { color: #2e9c67; background: color-mix(in srgb, #2e9c67 11%, transparent); border-style: solid; }
+.login2-visual-label { position: absolute; color: var(--login2-muted); font-size: .5rem !important; font-weight: 900 !important; letter-spacing: .14em; }.login2-label-gate { inset-inline-start: 10%; inset-block-start: 114px; }.login2-label-zone { inset-inline-end: 14%; inset-block-end: 34px; }
+.login2-stats { display: flex; align-items: center; gap: 36px; }.login2-stats > div { padding-inline-end: 28px; border-inline-end: 1px solid var(--login2-line); }.login2-stats > div:last-child { padding-inline-end: 0; border-inline-end: 0; }.login2-stats .MuiTypography-root { color: var(--login2-muted); font-size: .66rem; }.login2-stat-value { color: var(--login2-ink) !important; font-size: 1.45rem !important; font-weight: 900 !important; line-height: 1.2 !important; }.login2-stat-value span { color: var(--login2-primary); font-size: .8rem; }.login2-stat-status { display: flex; align-items: center; gap: 9px; max-width: 210px; }.login2-stat-status svg { color: #2e9c67; font-size: 19px; flex: 0 0 auto; }
+.login2-card { width: 100%; max-width: 410px; justify-self: end; padding: clamp(24px, 3vw, 32px); border: 1px solid var(--login2-line); border-block-start: 4px solid var(--login2-primary); border-radius: 20px !important; color: var(--login2-ink); background: color-mix(in srgb, var(--login2-paper) 88%, transparent) !important; box-shadow: 0 22px 50px color-mix(in srgb, #0d2538 16%, transparent), inset 0 1px 0 rgba(255,255,255,.42); backdrop-filter: blur(18px); animation: login2-arrive .6s cubic-bezier(.22, 1, .36, 1) both; }.login2-card-top { display: flex; align-items: center; gap: 11px; margin-bottom: 24px; }.login2-card-icon { width: 40px; height: 40px; display: grid; place-items: center; color: var(--login2-primary); border-radius: 12px; background: var(--login2-soft); }.login2-card-icon svg { font-size: 20px; }.login2-card-kicker { color: var(--login2-primary); font-size: .67rem !important; font-weight: 900 !important; }.login2-card-step { margin-top: 3px !important; color: var(--login2-muted); font-size: .56rem !important; letter-spacing: .1em; }.login2-form-title { margin: 0 0 6px !important; font-size: clamp(1.65rem, 3vw, 2rem) !important; font-weight: 900 !important; letter-spacing: -.04em; }.login2-form-description { margin-bottom: 20px !important; color: var(--login2-muted); font-size: .75rem !important; line-height: 1.7 !important; }.login2-form { display: grid; gap: 14px; }.login2-form .MuiTextField-root { background: transparent; }.login2-form .MuiOutlinedInput-root { min-height: 48px; border-radius: 12px; background: color-mix(in srgb, var(--login2-paper) 74%, var(--login2-soft)); }.login2-form .MuiInputLabel-root { font-size: .72rem; }.login2-form .MuiInputBase-input { padding-block: 12px; }.login2-form .MuiOutlinedInput-root.Mui-focused { box-shadow: 0 0 0 4px color-mix(in srgb, var(--login2-primary) 13%, transparent); }.login2-form-options { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: -3px; }.login2-form-options .MuiFormControlLabel-root { margin-inline: -8px 0; }.login2-form-options .MuiFormControlLabel-label { color: var(--login2-muted); font-size: .68rem; }.login2-recovery { display: flex; align-items: center; gap: 5px; color: var(--login2-muted); font-size: .61rem !important; }.login2-recovery svg { font-size: 13px; }.login2-submit { min-height: 50px !important; border-radius: 12px !important; color: #fff !important; background: var(--login2-primary) !important; font-size: .78rem !important; box-shadow: 0 10px 20px color-mix(in srgb, var(--login2-primary) 25%, transparent); text-transform: none !important; transition: transform 160ms ease, box-shadow 160ms ease !important; }.login2-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 25px color-mix(in srgb, var(--login2-primary) 32%, transparent); }.login2-submit:focus-visible { outline: 3px solid color-mix(in srgb, var(--login2-primary) 42%, transparent); outline-offset: 3px; }.login2-footer { display: block; margin-top: 22px !important; padding-top: 14px; border-top: 1px solid var(--login2-line); color: var(--login2-muted); font-size: .58rem !important; text-align: center; }
+.login2-sso-card { width: min(100%, 470px); margin: 12vh auto 0; padding: 48px; display: grid; gap: 16px; justify-items: center; text-align: center; border: 1px solid var(--login2-line); border-radius: 24px !important; background: var(--login2-paper) !important; }.login2-lock { width: 56px; height: 56px; display: grid; place-items: center; color: var(--login2-primary); border-radius: 18px; background: var(--login2-soft); }.login2-lock svg { font-size: 28px; }
+.app-root.app-theme-dark .login2-page { background: radial-gradient(circle at 9% 82%, color-mix(in srgb, var(--login2-primary) 14%, transparent), transparent 27%), radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--login2-primary) 16%, transparent), transparent 30%), var(--app-shell, #202830); }.app-root.app-theme-dark .login2-card { box-shadow: 0 28px 70px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.07); }.app-root.app-theme-dark .login2-form .MuiOutlinedInput-root { background: color-mix(in srgb, var(--login2-paper) 72%, #000 12%); }.app-root.app-theme-dark .login2-form .MuiOutlinedInput-root.Mui-focused { background: var(--login2-paper); }
+@keyframes login2-arrive { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes login2-pulse { 0%, 100% { opacity: .7; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.08); } }
+@keyframes login2-gate-cycle { 0%, 18%, 100% { transform: rotate(0deg); } 34%, 54% { transform: rotate(-72deg); } 68%, 84% { transform: rotate(0deg); } }
+@keyframes login2-gate-cycle-rtl { 0%, 18%, 100% { transform: rotate(0deg); } 34%, 54% { transform: rotate(72deg); } 68%, 84% { transform: rotate(0deg); } }
+@keyframes login2-car-flow { 0%, 16% { transform: translateX(0); opacity: .3; } 25%, 72% { transform: translateX(62px); opacity: 1; } 82%, 100% { transform: translateX(116px); opacity: .2; } }
+@keyframes login2-slot-pulse { 0%, 100% { box-shadow: inset 0 0 0 0 color-mix(in srgb, #2e9c67 0%, transparent); } 50% { box-shadow: inset 0 0 0 2px color-mix(in srgb, #2e9c67 22%, transparent); } }
+@media (max-width: 960px) { .login2-page { overflow-y: auto; }.login2-content { grid-template-columns: minmax(0, 1fr) minmax(350px, .82fr); gap: 36px; }.login2-headline { font-size: clamp(2.5rem, 6vw, 4.2rem) !important; }.login2-visual { margin-top: 28px; }.login2-card { padding: 30px; } }
+@media (max-width: 760px) { .login2-page { min-height: 100svh; padding: 20px; overflow-y: auto; }.login2-topbar { align-items: flex-start; }.login2-live { display: none; }.login2-content { display: flex; flex-direction: column; align-items: stretch; margin-top: 36px; gap: 28px; }.login2-story { width: 100%; }.login2-headline { max-width: 540px; font-size: clamp(2rem, 9vw, 3.2rem) !important; }.login2-description { max-width: 500px; }.login2-visual { height: 180px; margin-block: 20px 18px; }.login2-road-one { inset-block-start: 45px; }.login2-road-two { inset-block-start: 130px; }.login2-bays { inset-inline-start: 38%; inset-block-end: 9px; }.login2-car-one { inset-block-start: 46px; }.login2-camera { inset-block-start: 25px; }.login2-gate { inset-block-start: 53px; }.login2-label-gate { inset-block-start: 82px; }.login2-card { max-width: none; justify-self: stretch; padding: 26px 22px; }.login2-card-top { margin-bottom: 24px; } }
+@media (max-width: 430px) { .login2-page { padding: 16px; }.login2-logo-mark { width: 36px; height: 36px; border-radius: 10px; }.login2-logo-mark svg { font-size: 22px; }.login2-topbar-actions { gap: 7px; }.login2-language { padding-inline: 9px !important; }.login2-content { margin-top: 36px; }.login2-headline { font-size: 2.15rem !important; }.login2-description { font-size: .78rem !important; }.login2-stats { gap: 14px; flex-wrap: wrap; }.login2-stats > div { padding-inline-end: 14px; }.login2-stat-status { flex-basis: 100%; max-width: 100%; }.login2-visual { margin-inline: -4px; }.login2-bays { inset-inline-start: 29%; transform: scale(.82); transform-origin: bottom left; }.login2-car-one { inset-inline-start: 24%; }.login2-card { border-radius: 18px !important; }.login2-form-options { align-items: flex-start; flex-direction: column; gap: 2px; } }
+@media (prefers-reduced-motion: reduce) { .login2-page *, .login2-page *::before, .login2-page *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; } }
+
+/* Login2 compact centered glass frame. The page background remains untouched. */
+.login2-page { display: grid; place-items: center; padding: 16px; }
+.login2-frame { width: 500px; height: 500px; max-width: calc(100vw - 32px); max-height: calc(100svh - 32px); min-height: 0; padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; z-index: 1; border: 1px solid color-mix(in srgb, var(--login2-paper) 68%, var(--login2-primary)); border-radius: 26px; background: color-mix(in srgb, var(--login2-paper) 58%, transparent); box-shadow: 0 24px 70px color-mix(in srgb, #0d2538 20%, transparent), inset 0 1px 0 rgba(255,255,255,.42); backdrop-filter: blur(24px) saturate(125%); }
+.login2-frame .login2-topbar { width: 100%; flex: 0 0 36px; }
+.login2-frame .login2-logo { gap: 9px; }.login2-frame .login2-logo-mark { width: 34px; height: 34px; border-radius: 10px; }.login2-frame .login2-logo-mark svg { font-size: 21px; }.login2-frame .login2-logo-name { font-size: 1rem !important; }.login2-frame .login2-logo-caption { margin-top: 3px !important; font-size: .48rem !important; }.login2-frame .login2-topbar-actions { gap: 9px; }.login2-frame .login2-live { font-size: .58rem; }.login2-frame .login2-language { min-height: 30px !important; padding-inline: 9px !important; font-size: .65rem !important; }
+.login2-frame .login2-content { width: 100%; min-height: 0; height: auto; margin: 0; flex: 1 1 auto; display: flex; flex-direction: column; align-items: stretch; gap: 8px; overflow: visible; }
+.login2-frame .login2-story { flex: 0 0 auto; }.login2-frame .login2-eyebrow { font-size: .58rem !important; }.login2-frame .login2-headline { margin: 7px 0 7px !important; font-size: clamp(1.65rem, 7.5vw, 2.25rem) !important; line-height: 1.05 !important; }.login2-frame .login2-description { max-width: 100%; font-size: .67rem !important; line-height: 1.5 !important; }
+.login2-frame .login2-visual { height: 92px; margin: 10px 0 8px; }.login2-frame .login2-road-one { inset-block-start: 27px; }.login2-frame .login2-road-two { inset-block-start: 66px; }.login2-frame .login2-gate { inset-block-start: 35px; }.login2-frame .login2-car-one { inset-block-start: 28px; }.login2-frame .login2-camera { inset-block-start: 10px; width: 24px; height: 24px; }.login2-frame .login2-camera svg { font-size: 15px; }.login2-frame .login2-bays { inset-block-end: 6px; gap: 4px; }.login2-frame .login2-bays > div { width: 32px; height: 22px; font-size: .46rem; }.login2-frame .login2-label-gate { inset-block-start: 52px; font-size: .42rem !important; }.login2-frame .login2-label-zone { inset-block-end: 24px; font-size: .42rem !important; }.login2-frame .login2-stats { gap: 14px; }.login2-frame .login2-stats > div { padding-inline-end: 13px; }.login2-frame .login2-stats .MuiTypography-root { font-size: .52rem; }.login2-frame .login2-stat-value { font-size: 1rem !important; }
+.login2-frame .login2-card { width: 100%; max-width: none; min-height: 0; flex: 1 1 auto; padding: 12px 14px 10px; border: 0; border-block-start: 1px solid color-mix(in srgb, var(--login2-primary) 20%, transparent); border-radius: 0 !important; background: transparent !important; box-shadow: none; backdrop-filter: none; animation: none; }.login2-frame .login2-card-top { gap: 9px; margin-bottom: 10px; }.login2-frame .login2-card-icon { width: 30px; height: 30px; border-radius: 9px; }.login2-frame .login2-card-icon svg { font-size: 16px; }.login2-frame .login2-card-kicker { font-size: .58rem !important; }.login2-frame .login2-card-step { font-size: .48rem !important; }.login2-frame .login2-form-title { margin-bottom: 3px !important; font-size: 1.35rem !important; }.login2-frame .login2-form-description { margin-bottom: 10px !important; font-size: .61rem !important; line-height: 1.45 !important; }.login2-frame .login2-form { gap: 8px; }.login2-frame .login2-form .MuiOutlinedInput-root { min-height: 39px; border-radius: 9px; }.login2-frame .login2-form .MuiInputLabel-root { font-size: .62rem; }.login2-frame .login2-form .MuiInputBase-input { padding-block: 8px; font-size: .7rem; }.login2-frame .login2-form .MuiFormHelperText-root { margin-top: 1px; font-size: .57rem; }.login2-frame .login2-form-options { margin-top: -2px; }.login2-frame .login2-form-options .MuiFormControlLabel-label { font-size: .59rem; }.login2-frame .login2-recovery { font-size: .52rem !important; }.login2-frame .login2-submit { min-height: 41px !important; border-radius: 9px !important; font-size: .68rem !important; box-shadow: 0 7px 15px color-mix(in srgb, var(--login2-primary) 20%, transparent); }.login2-frame .login2-footer { margin-top: 8px !important; padding-top: 8px; font-size: .5rem !important; }
+.app-root.app-theme-dark .login2-frame { background: color-mix(in srgb, var(--login2-paper) 68%, transparent); box-shadow: 0 24px 70px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08); }
+@media (max-width: 560px) { .login2-frame { width: 100%; padding-inline: 14px; border-radius: 22px; }.login2-frame .login2-live { display: none; }.login2-frame .login2-headline { font-size: clamp(1.55rem, 8.5vw, 2.1rem) !important; }.login2-frame .login2-card { padding-inline: 8px; } }
+@media (max-height: 620px) { .login2-frame { height: calc(100svh - 24px); max-height: none; overflow-y: auto; } }
+
+/* Keep the login content vertically centered beneath the topbar; the page background remains untouched. */
+.login2-page { display: grid; grid-template-rows: auto minmax(0, 1fr); padding: clamp(20px, 4vw, 48px) clamp(20px, 6vw, 88px); }
+.login2-content { margin: 0 auto; min-height: 0; }
+
+/* Final login2 compactness pass: smaller heading and tighter form rhythm. */
+.login2-headline { font-size: clamp(1.7rem, 3.7vw, 3rem) !important; }
+.login2-card { padding: clamp(18px, 2.5vw, 24px); }
+.login2-card-top { margin-bottom: 13px; }
+.login2-form-title { margin-bottom: 4px !important; font-size: clamp(1.55rem, 2.5vw, 1.9rem) !important; }
+.login2-form-description { margin-bottom: 11px !important; line-height: 1.55 !important; }
+.login2-form { gap: 9px; }
+.login2-form .MuiOutlinedInput-root { min-height: 43px; border-radius: 10px; }
+.login2-form .MuiInputBase-input { padding-block: 9px; }
+.login2-submit { min-height: 45px !important; border-radius: 10px !important; }
+.login2-footer { margin-top: 13px !important; padding-top: 10px; }
+.login2-content { width: min(100%, 930px); grid-template-columns: minmax(0, 520px) minmax(340px, 410px); column-gap: 0; }
+.login2-card { justify-self: stretch; }
+.login2-visual { width: 100%; }
+.login2-page .login2-live span { animation: none; }
+.login2-card { min-height: 470px; padding: clamp(24px, 3vw, 32px); }
+.login2-card { position: relative; overflow: hidden; border-color: color-mix(in srgb, var(--login2-paper) 58%, var(--login2-primary)) !important; background: linear-gradient(145deg, color-mix(in srgb, var(--login2-paper) 76%, transparent), color-mix(in srgb, var(--login2-primary) 7%, transparent)) !important; box-shadow: 0 26px 70px color-mix(in srgb, #0d2538 24%, transparent), inset 0 1px 0 rgba(255,255,255,.62), inset 0 -1px 0 color-mix(in srgb, var(--login2-primary) 12%, transparent) !important; backdrop-filter: blur(24px) saturate(135%); -webkit-backdrop-filter: blur(24px) saturate(135%); }
+.login2-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(120deg, rgba(255,255,255,.2), transparent 34%, transparent 70%, color-mix(in srgb, var(--login2-primary) 7%, transparent)); opacity: .8; }
+.login2-card > * { position: relative; z-index: 1; }
+.login2-headline { margin-top: 0 !important; }
+.login2-description { color: var(--login2-primary); }
+.login2-card-top { white-space: nowrap; }
+.login2-story { transform: translateY(-28px); }
+@media (max-width: 760px) { .login2-content { justify-content: center; } .login2-card { min-height: auto; } }
+@media (max-width: 760px) { .login2-story { transform: none; } }
+
+/* Static parking blueprint: a clean gate-to-bay composition without motion. */
+.login2-visual { border: 1px solid color-mix(in srgb, var(--login2-primary) 20%, transparent); border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--login2-primary) 9%, transparent), color-mix(in srgb, var(--login2-paper) 34%, transparent)); }
+.login2-map-toolbar { position: absolute; inset-inline: 12px; inset-block-start: 9px; display: flex; align-items: center; justify-content: space-between; z-index: 3; }.login2-map-toolbar > .MuiTypography-root { color: var(--login2-muted); font-size: .46rem !important; font-weight: 900 !important; letter-spacing: .16em; }.login2-map-toolbar > div { display: flex; align-items: center; gap: 5px; color: #2e9c67; font-size: .46rem; font-weight: 900; letter-spacing: .12em; }.login2-map-toolbar span { width: 5px; height: 5px; border-radius: 50%; background: #2e9c67; }
+.login2-entry-lane { position: absolute; inset-inline-start: 10px; inset-inline-end: 69%; inset-block-start: 48px; inset-block-end: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid color-mix(in srgb, var(--login2-primary) 22%, transparent); border-radius: 9px; background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--login2-primary) 8%, transparent) 0 18px, color-mix(in srgb, var(--login2-primary) 13%, transparent) 18px 36px); }.login2-entry-lane::after { content: ''; position: absolute; inset-block: 12px; inset-inline-start: 50%; border-inline-start: 1px dashed color-mix(in srgb, var(--login2-primary) 35%, transparent); }.login2-entry-lane .MuiTypography-root { position: relative; z-index: 1; color: var(--login2-muted); font-size: .45rem !important; font-weight: 900 !important; letter-spacing: .15em; }.login2-entry-lane svg { position: relative; z-index: 1; color: var(--login2-primary); font-size: 18px; }
+.login2-map-gate { position: absolute; inset-inline-start: 32%; inset-block-start: 72px; width: 23px; height: 23px; z-index: 2; display: grid; place-items: center; border: 2px solid var(--login2-primary); border-radius: 50%; background: var(--login2-paper); box-shadow: 0 0 0 5px color-mix(in srgb, var(--login2-primary) 10%, transparent); }.login2-map-gate-post { width: 6px; height: 6px; border-radius: 50%; background: #2e9c67; }.login2-map-gate-arm { position: absolute; inset-inline-start: 9px; inset-block-start: -18px; width: 4px; height: 30px; border-radius: 4px; background: repeating-linear-gradient(180deg, #d79b35 0 7px, #f0cb77 7px 11px); }.login2-map-gate > .MuiTypography-root { position: absolute; inset-inline-start: 12px; inset-block-start: 27px; width: max-content; color: var(--login2-muted); font-size: .4rem !important; font-weight: 900 !important; letter-spacing: .12em; }
+.login2-map-parking-grid { position: absolute; inset-inline-start: 46%; inset-inline-end: 10px; inset-block-start: 46px; inset-block-end: 17px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 5px; padding: 5px; border: 1px solid color-mix(in srgb, var(--login2-primary) 18%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--login2-primary) 4%, transparent); }.login2-map-bay { position: relative; display: grid; place-items: center; min-width: 0; border: 1px dashed color-mix(in srgb, var(--login2-primary) 27%, transparent); border-radius: 5px; color: var(--login2-muted); background: color-mix(in srgb, var(--login2-paper) 24%, transparent); }.login2-map-bay > .MuiTypography-root { font-size: .46rem !important; font-weight: 900 !important; }.login2-map-bay.is-available { color: #2e9c67; border-style: solid; background: color-mix(in srgb, #2e9c67 8%, transparent); }.login2-map-bay.is-active { color: var(--login2-primary); border: 1px solid var(--login2-primary); background: color-mix(in srgb, var(--login2-primary) 13%, transparent); }.login2-map-bay.is-active > svg { position: absolute; inset-block-start: 5px; font-size: 18px; color: var(--login2-primary); }.login2-map-plate { position: absolute; inset-block-end: 4px; padding: 1px 3px; color: #17232d; background: #f6f8fa; border: 1px solid #c7d0d8; border-radius: 2px; font-family: Arial, sans-serif; font-size: 4px; font-weight: 800; line-height: 1; }
+.login2-map-sensor { position: absolute; z-index: 2; display: grid; place-items: center; width: 21px; height: 21px; color: #2e9c67; border: 1px solid color-mix(in srgb, #2e9c67 38%, transparent); border-radius: 7px; background: color-mix(in srgb, #2e9c67 9%, var(--login2-paper)); }.login2-map-sensor svg { font-size: 13px; }.login2-map-sensor-one { inset-inline-start: 39%; inset-block-start: 49px; }.login2-map-sensor-two { inset-inline-end: 13px; inset-block-end: 24px; }.login2-map-zone-label { position: absolute; inset-inline-end: 12px; inset-block-end: 7px; color: var(--login2-muted); font-size: .4rem !important; font-weight: 900 !important; letter-spacing: .12em; }
+@media (max-width: 760px) { .login2-map-parking-grid { inset-inline-start: 45%; }.login2-map-gate { inset-inline-start: 31%; }.login2-entry-lane { inset-inline-end: 68%; } }
+
+/* Professional operations-map treatment for the static parking illustration. */
+.login2-visual { border: 1px solid rgba(151, 211, 237, .28); border-radius: 16px; color: #dcecf5; background: linear-gradient(135deg, #0b263a 0%, #103a53 58%, #164d66 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 24px rgba(9, 35, 53, .16); }
+.login2-visual::before { content: ''; position: absolute; inset: 30px 0 0; opacity: .45; pointer-events: none; background-image: linear-gradient(rgba(154, 210, 232, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(154, 210, 232, .07) 1px, transparent 1px); background-size: 22px 22px; mask-image: linear-gradient(90deg, transparent, #000 22%, #000 90%, transparent); }
+.login2-map-toolbar > .MuiTypography-root { color: #9fc6d8; }.login2-map-toolbar > div { padding: 3px 7px; border: 1px solid rgba(91, 211, 151, .28); border-radius: 999px; color: #72d7a5; background: rgba(40, 177, 113, .12); }.login2-map-toolbar span { box-shadow: 0 0 0 3px rgba(62, 212, 141, .12); }
+.login2-entry-lane { border-color: rgba(157, 211, 231, .23); background: linear-gradient(180deg, rgba(123, 199, 224, .08), rgba(8, 28, 43, .12)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.025); }.login2-entry-lane::after { border-color: rgba(177, 223, 238, .38); }.login2-entry-lane .MuiTypography-root { color: #8db8cb; }.login2-entry-lane svg { color: #a7d8eb; }
+.login2-map-gate { border-color: #b6deed; background: #153f55; box-shadow: 0 0 0 5px rgba(123, 207, 235, .12), 0 5px 12px rgba(0,0,0,.2); }.login2-map-gate-post { background: #6be0a4; box-shadow: 0 0 0 3px rgba(107, 224, 164, .15); }.login2-map-gate-arm { background: repeating-linear-gradient(180deg, #e4ad4b 0 7px, #f7d078 7px 11px); box-shadow: 0 2px 5px rgba(0,0,0,.18); }.login2-map-gate > .MuiTypography-root { color: #98c3d5; }
+.login2-map-parking-grid { border-color: rgba(145, 204, 228, .25); background: rgba(5, 25, 39, .25); box-shadow: inset 0 0 18px rgba(0,0,0,.12); }.login2-map-bay { border-color: rgba(150, 207, 229, .24); color: #87aec0; background: rgba(144, 203, 226, .05); }.login2-map-bay > .MuiTypography-root { color: inherit; }.login2-map-bay.is-available { border-color: rgba(99, 219, 157, .58); color: #79dfa9; background: rgba(57, 196, 125, .13); }.login2-map-bay.is-active { border-color: #a7e3f1; color: #e0f7fc; background: linear-gradient(145deg, rgba(60, 166, 207, .42), rgba(44, 104, 145, .62)); box-shadow: inset 0 0 14px rgba(122, 221, 244, .16), 0 0 0 2px rgba(121, 214, 237, .08); }.login2-map-bay.is-active > svg { color: #e6f9ff; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }.login2-map-plate { color: #163043; background: #edf8fb; border-color: #b8d6df; }
+.login2-map-sensor { border-color: rgba(101, 224, 168, .5); color: #83e4b0; background: #123d4b; box-shadow: 0 0 0 4px rgba(81, 212, 148, .08); }.login2-map-zone-label { color: #8bb7c8; }
+.login2-map-gate::after { content: ''; position: absolute; inset-inline-start: 19px; inset-block-start: 9px; width: 48px; border-block-start: 1px dashed rgba(155, 216, 235, .35); }
+
+/* Subtle 3D/isometric depth for the static map. */
+.login2-visual { perspective: 850px; transform-style: preserve-3d; overflow: hidden; }
+.login2-entry-lane { transform: rotateX(9deg) rotateY(7deg); transform-origin: center bottom; box-shadow: inset 0 0 0 1px rgba(255,255,255,.035), 0 7px 0 rgba(4, 18, 29, .2); }
+.login2-map-parking-grid { transform: rotateX(13deg) rotateY(-7deg); transform-origin: center bottom; box-shadow: inset 0 0 18px rgba(0,0,0,.16), 0 9px 0 rgba(4, 18, 29, .22), 0 15px 20px rgba(3, 18, 29, .16); }
+.login2-map-bay { transform: translateZ(2px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.025), 0 2px 0 rgba(3, 17, 27, .16); }
+.login2-map-bay.is-available { box-shadow: inset 0 0 0 1px rgba(112, 232, 170, .1), 0 3px 0 rgba(23, 112, 79, .22); }
+.login2-map-bay.is-active { transform: translateZ(8px); box-shadow: inset 0 0 14px rgba(122, 221, 244, .18), 0 5px 0 rgba(29, 83, 113, .75), 0 8px 12px rgba(1, 17, 29, .28); }
+.login2-map-gate { transform: translateZ(8px); box-shadow: 0 0 0 5px rgba(123, 207, 235, .12), 0 5px 0 rgba(6, 29, 43, .55), 0 8px 12px rgba(1, 17, 29, .24); }
+.login2-map-gate-arm { box-shadow: 2px 2px 0 rgba(112, 63, 10, .5), 3px 4px 7px rgba(1, 17, 29, .2); }
+.login2-map-sensor { transform: translateZ(5px); box-shadow: 0 0 0 4px rgba(81, 212, 148, .08), 0 4px 7px rgba(1, 17, 29, .28); }
+.login2-map-bay.is-active > svg { filter: drop-shadow(2px 3px 2px rgba(0,0,0,.28)); }
+@media (max-width: 760px) { .login2-entry-lane { transform: rotateX(7deg) rotateY(4deg); }.login2-map-parking-grid { transform: rotateX(10deg) rotateY(-4deg); } }
+
+/* Realistic static gate hardware and top-down vehicle. */
+.login2-map-gate { width: 28px; height: 34px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.login2-map-gate-post { position: absolute; inset-inline-start: 8px; inset-block-end: 0; width: 14px; height: 25px; border: 1px solid #9fc7d5; border-radius: 3px 3px 4px 4px; background: linear-gradient(90deg, #d8edf2 0 18%, #56859a 18% 78%, #204b63 78%); box-shadow: 3px 4px 0 rgba(3, 17, 27, .45), 0 0 0 2px rgba(116, 207, 233, .1); }
+.login2-map-gate-post::after { content: ''; position: absolute; inset-inline-start: 3px; inset-block-start: 5px; width: 6px; height: 4px; border-radius: 1px; background: #123043; box-shadow: 0 7px 0 #123043; }
+.login2-map-gate-arm { position: absolute; inset-inline-start: -24px; inset-block-start: 8px; width: 34px; height: 5px; border: 1px solid #9c702d; border-radius: 3px; background: repeating-linear-gradient(90deg, #f6ca62 0 6px, #cf7b39 6px 11px); transform: none; box-shadow: 2px 3px 0 rgba(3, 17, 27, .38), 0 0 0 1px rgba(255, 227, 143, .18); }
+.login2-map-gate-beacon { position: absolute; inset-inline-start: 10px; inset-block-start: -5px; width: 9px; height: 5px; border: 1px solid #f3c969; border-radius: 4px 4px 2px 2px; background: #e58b47; box-shadow: 0 0 5px rgba(244, 188, 83, .45); }
+.login2-map-gate > .MuiTypography-root { inset-inline-start: 19px; inset-block-start: 29px; }
+.login2-map-bay.is-active > .MuiTypography-root { color: #e0f7fc; }
+.login2-stats { align-items: stretch; }
+.login2-stat-item { display: grid; justify-items: center; align-content: start; gap: 2px; text-align: center; }
+.login2-stat-item > svg { width: 19px; height: 19px; margin-bottom: 2px; color: var(--login2-primary); }
+.login2-stat-status { display: grid; max-width: 160px; }
+.login2-stat-status > svg { color: #2e9c67; }
+.login2-stat-status .MuiTypography-root { text-align: center; }
+
+/* Align the bottom of the parking visual with the login card. */
+.login2-story { min-height: 470px; display: flex; flex-direction: column; padding-top: clamp(24px, 3vw, 32px); transform: none; }
+.login2-visual { margin-top: auto; margin-bottom: 0; }
+@media (max-width: 760px) {
+  .login2-story { min-height: 0; display: block; padding-top: 0; }
+  .login2-visual { margin-block: 20px 18px; }
+}
+
+/* Glass shell around the complete login content. */
+.login2-content {
+  align-self: center;
+  height: fit-content;
+  border: 1px #8080803d solid;
+  padding: 32px;
+  border-radius: 16px;
+  background-color: #8080800f;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 410px);
+}
+.login2-headline { font-size: clamp(1.534rem, 3.339vw, 2.708rem) !important; text-decoration: none !important; white-space: normal; }
+.login2-headline-main, .login2-headline-secondary { display: inline; }
+.login2-headline-main { margin-inline-end: .25em; }
+.login2-headline-secondary { font-size: .4em; line-height: 1.3; letter-spacing: -.02em; font-weight: 800; white-space: normal; }
+.login2-description { font-size: .882rem !important; }
+.parking-control-logo { display: block; width: 100%; height: 100%; filter: saturate(.86) brightness(.78) contrast(1.16) drop-shadow(0 5px 10px rgba(22, 55, 91, .2)); transition: filter 220ms ease; }
+.app-root.app-theme-dark .parking-control-logo { filter: saturate(1.16) brightness(1.16) contrast(1.08) drop-shadow(0 6px 12px rgba(0, 0, 0, .34)); }
+.app-root[data-palette='light-green'] .parking-control-logo { filter: hue-rotate(-55deg) saturate(.84) brightness(.8) contrast(1.14) drop-shadow(0 5px 10px rgba(31, 91, 72, .22)); }
+.app-root[data-palette='dark-green'] .parking-control-logo { filter: hue-rotate(-55deg) saturate(.98) brightness(1.12) contrast(1.08) drop-shadow(0 6px 12px rgba(0, 0, 0, .36)); }
+.app-root[data-palette='light-slate'] .parking-control-logo { filter: saturate(.34) brightness(.78) contrast(1.16) drop-shadow(0 5px 10px rgba(47, 58, 72, .2)); }
+.app-root[data-palette='dark-slate'] .parking-control-logo { filter: saturate(.32) brightness(1.15) contrast(1.06) drop-shadow(0 6px 12px rgba(0, 0, 0, .36)); }
+.login2-logo .parking-control-logo { width: 34px; height: 34px; flex: 0 0 auto; }
+.showcase-brand-mark .parking-control-logo { width: 100%; height: 100%; }
+.login2-card-kicker { font-size: 1.608rem !important; line-height: 1.2 !important; white-space: normal; min-width: 0; max-width: calc(100% - 83px); overflow-wrap: anywhere; }
+.login2-card-icon { width: 80px; height: 80px; border-radius: 16px; }
+.login2-card-icon .parking-control-logo { width: 80px; height: 80px; }
+.login2-card-icon svg { font-size: 39px; }
+.login2-card-top { width: 100%; margin-inline-start: auto; margin-inline-end: 0; justify-content: center; align-items: center; gap: 3px; white-space: normal; }
+.login2-card-kicker { margin: 0 !important; }
+.login2-form .MuiInputLabel-root.MuiInputLabel-shrink { background: transparent !important; }
+.login2-stats { justify-content: center; margin-top: 2rem; }
+@media (max-width: 430px) { .login2-description { font-size: .819rem !important; } }

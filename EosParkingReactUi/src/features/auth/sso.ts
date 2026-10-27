@@ -61,7 +61,7 @@ async function getSsoPkcePair() {
 }
 
 export async function beginSsoLogin() {
-  const baseUrl = appConfig.ssoBaseUrl.trim();
+  const baseUrl = appConfig.ssoUiBaseUrl.trim();
   const clientId = appConfig.ssoClientId.trim();
   if (!baseUrl) throw new Error('SSO is not configured.');
   if (!clientId) throw new Error('SSO client id is not configured.');

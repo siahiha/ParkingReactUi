@@ -11,12 +11,13 @@ type CrudDialogProps = {
   confirmLabel: string;
   busy?: boolean;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  direction: 'rtl' | 'ltr';
 };
 
 /** Shared modal shell for create/edit forms across management modules. */
-export function CrudDialog({ open, title, children, onClose, onConfirm, cancelLabel, confirmLabel, busy = false, maxWidth = 'md' }: CrudDialogProps) {
+export function CrudDialog({ open, title, children, onClose, onConfirm, cancelLabel, confirmLabel, busy = false, maxWidth = 'md', direction }: CrudDialogProps) {
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth={maxWidth} slotProps={{ paper: { className: 'crud-dialog-paper' } }}>
+    <Dialog dir={direction} open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth={maxWidth} slotProps={{ paper: { className: 'crud-dialog-paper' } }}>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>{children}</DialogContent>
       <DialogActions>

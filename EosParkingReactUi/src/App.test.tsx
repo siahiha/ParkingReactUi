@@ -61,7 +61,7 @@ describe('login', () => {
 
     renderApp();
 
-    expect(await screen.findByTestId('login-submit')).toBeVisible();
+    expect(await screen.findByTestId('login2-submit')).toBeVisible();
     expect(window.location.pathname).toBe('/');
     expect(window.sessionStorage.getItem('eos-parking-auth-session')).toBeNull();
   });
@@ -78,7 +78,7 @@ describe('login', () => {
 
     renderApp();
 
-    expect(await screen.findByTestId('login-submit')).toBeVisible();
+    expect(await screen.findByTestId('login2-submit')).toBeVisible();
     expect(window.location.pathname).toBe('/');
     expect(window.sessionStorage.getItem('eos-parking-auth-session')).toBeNull();
   });
@@ -104,14 +104,34 @@ describe('login', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByTestId('login-submit'));
+    await user.click(screen.getByTestId('login2-submit'));
 
     expect(screen.getByText('نام کاربری را وارد کنید.')).toBeVisible();
     expect(screen.getByText('رمز عبور را وارد کنید.')).toBeVisible();
   });
 
+  it('serves the primary login route and navigates to Home after a valid login', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+      ResponseResultType: 1,
+      Values: { Id: 7, UserName: 'operator', CurrentParking: 1, UserToken: 'token-1', UserAccessLevelId: 1 },
+    }), { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    renderApp();
+
+    expect(screen.getByTestId('login2-username-input')).toBeVisible();
+    await user.type(screen.getByTestId('login2-username-input'), 'operator');
+    await user.type(screen.getByTestId('login2-password-input'), 'secret');
+    await user.click(screen.getByTestId('login2-submit'));
+
+    expect(await screen.findByText('خانه')).toBeVisible();
+    expect(window.location.pathname).toBe('/home');
+  });
+
   it('accepts the Windows login response shape with ResponseResultType=1', async () => {
     const user = userEvent.setup();
+    window.history.replaceState({}, '', '/login2');
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
       ResponseResultType: 1,
       Values: { Id: 7, UserName: 'operator', CurrentParking: 1, UserToken: 'token-1', UserAccessLevelId: 1, Permissions: ['legacy.permission'] },
@@ -130,6 +150,7 @@ describe('login', () => {
 
   it('renders a parking workspace after clicking a parking menu item', async () => {
     const user = userEvent.setup();
+    window.history.replaceState({}, '', '/login2');
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
       ResponseResultType: 1,
       Values: { Id: 7, UserName: 'operator', CurrentParking: 1, UserToken: 'token-1', UserAccessLevelId: 1 },
@@ -139,7 +160,7 @@ describe('login', () => {
     await user.type(screen.getByTestId('login-username-input'), 'operator');
     await user.type(screen.getByTestId('login-password-input'), 'secret');
     await user.click(screen.getByTestId('login-submit'));
-    await user.click(await screen.findByRole('button', { name: 'تعاریف و تنظیمات پارکینگ جاری' }));
+    await user.click(await screen.findByRole('button', { name: 'تعاریف و تنظیمات پارکینگ' }));
     await user.click(screen.getByRole('button', { name: 'تجهیزات' }));
 
     expect(window.location.pathname).toBe('/home/parking/equipment');
@@ -150,6 +171,7 @@ describe('login', () => {
 
   it('renders the parking directory after clicking the management menu item', async () => {
     const user = userEvent.setup();
+    window.history.replaceState({}, '', '/login2');
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
       ResponseResultType: 1,
       Values: { Id: 7, UserName: 'operator', CurrentParking: 1, UserToken: 'token-1', UserAccessLevelId: 1 },

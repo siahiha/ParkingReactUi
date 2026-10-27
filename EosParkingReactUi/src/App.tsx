@@ -16,8 +16,10 @@ import { apiRequest, registerSessionInvalidationHandler } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
 import { LoginPage } from './pages/LoginPage';
+import { Login2Page } from './pages/Login2Page';
 import { SsoCallbackPage } from './pages/SsoCallbackPage';
 import type { LoginResult } from './features/auth/authService';
+import { isSsoEnabled } from './config';
 import { useNavigationGuard } from './pages/NavigationGuardContext';
 import i18n from './i18n/instance';
 import { createAppTheme, defaultThemeShape, getPaletteTokens, resolvePaletteNames, resolveThemeColorOverrides, type ThemeMode, type ThemeShapeSettings } from './theme';
@@ -77,11 +79,16 @@ function readJsonStorage(key: string): unknown {
 
 export function App() {
   const [initialAuthSession] = useState(initializeAuthSession);
-  const [language, setLanguage] = useState<Language>(() => normalizeLanguage(window.localStorage.getItem(ssoLocaleStorageKey)) ?? 'fa');
-  const [themeMode, setThemeMode] = useState<ThemeMode>(() => normalizeThemeMode(window.localStorage.getItem(ssoThemeStorageKey)) ?? (window.localStorage.getItem(themeStorageKey) === 'dark' ? 'dark' : 'light'));
-  const [lightPalette, setLightPalette] = useState<PaletteName>(() => (window.localStorage.getItem(lightPaletteStorageKey) as PaletteName | null) ?? 'blue');
-  const [darkPalette, setDarkPalette] = useState<PaletteName>(() => (window.localStorage.getItem(darkPaletteStorageKey) as PaletteName | null) ?? 'blue');
-  const [themeColors, setThemeColors] = useState<unknown>(() => readJsonStorage(ssoThemeColorsStorageKey));
+  const hasSsoThemeCache = isSsoEnabled && Boolean(initialAuthSession);
+  const [language, setLanguage] = useState<Language>(() => (!isSsoEnabled || hasSsoThemeCache) ? normalizeLanguage(window.localStorage.getItem(ssoLocaleStorageKey)) ?? 'fa' : 'fa');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    if (hasSsoThemeCache) return normalizeThemeMode(window.localStorage.getItem(ssoThemeStorageKey)) ?? 'light';
+    if (isSsoEnabled) return 'light';
+    return normalizeThemeMode(window.localStorage.getItem(themeStorageKey)) ?? 'light';
+  });
+  const [lightPalette, setLightPalette] = useState<PaletteName>(() => hasSsoThemeCache || !isSsoEnabled ? (window.localStorage.getItem(lightPaletteStorageKey) as PaletteName | null) ?? 'blue' : 'blue');
+  const [darkPalette, setDarkPalette] = useState<PaletteName>(() => hasSsoThemeCache || !isSsoEnabled ? (window.localStorage.getItem(darkPaletteStorageKey) as PaletteName | null) ?? 'blue' : 'blue');
+  const [themeColors, setThemeColors] = useState<unknown>(() => hasSsoThemeCache ? readJsonStorage(ssoThemeColorsStorageKey) : undefined);
   const [shapeSettings, setShapeSettings] = useState<ThemeShapeSettings>(() => {
     try { const stored = JSON.parse(window.localStorage.getItem(shapeStorageKey) ?? 'null'); return stored && typeof stored === 'object' ? { ...defaultThemeShape, ...stored } : defaultThemeShape; } catch { return defaultThemeShape; }
   });
@@ -93,7 +100,7 @@ export function App() {
   const { requestNavigation } = useNavigationGuard();
   const direction = translations[language].direction;
   const activePalette = themeMode === 'light' ? lightPalette : darkPalette;
-  const activeThemeColors = resolveThemeColorOverrides(themeColors, themeMode);
+  const activeThemeColors = isSsoEnabled ? resolveThemeColorOverrides(themeColors, themeMode) : {};
   const activeTokens = getPaletteTokens(themeMode, activePalette, activeThemeColors);
   const theme = useMemo(() => createAppTheme(direction, themeMode, activePalette, shapeSettings, activeThemeColors), [direction, themeMode, activePalette, shapeSettings, activeThemeColors]);
   const pickerLocaleText = useMemo(() => {
@@ -103,19 +110,48 @@ export function App() {
 
   useEffect(() => {
     void i18n.changeLanguage(language);
-    window.localStorage.setItem(themeStorageKey, themeMode);
-    window.localStorage.setItem(ssoThemeStorageKey, themeMode);
-    window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
-    window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
     window.localStorage.setItem(shapeStorageKey, JSON.stringify(shapeSettings));
-    window.localStorage.setItem(ssoLocaleStorageKey, language);
-    if (themeColors !== undefined) window.localStorage.setItem(ssoThemeColorsStorageKey, JSON.stringify(themeColors));
-  }, [themeMode, lightPalette, darkPalette, shapeSettings, language, themeColors]);
+    if (isSsoEnabled) {
+      if (authenticated) {
+        window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
+        window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
+        window.localStorage.setItem(ssoLocaleStorageKey, language);
+        window.localStorage.setItem(ssoThemeStorageKey, themeMode);
+        if (themeColors === undefined) window.localStorage.removeItem(ssoThemeColorsStorageKey);
+        else window.localStorage.setItem(ssoThemeColorsStorageKey, JSON.stringify(themeColors));
+      } else {
+        window.localStorage.removeItem(ssoThemeStorageKey);
+        window.localStorage.removeItem(ssoThemeColorsStorageKey);
+        window.localStorage.removeItem(ssoLocaleStorageKey);
+        window.localStorage.removeItem(lightPaletteStorageKey);
+        window.localStorage.removeItem(darkPaletteStorageKey);
+      }
+    } else {
+      window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
+      window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
+      window.localStorage.setItem(ssoLocaleStorageKey, language);
+      window.localStorage.setItem(themeStorageKey, themeMode);
+      window.localStorage.removeItem(ssoThemeStorageKey);
+      window.localStorage.removeItem(ssoThemeColorsStorageKey);
+    }
+  }, [authenticated, themeMode, lightPalette, darkPalette, shapeSettings, language, themeColors]);
   const clearLocalSession = () => {
     sessionInvalidationHandled.current = true;
     setAuthenticated(false);
     setHomeUser(null);
     window.sessionStorage.removeItem(authSessionStorageKey);
+    if (isSsoEnabled) {
+      setThemeMode('light');
+      setLightPalette('blue');
+      setDarkPalette('blue');
+      setThemeColors(undefined);
+      setLanguage('fa');
+      window.localStorage.removeItem(ssoThemeStorageKey);
+      window.localStorage.removeItem(ssoThemeColorsStorageKey);
+      window.localStorage.removeItem(ssoLocaleStorageKey);
+      window.localStorage.removeItem(lightPaletteStorageKey);
+      window.localStorage.removeItem(darkPaletteStorageKey);
+    }
     navigate('/', { replace: true });
   };
   useEffect(() => registerSessionInvalidationHandler(() => {
@@ -123,16 +159,20 @@ export function App() {
     clearLocalSession();
   }), [navigate]);
   const authenticate = ({ user, preferences }: LoginResult) => {
-    if (preferences) {
-      const nextTheme = normalizeThemeMode(preferences.theme);
-      if (nextTheme) setThemeMode(nextTheme);
-      const nextLanguage = normalizeLanguage(preferences.locale);
+    if (isSsoEnabled) {
+      const nextTheme = normalizeThemeMode(preferences?.theme);
+      setThemeMode(nextTheme ?? 'light');
+      const nextLanguage = normalizeLanguage(preferences?.locale);
       if (nextLanguage) setLanguage(nextLanguage);
-      if (preferences.themeColors !== undefined) {
+      if (preferences?.themeColors === undefined) {
+        setThemeColors(undefined);
+        setLightPalette('blue');
+        setDarkPalette('blue');
+      } else {
         setThemeColors(preferences.themeColors);
         const palettes = resolvePaletteNames(preferences.themeColors);
-        if (palettes.light) setLightPalette(palettes.light);
-        if (palettes.dark) setDarkPalette(palettes.dark);
+        setLightPalette(palettes.light ?? 'blue');
+        setDarkPalette(palettes.dark ?? 'blue');
       }
     }
     // The token is set by the Backend as an HttpOnly cookie. Only the
@@ -141,7 +181,7 @@ export function App() {
     sessionInvalidationHandled.current = false;
     setAuthenticated(true);
     setHomeUser(user);
-    requestNavigation(() => navigate('/home'));
+    requestNavigation(() => navigate('/home', { replace: true }));
   };
   const logout = () => requestNavigation(() => {
     void (async () => {
@@ -157,14 +197,16 @@ export function App() {
   const toggleLanguage = () => setLanguage((current) => current === 'fa' ? 'en' : 'fa');
 
   const themeVars = themeMode === 'dark'
-    ? { surface: activeThemeColors.surface ?? '#29333d', shell: activeThemeColors.shell ?? '#202830', text: activeThemeColors.text ?? '#f3f5f7', mutedText: activeThemeColors.mutedText ?? '#b7c1ca', border: activeThemeColors.border ?? '#3d4b58', input: activeThemeColors.input ?? '#202b35' }
-    : { surface: activeThemeColors.surface ?? '#ffffff', shell: activeThemeColors.shell ?? '#f3f5f7', text: activeThemeColors.text ?? '#18212b', mutedText: activeThemeColors.mutedText ?? '#687482', border: activeThemeColors.border ?? '#d7dce2', input: activeThemeColors.input ?? '#fbfcfd' };
+    ? { surface: activeThemeColors.surface ?? activeTokens.surface, shell: activeThemeColors.shell ?? activeTokens.shell, text: activeThemeColors.text ?? '#f3f5f7', mutedText: activeThemeColors.mutedText ?? '#b7c1ca', border: activeThemeColors.border ?? activeTokens.border, input: activeThemeColors.input ?? activeTokens.input }
+    : { surface: activeThemeColors.surface ?? activeTokens.surface, shell: activeThemeColors.shell ?? activeTokens.shell, text: activeThemeColors.text ?? '#18212b', mutedText: activeThemeColors.mutedText ?? '#687482', border: activeThemeColors.border ?? activeTokens.border, input: activeThemeColors.input ?? activeTokens.input };
   const isOutsideAppRoutes = location.pathname !== '/' && location.pathname !== '/sso/callback' && !location.pathname.startsWith('/home');
-  const homeElement = (unknownRoute = false) => authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} unknownRoute={unknownRoute || isOutsideAppRoutes} /> : <Navigate to="/" replace />;
+  const homeElement = (unknownRoute = false) => authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={!isSsoEnabled} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} unknownRoute={unknownRoute || isOutsideAppRoutes} /> : <Navigate to="/" replace />;
   return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language} localeText={pickerLocaleText}><CssBaseline /><Routes>
     <Route path="/home/*" element={homeElement()} />
     <Route path="/sso/callback" element={<SsoCallbackPage language={language} onAuthenticated={authenticate} />} />
-    <Route path="/" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
+    <Route path="/login2" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
+    <Route path="/login" element={<Login2Page language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
+    <Route path="/" element={<Login2Page language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />
     <Route path="*" element={homeElement(true)} />
   </Routes></LocalizationProvider></ThemeProvider></RTL></Box>;
 }

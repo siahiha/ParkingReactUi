@@ -119,7 +119,7 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
   return (
     <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => void load()} toolbar={<Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip>}>
       <Box className="workspace-resource-content">
-        <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving}>
+        <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving} direction={language === 'fa' ? 'rtl' : 'ltr'}>
           <ParkingFormFields form={form} setForm={updateForm} copy={copy} saveMessage={message} language={language} />
         </CrudDialog>
         <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel={language === 'fa' ? 'رکوردی برای نمایش وجود ندارد.' : 'No records to display.'}>

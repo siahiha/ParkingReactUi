@@ -127,7 +127,7 @@ export const emptyAccessLevelForm: AccessLevelForm = {
 };
 
 export const userTypeOptions = [
-  { value: '0', fa: 'معمولی', en: 'Default user' },
+  { value: '0', fa: 'اوپراتور', en: 'Operator' },
   { value: '1', fa: 'پارکبان', en: 'Parkban' },
   { value: '2', fa: 'راننده', en: 'Driver' },
   { value: '3', fa: 'صدور مجوز', en: 'Exit permission manager' },

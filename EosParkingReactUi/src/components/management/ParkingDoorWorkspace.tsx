@@ -362,7 +362,7 @@ export function ParkingDoorWorkspace({ title, pageTitle, parkingId, language, ca
         ]}
       />
     </ResourceState>
-    <CrudDialog open={dialogOpen} title={draft.id ? text(language, 'ویرایش درب', 'Edit door') : text(language, 'ایجاد درب', 'Create door')} onClose={closeDialog} onConfirm={() => void save()} cancelLabel={text(language, 'لغو', 'Cancel')} confirmLabel={text(language, 'ذخیره', 'Save')} busy={busy} maxWidth="lg">
+    <CrudDialog open={dialogOpen} title={draft.id ? text(language, 'ویرایش درب', 'Edit door') : text(language, 'ایجاد درب', 'Create door')} onClose={closeDialog} onConfirm={() => void save()} cancelLabel={text(language, 'لغو', 'Cancel')} confirmLabel={text(language, 'ذخیره', 'Save')} busy={busy} maxWidth="lg" direction={language === 'fa' ? 'rtl' : 'ltr'}>
       <Box sx={{ display: 'grid', gap: 2 }}>
         <Box component="section" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
           {field('title', text(language, 'عنوان درب', 'Door title'), { required: true })}

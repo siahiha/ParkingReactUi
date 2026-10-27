@@ -3,7 +3,6 @@ import { Alert, Box, Button, Checkbox, CircularProgress, FormControlLabel, IconB
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import LocalParkingRoundedIcon from '@mui/icons-material/LocalParkingRounded';
 import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded';
@@ -13,6 +12,7 @@ import { useLogin } from '../features/auth/useLogin';
 import { beginSsoLogin } from '../features/auth/sso';
 import { appConfig } from '../config';
 import type { HomeUser } from './homeTypes';
+import { ParkingControlLogo } from '../components/ParkingControlLogo';
 
 type Props = { language: Language; toggleLanguage: () => void; onAuthenticated: (session: { token: string | null; user: HomeUser }) => void };
 type FormErrors = { username?: string; password?: string };
@@ -60,7 +60,7 @@ export function LoginPage({ language, toggleLanguage, onAuthenticated }: Props) 
   const ssoStarted = useRef(false);
 
   useEffect(() => {
-    if (!appConfig.ssoBaseUrl.trim() || ssoStarted.current) return;
+    if (!appConfig.ssoUiBaseUrl.trim() || ssoStarted.current) return;
     ssoStarted.current = true;
     void beginSsoLogin().catch(() => {
       setApiMessage(t.loginSsoFailed);
@@ -92,7 +92,7 @@ export function LoginPage({ language, toggleLanguage, onAuthenticated }: Props) 
     onAuthenticated({ token: result.token, user: nextUser });
   };
 
-  if (appConfig.ssoBaseUrl.trim()) {
+  if (appConfig.ssoUiBaseUrl.trim()) {
     return <Box className="login-page login-page-sso" dir={t.direction}>
       <Box className="login-page-toolbar"><Button className="language-button" variant="text" size="small" onClick={toggleLanguage} startIcon={<TranslateRoundedIcon />} aria-label={t.languageName}>{t.languageName}</Button></Box>
       <Paper className="login-card" elevation={0}>
@@ -112,7 +112,7 @@ export function LoginPage({ language, toggleLanguage, onAuthenticated }: Props) 
     <Box className="login-layout">
       <Box className="login-showcase">
         <Box className="showcase-brand">
-          <Box className="showcase-brand-mark" aria-hidden="true"><LocalParkingRoundedIcon /></Box>
+          <Box className="showcase-brand-mark" aria-hidden="true"><ParkingControlLogo className="parking-control-logo" /></Box>
           <Box><Typography className="showcase-brand-name">EOS</Typography><Typography className="showcase-brand-caption">{t.brandCaption}</Typography></Box>
         </Box>
         <Typography className="showcase-number" aria-hidden="true">{t.artNumber}</Typography>

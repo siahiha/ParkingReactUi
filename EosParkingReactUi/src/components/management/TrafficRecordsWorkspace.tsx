@@ -1385,10 +1385,12 @@ export function TrafficRecordsWorkspace({
                 numberOf(valueOf(row, "DumpId") ?? valueOf(row, "Id")),
               )
             }
+            onRowDoubleClick={(row) => openEdit(row)}
           />
         </ResourceState>
       </Box>
       <Dialog
+        dir={isPersian ? "rtl" : "ltr"}
         open={cargoOpen}
         onClose={() => {
           if (!cargoLoading) setCargoOpen(false);
@@ -1599,6 +1601,7 @@ export function TrafficRecordsWorkspace({
         </DialogActions>
       </Dialog>
       <Dialog
+        dir={isPersian ? "rtl" : "ltr"}
         open={editOpen}
         onClose={() => setEditOpen(false)}
         fullWidth

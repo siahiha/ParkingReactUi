@@ -10,11 +10,29 @@ export type ThemeColorOverrides = {
   text?: string; mutedText?: string; border?: string; input?: string;
 };
 
+type PaletteTokenSet = {
+  primary: string;
+  hover: string;
+  soft: string;
+  surface: string;
+  shell: string;
+  border: string;
+  input: string;
+};
+
 export const defaultThemeShape: ThemeShapeSettings = { controlRadius: 4, buttonRadius: 3, popupRadius: 5 };
 
-export const paletteTokens: Record<ThemeMode, Record<PaletteName, { primary: string; hover: string; soft: string }>> = {
-  light: { blue: { primary: '#234b78', hover: '#193a60', soft: '#edf2f7' }, green: { primary: '#286b5a', hover: '#1d5144', soft: '#eaf4f0' }, slate: { primary: '#4b5563', hover: '#374151', soft: '#eef0f2' } },
-  dark: { blue: { primary: '#8aa4bd', hover: '#b2c8da', soft: '#304252' }, green: { primary: '#79b9a5', hover: '#9bd1bf', soft: '#29453d' }, slate: { primary: '#b2bcc8', hover: '#d4dbe3', soft: '#39434d' } },
+export const paletteTokens: Record<ThemeMode, Record<PaletteName, PaletteTokenSet>> = {
+  light: {
+    blue: { primary: '#234b78', hover: '#193a60', soft: '#edf2f7', surface: '#ffffff', shell: '#f3f5f7', border: '#d7dce2', input: '#fbfcfd' },
+    green: { primary: '#286b5a', hover: '#1d5144', soft: '#eaf4f0', surface: '#fbfefc', shell: '#eef7f3', border: '#cadfd6', input: '#f7fcfa' },
+    slate: { primary: '#4b5563', hover: '#374151', soft: '#eef0f2', surface: '#fafbfc', shell: '#eef1f4', border: '#d0d6dc', input: '#f7f8fa' },
+  },
+  dark: {
+    blue: { primary: '#8aa4bd', hover: '#b2c8da', soft: '#304252', surface: '#29333d', shell: '#202830', border: '#3d4b58', input: '#202b35' },
+    green: { primary: '#79b9a5', hover: '#9bd1bf', soft: '#29453d', surface: '#293b36', shell: '#202f2b', border: '#3d584f', input: '#22332d' },
+    slate: { primary: '#b2bcc8', hover: '#d4dbe3', soft: '#39434d', surface: '#303841', shell: '#242a31', border: '#47515b', input: '#272f37' },
+  },
 };
 
 function colorValue(source: Record<string, unknown>, ...keys: string[]) {
@@ -75,6 +93,10 @@ export function getPaletteTokens(mode: ThemeMode, name: PaletteName, overrides: 
   if (overrides.primary) tokens.primary = overrides.primary;
   if (overrides.hover) tokens.hover = overrides.hover;
   if (overrides.soft) tokens.soft = overrides.soft;
+  if (overrides.surface) tokens.surface = overrides.surface;
+  if (overrides.shell) tokens.shell = overrides.shell;
+  if (overrides.border) tokens.border = overrides.border;
+  if (overrides.input) tokens.input = overrides.input;
   return tokens;
 }
 
@@ -90,8 +112,8 @@ export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode 
     warning: { main: '#a86600' },
     error: { main: '#c62828' },
     info: { main: '#28658a' },
-    background: { default: overrides.background ?? (mode === 'dark' ? '#202830' : '#f3f5f7'), paper: overrides.paper ?? (mode === 'dark' ? '#29333d' : '#ffffff') },
-    divider: overrides.border ?? '#d7dce2',
+    background: { default: overrides.background ?? tokens.shell, paper: overrides.paper ?? tokens.surface },
+    divider: overrides.border ?? tokens.border,
     text: { primary: overrides.text ?? (mode === 'dark' ? '#f3f5f7' : '#18212b'), secondary: overrides.mutedText ?? (mode === 'dark' ? '#b7c1ca' : '#687482') },
   },
   shape: { borderRadius: shape.controlRadius },

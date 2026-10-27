@@ -23,7 +23,6 @@ export type PasswordDialogProps = {
 };
 export type ThemeDialogProps = {
   open: boolean;
-  labels: ProfileDialogLabels;
   lightPalette: PaletteName;
   darkPalette: PaletteName;
   onLightPaletteChange: (palette: PaletteName) => void;

@@ -28,6 +28,7 @@ type Props = {
   lightPalette: PaletteName;
   darkPalette: PaletteName;
   shapeSettings: ThemeShapeSettings;
+  themeSettingsEnabled: boolean;
   onShapeSettingsChange: (settings: ThemeShapeSettings) => void;
   onThemeToggle: () => void;
   onLightPaletteChange: (palette: PaletteName) => void;
@@ -48,7 +49,7 @@ type Props = {
   direction: 'rtl' | 'ltr';
 };
 
-export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalette, shapeSettings, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, onHome, onNavigationOpen, onNavigationToggle, navigationLabel, navigationToggleLabel, navigationMode, navigationModeLabel, onNavigationModeChange, direction }: Props) {
+export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalette, shapeSettings, themeSettingsEnabled, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, onHome, onNavigationOpen, onNavigationToggle, navigationLabel, navigationToggleLabel, navigationMode, navigationModeLabel, onNavigationModeChange, direction }: Props) {
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [profileDialog, setProfileDialog] = useState<'password' | 'theme' | null>(null);
   const isMobile = useMediaQuery('(max-width:899px)');
@@ -62,20 +63,20 @@ export function HomeHeader({ labels: t, user, themeMode, lightPalette, darkPalet
       <Box className="home-header-middle-tools" aria-hidden="true" />
       <Box className="home-user-area home-header-primary-actions">
         <Tooltip title={t.home} arrow><IconButton className="home-header-utility-button" onClick={onHome} aria-label={t.home}><HomeRoundedIcon /></IconButton></Tooltip>
-        <Tooltip title={themeMode === 'light' ? t.nightMode : t.dayMode} arrow><IconButton className="home-header-utility-button" onClick={onThemeToggle} aria-label={themeMode === 'light' ? t.nightMode : t.dayMode}>{themeMode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}</IconButton></Tooltip>
+        {themeSettingsEnabled && <Tooltip title={themeMode === 'light' ? t.nightMode : t.dayMode} arrow><IconButton className="home-header-utility-button" onClick={onThemeToggle} aria-label={themeMode === 'light' ? t.nightMode : t.dayMode}>{themeMode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}</IconButton></Tooltip>}
         <Tooltip title={`${t.user}: ${user.userName}`} arrow><IconButton className="home-header-avatar-button" onClick={(event) => setUserMenuAnchor(event.currentTarget)} aria-label={`${t.user}: ${user.userName}`} aria-controls={userMenuAnchor ? 'user-profile-menu' : undefined} aria-haspopup="true" aria-expanded={userMenuAnchor ? 'true' : undefined}><Avatar className="home-header-avatar"><AccountCircleRoundedIcon /></Avatar></IconButton></Tooltip>
       </Box>
       <Box className="home-header-user-menu">
         <Menu id="user-profile-menu" anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: 'bottom', horizontal: direction === 'rtl' ? 'right' : 'left' }} transformOrigin={{ vertical: 'top', horizontal: direction === 'rtl' ? 'right' : 'left' }}>
           <MenuItem onClick={() => { setUserMenuAnchor(null); resetMessage(); setProfileDialog('password'); }}><ListItemIcon><KeyRoundedIcon fontSize="small" /></ListItemIcon>{t.changePassword}</MenuItem>
-          <MenuItem onClick={() => { setUserMenuAnchor(null); setProfileDialog('theme'); }}><ListItemIcon><PaletteRoundedIcon fontSize="small" /></ListItemIcon>{t.themeSettings}</MenuItem>
+          {themeSettingsEnabled && <MenuItem onClick={() => { setUserMenuAnchor(null); setProfileDialog('theme'); }}><ListItemIcon><PaletteRoundedIcon fontSize="small" /></ListItemIcon>{t.themeSettings}</MenuItem>}
           <MenuItem onClick={() => { setUserMenuAnchor(null); onNavigationModeChange(navigationMode === 'tabs' ? 'classic' : 'tabs'); }}><ListItemIcon><SwapHorizRoundedIcon fontSize="small" /></ListItemIcon>{navigationModeLabel}</MenuItem>
           <MenuItem onClick={() => { setUserMenuAnchor(null); onToggleLanguage(); }}><ListItemIcon><TranslateRoundedIcon fontSize="small" /></ListItemIcon>{t.changeLanguage}</MenuItem>
           <Divider />
           <MenuItem onClick={() => { setUserMenuAnchor(null); onLogout(); }}><ListItemIcon><LogoutRoundedIcon fontSize="small" /></ListItemIcon>{t.logout}</MenuItem>
         </Menu>
         <ChangePasswordDialog open={profileDialog === 'password'} labels={t} values={values} setValues={setValues} message={message} messageSeverity={messageSeverity} saving={saving} onSave={() => void save()} onClose={() => setProfileDialog(null)} />
-        <ThemeSettingsDialog open={profileDialog === 'theme'} labels={t} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onClose={() => setProfileDialog(null)} />
+        <ThemeSettingsDialog open={themeSettingsEnabled && profileDialog === 'theme'} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onClose={() => setProfileDialog(null)} />
       </Box>
     </Toolbar>
   </AppBar>;

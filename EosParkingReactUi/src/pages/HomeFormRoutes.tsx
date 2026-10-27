@@ -45,7 +45,7 @@ function UnknownRoute({ labels }: Pick<Props, 'labels'>) {
   return <Paper className="home-workspace" elevation={0} role="alert"><Typography variant="h6">{labels.unknownRouteTitle}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.unknownRouteMessage}</Typography><Button variant="outlined" size="small" sx={{ mt: 2 }} onClick={() => navigate('/home')}>{labels.backHome}</Button></Paper>;
 }
 
-function ManagementPage({ language, user, labels, selectedParkingId, visibleManagementItems, allManagementItems }: Omit<Props, 'hasPart1' | 'visibleParkingMenuItems' | 'allParkingMenuItems'>) {
+function ManagementPage({ language, labels, selectedParkingId, visibleManagementItems, allManagementItems }: Omit<Props, 'hasPart1' | 'visibleParkingMenuItems' | 'allParkingMenuItems'>) {
   const { section } = useParams();
   const item = allManagementItems.find((candidate) => candidate.key === section);
   if (!item) return <UnknownRoute labels={labels} />;
@@ -57,7 +57,7 @@ function ManagementPage({ language, user, labels, selectedParkingId, visibleMana
       return <ParkingManagementWorkspace itemKey={section} title={visibleManagementItems.find((item) => item.key === section)?.label ?? ''} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }
   if (section === 'exit') {
-      return <ExitPermissionWorkspace parkingId={selectedParkingId} language={language} userId={user.id} pageTitle={labels.parkingManagement} />;
+      return <ExitPermissionWorkspace parkingId={selectedParkingId} language={language} />;
   }
   return <Paper className="home-workspace" elevation={0}><Typography variant="h6">{visibleManagementItems.find((item) => item.key === section)?.label}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.placeholder}</Typography></Paper>;
 }

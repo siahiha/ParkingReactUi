@@ -82,10 +82,11 @@ export function useDefinitionCrud({ kind, parkingId, language, title, canEdit, c
 
   const selected = useMemo(() => rows.find((row, index) => idOf(row, index) === selectedId), [rows, selectedId]);
   const openCreate = () => { if (!canEdit) return; setForm({ ...emptyDefinitionForm }); setMemberKindTariffs([]); setFieldErrors({}); setSpaceRows([]); setDeletedSpaceIds([]); setSelectedSpaceIndex(null); setSelectedSpaceIndexes([]); setZoneFloorId(null); setEditingZoneId(null); setEditingZone(null); setSelectedZoneSpaceIds([]); setMessage(''); setError(''); setDialogOpen(true); };
-  const openEdit = async () => {
-    if (!selected || !canEdit) return;
-    let source = selected;
-    if (kind === 'floors') { try { const detail = rowsOf(await definitionApi.getParkingFloor(idOf(selected)))[0]; if (detail) source = detail; } catch { setError(copy.error); return; } }
+  const openEdit = async (row?: DefinitionRow) => {
+    const target = row ?? selected;
+    if (!target || !canEdit) return;
+    let source = target;
+    if (kind === 'floors') { try { const detail = rowsOf(await definitionApi.getParkingFloor(idOf(target)))[0]; if (detail) source = detail; } catch { setError(copy.error); return; } }
     if (kind === 'zones') { const sectionSpaces = parkSpacesOf(source); setEditingZoneId(idOf(source)); setEditingZone(source); setZoneFloorId(firstPositiveNumber(sectionSpaces[0] ?? {}, ['ParkingFloorId', 'FloorId']) ?? firstPositiveNumber(source, ['ParkingFloorId', 'FloorId']) ?? null); setSelectedZoneSpaceIds(sectionSpaces.map((space, index) => parkingSpaceId(space, index)).filter((id) => id > 0)); }
     setMemberKindTariffs(kind === 'member-kinds' ? tariffsOf(source) : []);
     const sourceSpaces = parkSpacesOf(source);
@@ -117,7 +118,7 @@ export function useDefinitionCrud({ kind, parkingId, language, title, canEdit, c
     try { const response = await definitionApi.save(definitionConfig[kind].save, payload); ensureApiSuccess(response); const savedId = Number(unwrap(response) ?? form.Id); setDialogOpen(false); setFieldErrors({}); setMessage(copy.saved); await load(); if (savedId > 0) setSelectedId(savedId); } catch (cause) { setError(cause instanceof Error && cause.message ? cause.message : copy.error); } finally { setSaving(false); }
   };
   const openCreateSpace = () => { setSpaceForm({ ...emptyParkingSpaceForm, ParkingFloorId: form.Id }); setSpaceDialogOpen(true); };
-  const openEditSpace = () => { if (selectedSpaceIndex === null || !spaceRows[selectedSpaceIndex]) return; setSpaceForm({ ...spaceRows[selectedSpaceIndex] }); setSpaceDialogOpen(true); };
+  const openEditSpace = (index?: number) => { const targetIndex = index ?? selectedSpaceIndex; if (targetIndex === null || targetIndex === undefined || !spaceRows[targetIndex]) return; setSpaceForm({ ...spaceRows[targetIndex] }); setSelectedSpaceIndex(targetIndex); setSelectedSpaceIndexes([targetIndex]); setSpaceDialogOpen(true); };
   const saveSpace = () => { if (!spaceForm.Title.trim() || !spaceForm.ParkingParkSpaceKindId) { setError(language === 'fa' ? 'عنوان و نوع جای‌پارک الزامی است.' : 'Space title and space type are required.'); return; } const next = { ...spaceForm, Title: spaceForm.Title.trim(), ParkingFloorId: form.Id }; setSpaceRows((current) => selectedSpaceIndex === null ? [...current, next] : current.map((space, index) => index === selectedSpaceIndex ? next : space)); setSpaceDialogOpen(false); setSelectedSpaceIndex(null); setSelectedSpaceIndexes([]); };
   const openCreateSpaceRange = () => { setSpaceRangeForm({ ...emptySpaceRangeForm }); setSpaceRangeDialogOpen(true); };
   const saveSpaceRange = () => { const from = Number(spaceRangeForm.from.replace(/,/g, '')); const to = Number(spaceRangeForm.to.replace(/,/g, '')); if (!spaceRangeForm.prefix.trim() || !Number.isInteger(from) || !Number.isInteger(to) || from < 0 || to < from || to - from > 500 || !spaceRangeForm.ParkingParkSpaceKindId) { setError(language === 'fa' ? 'پیشوند، بازه‌ی عددی معتبر و نوع جای‌پارک را وارد کنید. بازه نمی‌تواند بیشتر از ۵۰۰ مورد باشد.' : 'Enter a valid prefix, numeric range and space type. The range cannot exceed 500 items.'); return; } const prefix = spaceRangeForm.prefix.trim(); const existingTitles = new Set(spaceRows.map((space) => space.Title)); const generated: ParkingSpaceRow[] = []; for (let number = from; number <= to; number += 1) { const titleValue = `${prefix}${number}`; if (existingTitles.has(titleValue)) { setError(language === 'fa' ? `عنوان «${titleValue}» تکراری است.` : `The title "${titleValue}" already exists.`); return; } existingTitles.add(titleValue); generated.push({ Id: 0, Title: titleValue, IsActive: spaceRangeForm.IsActive, ParkingFloorId: form.Id, ParkingSectionId: null, ParkingParkSpaceKindId: spaceRangeForm.ParkingParkSpaceKindId }); } setSpaceRows((current) => [...current, ...generated]); setSpaceRangeDialogOpen(false); setError(''); };
