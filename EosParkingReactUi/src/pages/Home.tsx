@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Box } from '@mui/material';
 import type { Language } from '../i18n';
 import type { PaletteName } from '../components/homeProfileTypes';
@@ -16,6 +17,7 @@ import { asRows, recordValue } from '../components/management/managementTypes';
 import { useLocation, useNavigate, type NavigateOptions } from 'react-router-dom';
 import { useNavigationGuard } from './NavigationGuardContext';
 import { HomeTabs, type HomeTab } from './HomeTabs';
+import { Home2Shell } from './Home2Shell';
 
 export type { HomeUser } from './homeTypes';
 export type { HomeLabels } from './homeCopy';
@@ -30,6 +32,7 @@ function hasBit(value: string | number | undefined, bit: bigint) {
 
 export function Home({ language, user, themeMode, lightPalette, darkPalette, shapeSettings, themeSettingsEnabled, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, unknownRoute = false, basePath = '/home', variant = 'default' }: HomeProps) {
   const t = homeCopy[language];
+  const { t: resourceT } = useTranslation();
   const direction = language === 'fa' ? 'rtl' : 'ltr';
   const location = useLocation();
   const navigate = useNavigate();
@@ -114,15 +117,19 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
     }).catch(() => {
       if (!isCurrent) return;
       setParkingOptions([]);
-      setParkingLoadError(language === 'fa' ? 'دریافت فهرست پارکینگ‌ها ناموفق بود.' : 'Loading the parking list failed.');
+      setParkingLoadError(variant === 'home2' ? resourceT('home2.parkingLoadError') : language === 'fa' ? 'دریافت فهرست پارکینگ‌ها ناموفق بود.' : 'Loading the parking list failed.');
     });
     return () => { isCurrent = false; };
-  }, [user.currentParking, language]);
+  }, [user.currentParking, language, resourceT, variant]);
 
   useEffect(() => {
     if (!shouldShowUnknownRoute && !user.canManageDashboard && !activeParkingMenu && !showManagement && firstVisibleParkingItem) guardedNavigate(homePath(`/parking/${firstVisibleParkingItem.key}`), { replace: true });
   }, [shouldShowUnknownRoute, user.canManageDashboard, activeParkingMenu, showManagement, firstVisibleParkingItem, navigate, requestNavigation]);
   useEffect(() => { window.localStorage.setItem('eos-parking-sidebar-collapsed', String(sidebarCollapsed)); }, [sidebarCollapsed]);
+
+  const pageContent = shouldShowUnknownRoute ? <Alert severity="warning" role="alert">{t.unknownRouteTitle}: {t.unknownRouteMessage}</Alert> : (showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes basePath={basePath} language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} allManagementItems={managementItems} visibleParkingMenuItems={visibleParkingMenuItems} allParkingMenuItems={allParkingMenuItems} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : selectedParking ? (variant === 'home2' ? <HomeDashboard2 language={language} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} basePath={basePath} onNavigate={openNavigationTab} /> : <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} />) : <Alert severity="info">{variant === 'home2' ? resourceT('home2.noParking') : language === 'fa' ? 'پارکینگی برای نمایش در دسترس نیست.' : 'No parking is available to display.'}</Alert>;
+
+  if (variant === 'home2') return <Home2Shell language={language} labels={t} user={user} direction={direction} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={themeSettingsEnabled} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={setSelectedParkingId} openTabs={openTabs} activePath={location.pathname} homePath={homePath()} navigationMode={navigationMode} onNavigationModeChange={setNavigationMode} onHome={() => openNavigationTab(homePath())} onNavigate={openNavigationTab} onCloseTab={closeNavigationTab} onNavigationOpen={() => setMobileNavigationOpen(true)} onNavigationToggle={() => setSidebarCollapsed((current) => !current)} navigationLabel={t.openNavigation} navigationToggleLabel={sidebarCollapsed ? t.expandNavigation : t.collapseNavigation} basePath={basePath} visibleManagementItems={visibleManagement} visibleParkingMenuGroups={visibleParking} activeParkingMenu={activeParkingMenu} managementSection={managementSection} canManageDashboard={user.canManageDashboard} sidebarCollapsed={sidebarCollapsed} onSidebarCollapsedChange={setSidebarCollapsed} mobileNavigationOpen={mobileNavigationOpen} onMobileNavigationClose={() => setMobileNavigationOpen(false)}><>{parkingLoadError && <Alert severity="warning" className="home2-route-alert">{parkingLoadError}</Alert>}{pageContent}</></Home2Shell>;
 
   return <Box className={`home-shell ${hasSidebar ? 'home-shell-with-sidebar' : ''} ${sidebarCollapsed ? 'home-shell-sidebar-collapsed' : ''}`} dir={language === 'fa' ? 'rtl' : 'ltr'}>
     <HomeHeader labels={t} user={user} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={themeSettingsEnabled} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={setSelectedParkingId} onHome={() => openNavigationTab(homePath())} onNavigationOpen={() => setMobileNavigationOpen(true)} onNavigationToggle={() => setSidebarCollapsed((current) => !current)} navigationLabel={t.openNavigation} navigationToggleLabel={sidebarCollapsed ? t.expandNavigation : t.collapseNavigation} navigationMode={navigationMode} navigationModeLabel={`${navigationModeCopy[language].switchMode}: ${navigationMode === 'tabs' ? navigationModeCopy[language].classic : navigationModeCopy[language].tabs}`} onNavigationModeChange={setNavigationMode} direction={direction} />
@@ -132,7 +139,7 @@ export function Home({ language, user, themeMode, lightPalette, darkPalette, sha
       <Box component="main" className="home-main">
         {!showManagement && !activeParkingMenu && <Box className="home-page-header"><Box className="home-page-heading-copy"><h1 className="home-page-title">{t.homeTitle}</h1></Box></Box>}
         {parkingLoadError && <Alert severity="warning" sx={{ m: 2 }}>{parkingLoadError}</Alert>}
-      {shouldShowUnknownRoute ? <Alert severity="warning" role="alert">{t.unknownRouteTitle}: {t.unknownRouteMessage}</Alert> : (showManagement || activeParkingMenu) ? <Box className="home-content-section"><HomeFormRoutes basePath={basePath} language={language} user={user} labels={t} selectedParkingId={selectedParkingId} visibleManagementItems={visibleManagement} allManagementItems={managementItems} visibleParkingMenuItems={visibleParkingMenuItems} allParkingMenuItems={allParkingMenuItems} hasPart1={hasPart1} /></Box> : (!user.canManageDashboard && visibleManagement.length === 0) ? <Alert severity="info">{t.noAccess}</Alert> : selectedParking ? (variant === 'home2' ? <HomeDashboard2 labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} basePath={basePath} onNavigate={openNavigationTab} /> : <HomeDashboard labels={t} selectedParkingName={selectedParking.name} selectedParkingId={selectedParking.id} />) : <Alert severity="info">{language === 'fa' ? 'پارکینگی برای نمایش در دسترس نیست.' : 'No parking is available to display.'}</Alert>}
+       {pageContent}
       </Box>
     </Box>
   </Box>;
