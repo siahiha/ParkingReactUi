@@ -16,7 +16,7 @@ import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import type { Language } from '../i18n';
 
-type Props = { language: Language; selectedParkingName: string; selectedParkingId: number; basePath: '/home' | '/home2'; onNavigate: (path: string) => void };
+type Props = { language: Language; selectedParkingName: string; selectedParkingId: number; basePath: '/home' | '/home2' | '/home3'; onNavigate: (path: string) => void };
 
 const slots = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'C1', 'C2', 'C3', 'C4', 'D1', 'D2', 'D3', 'D4'];
 const occupiedSlots = new Set(['A3', 'A4', 'B2', 'B3', 'C2', 'D1', 'D4']);

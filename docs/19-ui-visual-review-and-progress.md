@@ -30,12 +30,12 @@
 ویژگی‌های بصری انتخاب‌شده:
 
 - ترکیب Industrial، Utilitarian، Command Center و Swiss Minimal؛
-- سطوح تخت با border روشن و shadow محدود؛
+- سطوح لایه‌ای با border روشن، shadow کنترل‌شده و در صورت نیاز gradient یا glassmorphism خوانا؛
 - استفاده‌ی کنترل‌شده از آبی سازمانی به‌عنوان رنگ هدایت‌کننده؛
 - استفاده از سبز، زرد و قرمز فقط برای وضعیت‌های معنایی؛
 - typography متراکم اما خوانا با `Vazir/VazirFD`؛ متن فارسی از `VazirFD` و وزن‌های
   bold از `Vazir-Bold.woff2` استفاده می‌کنند.
-- حذف تزئینات بدون کاربرد، glassmorphism، neon و gradientهای تبلیغاتی.
+- حذف تزئینات بدون کاربرد؛ glassmorphism، neon و gradientهای برند یا عملیاتی در صورت هدف مشخص، token مشترک و رعایت کنتراست مجاز هستند.
 
 ### هویت بصری صفحه ورود
 

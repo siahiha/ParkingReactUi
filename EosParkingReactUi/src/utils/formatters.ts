@@ -20,6 +20,15 @@ export function formatMoney(value: string | number | null | undefined): string {
   return Number.isFinite(amount) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount) : '—';
 }
 
+export function formatNumber(value: string | number | null | undefined, language: Language): string {
+  if (value === null || value === undefined || value === '') return '—';
+
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en-US', { maximumFractionDigits: 0 }).format(amount)
+    : '—';
+}
+
 export function formatMoneyInput(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === '') return '';
 

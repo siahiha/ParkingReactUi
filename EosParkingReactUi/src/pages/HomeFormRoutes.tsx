@@ -18,7 +18,7 @@ type MenuItem = { key: string; label: string };
 type Labels = { parkingManagement: string; listMenu: string; placeholder: string; accessDeniedTitle: string; accessDeniedMessage: string; unknownRouteTitle: string; unknownRouteMessage: string; backHome: string };
 
 type Props = {
-  basePath?: '/home' | '/home2';
+  basePath?: '/home' | '/home2' | '/home3';
   language: Language;
   user: HomeUser;
   labels: Labels;

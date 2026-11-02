@@ -220,7 +220,7 @@ Fallback قدیمی برگردانده شد و تست نمایش منوی مدی
 - درخواست Login از صفحه خارج و به `features/auth/authService.ts` و hook اختصاصی منتقل شد؛
 - مدیریت theme، direction، زبان و font از دستکاری مستقیم `document.documentElement` به state، props، `ThemeProvider` و ریشهٔ declarative React منتقل شده است؛ `App.tsx` نباید برای این stateهای UI مستقیماً `document` یا style آن را تغییر دهد؛
 - routeهای workspace با `lazy` و `Suspense` بارگذاری می‌شوند؛
-- gradient، حرکت نمایشی کارت‌ها و shadowهای سنگین از styleهای اصلی حذف یا محدود شدند؛
+- gradient، حرکت نمایشی کارت‌ها و shadowهای سنگین فقط در صورت ثبت در سیاست افکت‌های بصری، استفاده از token مشترک، رعایت کنتراست و پشتیبانی از `prefers-reduced-motion` مجاز هستند؛ موارد فاقد هدف یا ایجادکننده‌ی اختلال باید حذف شوند؛
 - کلید رمزنگاری Legacy دیگر در source قرار ندارد و فقط از پیکربندی محیطی خوانده می‌شود؛ نبودن آن باید با خطای امن متوقف شود؛
 - password در هیچ storage مرورگر ذخیره نمی‌شود. مقادیر موجود در test setup صرفاً fixture تستی هستند و نباید وارد production شوند.
 

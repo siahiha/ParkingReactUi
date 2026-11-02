@@ -9,6 +9,7 @@ type ApiPayload = Record<string, unknown>;
 export const parkingApi = {
   list: () => apiRequest<unknown>('api/Parking/Get'),
   getById: (parkingId: number) => apiRequest<unknown>(`api/Parking/Get?id=${parkingId}`),
+  getInfoById: (parkingId: number, signal?: AbortSignal) => apiRequest<unknown>(`api/Parking/GetInfoById?id=${parkingId}`, { signal }),
   save: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/Save', { method: 'POST', body: JSON.stringify(payload) }),
   remove: (parkingId: number) => apiRequest<unknown>(`api/Parking/Delete?id=${parkingId}`),
   getDoors: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingDoors?parkingId=${parkingId}`),

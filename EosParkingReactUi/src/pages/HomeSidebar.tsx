@@ -12,7 +12,7 @@ import type { HomeMenuGroup, HomeMenuItem, ManagementSection } from './homeMenuM
 
 type Props = {
   appName: string; systemMenu: string; currentParkingSectionTitle: string; reportsSectionTitle: string;
-  basePath?: '/home' | '/home2';
+  basePath?: '/home' | '/home2' | '/home3';
   direction: 'rtl' | 'ltr';
   visibleManagementItems: Array<HomeMenuItem & { key: ManagementSection }>; visibleParkingMenuGroups: HomeMenuGroup[];
   activeParkingMenu: string | null; managementSection?: ManagementSection; onNavigate: (path: string) => void;

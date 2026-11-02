@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, formatMoneyInput, normalizeMoneyInput } from './formatters';
+import { formatMoney, formatMoneyInput, formatNumber, normalizeMoneyInput } from './formatters';
 
 describe('money formatters', () => {
   it('renders monetary values with a three-digit separator and Latin digits', () => {
@@ -10,5 +10,10 @@ describe('money formatters', () => {
   it('normalizes Persian and Arabic digits before formatting an editable amount', () => {
     expect(normalizeMoneyInput('۱٬۲۳۴,٥٦٧ ریال')).toBe('1234567');
     expect(formatMoneyInput('۱٬۲۳۴٬۵۶۷')).toBe('1,234,567');
+  });
+
+  it('formats counts with the active language locale', () => {
+    expect(formatNumber(1284, 'fa')).toBe('۱٬۲۸۴');
+    expect(formatNumber(1284, 'en')).toBe('1,284');
   });
 });
