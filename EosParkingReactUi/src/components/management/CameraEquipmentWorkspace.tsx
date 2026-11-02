@@ -15,6 +15,7 @@ import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import { WorkspaceToolbar } from '../WorkspaceToolbar';
 import { asRows, recordValue, type Language, type RecordValue } from './managementTypes';
+import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
 type Draft = { id: number; name: string; deviceType: string; connectionType: string; ip: string; port: string; username: string; password: string; rtspUrl: string; comPort: string; relay: string; baudRate: string; readTimeout: string; writeTimeout: string; controlByServer: boolean; pcCheck: boolean; byService: boolean; disabled: boolean; detectionServerAddress: string; detectionLeft: string; detectionTop: string; detectionWidth: string; detectionHeight: string; raw: RecordValue | null };
@@ -23,14 +24,9 @@ const text = (language: Language, fa: string, en: string) => language === 'fa' ?
 const value = (row: RecordValue, key: string) => recordValue(row, key);
 const bool = (input: unknown) => input === true || input === 1 || input === '1' || String(input).toLowerCase() === 'true';
 const equipmentTypeLabel = (input: unknown, language: Language) => {
-  const labels: Record<string, [string, string]> = {
-    '0': ['دوربین', 'Camera'], '1': ['راهبند', 'Gate'], '2': ['دستگاه صدور کارت', 'Card dispenser'],
-    '3': ['کنترل‌کننده تردد Shine', 'Shine traffic controller'], '4': ['کنترل‌کننده تردد Poro', 'Poro traffic controller'],
-    '5': ['کنترل‌کننده تردد چهره', 'Face traffic controller'], '6': ['POS', 'POS'],
-    '7': ['خوانشگر UHF برد بلند', 'UHF long-range reader'], '8': ['کارت‌خوان', 'Card reader'], '9': ['QR آنلاین', 'Online QR code'],
-  };
-  const label = labels[String(input)];
-  return label ? text(language, label[0], label[1]) : text(language, `نوع ${String(input)}`, `Type ${String(input)}`);
+  const text = i18n.getFixedT(language);
+  const keys: Record<string, string> = { '0': 'camera.typeCamera', '1': 'camera.typeGate', '2': 'camera.typeCardDispenser', '3': 'camera.typeShine', '4': 'camera.typePoro', '5': 'camera.typeFace', '6': 'camera.typePos', '7': 'camera.typeUhf', '8': 'camera.typeCardReader', '9': 'camera.typeQr' };
+  return String((i18n.getFixedT(language) as unknown as (key: string, options?: Record<string, unknown>) => string)(keys[String(input)] ?? 'camera.typeUnknown', { value: String(input) }));
 };
 
 function getViewerId() {

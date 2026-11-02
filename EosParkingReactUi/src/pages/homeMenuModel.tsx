@@ -18,7 +18,7 @@ import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import TrafficRoundedIcon from '@mui/icons-material/TrafficRounded';
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import ViewModuleRoundedIcon from '@mui/icons-material/ViewModuleRounded';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import { permissionNames } from '../api/contracts';
 import type { HomeUser } from './homeTypes';
 

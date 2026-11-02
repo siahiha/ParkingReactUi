@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import type { PaletteName } from '../components/homeProfileTypes';
 import type { ThemeMode, ThemeShapeSettings } from '../theme';
 import type { HomeTab, HomeUser } from './homeTypes';
@@ -67,7 +67,6 @@ export function HomeShell({ children, isLoading, language, user, direction, them
     </Box>
   </Box>;
 }
-
 
 
 

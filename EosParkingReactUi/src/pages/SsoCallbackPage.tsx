@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import { loginWithSso } from '../features/auth/authService';
 import { clearPendingSso, consumeSsoCallback } from '../features/auth/sso';
 import type { LoginResult } from '../features/auth/authService';

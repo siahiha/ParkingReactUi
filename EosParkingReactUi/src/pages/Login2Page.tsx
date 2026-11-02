@@ -8,7 +8,7 @@ import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded';
 import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { translations, type Language } from '../i18n';
+import i18n, { type Language } from '../i18n/instance';
 import { useLogin } from '../features/auth/useLogin';
 import { beginSsoLogin } from '../features/auth/sso';
 import { appConfig } from '../config';
@@ -19,48 +19,14 @@ type Props = { language: Language; toggleLanguage: () => void; onAuthenticated: 
 type FormErrors = { username?: string; password?: string };
 const rememberedUsernameKey = 'eos-parking-remembered-username';
 
-const copy = {
-  fa: {
-    headlineMain: 'پارکینگ',
-    headlineSecondary: 'مدیریت هوشمند تردد',
-    description: 'شرکت علم و صنعت',
-    live: 'سامانه آنلاین است',
-    capacity: 'امنیت و دسترسی',
-    slots: 'دقت و سرعت',
-    protected: 'مدیریت و یکپارچگی',
-    access: 'برای ورود به داشبورد عملیاتی اطلاعات خود را وارد کنید.',
-    usernameHint: 'نام کاربری سازمانی',
-    passwordHint: 'رمز عبور خود را وارد کنید',
-    secure: 'مرکز کنترل پارکینگ',
-    ssoStarting: 'در حال آماده‌سازی ورود یکپارچه…',
-    ssoFailed: 'راه‌اندازی ورود یکپارچه با مشکل روبه‌رو شد.',
-    login: 'ورود به سیستم',
-    checking: 'در حال بررسی دسترسی...',
-    footer: 'EOS Parking OS  •  مدیریت هوشمند پارکینگ',
-  },
-  en: {
-    headlineMain: 'Parking',
-    headlineSecondary: 'management system',
-    description: 'Elmosanat Company',
-    live: 'System online',
-    capacity: 'Security and access',
-    slots: 'Accuracy and speed',
-    protected: 'Management and integrity',
-    access: 'Enter your details to open the operations dashboard.',
-    usernameHint: 'Your organization username',
-    passwordHint: 'Enter your password',
-    secure: 'Parking Control Center',
-    ssoStarting: 'Preparing single sign-on…',
-    ssoFailed: 'Single sign-on could not be started.',
-    login: 'Sign in',
-    checking: 'Checking access...',
-    footer: 'EOS Parking OS  •  Smart parking management',
-  },
-} as const;
-
 export function Login2Page({ language, toggleLanguage, onAuthenticated }: Props) {
-  const t = translations[language];
-  const c = copy[language];
+  const text = i18n.getFixedT(language);
+  const t = {
+    direction: text('app.direction'), languageName: text('app.languageName'), title: text('login.title'), username: text('login.username'), password: text('login.password'), rememberMe: text('login.rememberMe'), showPassword: text('login.showPassword'), hidePassword: text('login.hidePassword'), usernameRequired: text('login.usernameRequired'), passwordRequired: text('login.passwordRequired'), loginInvalid: text('login.loginInvalid'), loginRequestFailed: text('login.loginRequestFailed'),
+  };
+  const c = {
+    headlineMain: text('login2.headlineMain'), headlineSecondary: text('login2.headlineSecondary'), description: text('login2.description'), capacity: text('login2.capacity'), slots: text('login2.slots'), protected: text('login2.protected'), access: text('login2.access'), usernameHint: text('login2.usernameHint'), passwordHint: text('login2.passwordHint'), secure: text('login2.secure'), ssoStarting: text('login2.ssoStarting'), ssoFailed: text('login2.ssoFailed'), login: text('login2.login'), checking: text('login2.checking'), footer: text('login2.footer'), liveMap: text('login2.liveMap'), open: text('login2.open'), entry: text('login2.entry'), gate: text('login2.gate'), zone: text('login2.zone'), bays: text('login2.bays', { returnObjects: true }) as readonly string[], recovery: text('login2.recovery'),
+  };
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);

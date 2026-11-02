@@ -10,7 +10,7 @@ import rtlPlugin from 'stylis-plugin-rtl';
 import 'dayjs/locale/fa';
 import { prefixer } from 'stylis';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { type Language, translations } from './i18n';
+import type { Language } from './i18n/instance';
 import { parseAuthSession, resolveCanManageDashboard, type SsoUserPreferences } from './api/contracts';
 import { apiRequest, registerSessionInvalidationHandler } from './api/client';
 import { Home } from './pages/Home';
@@ -98,7 +98,7 @@ export function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
-  const direction = translations[language].direction;
+    const direction = language === 'fa' ? 'rtl' : 'ltr';
   const activePalette = themeMode === 'light' ? lightPalette : darkPalette;
   const activeThemeColors = isSsoEnabled ? resolveThemeColorOverrides(themeColors, themeMode) : {};
   const activeTokens = getPaletteTokens(themeMode, activePalette, activeThemeColors);

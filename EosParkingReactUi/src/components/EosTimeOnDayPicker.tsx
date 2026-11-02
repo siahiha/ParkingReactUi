@@ -1,7 +1,7 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import type { TextFieldProps } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { translations, type Language } from '../i18n';
+import i18n, { type Language } from '../i18n/instance';
 
 export type EosTimeOnDayUnit = 'seconds' | 'minutes' | 'hours';
 
@@ -29,8 +29,8 @@ function fromMinuteOfDay(minutes: number, unit: EosTimeOnDayUnit): number {
 }
 
 export function EosTimeOnDayPicker({ value, onChange, unit = 'minutes', language = 'fa', clearable = true, label, disabled = false, readOnly = true, required, error, helperText, size, fullWidth, variant, sx }: EosTimeOnDayPickerProps) {
-  const labels = translations[language];
-  const pickerLabel = String(label ?? labels.chooseTime);
+  const text = i18n.getFixedT(language);
+  const pickerLabel = String(label ?? text('timePicker.chooseTime'));
   const currentMinute = minuteOfDay(value, unit);
   const pickerValue = currentMinute === null
     ? null
@@ -47,7 +47,7 @@ export function EosTimeOnDayPicker({ value, onChange, unit = 'minutes', language
   };
 
   return <TimePicker
-    label={label ?? labels.chooseTime}
+    label={label ?? text('timePicker.chooseTime')}
     value={pickerValue}
     onChange={handleChange}
     ampm={false}
@@ -59,7 +59,7 @@ export function EosTimeOnDayPicker({ value, onChange, unit = 'minutes', language
     slotProps={{
       field: { clearable, readOnly, 'aria-label': pickerLabel },
       textField: {
-        label: label ?? labels.chooseTime,
+        label: label ?? text('timePicker.chooseTime'),
         required,
         error,
         helperText,

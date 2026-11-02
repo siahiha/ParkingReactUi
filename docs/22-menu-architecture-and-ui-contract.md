@@ -16,7 +16,7 @@
 | **تب‌های فرم پارکینگ** | تب‌های داخلی «مشخصات»، «تنظیمات» و «شیفت‌ها» داخل فرم ایجاد/ویرایش | `ParkingFormFields` |
 | **تب‌های navigation صفحه** | نوار تب Home برای جابه‌جایی بین routeهای باز؛ بخشی از خود منوی «پارکینگ‌ها» نیست | `HomeTabs` |
 | **پارکینگ جاری** | پارکینگی که در Header انتخاب شده و context عملیات بخش جاری است؛ با منوی «پارکینگ‌ها» یکی نیست | انتخاب‌گر Header |
-| **تعاریف و تنظیمات پارکینگ** | یکی از سه بخش اصلی منوی کناری برای امکانات پارکینگ انتخاب‌شده | گروه `definitions-root` |
+| **تعاریف و تنظیمات پارکینگ** | یکی از سه بخش اصلی منوی کناری برای امکانات پارکینگ انتخاب‌شده | ریشه‌ی `parking` در `HomeNavigation` |
 
 ### قاعده‌ی اجباری نام‌گذاری
 
@@ -58,18 +58,18 @@
 - با کلیک، فقط زیرمجموعه‌ی خودش را باز یا بسته کند؛
 - در حالت باز، حالت active مشخص داشته باشد.
 
-در هر لحظه state باز و بسته بودن گروه‌ها توسط `expandedMenuGroup` کنترل می‌شود. مقدارهای اصلی فعلی عبارت‌اند از:
+در هر لحظه state باز و بسته بودن ریشه‌ها توسط `expandedRoot` کنترل می‌شود. مقدارهای اصلی فعلی عبارت‌اند از:
 
 - `system`
-- `definitions-root`
-- `reports-root`
+- `parking`
+- `reports`
 
 ### حالت فشرده‌ی منو
 
-- در حالت فشرده، کلیک روی هر آیکون باید منو را باز کند و همان بخش مقصد را نمایش دهد.
-- با بازشدن از روی آیکون «عملیات پارکینگ»، فقط بخش «تعاریف و تنظیمات پارکینگ» و زیرگروه «عملیات پارکینگ» باز می‌مانند؛ مدیریت سامانه، گزارش‌ها و سایر زیرگروه‌ها بسته‌اند.
-- آیکون‌های «مدیریت سامانه»، «تعاریف و تنظیمات پارکینگ» و «گزارش‌ها» نیز باید فقط بخش متناظر خود را باز کنند.
-- همگام‌سازی منوی باز با مسیر جاری فقط هنگام تغییر مسیر انجام می‌شود تا بازکردن آیکون موردنظر کاربر با وضعیت صفحه‌ی قبلی بازنویسی نشود.
+- در حالت فشرده، آیکون خانه به `/home` می‌رود و آیکون‌های ریشه‌ای با بازکردن rail، ریشه‌ی متناظر را فعال می‌کنند.
+- آیکون مدیریت سامانه ریشه‌ی `system`، آیکون تعاریف/عملیات ریشه‌ی `parking` و آیکون گزارش‌ها ریشه‌ی `reports` را فعال می‌کنند.
+- گروه‌های داخلی پس از بازشدن rail با `expandedGroups` جداگانه باز و بسته می‌شوند؛ انتخاب یک آیکون داخلی تضمین نمی‌کند گروه دیگری خودکار باز شود.
+- وقتی مسیر جاری تغییر کند، effect مربوط به مسیر ریشه‌ی فعال و گروه داخلی متناظر را همگام می‌کند.
 
 ## ۲. مدیریت سامانه
 
@@ -158,69 +158,34 @@
 
 ## ۵. قرارداد ظاهری مشترک
 
-سه عنوان اصلی باید از کلاس مشترک `home-top-level-heading` استفاده کنند و wrapper آن‌ها باید کلاس `home-top-level-section` داشته باشد.
+منبع قرارداد منو، component `HomeNavigation` و مدل داده‌ی `homeMenuModel.tsx` است؛ ظاهر navigation
+از renderer مشترک و tokenهای فعلی می‌آید و component جدید نباید به کلاس‌های اختصاصی حذف‌شده وابسته باشد.
 
-زیرمجموعه‌های مستقیم سه بخش باید از کلاس `home-top-level-subnav` استفاده کنند. این کلاس مسئول موارد زیر است:
-
-- چیدمان عمودی؛
-- تورفتگی یکسان؛
-- فاصله‌ی ثابت بین آیتم‌ها؛
-- خط راهنمای عمودی؛
-- عرض کامل در محدوده‌ی منوی کناری؛
-- نمایش صحیح در حالت RTL و LTR.
-
-آیتم‌های عادی زیرمنو از کلاس‌های زیر استفاده می‌کنند:
-
-- `home-nav-item`
-- `home-leaf-item`
-
-کلاس `home-leaf-item` قرارداد نهایی ظاهر همه‌ی برگ‌ها است و منوی «تجهیزات» مرجع ظاهری آن محسوب می‌شود. بنابراین «پارکینگ‌ها»، «تجهیزات»، برگ‌های گزارش‌ها و برگ‌های داخلی عملیات و یکپارچه‌سازی باید از نظر رنگ، ارتفاع، padding، فونت، آیکون، hover و active یکسان باشند.
-
-زیرگروه‌های داخلی مانند «عملیات پارکینگ»، «یکپارچه‌سازی سامانه‌ها» و دسته‌های گزارش از `home-nested-subnav` استفاده می‌کنند تا فقط یک سطح تورفتگی بیشتر از آیتم‌های مستقیم داشته باشند. عنوان دسته‌های گزارش از الگوی `home-branch-heading` استفاده می‌کند و برگ‌های گزارش از همان قرارداد `home-leaf-item` پیروی می‌کنند. این کلاس‌ها نباید رنگ یا ظاهر Buttonهای برگ را تغییر دهند.
+- سه ریشه‌ی منو با یک renderer مشترک نمایش داده می‌شوند و state بازشدن آن‌ها در `expandedRoot` نگهداری می‌شود.
+- گروه‌های داخلی و دسته‌های گزارش با `expandedGroups` کنترل می‌شوند؛ ظاهر آن‌ها از جایگاه داده در مدل منو و tokenهای مشترک می‌آید.
+- برگ‌های منو از همان الگوی مشترک HomeNavigation برای icon، label، hover، active و disabled/permission state استفاده می‌کنند.
+- وضعیت active از مسیر جاری و stateهای `managementSection` یا `activeParkingMenu` به‌دست می‌آید؛ به CSS اختصاصی برای یک آیتم وابسته نیست.
+- Header و brand بخشی از `HomeHeader` هستند و نباید به‌عنوان محتوای navigation یا rail مستند/پیاده‌سازی شوند.
 
 ## ۶. قانون اضافه‌کردن دسته یا آیتم جدید
 
-برای اضافه‌کردن یک بخش اصلی جدید:
+برای اضافه‌کردن آیتم یا گروه جدید:
 
-1. یک wrapper با کلاس `home-top-level-section` بسازید.
-2. عنوان آن را با کلاس `home-top-level-heading` بسازید.
-3. زیرمجموعه‌ها را فقط داخل `home-top-level-subnav` قرار دهید.
-4. state باز و بسته‌شدن را به `expandedMenuGroup` متصل کنید.
-5. از CSS اختصاصی برای رنگ، فاصله یا اندازه استفاده نکنید؛ مگر اینکه یک نیاز UX مستند وجود داشته باشد.
+1. داده‌ی آن را در `homeMenuModel.tsx`، در بخش management یا گروه‌های parking، اضافه کنید.
+2. مسیر را مطابق قرارداد `/home/management/:key` یا `/home/parking/:key` تعیین کنید.
+3. label و متن قابل‌نمایش را در namespaceهای locale مربوط به `home`/`homeMenu` اضافه کنید؛ متن UI را در مدل hardcode نکنید.
+4. visibility را از `visibleManagementItems` و `visibleParkingGroups` عبور دهید و در صورت نیاز mapping مجوز را تکمیل کنید.
+5. renderer مشترک `HomeNavigation` را reuse کنید؛ برای یک آیتم CSS یا variant جدا نسازید.
 
-برای اضافه‌کردن آیتم به یک زیرمنو:
-
-- آیتم باید Button باشد؛
-- از `home-nav-item home-leaf-item` استفاده کند؛
-- آیکون، متن و فاصله‌ی آن از قانون عمومی فاصله‌ی آیکون/متن پیروی کند؛
-- حالت active را از state انتخاب‌شده دریافت کند.
-
-### قانون جلوگیری از تفاوت ظاهری برگ‌ها
-
-- کلاس‌های قدیمی یا وابسته به والد مانند `home-subnav-item` و `home-parking-nav-item` نباید برای تعیین ظاهر برگ جدید استفاده شوند.
-- سطح منو فقط باید با wrapperها (`home-top-level-subnav` یا `home-nested-subnav`) تعیین شود.
-- Button تمام برگ‌ها باید `home-leaf-item` داشته باشد.
-- هر CSS جدید برای یک برگ خاص باید به کلاس `home-leaf-item` منتقل شود؛ استایل اختصاصی برای یک آیتم مانند «پارکینگ‌ها» یا «تجهیزات» مجاز نیست.
-
-هر دسته‌ی جدیدی که با این قرارداد اضافه شود باید از نظر ظاهر با سه بخش فعلی یکسان باقی بماند.
+با اضافه‌شدن یک گروه، state آن باید با `expandedRoot` یا `expandedGroups` هماهنگ باشد و مسیر غیرمجاز
+همچنان در پوسته‌ی Home پیام unauthorized نشان دهد.
 
 ## ۷. تم روشن و تیره
 
-در تم روشن:
-
-- متن عنوان‌ها: خاکستری تیره؛
-- پس‌زمینه‌ی عادی: شفاف یا سفید؛
-- پس‌زمینه‌ی hover و active: طیف آبی بسیار روشن؛
-- خط جداکننده و خط راهنما: خاکستری روشن.
-
-در تم تیره:
-
-- متن عنوان‌ها: خاکستری بسیار روشن یا سفید؛
-- پس‌زمینه‌ی عادی: شفاف روی زمینه‌ی تیره؛
-- پس‌زمینه‌ی hover و active: آبی تیره؛
-- خط جداکننده و خط راهنما: خاکستری تیره.
-
-قواعد تم باید روی کلاس‌های مشترک اعمال شوند، نه روی یک بخش خاص مثل «مدیریت سامانه». هدف این است که هر سه بخش در هر دو تم ظاهر یکسان داشته باشند.
+رنگ‌های سطح، متن، border، hover، active و وضعیت باید از MUI Theme و tokenهای محلی Home گرفته شوند.
+accentهای اختصاصی Home فقط برای هویت بصری navigation و iconها مجاز هستند؛ این accentها نباید جایگزین
+رنگ معنایی `success`، `warning`، `error` یا `info` شوند. قواعد باید روی renderer مشترک اعمال شوند تا
+سه ریشه و همه‌ی زیرگروه‌ها در light/dark و RTL/LTR رفتار یکسان داشته باشند.
 
 ## ۸. رفتار Responsive و جایگاه فعلی navigation
 
@@ -230,7 +195,7 @@
 در دسکتاپ:
 
 - `HomeHeader` تمام عرض viewport را اشغال می‌کند؛
-- `HomeSidebar` به‌صورت rail ثابت در `inline-start` زبان فعال قرار دارد: در فارسی (`rtl`)
+- `HomeNavigation` به‌صورت rail ثابت در `inline-start` زبان فعال قرار دارد: در فارسی (`rtl`)
   سمت راست و در انگلیسی (`ltr`) سمت چپ؛ rail از زیر Header شروع می‌شود و بخش باقی‌مانده‌ی
   ارتفاع صفحه را پوشش می‌دهد؛
 - workspace با متغیر عرض rail offset می‌شود و خود rail اسکرول مستقل دارد؛
@@ -238,7 +203,7 @@
 
 در موبایل:
 
-- rail دائمی مخفی می‌شود و `HomeSidebar` به‌صورت Drawer موقت نمایش داده می‌شود؛
+- rail دائمی مخفی می‌شود و `HomeNavigation` به‌صورت Drawer موقت نمایش داده می‌شود؛
 - anchor Drawer با جهت فعال زبان تعیین می‌شود؛
 - همبرگر در سمت `inline-start` قرار می‌گیرد و Header و workspace تمام‌عرض هستند؛
 - زیرمنوها عمودی می‌مانند و متن طولانی نباید اسکرول افقی ایجاد کند.
@@ -246,7 +211,7 @@
 ### ۸.۱. جهت و جایگاه فعلی rail و همبرگر
 
 - جایگاه rail و همبرگر از `dir` زبان فعال مشتق می‌شود؛ در فارسی راست و در انگلیسی چپ.
-- `HomeSidebar` برای Drawer موبایل در فارسی از `right` و در انگلیسی از `left` استفاده می‌کند.
+- `HomeNavigation` برای Drawer موبایل در فارسی از `right` و در انگلیسی از `left` استفاده می‌کند.
 - CSS نهایی rail را با logical property در `inline-start` قرار می‌دهد؛ Header تمام‌عرض
   است و rail از زیر Header شروع می‌شود، بنابراین rail کل ارتفاع viewport را از نقطه‌ی صفر
   نمی‌پوشاند.
@@ -267,32 +232,30 @@
 6. هیچ حالت نباید اسکرول افقی در سطح viewport ایجاد کند.
 
 منبع پیاده‌سازی این قرارداد `EosParkingReactUi/src/pages/Home.tsx`،
-`EosParkingReactUi/src/pages/HomeHeader.tsx`، `EosParkingReactUi/src/pages/HomeSidebar.tsx`
+`EosParkingReactUi/src/pages/HomeShell.tsx`، `EosParkingReactUi/src/pages/HomeHeader.tsx`،
+`EosParkingReactUi/src/pages/HomeNavigation.tsx`، `EosParkingReactUi/src/pages/HomeTabs.tsx` و
+`EosParkingReactUi/src/pages/HomeDashboard.tsx`
 و لایه‌ی نهایی navigation در `EosParkingReactUi/src/styles.css` است.
 
 ### ۸.۲. قانون الزامی چیدمان کنترل‌های Header
 
-در Header، `parking-select` و گروه کنترل‌های کاربر باید با جهت زبان جابه‌جا شوند، نه با
-مقدارهای ثابت فیزیکی:
+ترتیب منطقی کنترل‌های فعلی Header از این اجزا تشکیل می‌شود: brand، دکمه‌ی navigation،
+context/select پارکینگ، فضای میانی، خانه، کنترل تم در صورت فعال‌بودن و منوی کاربر.
+جهت `rtl`/`ltr` جایگاه فیزیکی این نواحی و anchor navigation را آینه می‌کند؛ سند نباید به wrapper
+حذف‌شده یا نام‌گذاری داخلی خاصی وابسته باشد.
 
-- فارسی (`rtl`): `parking-select` در سمت راست Header و نزدیک Rail قرار می‌گیرد؛ گروه
-  کنترل‌های پروفایل، حالت روز/شب و خانه در سمت چپ قرار می‌گیرد.
-- انگلیسی (`ltr`): `parking-select` در سمت چپ Header و نزدیک Rail قرار می‌گیرد؛ گروه
-  کنترل‌های پروفایل، حالت روز/شب و خانه در سمت راست قرار می‌گیرد.
-- ترتیب فیزیکی گروه کنترل‌ها از چپ به راست در فارسی «کاربر جاری، حالت روز/شب، خانه» و
-  در انگلیسی «خانه، حالت روز/شب، کاربر جاری» است. داخل گروه، DOM و flex باید از
-  `direction` زبان تبعیت کند؛ `row-reverse` یا ترتیب جداگانه‌ی زبان‌ها ساخته نشود.
-- در flex Header، `parking-select` باید قبل از `home-user-area` قرار بگیرد؛ هر override
-  CSS که `home-user-area` را قبل از `parking-select` مرتب کند، قرارداد را نقض می‌کند.
-- جستجو/ابزارهای میانی باید فضای بین این دو ناحیه را پر کنند و نباید باعث انتقال
-  `parking-select` به سمت مقابل Rail یا انتقال گروه کنترل‌ها به سمت Rail شوند.
+- brand و عنوان سامانه در Header باقی می‌مانند و بخشی از rail نیستند.
+- انتخاب‌گر پارکینگ یک کنترل مستقل در Header است و به گروهی با نام قراردادی خاص وابسته نیست.
+- منوی کاربر باید تغییر رمز، تنظیمات تم، تغییر زبان، انتخاب tabs/classic و خروج را نگه دارد.
+- همبرگر در desktop وضعیت collapse navigation و در mobile وضعیت Drawer را کنترل می‌کند.
+- هیچ overrideای نباید باعث overlap یا اسکرول افقی Header و workspace در RTL/LTR شود.
 
 **چک اجباری Header:**
 
-1. فارسی: Rail راست، `parking-select` راست، گروه پروفایل/تم/خانه چپ؛
-2. انگلیسی: Rail چپ، `parking-select` چپ، گروه پروفایل/تم/خانه راست؛
-3. ترتیب آیکون‌ها در هر دو زبان آینه‌ای و بدون overlap یا اسکرول افقی باشد؛
-4. تغییر زبان در همان session باید این چیدمان را بدون reload آینه کند.
+1. فارسی و انگلیسی هر دو Header تمام‌عرض و navigation هم‌جهت با `dir` داشته باشند؛
+2. brand، navigation trigger، parking context و controls بدون overlap نمایش داده شوند؛
+3. تغییر زبان در همان session جایگاه navigation و anchor Drawer را بدون reload آینه کند؛
+4. حالت tabs/classic و منوی کاربر در هر دو زبان قابل استفاده باقی بمانند.
 
 ## ۹. ارتباط با محتوای صفحه و API
 
@@ -309,6 +272,7 @@
 endpointهای فعلاً شناسایی‌شده برای محتوای واقعی شامل موارد زیر هستند:
 
 - `api/Parking/Get`
+- `api/Parking/GetInfoById?id={parkingId}` برای اطلاعات داشبورد Home؛ نام endpoint مشخص، قرارداد کامل response/error نیازمند تأیید
 - `api/Parking/GetParkingFloors`
 - `api/Parking/GetParkingSections`
 - `api/Parking/GetParkingDoors`
@@ -404,7 +368,10 @@ Endpoint فهرست کارت `api/Card/GetByParkingId` است؛ قرارداد `
 
 ## ۱۰. فایل‌های مرجع پیاده‌سازی
 
-- ساختار و state منوها: `Persentation/EosParkingReactUi/src/pages/Home.tsx`
+- route و state پوسته: `Persentation/EosParkingReactUi/src/pages/Home.tsx` و `Persentation/EosParkingReactUi/src/pages/HomeShell.tsx`
+- Header: `Persentation/EosParkingReactUi/src/pages/HomeHeader.tsx`
+- navigation و مدل منو: `Persentation/EosParkingReactUi/src/pages/HomeNavigation.tsx` و `Persentation/EosParkingReactUi/src/pages/homeMenuModel.tsx`
+- تب‌ها و داشبورد: `Persentation/EosParkingReactUi/src/pages/HomeTabs.tsx`، `Persentation/EosParkingReactUi/src/pages/HomeDashboard.tsx` و `Persentation/EosParkingReactUi/src/features/home/homeParkingInfoService.ts`
 - قوانین ظاهری و تم: `Persentation/EosParkingReactUi/src/styles.css`
 - محتوای APIمحور منوها: `Persentation/EosParkingReactUi/src/components/ParkingManagementWorkspace.tsx`
 - صفحه اختصاص شیفت: `Persentation/EosParkingReactUi/src/components/management/ShiftAssignmentWorkspace.tsx`

@@ -13,6 +13,7 @@ import monthlyIncomeTemplate from '../../assets/report-templates/ParkingMonthlyI
 import memberCashTemplate from '../../assets/report-templates/MemberCashReport.mrt?raw';
 import userCashTemplate from '../../assets/report-templates/UserCashReport.mrt?raw';
 import membershipIncomeTemplate from '../../assets/report-templates/MembershipInfoIncomingDetailsReport.mrt?raw';
+import i18n from '../../i18n/instance';
 
 type FinancialReportKind = 'parking-income' | 'monthly-income' | 'member-cash' | 'user-performance' | 'membership-income';
 type Props = { title: string; parkingId: number; language: Language; kind: FinancialReportKind };
@@ -37,7 +38,7 @@ function responseValues(input: unknown): unknown[] {
   const response = recordOf(input);
   const responseType = valueOf(response, 'ResponseResultType');
   if (responseType !== undefined && responseType !== null && responseType !== '' && Number(responseType) !== 1 && String(responseType).toLowerCase() !== 'ok') {
-    throw new Error(textOf(valueOf(response, 'Message') ?? valueOf(response, 'RealMessage')) || 'پاسخ سرویس معتبر نیست.');
+    throw new Error(textOf(valueOf(response, 'Message') ?? valueOf(response, 'RealMessage')) || i18n.t('financialReport.responseError'));
   }
   return asRows(valueOf(response, 'Values') ?? valueOf(response, 'Data') ?? input);
 }
@@ -145,6 +146,7 @@ async function createReport(rows: ReportRow[], kind: FinancialReportKind, langua
 
 export function FinancialReportWorkspace({ title, parkingId, language, kind }: Props) {
   const fa = language === 'fa';
+  const text = i18n.getFixedT(language);
   const today = useMemo(() => dateValue(new Date()), []);
   const previousMonth = useMemo(() => { const date = new Date(); date.setMonth(date.getMonth() - 1); return dateValue(date); }, []);
   const [fromDate, setFromDate] = useState(previousMonth);
@@ -183,16 +185,16 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
       if (!current) return;
       setUsers(responseValues(response).flatMap((item) => { const row = recordOf(item); const id = numberOf(valueOf(row, 'Id')); const titleValue = textOf(valueOf(row, 'UserName')); return id > 0 && titleValue ? [{ id, title: titleValue }] : []; }));
     }));
-    void Promise.all(tasks).catch((reason: unknown) => { if (current) setError(reason instanceof Error ? reason.message : (fa ? 'دریافت فهرست فیلترها ناموفق بود.' : 'Report filters could not be loaded.')); }).finally(() => { if (current) setLoadingLookups(false); });
+    void Promise.all(tasks).catch((reason: unknown) => { if (current) setError(reason instanceof Error ? reason.message : text('financialReport.lookupError')); }).finally(() => { if (current) setLoadingLookups(false); });
     return () => { current = false; };
   }, [kind, parkingId, fa]);
 
-  const titleDescription = useMemo(() => fa ? `از تاریخ ${fromDate} تا تاریخ ${toDate}` : `From ${fromDate} to ${toDate}`, [fromDate, toDate, fa]);
+  const titleDescription = useMemo(() => `${text('financialReport.from')} ${fromDate} ${text('financialReport.to')} ${toDate}`, [fromDate, toDate, text]);
   useEffect(() => {
     let current = true;
     if (rows === null) { setReport(null); setRenderingReport(false); return () => { current = false; }; }
     setReport(null); setRenderingReport(true);
-    void createReport(rows, kind, language, titleDescription).then((renderedReport) => { if (current) setReport(renderedReport); }).catch((reason: unknown) => { if (current) setError(reason instanceof Error ? reason.message : (fa ? 'رندر گزارش مالی ناموفق بود.' : 'The financial report could not be rendered.')); }).finally(() => { if (current) setRenderingReport(false); });
+    void createReport(rows, kind, language, titleDescription).then((renderedReport) => { if (current) setReport(renderedReport); }).catch((reason: unknown) => { if (current) setError(reason instanceof Error ? reason.message : text('financialReport.renderError')); }).finally(() => { if (current) setRenderingReport(false); });
     return () => { current = false; };
   }, [rows, kind, language, titleDescription, fa]);
 
@@ -204,8 +206,8 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
   }, [fa]);
 
   const runReport = () => {
-    if (fromDate > toDate) { setError(fa ? 'تاریخ شروع نباید بعد از تاریخ پایان باشد.' : 'The start date cannot be after the end date.'); return; }
-    if (kind === 'member-cash' && !memberCode) { setError(fa ? 'برای گزارش گردش مالی، یک عضو انتخاب کنید.' : 'Select a member for the member cash report.'); return; }
+    if (fromDate > toDate) { setError(text('financialReport.dateError')); return; }
+    if (kind === 'member-cash' && !memberCode) { setError(text('financialReport.memberRequired')); return; }
     setLoadingReport(true); setError(''); setRows(null);
     const statisticPage = { Filters: { StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingIds: [parkingId], DoorIds: [], SolarYears: [] }, GridFilters: [], PageNumber: 1, PageSize: 1000000 };
     let request: Promise<unknown>;
@@ -214,21 +216,21 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
     else if (kind === 'member-cash') request = reportApi.memberCash({ Filters: { StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingId: parkingId, MemberCode: memberCode }, GridFilters: [], PageNumber: 1, PageSize: 1000000 });
     else if (kind === 'user-performance') request = reportApi.userActivity(fromDate, toDate, Number(userId));
     else request = reportApi.membershipIncome({ StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingId: parkingId, MemberCode: memberCode, MemberRegisterKindId: Number(memberRegisterKindId || 0) });
-    void request.then((response) => setRows(kind === 'parking-income' || kind === 'monthly-income' ? normalizeStatistics(response) : kind === 'membership-income' ? normalizeMembership(response) : normalizeCash(response))).catch((reason: unknown) => { setRows(null); setError(reason instanceof Error ? reason.message : (fa ? 'دریافت گزارش مالی ناموفق بود.' : 'The financial report could not be loaded.')); }).finally(() => setLoadingReport(false));
+    void request.then((response) => setRows(kind === 'parking-income' || kind === 'monthly-income' ? normalizeStatistics(response) : kind === 'membership-income' ? normalizeMembership(response) : normalizeCash(response))).catch((reason: unknown) => { setRows(null); setError(reason instanceof Error ? reason.message : text('financialReport.loadError')); }).finally(() => setLoadingReport(false));
   };
 
   const toolbar = <Box className="report-filter-toolbar">
-    <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'از تاریخ' : 'From date'} value={fromDate} onChange={setFromDate} language={language} dateOnly size="small" /></Box>
-    <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'تا تاریخ' : 'To date'} value={toDate} onChange={setToDate} language={language} dateOnly size="small" /></Box>
-    {kind === 'member-cash' && <FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{fa ? 'عضو' : 'Member'}</InputLabel><Select value={memberCode} label={fa ? 'عضو' : 'Member'} disabled={loadingLookups} onChange={(event) => setMemberCode(event.target.value)}><MenuItem value="">{fa ? 'انتخاب عضو' : 'Select member'}</MenuItem>{members.map((member) => <MenuItem key={member.code} value={member.code}>{member.title}</MenuItem>)}</Select></FormControl>}
-    {kind === 'membership-income' && <><TextField size="small" label={fa ? 'کد عضو' : 'Member code'} value={memberCode} onChange={(event) => setMemberCode(event.target.value)} sx={{ minWidth: 0 }} /><FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{fa ? 'نوع حق عضویت' : 'Membership type'}</InputLabel><Select value={memberRegisterKindId} label={fa ? 'نوع حق عضویت' : 'Membership type'} disabled={loadingLookups} onChange={(event) => setMemberRegisterKindId(event.target.value)}><MenuItem value="">{fa ? 'همه' : 'All'}</MenuItem>{registerKinds.map((item) => <MenuItem key={item.id} value={item.id}>{item.title}</MenuItem>)}</Select></FormControl></>}
-    {kind === 'user-performance' && <FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{fa ? 'کاربر' : 'User'}</InputLabel><Select value={userId} label={fa ? 'کاربر' : 'User'} disabled={loadingLookups} onChange={(event) => setUserId(event.target.value)}><MenuItem value="0">{fa ? 'کاربر جاری' : 'Current user'}</MenuItem>{users.map((user) => <MenuItem key={user.id} value={user.id}>{user.title}</MenuItem>)}</Select></FormControl>}
-    <Button variant="contained" startIcon={loadingReport ? <CircularProgress size={18} color="inherit" /> : <PlayArrowRoundedIcon />} onClick={runReport} disabled={loadingReport || loadingLookups} sx={{ minHeight: 40 }}>{fa ? 'نمایش گزارش' : 'Show report'}</Button>
+    <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={text('financialReport.from')} value={fromDate} onChange={setFromDate} language={language} dateOnly size="small" /></Box>
+    <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={text('financialReport.to')} value={toDate} onChange={setToDate} language={language} dateOnly size="small" /></Box>
+    {kind === 'member-cash' && <FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{text('financialReport.member')}</InputLabel><Select value={memberCode} label={text('financialReport.member')} disabled={loadingLookups} onChange={(event) => setMemberCode(event.target.value)}><MenuItem value="">{text('financialReport.selectMember')}</MenuItem>{members.map((member) => <MenuItem key={member.code} value={member.code}>{member.title}</MenuItem>)}</Select></FormControl>}
+    {kind === 'membership-income' && <><TextField size="small" label={text('financialReport.memberCode')} value={memberCode} onChange={(event) => setMemberCode(event.target.value)} sx={{ minWidth: 0 }} /><FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{text('financialReport.membershipType')}</InputLabel><Select value={memberRegisterKindId} label={text('financialReport.membershipType')} disabled={loadingLookups} onChange={(event) => setMemberRegisterKindId(event.target.value)}><MenuItem value="">{text('financialReport.all')}</MenuItem>{registerKinds.map((item) => <MenuItem key={item.id} value={item.id}>{item.title}</MenuItem>)}</Select></FormControl></>}
+    {kind === 'user-performance' && <FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{text('financialReport.user')}</InputLabel><Select value={userId} label={text('financialReport.user')} disabled={loadingLookups} onChange={(event) => setUserId(event.target.value)}><MenuItem value="0">{text('financialReport.currentUser')}</MenuItem>{users.map((user) => <MenuItem key={user.id} value={user.id}>{user.title}</MenuItem>)}</Select></FormControl>}
+    <Button variant="contained" startIcon={loadingReport ? <CircularProgress size={18} color="inherit" /> : <PlayArrowRoundedIcon />} onClick={runReport} disabled={loadingReport || loadingLookups} sx={{ minHeight: 40 }}>{text('financialReport.show')}</Button>
   </Box>;
 
   return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport || renderingReport} onRefresh={runReport} toolbar={toolbar}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-    {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{fa ? 'فیلترها را انتخاب کنید و نمایش گزارش را بزنید.' : 'Choose the filters and select Show report.'}</Alert>}
-    {rows !== null && <Box className="stimulsoft-financial-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{fa ? `${rows.length.toLocaleString('fa-IR')} رکورد` : `${rows.length.toLocaleString('en-US')} records`}</Typography>{report && <Viewer id={`financial-report-viewer-${kind}`} report={report} options={viewerOptions} visible />}</Box>}
+    {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{text('financialReport.choose')}</Alert>}
+    {rows !== null && <Box className="stimulsoft-financial-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{rows.length.toLocaleString(language === 'fa' ? 'fa-IR' : 'en-US')} {text('financialReport.records')}</Typography>{report && <Viewer id={`financial-report-viewer-${kind}`} report={report} options={viewerOptions} visible />}</Box>}
   </ManagementWorkspaceFrame>;
 }

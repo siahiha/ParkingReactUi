@@ -1,4 +1,4 @@
-import type { Language } from '../../i18n';
+import type { Language } from '../../i18n/instance';
 
 export type { Language };
 export type Primitive = string | number | boolean | null | undefined;

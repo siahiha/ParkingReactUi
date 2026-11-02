@@ -5,7 +5,7 @@ import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { Box, Checkbox, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Table, TableBody, TableCell, TableHead, TableRow, TextField } from '@mui/material';
-import { translations } from '../i18n';
+import i18n from '../i18n/instance';
 import { BooleanStatusIcon } from './BooleanStatusIcon';
 
 export type AppDataGridColumn<T> = {
@@ -56,7 +56,10 @@ type ColumnMenuState = { key: string; anchor: HTMLElement } | null;
 
 /** Shared compact table/grid shell. Column actions belong in the header menu. */
 export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selectedKey = null, selectedKeys = [], onRowClick, onRowFocus, onRowDoubleClick, onSelectionChange, isRowSelectable, filterable = true, defaultFilterOpen = false, defaultSearchMode = 'contains', defaultCaseSensitive = false, allowSearchOptions = true, allowCaseSensitive = true }: AppDataGridProps<T>) {
-  const copy = translations[direction === 'rtl' ? 'fa' : 'en'];
+  const text = i18n.getFixedT(direction === 'rtl' ? 'fa' : 'en');
+  const copy = {
+    selectAllRows: text('grid.selectAllRows'), selectRow: text('grid.selectRow'), showColumnFilters: text('grid.showColumnFilters'), hideColumnFilters: text('grid.hideColumnFilters'), searchMode: text('grid.searchMode'), contains: text('grid.contains'), startsWith: text('grid.startsWith'), equals: text('grid.equals'), caseSensitive: text('grid.caseSensitive'), clearFilters: text('grid.clearFilters'), filterColumn: text('grid.filterColumn'), noFilterResults: text('grid.noFilterResults'), columnMenu: text('grid.columnMenu'), showColumnSearch: text('grid.showColumnSearch'), hideColumnSearch: text('grid.hideColumnSearch'), clearColumnFilter: text('grid.clearColumnFilter'), yes: text('grid.yes'), no: text('grid.no'),
+  };
   const menuId = useId();
   const [openFilterColumns, setOpenFilterColumns] = useState<string[]>(() => defaultFilterOpen ? columns.filter((column) => column.filterable !== false).map((column) => column.key) : []);
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -164,7 +167,7 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
     const value = column.getFilterValue ? column.getFilterValue(row, index) : (row as Record<string, unknown>)[column.key] ?? (row as Record<string, unknown>)[column.key.charAt(0).toLowerCase() + column.key.slice(1)];
     return value === true || value === 1 || value === '1' || String(value).toLowerCase() === 'true';
   };
-  const booleanLabels = direction === 'rtl' ? { yes: 'بله', no: 'خیر' } : { yes: 'Yes', no: 'No' };
+  const booleanLabels = { yes: copy.yes, no: copy.no };
   const columnCellSx = (column: AppDataGridColumn<T>) => column.width || column.minWidth ? { width: column.width, minWidth: column.minWidth ?? column.width } : undefined;
   const headerCell = (column: AppDataGridColumn<T>) => <TableCell key={column.key} sx={columnCellSx(column)} className={`app-data-grid-header-cell-root${isCompactColumn(column) ? ' app-data-grid-compact-cell' : ''}`}>
     <Box className="app-data-grid-header-cell-content">

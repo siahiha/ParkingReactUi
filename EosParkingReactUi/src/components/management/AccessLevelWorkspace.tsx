@@ -15,14 +15,9 @@ import { asBigInt, asRows, accessPermissionTotals, emptyAccessLevelForm, markAcc
 
 type Props = { title: string; pageTitle?: string; language: Language };
 
-function copyFor(language: Language) {
-  return language === 'fa'
-    ? { add: 'سطح دسترسی جدید', edit: 'ویرایش سطح دسترسی', remove: 'حذف سطح دسترسی', removeConfirm: 'آیا از حذف این سطح دسترسی مطمئن هستید؟', cancel: 'انصراف', save: 'ذخیره سطح دسترسی', createTitle: 'افزودن سطح دسترسی', editTitle: 'ویرایش سطح دسترسی', required: 'نام سطح دسترسی الزامی است.', systemDelete: 'سطح دسترسی سیستمی قابل حذف نیست.', saveError: 'ذخیره سطح دسترسی ناموفق بود.', saved: 'سطح دسترسی با موفقیت ذخیره شد.', name: 'نام سطح دسترسی', description: 'توضیحات', permissions: 'مجوزها' }
-    : { add: 'New access level', edit: 'Edit access level', remove: 'Delete access level', removeConfirm: 'Are you sure you want to delete this access level?', cancel: 'Cancel', save: 'Save access level', createTitle: 'Add access level', editTitle: 'Edit access level', required: 'Access level name is required.', systemDelete: 'System access levels cannot be deleted.', saveError: 'Saving the access level failed.', saved: 'Access level saved successfully.', name: 'Access level name', description: 'Description', permissions: 'Permissions' };
-}
-
 export function AccessLevelWorkspace({ title, pageTitle, language }: Props) {
-  const copy = copyFor(language);
+  const text = i18n.getFixedT(language);
+  const copy = { add: text('accessWorkspace.add'), edit: text('accessWorkspace.edit'), remove: text('accessWorkspace.remove'), cancel: text('accessWorkspace.cancel'), save: text('accessWorkspace.save'), createTitle: text('accessWorkspace.createTitle'), editTitle: text('accessWorkspace.editTitle'), required: text('accessWorkspace.required'), systemDelete: text('accessWorkspace.systemDelete'), saveError: text('accessWorkspace.saveError'), saved: text('accessWorkspace.saved'), name: text('accessWorkspace.name'), description: text('accessWorkspace.description'), permissions: text('accessWorkspace.permissions'), selectDescendants: text('accessWorkspace.selectDescendants'), loading: text('accessWorkspace.loading'), empty: text('accessWorkspace.empty'), system: text('accessWorkspace.system'), yes: text('accessWorkspace.yes'), no: text('accessWorkspace.no'), loadError: text('accessWorkspace.loadError') };
   const [rows, setRows] = useState<RecordValue[]>([]);
   const [nodes, setNodes] = useState<AccessPermissionNode[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +47,7 @@ export function AccessLevelWorkspace({ title, pageTitle, language }: Props) {
     } catch {
       setRows([]);
       setNodes([]);
-      setError(language === 'fa' ? 'دریافت سطوح دسترسی از API ناموفق بود.' : 'Loading access levels from the API failed.');
+      setError(copy.loadError);
     } finally {
       setLoading(false);
     }
@@ -131,10 +126,10 @@ export function AccessLevelWorkspace({ title, pageTitle, language }: Props) {
   return (
     <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => void load()} toolbar={<><Tooltip title={copy.add} arrow><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.add} onClick={startCreate}><AddRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.edit} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.edit} onClick={() => { const row = rows.find((item, index) => Number(recordValue(item, 'Id') ?? index) === selectedId); if (row) edit(row); }} disabled={!selectedId || selectedIds.length !== 1}><EditRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.remove} arrow><span><IconButton className="workspace-toolbar-icon-button" color="error" aria-label={copy.remove} onClick={requestRemove} disabled={selectedIds.length === 0}><DeleteOutlineRoundedIcon /></IconButton></span></Tooltip></>}>
       <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving} maxWidth="lg" direction={language === 'fa' ? 'rtl' : 'ltr'}>
-        <AccessLevelFormFields form={form} setForm={setForm} message={message} nodes={nodes} cascade={cascade} onCascadeChange={setCascade} onToggle={(key, checked) => setNodes((current) => setAccessNodeState(current, key, checked, cascade))} labels={{ saved: copy.saved, name: copy.name, description: copy.description, permissions: copy.permissions, selectDescendants: language === 'fa' ? 'زیرمجموعه‌ها هم انتخاب شوند' : 'Select descendants' }} />
+        <AccessLevelFormFields form={form} setForm={setForm} message={message} nodes={nodes} cascade={cascade} onCascadeChange={setCascade} onToggle={(key, checked) => setNodes((current) => setAccessNodeState(current, key, checked, cascade))} labels={{ saved: copy.saved, name: copy.name, description: copy.description, permissions: copy.permissions, selectDescendants: copy.selectDescendants }} />
       </CrudDialog>
-      <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel={language === 'fa' ? 'رکوردی برای نمایش وجود ندارد.' : 'No records to display.'}>
-        <AppDataGrid direction={language === 'fa' ? 'rtl' : 'ltr'} rows={rows} rowKey={(row, index) => Number(recordValue(row, 'Id') ?? index)} selectedKey={selectedId} selectedKeys={selectedIds} onSelectionChange={(keys) => { const ids = keys.map(Number); setSelectedIds(ids); setSelectedId(ids.length === 1 ? ids[0] : null); }} onRowClick={(row, index) => { const id = Number(recordValue(row, 'Id') ?? index); setSelectedId(id); setSelectedIds([id]); }} onRowDoubleClick={(row) => edit(row)} columns={[{ key: 'Name', label: copy.name, render: (row) => String(recordValue(row, 'Name') ?? '—') }, { key: 'Description', label: copy.description, render: (row) => String(recordValue(row, 'Description') ?? '—') }, { key: 'IsSystemType', label: language === 'fa' ? 'سیستمی' : 'System', render: (row) => Boolean(recordValue(row, 'IsSystemType')) ? (language === 'fa' ? 'بله' : 'Yes') : (language === 'fa' ? 'خیر' : 'No') }]} />
+      <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={copy.loading} emptyLabel={copy.empty}>
+        <AppDataGrid direction={language === 'fa' ? 'rtl' : 'ltr'} rows={rows} rowKey={(row, index) => Number(recordValue(row, 'Id') ?? index)} selectedKey={selectedId} selectedKeys={selectedIds} onSelectionChange={(keys) => { const ids = keys.map(Number); setSelectedIds(ids); setSelectedId(ids.length === 1 ? ids[0] : null); }} onRowClick={(row, index) => { const id = Number(recordValue(row, 'Id') ?? index); setSelectedId(id); setSelectedIds([id]); }} onRowDoubleClick={(row) => edit(row)} columns={[{ key: 'Name', label: copy.name, render: (row) => String(recordValue(row, 'Name') ?? '—') }, { key: 'Description', label: copy.description, render: (row) => String(recordValue(row, 'Description') ?? '—') }, { key: 'IsSystemType', label: copy.system, render: (row) => Boolean(recordValue(row, 'IsSystemType')) ? copy.yes : copy.no }]} />
       </ResourceState>
       <ConfirmDialog open={deleteDialogOpen} title={copy.remove} message={deleteRows.length > 1 ? i18n.t('access.deleteManyConfirm', { count: deleteRows.length, lng: language }) : i18n.t('access.deleteConfirm', { lng: language })} cancelLabel={copy.cancel} confirmLabel={copy.remove} busy={deleting} onClose={() => { if (!deleting) { setDeleteDialogOpen(false); setDeleteRows([]); } }} onConfirm={() => void confirmRemove()} />
     </ManagementWorkspaceFrame>

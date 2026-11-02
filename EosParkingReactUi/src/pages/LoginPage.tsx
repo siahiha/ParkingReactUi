@@ -7,7 +7,7 @@ import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded';
 import SensorsRoundedIcon from '@mui/icons-material/SensorsRounded';
-import { translations, type Language } from '../i18n';
+import i18n, { type Language } from '../i18n/instance';
 import { useLogin } from '../features/auth/useLogin';
 import { beginSsoLogin } from '../features/auth/sso';
 import { appConfig } from '../config';
@@ -48,7 +48,10 @@ function TopDownCarIcon() {
 }
 
 export function LoginPage({ language, toggleLanguage, onAuthenticated }: Props) {
-  const t = translations[language];
+  const text = i18n.getFixedT(language);
+  const t = {
+    direction: text('app.direction'), languageName: text('app.languageName'), title: text('login.title'), subtitle: text('login.subtitle'), brandCaption: text('login.brandCaption'), secureAccess: text('login.secureAccess'), ssoStarting: text('login.ssoStarting'), loginSsoFailed: text('login.loginSsoFailed'), username: text('login.username'), password: text('login.password'), rememberMe: text('login.rememberMe'), login: text('login.login'), checking: text('login.checking'), usernameRequired: text('login.usernameRequired'), passwordRequired: text('login.passwordRequired'), productVersion: text('login.productVersion'), artEyebrow: text('login.artEyebrow'), artNumber: text('login.artNumber'), artTitle: text('login.artTitle'), artTitleAccent: text('login.artTitleAccent'), artDescription: text('login.artDescription'), artSecurity: text('login.artSecurity'), artSpeed: text('login.artSpeed'), artDevices: text('login.artDevices'), artGate: text('login.artGate'), artZone: text('login.artZone'), artBays: text('login.artBays', { returnObjects: true }) as readonly string[], showcaseFooter: text('login.showcaseFooter'), showPassword: text('login.showPassword'), hidePassword: text('login.hidePassword'), loginInvalid: text('login.loginInvalid'), loginRequestFailed: text('login.loginRequestFailed'),
+  };
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);

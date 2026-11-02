@@ -17,6 +17,7 @@ import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import type { Language } from './managementTypes';
 import { useNavigationGuard, type NavigationAction } from '../../pages/NavigationGuardContext';
+import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
 
@@ -98,24 +99,9 @@ function responseSucceeded(input: unknown): boolean {
   return values === undefined || values === true || values === 1 || values === '1';
 }
 
-function copyFor(language: Language) {
-  return language === 'fa'
-    ? {
-      add: 'افزودن کارت', edit: 'ویرایش کارت', applyEdit: 'اعمال ویرایش', cancelEdit: 'لغو ویرایش', remove: 'حذف کارت', save: 'ذخیره تغییرات', discard: 'لغو تغییرات', refresh: 'به‌روزرسانی',
-      cardNumber: 'شماره کارت', memberCode: 'کد عضویت', memberName: 'نام عضو', blocked: 'غیرفعال', persistOn: 'تاریخ ثبت', description: 'توضیحات',
-      count: 'کارت', loading: 'در حال دریافت کارت‌ها...', empty: 'کارتی برای نمایش وجود ندارد.', loadError: 'دریافت کارت‌ها از API ناموفق بود.', forbidden: 'دسترسی مشاهده یا مدیریت کارت‌ها برای این کاربر مجاز نیست.', required: 'شماره کارت الزامی است.', duplicate: 'کارتی با این شماره قبلاً ثبت شده است.',
-      saved: 'تغییرات کارت‌ها با موفقیت ذخیره شد.', saveError: 'ذخیره تغییرات کارت‌ها ناموفق بود.', deleted: 'رکوردهای انتخاب‌شده برای حذف علامت‌گذاری شدند.', pendingDelete: 'حذف رکورد انتخاب‌شده در انتظار تأیید است.', confirmDelete: 'حذف', cancel: 'انصراف', selected: 'انتخاب‌شده', unsaved: 'تغییر ذخیره‌نشده دارید.', noChanges: 'تغییری برای ذخیره وجود ندارد.', unsavedTitle: 'تغییرات ذخیره‌نشده', unsavedMessage: 'در این صفحه تغییرات ذخیره‌نشده دارید. برای ادامه چه کاری انجام شود؟', saveAndContinue: 'ذخیره و ادامه', discardAndContinue: 'ادامه بدون ذخیره', stay: 'ماندن در صفحه',
-    }
-    : {
-      add: 'Add card', edit: 'Edit card', applyEdit: 'Apply edit', cancelEdit: 'Cancel edit', remove: 'Delete card', save: 'Save changes', discard: 'Discard changes', refresh: 'Refresh',
-      cardNumber: 'Card number', memberCode: 'Member code', memberName: 'Member name', blocked: 'Inactive', persistOn: 'Registered at', description: 'Description',
-      count: 'card(s)', loading: 'Loading cards...', empty: 'No cards to display.', loadError: 'Loading cards from the API failed.', forbidden: 'The current user is not allowed to view or manage cards.', required: 'Card number is required.', duplicate: 'A card with this number already exists.',
-      saved: 'Card changes were saved successfully.', saveError: 'Saving card changes failed.', deleted: 'Selected rows are marked for deletion.', pendingDelete: 'Deletion of the selected rows is waiting for confirmation.', confirmDelete: 'Delete', cancel: 'Cancel', selected: 'selected', unsaved: 'You have unsaved changes.', noChanges: 'There are no changes to save.', unsavedTitle: 'Unsaved changes', unsavedMessage: 'This page has unsaved changes. What should happen before continuing?', saveAndContinue: 'Save and continue', discardAndContinue: 'Continue without saving', stay: 'Stay on page',
-    };
-}
-
 export function CardManagementWorkspace({ title, pageTitle, parkingId, language }: Props) {
-  const copy = copyFor(language);
+  const text = i18n.getFixedT(language);
+  const copy = { add: text('cardWorkspace.add'), edit: text('cardWorkspace.edit'), applyEdit: text('cardWorkspace.applyEdit'), cancelEdit: text('cardWorkspace.cancelEdit'), remove: text('cardWorkspace.remove'), save: text('cardWorkspace.save'), discard: text('cardWorkspace.discard'), refresh: text('cardWorkspace.refresh'), cardNumber: text('cardWorkspace.cardNumber'), memberCode: text('cardWorkspace.memberCode'), memberName: text('cardWorkspace.memberName'), blocked: text('cardWorkspace.blocked'), persistOn: text('cardWorkspace.persistOn'), description: text('cardWorkspace.description'), count: text('cardWorkspace.count'), loading: text('cardWorkspace.loading'), empty: text('cardWorkspace.empty'), loadError: text('cardWorkspace.loadError'), forbidden: text('cardWorkspace.forbidden'), required: text('cardWorkspace.required'), duplicate: text('cardWorkspace.duplicate'), saved: text('cardWorkspace.saved'), saveError: text('cardWorkspace.saveError'), deleted: text('cardWorkspace.deleted'), pendingDelete: text('cardWorkspace.pendingDelete'), confirmDelete: text('cardWorkspace.confirmDelete'), cancel: text('cardWorkspace.cancel'), selected: text('cardWorkspace.selected'), unsaved: text('cardWorkspace.unsaved'), noChanges: text('cardWorkspace.noChanges'), unsavedTitle: text('cardWorkspace.unsavedTitle'), unsavedMessage: text('cardWorkspace.unsavedMessage'), saveAndContinue: text('cardWorkspace.saveAndContinue'), discardAndContinue: text('cardWorkspace.discardAndContinue'), stay: text('cardWorkspace.stay') };
   const [rows, setRows] = useState<CardRow[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [changedKeys, setChangedKeys] = useState<string[]>([]);

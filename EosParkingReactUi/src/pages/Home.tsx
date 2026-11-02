@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Box } from '@mui/material';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import type { PaletteName } from '../components/homeProfileTypes';
 import type { ThemeShapeSettings } from '../theme';
 import { HomeFormRoutes } from './HomeFormRoutes';

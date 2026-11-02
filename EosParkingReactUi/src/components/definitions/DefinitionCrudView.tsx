@@ -10,7 +10,7 @@ import { CrudDialog } from '../CrudDialog';
 import { WorkspaceToolbar } from '../WorkspaceToolbar';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { MoneyTextField } from '../MoneyTextField';
-import type { Language } from '../../i18n';
+import type { Language } from '../../i18n/instance';
 import { formatMoney } from '../../utils/formatters';
 import { idOf, parkSpacesCount, parkingSpaceId, spaceSectionId, valueOf, type DefinitionKind, type DefinitionRow } from './definitionDomain';
 import { useDefinitionCrud } from './useDefinitionCrud';

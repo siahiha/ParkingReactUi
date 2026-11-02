@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 
 type Props = {
   language: Language;
@@ -20,7 +20,6 @@ export function HomeDashboardIntro({ language, selectedParkingName }: Props) {
     </Box>
   </Box>;
 }
-
 
 
 

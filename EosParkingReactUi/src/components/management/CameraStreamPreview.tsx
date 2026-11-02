@@ -12,6 +12,7 @@ import { ApiError } from '../../api/client';
 import { cameraApi, type Camera, type CameraRoi, type CameraStatus, type CameraStatusState } from '../../api/management';
 import { appConfig } from '../../config';
 import type { Language } from './managementTypes';
+import i18n from '../../i18n/instance';
 
 export type CameraStreamMode = 'Hls' | 'WebRTC';
 export type CameraStreamSize = number | { width: number | string; height?: number | string };
@@ -41,14 +42,9 @@ export type CameraStreamPreviewProps = {
 const text = (language: Language, fa: string, en: string) => language === 'fa' ? fa : en;
 
 function statusLabel(state: CameraStatusState, language: Language) {
-  const labels: Record<CameraStatusState, [string, string]> = {
-    Disconnected: ['قطع شده', 'Disconnected'],
-    Connecting: ['در حال اتصال', 'Connecting'],
-    Connected: ['متصل', 'Connected'],
-    Failed: ['خطا', 'Failed'],
-    Stopping: ['در حال قطع اتصال', 'Stopping'],
-  };
-  return (labels[state] ?? labels.Disconnected)[language === 'fa' ? 0 : 1];
+  const text = i18n.getFixedT(language) as unknown as (key: string) => string;
+  const keys: Record<CameraStatusState, string> = { Disconnected: 'camera.disconnected', Connecting: 'camera.connecting', Connected: 'camera.connected', Failed: 'camera.failed', Stopping: 'camera.stopping' };
+  return String(text(keys[state] ?? keys.Disconnected));
 }
 
 function statusColor(state: CameraStatusState) {
@@ -135,7 +131,7 @@ function backendErrorMessage(cause: unknown, language: Language) {
   const body = cause.body as Record<string, unknown>;
   const rawMessage = String(body.ExceptionMessage ?? body.Message ?? '').trim();
   if (rawMessage.toLowerCase().includes('already registered')) {
-    return text(language, 'این دوربین با یک آدرس RTSP دیگر در حال استفاده است. اتصال قبلی را قطع کنید و دوباره تلاش کنید.', 'This camera is already registered with another RTSP URL. Disconnect the previous session and try again.');
+    return i18n.getFixedT(language)('camera.alreadyRegistered');
   }
   return rawMessage || null;
 }
@@ -414,7 +410,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   const activeStream = streamMode === 'WebRTC' ? webRtcUrl : streamUrl;
   const isConnected = status.state === 'Connected';
   const isBusy = status.state === 'Connecting' || status.state === 'Stopping';
-  const statusDetails = error || status.error || statusLabel(status.state, language);
+  const statusDetails = error || String(status.error ?? '') || statusLabel(status.state, language);
   const previewSize = typeof size === 'number' ? { width: size, height: size } : size;
   const hasToolbar = showConnectionButton || showModeSwitcher || showRoiAction;
   const switchMode = () => void connect(streamMode === 'WebRTC' ? 'Hls' : 'WebRTC');

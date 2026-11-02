@@ -16,14 +16,9 @@ import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; language: Language };
 
-function copyFor(language: Language) {
-  return language === 'fa'
-    ? { add: 'کاربر جدید', edit: 'ویرایش کاربر', remove: 'حذف کاربر', removeConfirm: 'آیا از حذف این کاربر مطمئن هستید؟', cancel: 'انصراف', save: 'ذخیره کاربر', createTitle: 'افزودن کاربر', editTitle: 'ویرایش کاربر', required: 'نام کاربری، کلمه عبور، سطح دسترسی و نوع کاربری الزامی است.', invalidNumber: 'تلفن و همراه باید عددی باشند.', systemDelete: 'امکان حذف کاربر سیستمی وجود ندارد.', saveError: 'ذخیره کاربر ناموفق بود.', saved: 'کاربر با موفقیت ذخیره شد.' }
-    : { add: 'New user', edit: 'Edit user', remove: 'Delete user', removeConfirm: 'Are you sure you want to delete this user?', cancel: 'Cancel', save: 'Save user', createTitle: 'Add user', editTitle: 'Edit user', required: 'Username, password, access level and user type are required.', invalidNumber: 'Telephone and mobile must be numeric.', systemDelete: 'System users cannot be deleted.', saveError: 'Saving the user failed.', saved: 'User saved successfully.' };
-}
-
 export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
-  const copy = copyFor(language);
+  const text = i18n.getFixedT(language);
+  const copy = { add: text('userWorkspace.add'), edit: text('userWorkspace.edit'), remove: text('userWorkspace.remove'), cancel: text('userWorkspace.cancel'), save: text('userWorkspace.save'), createTitle: text('userWorkspace.createTitle'), editTitle: text('userWorkspace.editTitle'), required: text('userWorkspace.required'), invalidNumber: text('userWorkspace.invalidNumber'), systemDelete: text('userWorkspace.systemDelete'), saveError: text('userWorkspace.saveError'), saved: text('userWorkspace.saved'), loading: text('userWorkspace.loading'), empty: text('userWorkspace.empty'), loadError: text('userWorkspace.loadError') };
   const [rows, setRows] = useState<RecordValue[]>([]);
   const [accessLevels, setAccessLevels] = useState<RecordValue[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +46,7 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
       setSelectedIds((current) => current.filter((id) => loadedRows.some((row, index) => Number(recordValue(row, 'Id') ?? index) === id)));
     } catch {
       setRows([]);
-      setError(language === 'fa' ? 'دریافت اطلاعات کاربران از API ناموفق بود.' : 'Loading users from the API failed.');
+      setError(copy.loadError);
     } finally {
       setLoading(false);
     }
@@ -161,21 +156,7 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
 
   const labels: UserFormLabels = {
     saved: copy.saved,
-    name: language === 'fa' ? 'نام کاربری' : 'Username',
-    password: language === 'fa' ? 'کلمه عبور' : 'Password',
-    accessLevel: language === 'fa' ? 'سطح دسترسی' : 'Access level',
-    userType: language === 'fa' ? 'نوع کاربری' : 'User type',
-    firstName: language === 'fa' ? 'نام' : 'First name',
-    lastName: language === 'fa' ? 'نام خانوادگی' : 'Last name',
-    fatherName: language === 'fa' ? 'نام پدر' : 'Father name',
-    nationalCode: language === 'fa' ? 'کد ملی' : 'National code',
-    telephone: language === 'fa' ? 'تلفن' : 'Telephone',
-    mobile: language === 'fa' ? 'همراه' : 'Mobile',
-    address: language === 'fa' ? 'آدرس' : 'Address',
-    description: language === 'fa' ? 'توضیحات' : 'Description',
-    disable: language === 'fa' ? 'غیرفعال شود' : 'Disable user',
-    accessTitle: language === 'fa' ? 'مشخصات ورود و دسترسی' : 'Login and access',
-    personalTitle: language === 'fa' ? 'مشخصات فردی و تماس' : 'Personal and contact information',
+    name: text('userWorkspace.name'), password: text('userWorkspace.password'), accessLevel: text('userWorkspace.accessLevel'), userType: text('userWorkspace.userType'), firstName: text('userWorkspace.firstName'), lastName: text('userWorkspace.lastName'), fatherName: text('userWorkspace.fatherName'), nationalCode: text('userWorkspace.nationalCode'), telephone: text('userWorkspace.telephone'), mobile: text('userWorkspace.mobile'), address: text('userWorkspace.address'), description: text('userWorkspace.description'), disable: text('userWorkspace.disable'), accessTitle: text('userWorkspace.accessTitle'), personalTitle: text('userWorkspace.personalTitle'),
   };
 
   return (
@@ -183,13 +164,13 @@ export function UserManagementWorkspace({ title, pageTitle, language }: Props) {
       <CrudDialog open={editorOpen} title={editingId ? copy.editTitle : copy.createTitle} onClose={() => setEditorOpen(false)} onConfirm={() => void save()} cancelLabel={copy.cancel} confirmLabel={copy.save} busy={saving} maxWidth="lg" direction={language === 'fa' ? 'rtl' : 'ltr'}>
         <UserFormFields form={form} setForm={setForm} message={message} editingId={editingId} accessLevels={accessLevels} userTypes={userTypeOptions} language={language} labels={labels} />
       </CrudDialog>
-      <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel={language === 'fa' ? 'رکوردی برای نمایش وجود ندارد.' : 'No records to display.'}>
+      <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={copy.loading} emptyLabel={copy.empty}>
         <AppDataGrid direction={language === 'fa' ? 'rtl' : 'ltr'} rows={rows} rowKey={(row, index) => Number(recordValue(row, 'Id') ?? index)} selectedKey={selectedId} selectedKeys={selectedIds} isRowSelectable={(row) => !Boolean(recordValue(row, 'IsSystemType'))} onSelectionChange={(keys) => { const ids = keys.map(Number); setSelectedIds(ids); setSelectedId(ids.length === 1 ? ids[0] : null); }} onRowClick={(row, index) => { const id = Number(recordValue(row, 'Id') ?? index); setSelectedId(id); setSelectedIds([id]); }} onRowDoubleClick={(row) => edit(row)} columns={[
           { key: 'UserName', label: labels.name, render: (row) => String(recordValue(row, 'UserName') ?? '—') },
-          { key: 'Name', label: language === 'fa' ? 'نام و نام خانوادگی' : 'Name', render: (row) => `${String(recordValue(row, 'FirstName') ?? '')} ${String(recordValue(row, 'LastName') ?? '')}`.trim() || '—' },
+          { key: 'Name', label: text('userWorkspace.fullName'), render: (row) => `${String(recordValue(row, 'FirstName') ?? '')} ${String(recordValue(row, 'LastName') ?? '')}`.trim() || '—' },
           { key: 'AccessLevel', label: labels.accessLevel, render: (row) => { const levelId = String(recordValue(row, 'UserAccessLevelId') ?? ''); const level = accessLevels.find((item) => String(recordValue(item, 'Id') ?? '') === levelId); return String(recordValue(level ?? {}, 'Name') ?? recordValue(level ?? {}, 'Title') ?? '—'); } },
-          { key: 'UserType', label: labels.userType, render: (row) => { const option = userTypeOptions.find((item) => item.value === String(recordValue(row, 'UserType') ?? '')); return option ? (language === 'fa' ? option.fa : option.en) : '—'; } },
-          { key: 'IsActive', label: language === 'fa' ? 'وضعیت' : 'Status', trueLabel: language === 'fa' ? 'فعال' : 'Active', falseLabel: language === 'fa' ? 'غیرفعال' : 'Inactive' },
+          { key: 'UserType', label: labels.userType, render: (row) => { const option = userTypeOptions.find((item) => item.value === String(recordValue(row, 'UserType') ?? '')); const labelsByType = [text('userWorkspace.operator'), text('userWorkspace.parkban'), text('userWorkspace.driver'), text('userWorkspace.exitPermission')]; return option ? labelsByType[Number(option.value)] ?? '—' : '—'; } },
+          { key: 'IsActive', label: text('userWorkspace.status'), trueLabel: text('userWorkspace.active'), falseLabel: text('userWorkspace.inactive') },
         ]} />
       </ResourceState>
       <ConfirmDialog open={deleteDialogOpen} title={copy.remove} message={deleteRows.length > 1 ? i18n.t('users.deleteManyConfirm', { count: deleteRows.length, lng: language }) : i18n.t('users.deleteConfirm', { lng: language })} cancelLabel={copy.cancel} confirmLabel={copy.remove} busy={deleting} onClose={() => { if (!deleting) { setDeleteDialogOpen(false); setDeleteRows([]); } }} onConfirm={() => void confirmRemove()} />

@@ -7,6 +7,7 @@ import { parkingApi } from '../../api/management';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import type { Language } from './managementTypes';
+import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
 
@@ -19,9 +20,8 @@ const unwrapParking = (input: unknown): Record<string, unknown> | null => {
 };
 
 const valueOf = (row: Record<string, unknown> | null, key: string) => row?.[key] ?? row?.[key.charAt(0).toLowerCase() + key.slice(1)];
-const text = (language: Language, fa: string, en: string) => language === 'fa' ? fa : en;
-
 export function IntegrationSettingsWorkspace({ title, pageTitle, parkingId, language }: Props) {
+  const text = i18n.getFixedT(language);
   const [parking, setParking] = useState<Record<string, unknown> | null>(null);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export function IntegrationSettingsWorkspace({ title, pageTitle, parkingId, lang
         setDirty(false);
       }
     } catch (cause) {
-      setError(cause instanceof ApiError && cause.status === 403 ? text(language, 'دسترسی مشاهده تنظیمات ارتباط مجاز نیست.', 'Integration settings access is forbidden.') : text(language, 'دریافت تنظیمات ارتباط ناموفق بود.', 'Integration settings could not be loaded.'));
+      setError(cause instanceof ApiError && cause.status === 403 ? text('integration.forbiddenRead') : text('integration.loadError'));
     } finally { setLoading(false); }
   };
 
@@ -52,8 +52,8 @@ export function IntegrationSettingsWorkspace({ title, pageTitle, parkingId, lang
     if (!candidate) return null;
     try {
       const parsed = new URL(candidate);
-      if (!['http:', 'https:'].includes(parsed.protocol)) return text(language, 'آدرس باید با http یا https شروع شود.', 'The address must use http or https.');
-    } catch { return text(language, 'آدرس وب‌سرویس معتبر نیست.', 'Enter a valid web-service URL.'); }
+      if (!['http:', 'https:'].includes(parsed.protocol)) return text('integration.invalidProtocol');
+    } catch { return text('integration.invalidUrl'); }
     return null;
   };
 
@@ -64,30 +64,30 @@ export function IntegrationSettingsWorkspace({ title, pageTitle, parkingId, lang
     setMessage('');
     try {
       await parkingApi.save({ ...(parking ?? { Id: parkingId }), Id: parkingId, EtsDataProviderURL: url.trim() || null });
-      setMessage(text(language, 'تنظیمات ارتباط با موفقیت ذخیره شد.', 'Integration settings were saved.'));
+      setMessage(text('integration.saved'));
       await load();
     } catch (cause) {
-      setMessage(cause instanceof ApiError && cause.status === 403 ? text(language, 'مجوز ذخیره تنظیمات ارتباط را ندارید.', 'You are not allowed to save integration settings.') : text(language, 'ذخیره تنظیمات ارتباط ناموفق بود.', 'Saving integration settings failed.'));
+      setMessage(cause instanceof ApiError && cause.status === 403 ? text('integration.forbiddenSave') : text('integration.saveError'));
     } finally { setSaving(false); }
   };
 
   return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => { void load(); }}>
-    <ResourceState loading={loading} error={error} empty={false} loadingLabel={text(language, 'در حال دریافت تنظیمات...', 'Loading settings...')} emptyLabel="">
+    <ResourceState loading={loading} error={error} empty={false} loadingLabel={text('integration.loading')} emptyLabel="">
       <Box component="form" onSubmit={(event) => { event.preventDefault(); void save(); }} sx={{ maxWidth: 720, display: 'grid', gap: 2 }}>
         <Alert severity="info" icon={<LinkRoundedIcon />}>
-          <Typography variant="body2">{text(language, 'این تنظیم، آدرس وب‌سرویس ETS را برای پارکینگ جاری نگه‌داری می‌کند. اتصال مستقیم مرورگر به ETS انجام نمی‌شود.', 'This setting stores the ETS web-service address for the current parking. The browser does not connect directly to ETS.')}</Typography>
+          <Typography variant="body2">{text('integration.description')}</Typography>
         </Alert>
         <Box sx={{ display: 'grid', gap: 1 }}>
-          <TextField size="small" fullWidth label={text(language, 'آدرس وب‌سرویس ETS', 'ETS web-service URL')} value={url} onChange={(event) => { setUrl(event.target.value); setDirty(true); setMessage(''); }} placeholder="https://..." dir="ltr" slotProps={{ htmlInput: { inputMode: 'url' } }} helperText={text(language, 'اختیاری است؛ برای پاک‌کردن اتصال، مقدار را خالی ذخیره کنید.', 'Optional. Save an empty value to clear the connection.')} />
-          {dirty && <Typography variant="caption" color="warning.main">{text(language, 'تغییرات ذخیره‌نشده است.', 'You have unsaved changes.')}</Typography>}
+          <TextField size="small" fullWidth label={text('integration.label')} value={url} onChange={(event) => { setUrl(event.target.value); setDirty(true); setMessage(''); }} placeholder="https://..." dir="ltr" slotProps={{ htmlInput: { inputMode: 'url' } }} helperText={text('integration.helper')} />
+          {dirty && <Typography variant="caption" color="warning.main">{text('integration.dirty')}</Typography>}
         </Box>
-        {message && <Alert severity={message.includes(text(language, 'موفقیت', 'saved')) ? 'success' : 'warning'}>{message}</Alert>}
+        {message && <Alert severity={message === text('integration.saved') ? 'success' : 'warning'}>{message}</Alert>}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />} disabled={saving || loading}>{saving ? text(language, 'در حال ذخیره...', 'Saving...') : text(language, 'ذخیره تنظیمات', 'Save settings')}</Button>
-          <Button type="button" variant="outlined" onClick={() => { setUrl(String(valueOf(parking, 'EtsDataProviderURL') ?? '')); setDirty(false); setMessage(''); }} disabled={!dirty || saving}>{text(language, 'لغو تغییرات', 'Discard changes')}</Button>
-          <Tooltip title={text(language, 'برای فعال‌شدن، endpoint تست ارتباط ETS باید توسط Backend ارائه شود.', 'Backend must provide an ETS connection-test endpoint before this action can be enabled.')} arrow><span><Button type="button" variant="outlined" startIcon={<LinkRoundedIcon />} disabled>{text(language, 'تست ارتباط', 'Test connection')}</Button></span></Tooltip>
+          <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />} disabled={saving || loading}>{saving ? text('integration.saving') : text('integration.save')}</Button>
+          <Button type="button" variant="outlined" onClick={() => { setUrl(String(valueOf(parking, 'EtsDataProviderURL') ?? '')); setDirty(false); setMessage(''); }} disabled={!dirty || saving}>{text('integration.discard')}</Button>
+          <Tooltip title={text('integration.testHint')} arrow><span><Button type="button" variant="outlined" startIcon={<LinkRoundedIcon />} disabled>{text('integration.test')}</Button></span></Tooltip>
         </Box>
-        <Alert severity="warning">{text(language, 'تست واقعی اتصال ETS در نسخه وب تا زمان ارائه endpoint رسمی Backend در دسترس نیست.', 'A real ETS connection test is unavailable in the web version until Backend provides an official endpoint.')}</Alert>
+        <Alert severity="warning">{text('integration.warning')}</Alert>
       </Box>
     </ResourceState>
   </ManagementWorkspaceFrame>;

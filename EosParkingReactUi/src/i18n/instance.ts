@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import fa from '../locales/fa';
 import en from '../locales/en';
 
+export type Language = 'fa' | 'en';
 export const i18nInstance = i18n;
 
 if (!i18n.isInitialized) {

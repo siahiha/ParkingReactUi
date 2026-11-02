@@ -11,6 +11,7 @@ import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import { WorkspaceToolbar } from '../WorkspaceToolbar';
 import { EosDateTimePicker } from '../EosDateTimePicker';
+import i18n from '../../i18n/instance';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
 type Option = { id: number; label: string };
@@ -67,6 +68,7 @@ function optionRows(input: unknown, labelKeys: string[]): Option[] {
 
 export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language }: Props) {
   const isPersian = language === 'fa';
+  const text = i18n.getFixedT(language);
   const [doors, setDoors] = useState<Option[]>([]);
   const [users, setUsers] = useState<Option[]>([]);
   const [doorId, setDoorId] = useState<number | ''>('');
@@ -86,9 +88,7 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
-  const copy = isPersian
-    ? { count: 'روز', chooseDoor: 'درب را انتخاب کنید', start: 'از تاریخ', end: 'تا تاریخ', show: 'نمایش', save: 'ذخیره', copy: 'رونوشت به دیگر روزها', copyTitle: 'رونوشت به دیگر روزها', copyFrom: 'رونوشت از', copyTo: 'رونوشت تا', applyCopy: 'اعمال رونوشت', cancel: 'انصراف', selectRow: 'ابتدا یک روز را از جدول انتخاب کنید.', loading: 'در حال دریافت...', empty: 'برای این درب و بازه، تخصیصی برای نمایش وجود ندارد.', noOptions: 'درب یا کاربری برای انتخاب وجود ندارد.', saved: 'تخصیص شیفت‌ها ذخیره شد.', past: 'روزهای گذشته قابل ویرایش نیستند.', loadError: 'دریافت اطلاعات اختصاص شیفت ناموفق بود.', saveError: 'ذخیره اختصاص شیفت ناموفق بود.', date: 'تاریخ', shift1: 'شیفت اول', shift2: 'شیفت دوم', shift3: 'شیفت سوم' }
-    : { count: 'days', chooseDoor: 'Select a door', start: 'Start date', end: 'End date', show: 'Show', save: 'Save', copy: 'Copy to other days', copyTitle: 'Copy to other days', copyFrom: 'Copy from', copyTo: 'Copy to', applyCopy: 'Apply copy', cancel: 'Cancel', selectRow: 'Select a day from the table first.', loading: 'Loading...', empty: 'No assignments found for this door and date range.', noOptions: 'No door or user is available.', saved: 'Shift assignments saved.', past: 'Past dates cannot be edited.', loadError: 'Failed to load shift assignments.', saveError: 'Failed to save shift assignments.', date: 'Date', shift1: 'Shift 1', shift2: 'Shift 2', shift3: 'Shift 3' };
+  const copy = { count: text('shiftAssignment.count'), chooseDoor: text('shiftAssignment.chooseDoor'), start: text('shiftAssignment.start'), end: text('shiftAssignment.end'), show: text('shiftAssignment.show'), save: text('shiftAssignment.save'), copy: text('shiftAssignment.copy'), copyTitle: text('shiftAssignment.copyTitle'), copyFrom: text('shiftAssignment.copyFrom'), copyTo: text('shiftAssignment.copyTo'), applyCopy: text('shiftAssignment.applyCopy'), cancel: text('shiftAssignment.cancel'), selectRow: text('shiftAssignment.selectRow'), loading: text('shiftAssignment.loading'), empty: text('shiftAssignment.empty'), noOptions: text('shiftAssignment.noOptions'), saved: text('shiftAssignment.saved'), past: text('shiftAssignment.past'), loadError: text('shiftAssignment.loadError'), saveError: text('shiftAssignment.saveError'), forbiddenRead: text('shiftAssignment.forbiddenRead'), forbiddenSave: text('shiftAssignment.forbiddenSave'), copyDateError: text('shiftAssignment.copyDateError'), copySaved: text('shiftAssignment.copySaved'), unassigned: text('shiftAssignment.unassigned'), toolbar: text('shiftAssignment.toolbar'), date: text('shiftAssignment.date'), shift1: text('shiftAssignment.shift1'), shift2: text('shiftAssignment.shift2'), shift3: text('shiftAssignment.shift3') };
 
   useEffect(() => {
     let cancelled = false;
@@ -113,7 +113,7 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
       setSelectedRowKey(null);
     } catch (cause) {
       setRows([]);
-      setError(cause instanceof ApiError && cause.status === 403 ? (isPersian ? 'دسترسی مشاهده یا ویرایش اختصاص شیفت برای کاربر فعلی مجاز نیست.' : 'The current user is not allowed to view or edit shift assignments.') : copy.loadError);
+      setError(cause instanceof ApiError && cause.status === 403 ? copy.forbiddenRead : copy.loadError);
     } finally { setLoadingRows(false); }
   };
 
@@ -127,7 +127,7 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
     const payload = rows.filter((row) => dirtyKeys.has(`${row.ParkingDoorId}-${row.WorkDate}`)).map((row) => ({ ...row, WorkDate: apiDate(row.WorkDate) }));
     if (!payload.length) return;
     setSaving(true); setError(''); setNotice('');
-    try { await userApi.saveWorkShifts(payload); setDirtyKeys(new Set()); setNotice(copy.saved); } catch (cause) { setError(cause instanceof ApiError && cause.status === 403 ? (isPersian ? 'دسترسی ذخیره اختصاص شیفت برای کاربر فعلی مجاز نیست.' : 'The current user is not allowed to save shift assignments.') : copy.saveError); } finally { setSaving(false); }
+    try { await userApi.saveWorkShifts(payload); setDirtyKeys(new Set()); setNotice(copy.saved); } catch (cause) { setError(cause instanceof ApiError && cause.status === 403 ? copy.forbiddenSave : copy.saveError); } finally { setSaving(false); }
   };
 
   const selectedRow = rows.find((row) => `${row.ParkingDoorId}-${row.WorkDate}` === selectedRowKey);
@@ -140,7 +140,7 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
 
   const applyCopy = () => {
     if (!selectedRow) return;
-    if (!copyToDate || copyToDate < selectedRow.WorkDate) { setError(isPersian ? 'تاریخ پایان کپی باید بعد از تاریخ ردیف انتخاب‌شده باشد.' : 'The copy end date must be on or after the selected row.'); return; }
+    if (!copyToDate || copyToDate < selectedRow.WorkDate) { setError(copy.copyDateError); return; }
     const copiedFields: ShiftField[] = [];
     if (copyShift1) copiedFields.push('UserIdOnShift1');
     if (copyShift2) copiedFields.push('UserIdOnShift2');
@@ -165,10 +165,10 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
     });
     setDirtyKeys((current) => new Set([...current, ...copiedKeys]));
     setCopyDialogOpen(false);
-    setNotice(isPersian ? 'کپی اختصاص شیفت روی جدول اعمال شد؛ برای ثبت نهایی «ذخیره» را بزنید.' : 'The assignments were copied to the grid; click Save to persist them.');
+    setNotice(copy.copySaved);
   };
 
-  const userOptions = useMemo(() => [{ id: 0, label: isPersian ? 'بدون تخصیص' : 'Unassigned' }, ...users], [isPersian, users]);
+  const userOptions = useMemo(() => [{ id: 0, label: copy.unassigned }, ...users], [copy.unassigned, users]);
   const userSelect = (row: ShiftRow, field: keyof ShiftRow) => <Select size="small" value={String(row[field] ?? 0)} onChange={(event) => updateRow(row, field, Number(event.target.value) || null)} disabled={row.WorkDate < today()} aria-label={copy.chooseDoor}>{userOptions.map((option) => <MenuItem key={option.id} value={String(option.id)}>{option.label}</MenuItem>)}</Select>;
   const columns = [
     { key: 'WorkDate', label: copy.date, render: (row: ShiftRow) => <Typography variant="body2" dir="ltr">{row.WorkDate}</Typography> },
@@ -177,7 +177,7 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
     { key: 'FullNameOnShift3', label: copy.shift3, render: (row: ShiftRow) => userSelect(row, 'UserIdOnShift3'), getFilterValue: (row: ShiftRow) => row.FullNameOnShift3 ?? '' },
   ];
 
-  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loadingRows} onRefresh={doorId ? () => void loadRows() : undefined} toolbar={<WorkspaceToolbar className="shift-assignment-toolbar" ariaLabel={isPersian ? 'فیلتر و عملیات اختصاص شیفت' : 'Shift assignment filters and actions'}><FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{copy.chooseDoor}</InputLabel><Select label={copy.chooseDoor} value={String(doorId)} onChange={(event) => setDoorId(Number(event.target.value) || '')}>{doors.map((door) => <MenuItem key={door.id} value={String(door.id)}>{door.label}</MenuItem>)}</Select></FormControl><EosDateTimePicker size="small" dateOnly language={language} label={copy.start} value={startDate} onChange={setStartDate} /><EosDateTimePicker size="small" dateOnly language={language} label={copy.end} value={endDate} onChange={setEndDate} /><Tooltip title={copy.show} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.show} onClick={() => void loadRows()} disabled={loadingRows || !doorId || startDate > endDate}><SearchRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.copy} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.copy} onClick={openCopyDialog} disabled={!selectedRow}><ContentCopyRoundedIcon /></IconButton></span></Tooltip><Tooltip title={saving ? copy.loading : copy.save} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={saving ? copy.loading : copy.save} onClick={() => void save()} disabled={saving || dirtyKeys.size === 0} aria-busy={saving}><SaveRoundedIcon /></IconButton></span></Tooltip></WorkspaceToolbar>}>
+  return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loadingRows} onRefresh={doorId ? () => void loadRows() : undefined} toolbar={<WorkspaceToolbar className="shift-assignment-toolbar" ariaLabel={copy.toolbar}><FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{copy.chooseDoor}</InputLabel><Select label={copy.chooseDoor} value={String(doorId)} onChange={(event) => setDoorId(Number(event.target.value) || '')}>{doors.map((door) => <MenuItem key={door.id} value={String(door.id)}>{door.label}</MenuItem>)}</Select></FormControl><EosDateTimePicker size="small" dateOnly language={language} label={copy.start} value={startDate} onChange={setStartDate} /><EosDateTimePicker size="small" dateOnly language={language} label={copy.end} value={endDate} onChange={setEndDate} /><Tooltip title={copy.show} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={copy.show} onClick={() => void loadRows()} disabled={loadingRows || !doorId || startDate > endDate}><SearchRoundedIcon /></IconButton></span></Tooltip><Tooltip title={copy.copy} arrow><span><IconButton className="workspace-toolbar-icon-button" aria-label={copy.copy} onClick={openCopyDialog} disabled={!selectedRow}><ContentCopyRoundedIcon /></IconButton></span></Tooltip><Tooltip title={saving ? copy.loading : copy.save} arrow><span><IconButton className="workspace-toolbar-icon-button" color="primary" aria-label={saving ? copy.loading : copy.save} onClick={() => void save()} disabled={saving || dirtyKeys.size === 0} aria-busy={saving}><SaveRoundedIcon /></IconButton></span></Tooltip></WorkspaceToolbar>}>
     {notice && <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert>}
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {loadingOptions && <ResourceState loading error="" empty={false} loadingLabel={copy.loading} emptyLabel="">{null}</ResourceState>}

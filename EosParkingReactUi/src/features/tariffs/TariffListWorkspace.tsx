@@ -7,11 +7,12 @@ import { ApiError } from '../../api/client';
 import { AppDataGrid } from '../../components/AppDataGrid';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import { ResourceState } from '../../components/management/ResourceState';
-import type { Language } from '../../i18n';
+import type { Language } from '../../i18n/instance';
 import { formatDateTime } from '../../utils/formatters';
 import { tariffService, type TariffListRow } from './tariffService';
 import { TariffEditorDialog } from './TariffEditorDialog';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import i18n from '../../i18n/instance';
 
 type Filter = 'all' | 'public' | 'member';
 type Props = { title: string; pageTitle: string; parkingId: number; language: Language };
@@ -25,9 +26,8 @@ export function TariffListWorkspace({ title, pageTitle, parkingId, language }: P
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const copy = language === 'fa'
-    ? { count: 'تعرفه', loading: 'در حال دریافت تعرفه‌ها...', empty: 'تعرفه‌ای برای این پارکینگ ثبت نشده است.', error: 'دریافت تعرفه‌ها ناموفق بود.', forbidden: 'دسترسی مشاهدهٔ تعرفه‌ها برای کاربر فعلی مجاز نیست.', filter: 'نمایش', all: 'همه تعرفه‌ها', public: 'تعرفه عمومی', member: 'تعرفه اعضا', type: 'نوع', status: 'وضعیت', current: 'پیش‌فرض', date: 'تاریخ اجرا', active: 'فعال', inactive: 'غیرفعال', yes: 'بله', no: '—' }
-    : { count: 'tariffs', loading: 'Loading tariffs...', empty: 'No tariffs are registered for this parking.', error: 'Loading tariffs failed.', forbidden: 'You are not allowed to view tariffs.', filter: 'Show', all: 'All tariffs', public: 'Public tariffs', member: 'Member tariffs', type: 'Type', status: 'Status', current: 'Default', date: 'Effective date', active: 'Active', inactive: 'Inactive', yes: 'Yes', no: '—' };
+  const text = i18n.getFixedT(language);
+  const copy = { count: text('tariffList.count'), loading: text('tariffList.loading'), empty: text('tariffList.empty'), error: text('tariffList.error'), forbidden: text('tariffList.forbidden'), filter: text('tariffList.filter'), all: text('tariffList.all'), public: text('tariffList.public'), member: text('tariffList.member'), type: text('tariffList.type'), status: text('tariffList.status'), current: text('tariffList.current'), date: text('tariffList.date'), active: text('tariffList.active'), inactive: text('tariffList.inactive'), yes: text('tariffList.yes'), no: '—', add: text('tariffList.add'), edit: text('tariffList.edit'), remove: text('tariffList.remove'), removeError: text('tariffList.removeError'), title: text('tariffList.title'), cancel: text('tariffList.cancel'), confirm: text('tariffList.confirm') };
 
   const load = async (signal?: AbortSignal) => {
     setLoading(true);
@@ -51,7 +51,7 @@ export function TariffListWorkspace({ title, pageTitle, parkingId, language }: P
   const selectedTariff = rows.find((row) => row.id === selectedTariffId) ?? null;
   const direction = language === 'fa' ? 'rtl' : 'ltr';
 
-  const actionCopy = language === 'fa' ? { add: 'ایجاد تعرفه', edit: 'ویرایش تعرفه', remove: 'حذف تعرفه', removeError: 'حذف تعرفه ناموفق بود.' } : { add: 'Create tariff', edit: 'Edit tariff', remove: 'Delete tariff', removeError: 'Deleting tariff failed.' };
+  const actionCopy = { add: copy.add, edit: copy.edit, remove: copy.remove, removeError: copy.removeError };
 
   const responseValue = (input: unknown) => {
     const response = input && typeof input === 'object' ? input as Record<string, unknown> : {};
@@ -80,7 +80,7 @@ export function TariffListWorkspace({ title, pageTitle, parkingId, language }: P
     <Box className="workspace-resource-content">
       <ResourceState loading={loading} error={error} empty={filteredRows.length === 0} loadingLabel={copy.loading} emptyLabel={copy.empty}>
         <AppDataGrid direction={direction} rows={filteredRows} rowKey={(row) => row.id} selectedKey={selectedTariffId} onRowClick={(row) => setSelectedTariffId(row.id)} onRowDoubleClick={(row) => { setSelectedTariffId(row.id); setEditorMode('edit'); }} columns={[
-          { key: 'title', label: language === 'fa' ? 'عنوان تعرفه' : 'Tariff title', render: (row) => row.title || '—' },
+          { key: 'title', label: copy.title, render: (row) => row.title || '—' },
           { key: 'type', label: copy.type, render: (row) => row.isMemberTariff ? copy.member : copy.public },
           { key: 'isActive', label: copy.status, compact: true, boolean: true, trueLabel: copy.active, falseLabel: copy.inactive },
           { key: 'isCurrent', label: copy.current, compact: true, boolean: true, trueLabel: copy.yes, falseLabel: copy.no },
@@ -88,5 +88,5 @@ export function TariffListWorkspace({ title, pageTitle, parkingId, language }: P
         ]} />
       </ResourceState>
     </Box>
-  </ManagementWorkspaceFrame><TariffEditorDialog open={editorMode !== null} mode={editorMode ?? 'create'} row={editorMode === 'edit' ? selectedTariff : null} parkingId={parkingId} language={language} onClose={() => setEditorMode(null)} onSaved={() => { setEditorMode(null); void load(); }} /><ConfirmDialog open={deleteOpen} title={language === 'fa' ? 'حذف تعرفه' : 'Delete tariff'} message={language === 'fa' ? `آیا از حذف «${selectedTariff?.title ?? ''}» مطمئن هستید؟` : `Delete “${selectedTariff?.title ?? ''}”?`} cancelLabel={language === 'fa' ? 'انصراف' : 'Cancel'} confirmLabel={language === 'fa' ? 'حذف' : 'Delete'} onClose={() => setDeleteOpen(false)} onConfirm={() => void remove()} busy={saving} /></>;
+  </ManagementWorkspaceFrame><TariffEditorDialog open={editorMode !== null} mode={editorMode ?? 'create'} row={editorMode === 'edit' ? selectedTariff : null} parkingId={parkingId} language={language} onClose={() => setEditorMode(null)} onSaved={() => { setEditorMode(null); void load(); }} /><ConfirmDialog open={deleteOpen} title={copy.remove} message={text('tariffList.deleteConfirm', { title: selectedTariff?.title ?? '' })} cancelLabel={copy.cancel} confirmLabel={copy.confirm} onClose={() => setDeleteOpen(false)} onConfirm={() => void remove()} busy={saving} /></>;
 }

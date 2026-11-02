@@ -1,5 +1,5 @@
 import { Alert, Box } from '@mui/material';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import { useHomeParkingInfo } from '../features/home/useHomeParkingInfo';
 import { HomeDashboardIntro } from './HomeDashboardIntro';
 import { HomeDashboardLower } from './HomeDashboardLower';

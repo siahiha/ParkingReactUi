@@ -8,7 +8,7 @@ import LocalParkingRoundedIcon from '@mui/icons-material/LocalParkingRounded';
 import NorthRoundedIcon from '@mui/icons-material/NorthRounded';
 import SouthRoundedIcon from '@mui/icons-material/SouthRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import { formatDateTime, formatNumber } from '../utils/formatters';
 import { occupancyPercentage, type HomeParkingInfo } from '../features/home/homeParkingInfoService';
 
@@ -78,7 +78,6 @@ function DoorStatusItem({ language, door }: { language: Language; door: HomePark
     <Box className="home3-door-metrics"><Typography>{t('home.trafficToday')}<strong>{formatNumber(door.trafficCount, language)}</strong></Typography><Typography>{t('home.lastTraffic')}<strong dir="ltr">{door.lastTrafficDateTime ? formatDateTime(door.lastTrafficDateTime, language) : ''}</strong></Typography></Box>
   </Box>;
 }
-
 
 
 

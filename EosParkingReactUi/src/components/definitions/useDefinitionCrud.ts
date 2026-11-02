@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../api/client';
 import { definitionApi } from '../../api/management';
-import type { Language } from '../../i18n';
+import type { Language } from '../../i18n/instance';
 import i18n from '../../i18n/instance';
 import { boolValue, definitionConfig, emptyDefinitionForm, emptyParkingSpaceForm, emptySpaceRangeForm, ensureApiSuccess, firstPositiveNumber, hasParkingSection, idOf, normalizeParkingSpace, nestedRows, parkSpacesOf, parkingSpaceId, rowsOf, spaceFloorId, spaceSectionId, tariffsOf, unwrap, valueOf, type DefinitionForm, type DefinitionKind, type DefinitionRow, type ParkingSpaceRow, type SpaceRangeForm } from './definitionDomain';
 

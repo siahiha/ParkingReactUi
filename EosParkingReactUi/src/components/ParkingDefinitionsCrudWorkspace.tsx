@@ -1,6 +1,6 @@
 import { DefinitionCrudView } from './definitions/DefinitionCrudView';
 import type { DefinitionKind } from './definitions/definitionDomain';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 
 type Props = { kind: DefinitionKind; parkingId: number; language: Language; title: string; pageTitle: string; canEdit?: boolean; canDelete?: boolean };
 

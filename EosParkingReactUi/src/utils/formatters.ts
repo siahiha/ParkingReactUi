@@ -1,4 +1,4 @@
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 
 const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
 const arabicDigits = '٠١٢٣٤٥٦٧٨٩';

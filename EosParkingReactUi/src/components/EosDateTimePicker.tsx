@@ -4,9 +4,8 @@ import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { EosTimeOnDayPicker } from './EosTimeOnDayPicker';
-import { translations } from '../i18n';
+import i18n, { type Language } from '../i18n/instance';
 
-type Language = 'fa' | 'en';
 export type EosDateTimePickerProps = Omit<TextFieldProps, 'value' | 'onChange' | 'type'> & { value: string; onChange: (value: string) => void; language?: Language; dateOnly?: boolean };
 const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
 const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
@@ -49,6 +48,9 @@ function parseTypedDate(input: string, fa: boolean): string | null {
 
 export function EosDateTimePicker({ value, onChange, label, language = 'fa', dateOnly = false, ...props }: EosDateTimePickerProps) {
   const fa = language === 'fa';
+  const text = i18n.getFixedT(language);
+  const months = text('datePicker.months', { returnObjects: true }) as readonly string[];
+  const weeks = text('datePicker.weeks', { returnObjects: true }) as readonly string[];
   const today = new Date();
   const fallback = iso(today.getFullYear(), today.getMonth() + 1, today.getDate());
   const date = value.slice(0, 10) || fallback;
@@ -69,8 +71,6 @@ export function EosDateTimePicker({ value, onChange, label, language = 'fa', dat
     setYear(next[0]); setMonth(next[1]);
   }, [open, date, fa]);
 
-  const months = fa ? ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'] : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const weeks = fa ? ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const first = fa ? j2g(`${year}/${String(month).padStart(2, '0')}/01`) : iso(year, month, 1);
   const offset = first ? (fa ? (new Date(`${first}T00:00:00Z`).getUTCDay() + 1) % 7 : new Date(`${first}T00:00:00Z`).getUTCDay()) : 0;
   const days = fa ? jMonthDays(year, month) : new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -95,25 +95,25 @@ export function EosDateTimePicker({ value, onChange, label, language = 'fa', dat
   };
 
   return <Box sx={{ display: 'grid', gridTemplateColumns: dateOnly ? '1fr' : 'minmax(0, 1fr) minmax(110px, 0.6fr)', gap: 1, alignItems: 'start' }}>
-    <TextField
+      <TextField
       {...props}
       fullWidth
       type="text"
       label={label}
       value={inputValue}
-      placeholder={fa ? '۱۴۰۴/۰۱/۰۱' : 'YYYY-MM-DD'}
+      placeholder={text('datePicker.placeholder')}
       onChange={(event) => setInputValue(event.target.value)}
       onBlur={commitInput}
       onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); commitInput(); setOpen(false); } if (event.key === 'Escape') setInputValue(displayValue); }}
       onClick={(event) => { setAnchor(event.currentTarget); setOpen(true); }}
       slotProps={{ input: { readOnly: Boolean(props.disabled), endAdornment: <InputAdornment position="end"><IconButton size="small" disabled={props.disabled} aria-label={String(label)} onClick={(event) => { event.stopPropagation(); setAnchor(event.currentTarget); setOpen(true); }}><CalendarMonthRoundedIcon /></IconButton></InputAdornment> } }}
     />
-    {!dateOnly && <EosTimeOnDayPicker label={translations[language].time} value={parsedTime} onChange={setTime} unit="minutes" language={language} clearable={false} size={props.size} disabled={props.disabled} error={props.error} />}
+    {!dateOnly && <EosTimeOnDayPicker label={text('timePicker.time')} value={parsedTime} onChange={setTime} unit="minutes" language={language} clearable={false} size={props.size} disabled={props.disabled} error={props.error} />}
     <Popover open={open && !props.disabled} anchorEl={anchor} onClose={() => { commitInput(); setOpen(false); }} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
       <Box dir={fa ? 'rtl' : 'ltr'} sx={{ p: 1.5, width: 310 }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(90px, 1fr)', gap: 1, mb: 1 }}>
-          <TextField select size="small" label={fa ? 'ماه' : 'Month'} value={month} onChange={(event) => setMonth(Number(event.target.value))}>{months.map((monthName, index) => <MenuItem key={monthName} value={index + 1}>{monthName}</MenuItem>)}</TextField>
-          <TextField select size="small" label={fa ? 'سال' : 'Year'} value={year} onChange={(event) => setYear(Number(event.target.value))}>{yearOptions.map((yearValue) => <MenuItem key={yearValue} value={yearValue}>{yearValue}</MenuItem>)}</TextField>
+          <TextField select size="small" label={text('datePicker.month')} value={month} onChange={(event) => setMonth(Number(event.target.value))}>{months.map((monthName, index) => <MenuItem key={monthName} value={index + 1}>{monthName}</MenuItem>)}</TextField>
+          <TextField select size="small" label={text('datePicker.year')} value={year} onChange={(event) => setYear(Number(event.target.value))}>{yearOptions.map((yearValue) => <MenuItem key={yearValue} value={yearValue}>{yearValue}</MenuItem>)}</TextField>
         </Box>
         <Box className="inline-status-row" sx={{ justifyContent: 'space-between', mb: 1 }}>
           <IconButton size="small" onClick={() => move(fa ? 1 : -1)}><ChevronLeftRoundedIcon /></IconButton>

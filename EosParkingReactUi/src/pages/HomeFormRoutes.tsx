@@ -1,8 +1,9 @@
 import { Box, Button, CircularProgress, Paper, Typography } from '@mui/material';
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import type { Language } from '../i18n';
+import type { Language } from '../i18n/instance';
 import type { HomeUser } from './Home';
+import i18n from '../i18n/instance';
 const ParkingDefinitionsCrudWorkspace = lazy(() => import('../components/ParkingDefinitionsCrudWorkspace').then((module) => ({ default: module.ParkingDefinitionsCrudWorkspace })));
 const ParkingManagementWorkspace = lazy(() => import('../components/ParkingManagementWorkspace').then((module) => ({ default: module.ParkingManagementWorkspace })));
 const ExitPermissionWorkspace = lazy(() => import('../components/ExitPermissionWorkspace').then((module) => ({ default: module.ExitPermissionWorkspace })));
@@ -99,8 +100,9 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
 }
 
 export function HomeFormRoutes(props: Props) {
+  const text = i18n.getFixedT(props.language);
   return (
-    <Suspense fallback={<Box className="inline-status-row"><CircularProgress size={20} /><Typography variant="body2">{props.language === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}</Typography></Box>}><Routes>
+    <Suspense fallback={<Box className="inline-status-row"><CircularProgress size={20} /><Typography variant="body2">{text('common.loading')}</Typography></Box>}><Routes>
       <Route path="management/:section" element={<ManagementPage {...props} />} />
       <Route path="parking/:itemKey" element={<ParkingPage {...props} />} />
       <Route path="*" element={<UnknownRoute labels={props.labels} basePath={props.basePath} />} />
