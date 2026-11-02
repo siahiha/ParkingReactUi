@@ -5,15 +5,15 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appTheme } from '../theme';
 import { parkingApi } from '../api/management';
-import { Home3Dashboard } from './Home3Dashboard';
-import { Home3DashboardIntro } from './Home3DashboardIntro';
-import { Home3LoadingState } from './Home3LoadingState';
+import { HomeDashboard } from './HomeDashboard';
+import { HomeDashboardIntro } from './HomeDashboardIntro';
+import { HomeLoadingState } from './HomeLoadingState';
 
 function renderDashboard(onNavigate = vi.fn()) {
-  return { onNavigate, ...render(<ThemeProvider theme={appTheme}><Home3Dashboard language="fa" selectedParkingName="پارکینگ مرکزی" selectedParkingId={7} basePath="/home3" onNavigate={onNavigate} /></ThemeProvider>) };
+  return { onNavigate, ...render(<ThemeProvider theme={appTheme}><HomeDashboard language="fa" selectedParkingName="پارکینگ مرکزی" selectedParkingId={7} basePath="/home" onNavigate={onNavigate} /></ThemeProvider>) };
 }
 
-describe('Home3 dashboard', () => {
+describe('Home dashboard', () => {
   afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
   it('loads parking information and refreshes it from the icon action', async () => {
@@ -55,10 +55,10 @@ describe('Home3 dashboard', () => {
   });
 
   it('reads the infrastructure label from the matching language resource', () => {
-    const { rerender } = render(<ThemeProvider theme={appTheme}><Home3DashboardIntro language="fa" selectedParkingName="پارکینگ مرکزی" /></ThemeProvider>);
+    const { rerender } = render(<ThemeProvider theme={appTheme}><HomeDashboardIntro language="fa" selectedParkingName="پارکینگ مرکزی" /></ThemeProvider>);
     expect(screen.getByText('زیرساخت هوشمند تردد و پارکینگ')).toBeVisible();
 
-    rerender(<ThemeProvider theme={appTheme}><Home3DashboardIntro language="en" selectedParkingName="Central Parking" /></ThemeProvider>);
+    rerender(<ThemeProvider theme={appTheme}><HomeDashboardIntro language="en" selectedParkingName="Central Parking" /></ThemeProvider>);
     expect(screen.getByText('Smart Traffic and Parking Infrastructure')).toBeVisible();
   });
 
@@ -71,17 +71,19 @@ describe('Home3 dashboard', () => {
     expect(screen.getAllByText('B4').length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: 'مدیریت اعضا' }));
-    expect(onNavigate).toHaveBeenCalledWith('/home3/parking/members');
+    expect(onNavigate).toHaveBeenCalledWith('/home/parking/members');
   });
 });
 
-describe('Home3 loading state', () => {
+describe('Home loading state', () => {
   afterEach(() => cleanup());
 
   it('exposes a translated status and skeleton structure', () => {
-    const { container } = render(<ThemeProvider theme={appTheme}><Home3LoadingState /></ThemeProvider>);
+    const { container } = render(<ThemeProvider theme={appTheme}><HomeLoadingState /></ThemeProvider>);
 
     expect(screen.getByRole('status', { name: 'در حال بارگذاری...' })).toBeVisible();
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(10);
   });
 });
+
+

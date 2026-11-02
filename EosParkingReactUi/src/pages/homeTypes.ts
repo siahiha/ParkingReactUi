@@ -11,3 +11,7 @@ export type HomeUser = {
 };
 
 export type ThemeMode = 'light' | 'dark';
+
+export type HomeTab = { path: string; label: string };
+
+export type NavigationMode = 'tabs' | 'classic';

@@ -24,7 +24,7 @@ const parkingInfoSchema = z.object({
   doorStatuses: z.array(doorStatusSchema),
 });
 
-export type Home3ParkingInfo = z.infer<typeof parkingInfoSchema>;
+export type HomeParkingInfo = z.infer<typeof parkingInfoSchema>;
 
 function unwrapValues(input: unknown): unknown {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
@@ -36,7 +36,7 @@ function readField(record: Record<string, unknown>, name: string) {
   return record[name] ?? record[name.charAt(0).toLowerCase() + name.slice(1)];
 }
 
-export async function fetchHome3ParkingInfo(parkingId: number, signal?: AbortSignal): Promise<Home3ParkingInfo> {
+export async function fetchHomeParkingInfo(parkingId: number, signal?: AbortSignal): Promise<HomeParkingInfo> {
   const response = await parkingApi.getInfoById(parkingId, signal);
   const values = unwrapValues(response);
   if (!values || typeof values !== 'object' || Array.isArray(values)) {
@@ -67,7 +67,9 @@ export async function fetchHome3ParkingInfo(parkingId: number, signal?: AbortSig
   });
 }
 
-export function occupancyPercentage(info: Home3ParkingInfo | null) {
+export function occupancyPercentage(info: HomeParkingInfo | null) {
   if (!info || info.totalCapacity <= 0) return null;
   return Math.round((info.occupied / info.totalCapacity) * 100);
 }
+
+

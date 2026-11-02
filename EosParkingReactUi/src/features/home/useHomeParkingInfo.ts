@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchHome3ParkingInfo, type Home3ParkingInfo } from './home3ParkingInfoService';
+import { fetchHomeParkingInfo, type HomeParkingInfo } from './homeParkingInfoService';
 
 const refreshIntervalMs = 30_000;
 
 type LoadState = {
-  data: Home3ParkingInfo | null;
+  data: HomeParkingInfo | null;
   loading: boolean;
   refreshing: boolean;
   error: boolean;
 };
 
-export function useHome3ParkingInfo(parkingId: number) {
+export function useHomeParkingInfo(parkingId: number) {
   const [state, setState] = useState<LoadState>({ data: null, loading: true, refreshing: false, error: false });
   const requestRef = useRef<AbortController | null>(null);
   const inFlightRef = useRef(false);
@@ -23,7 +23,7 @@ export function useHome3ParkingInfo(parkingId: number) {
     setState((current) => ({ ...current, loading: current.data === null, refreshing: current.data !== null, error: false }));
 
     try {
-      const data = await fetchHome3ParkingInfo(parkingId, controller.signal);
+      const data = await fetchHomeParkingInfo(parkingId, controller.signal);
       setState({ data, loading: false, refreshing: false, error: false });
     } catch (cause) {
       if (!controller.signal.aborted) {
@@ -50,3 +50,5 @@ export function useHome3ParkingInfo(parkingId: number) {
 
   return { ...state, refresh };
 }
+
+

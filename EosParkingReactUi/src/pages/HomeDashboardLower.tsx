@@ -9,13 +9,13 @@ import type { ReactNode } from 'react';
 
 type Props = { onNavigate: (path: string) => void };
 
-export function Home3DashboardLower({ onNavigate }: Props) {
+export function HomeDashboardLower({ onNavigate }: Props) {
   const { t } = useTranslation();
 
   return <Box className="home3-lower">
     <Box className="home3-quick-panel">
-      <Box className="home3-panel-heading"><Box><Typography className="home3-panel-title">{t('home2.quickActions')}</Typography></Box></Box>
-      <Box className="home3-quick-actions"><QuickAction icon={<DirectionsCarRoundedIcon />} label={t('home2.openTraffic')} onClick={() => onNavigate('/parking/traffic-records')} /><QuickAction icon={<GroupsRoundedIcon />} label={t('home2.openMembers')} onClick={() => onNavigate('/parking/members')} /><QuickAction icon={<MonitorHeartRoundedIcon />} label={t('home2.openMonitoring')} onClick={() => onNavigate('/parking/monitoring')} /><QuickAction icon={<AssessmentRoundedIcon />} label={t('home2.openReports')} onClick={() => onNavigate('/parking/traffic-reports-list')} /></Box>
+      <Box className="home3-panel-heading"><Box><Typography className="home3-panel-title">{t('home.quickActions')}</Typography></Box></Box>
+      <Box className="home3-quick-actions"><QuickAction icon={<DirectionsCarRoundedIcon />} label={t('home.openTraffic')} onClick={() => onNavigate('/parking/traffic-records')} /><QuickAction icon={<GroupsRoundedIcon />} label={t('home.openMembers')} onClick={() => onNavigate('/parking/members')} /><QuickAction icon={<MonitorHeartRoundedIcon />} label={t('home.openMonitoring')} onClick={() => onNavigate('/parking/monitoring')} /><QuickAction icon={<AssessmentRoundedIcon />} label={t('home.openReports')} onClick={() => onNavigate('/parking/traffic-reports-list')} /></Box>
     </Box>
   </Box>;
 }
@@ -23,3 +23,7 @@ export function Home3DashboardLower({ onNavigate }: Props) {
 function QuickAction({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
   return <Button onClick={onClick}>{icon}<span>{label}</span><ArrowOutwardRoundedIcon /></Button>;
 }
+
+
+
+
