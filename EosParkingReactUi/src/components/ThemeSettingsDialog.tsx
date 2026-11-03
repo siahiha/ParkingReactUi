@@ -1,6 +1,7 @@
+import { AppPopup } from './AppPopup';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, Typography } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, Typography } from '@mui/material';
 import { Box } from '@mui/material';
 import type { PaletteName, ThemeDialogProps } from './homeProfileTypes';
 import { getPaletteTokens } from '../theme';
@@ -59,9 +60,8 @@ export function ThemeSettingsDialog({ open, lightPalette, darkPalette, onLightPa
   );
 
   return (
-    <Dialog className="theme-settings-dialog" open={open} onClose={handleCancel} fullWidth maxWidth="xs">
-      <DialogTitle>{t('theme.settings')}</DialogTitle>
-      <DialogContent>
+    <AppPopup open={open} onClose={handleCancel} onConfirm={handleApply} maxWidth="xs"
+      title={t('theme.settings')} cancelLabel={t('theme.cancel')} confirmLabel={t('theme.apply')}>
         <Box className="theme-settings-content">
           <Box className="theme-settings-section">
             <Typography className="theme-settings-section-title" variant="subtitle2">{t('theme.colors')}</Typography>
@@ -79,11 +79,6 @@ export function ThemeSettingsDialog({ open, lightPalette, darkPalette, onLightPa
             </Stack>
           </Box>
         </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleCancel}>{t('theme.cancel')}</Button>
-        <Button variant="contained" onClick={handleApply}>{t('theme.apply')}</Button>
-      </DialogActions>
-    </Dialog>
+      </AppPopup>
   );
 }

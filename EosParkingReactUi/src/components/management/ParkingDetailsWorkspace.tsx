@@ -8,6 +8,7 @@ import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import { emptyParkingForm, parkingFormFromRow, parkingPayload, type Language, type ParkingForm, type RecordValue } from './managementTypes';
 import { parkingCopy, validateParkingForm } from './parkingCopy';
+import './parkingDetails.css';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
 
@@ -65,7 +66,7 @@ export function ParkingDetailsWorkspace({ title, pageTitle, parkingId, language 
   return (
     <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loading} onRefresh={() => void load()}>
       <ResourceState loading={loading} error={error} empty={false} loadingLabel={language === 'fa' ? 'در حال دریافت اطلاعات...' : 'Loading...'} emptyLabel="">
-        <Box className="workspace-resource-content"><ParkingFormFields form={form} setForm={updateForm} copy={copy} saveMessage={message} language={language} /><Button variant="contained" startIcon={<SaveRoundedIcon />} onClick={() => void save()} disabled={saving} aria-busy={saving}>{copy.save}</Button></Box>
+        <Box className="workspace-resource-content parking-details-content"><ParkingFormFields layout="sections" form={form} setForm={updateForm} copy={copy} saveMessage={message} language={language} /><Box className="parking-details-actions"><Button variant="contained" startIcon={<SaveRoundedIcon />} onClick={() => void save()} disabled={saving} aria-busy={saving}>{copy.save}</Button></Box></Box>
       </ResourceState>
     </ManagementWorkspaceFrame>
   );

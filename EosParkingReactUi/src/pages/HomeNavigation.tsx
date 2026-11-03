@@ -27,6 +27,7 @@ export function HomeNavigation({ appName, direction, basePath, systemMenu, curre
   const reportsGroup = useMemo(() => visibleParkingMenuGroups.find((group) => group.key === 'reports'), [visibleParkingMenuGroups]);
   const reportGroups = useMemo(() => reportsGroup?.subgroups ?? [], [reportsGroup]);
   const activeReport = Boolean(activeParkingMenu && (reportsGroup?.items.some((item) => item.key === activeParkingMenu) || reportGroups.some((group) => group.items.some((item) => item.key === activeParkingMenu))));
+  const activeGroupKey = [...operationalGroups, ...reportGroups].find((group) => group.items.some((item) => item.key === activeParkingMenu))?.key;
   const menuLabel = (key: string) => translate(`homeMenu.items.${key}`);
   const groupLabel = (key: string) => translate(`homeMenu.groups.${key}`);
 
@@ -34,9 +35,9 @@ export function HomeNavigation({ appName, direction, basePath, systemMenu, curre
     if (managementSection) { setExpandedRoot('system'); setExpandedGroups({}); return; }
     if (!activeParkingMenu) return;
     setExpandedRoot(activeReport ? 'reports' : 'parking');
-    const activeGroup = [...operationalGroups, ...reportGroups].find((group) => group.items.some((item) => item.key === activeParkingMenu));
-    setExpandedGroups(activeGroup ? { [activeGroup.key]: true } : {});
-  }, [activeParkingMenu, activeReport, managementSection, operationalGroups, reportGroups]);
+    setExpandedGroups(activeGroupKey ? { [activeGroupKey]: true } : {});
+    // Permission filtering recreates arrays on parent renders; synchronize on route identity only.
+  }, [activeParkingMenu, activeReport, managementSection, activeGroupKey]);
 
   const navigate = (path: string) => { onNavigate(path); onMobileClose(); };
   const iconFor = (key: string) => groupIcons[key as keyof typeof groupIcons] ?? <SettingsRoundedIcon />;
@@ -61,7 +62,6 @@ export function HomeNavigation({ appName, direction, basePath, systemMenu, curre
   const content = (isDrawer: boolean) => <Box className={`home3-navigation-content ${isDrawer ? 'is-drawer' : ''}`} dir={direction}><Box className="home3-nav-heading"><Typography>{t('home.navigation')}</Typography>{!isDrawer && <IconButton onClick={() => onCollapsedChange(!collapsed)} aria-label={collapsed ? t('home.expand') : t('home.collapse')} size="small">{collapsed ? direction === 'rtl' ? <ChevronLeftRoundedIcon /> : <ChevronRightRoundedIcon /> : direction === 'rtl' ? <ChevronRightRoundedIcon /> : <ChevronLeftRoundedIcon />}</IconButton>}</Box>{isDrawer || !collapsed ? renderFull() : renderCompact()}</Box>;
   return <><Box component="aside" className={`home3-navigation ${collapsed ? 'is-collapsed' : ''}`} aria-label={appName}>{content(false)}</Box><Drawer className="home3-drawer" anchor={direction === 'rtl' ? 'right' : 'left'} open={mobileOpen} onClose={onMobileClose}><Box className="home3-drawer-surface">{content(true)}</Box></Drawer></>;
 }
-
 
 
 

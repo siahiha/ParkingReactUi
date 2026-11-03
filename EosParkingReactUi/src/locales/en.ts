@@ -1,4 +1,5 @@
 const en = {
+  popup: { cancel: 'Cancel', confirm: 'Confirm' },
   app: {
     direction: 'ltr', languageName: 'Persian',
   },

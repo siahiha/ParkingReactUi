@@ -1,5 +1,6 @@
+import { AppPopup } from '../AppPopup';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Select, Tooltip, Typography } from '@mui/material';
+import { Alert, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Select, Tooltip, Typography } from '@mui/material';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
@@ -184,6 +185,9 @@ export function ShiftAssignmentWorkspace({ title, pageTitle, parkingId, language
     {!loadingOptions && (!doors.length || !users.length) && <Alert severity="info">{copy.noOptions}</Alert>}
     {!loadingOptions && doors.length > 0 && users.length > 0 && <ResourceState loading={loadingRows} error="" empty={rows.length === 0} loadingLabel={copy.loading} emptyLabel={copy.empty}><AppDataGrid<ShiftRow> direction={isPersian ? 'rtl' : 'ltr'} rows={rows} columns={columns} rowKey={(row) => `${row.ParkingDoorId}-${row.WorkDate}`} selectedKey={selectedRowKey} onRowClick={(row) => setSelectedRowKey(`${row.ParkingDoorId}-${row.WorkDate}`)} /></ResourceState>}
     {rows.some((row) => row.WorkDate < today()) && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>{copy.past}</Typography>}
-    <Dialog dir={isPersian ? 'rtl' : 'ltr'} open={copyDialogOpen} onClose={() => setCopyDialogOpen(false)} fullWidth maxWidth="xs"><DialogTitle>{copy.copyTitle}</DialogTitle><DialogContent><Typography variant="body2" sx={{ mb: 2 }}>{selectedRow ? `${copy.copyFrom}: ${selectedRow.WorkDate}` : copy.selectRow}</Typography><EosDateTimePicker fullWidth size="small" dateOnly language={language} label={copy.copyTo} value={copyToDate} onChange={setCopyToDate} /><FormControlLabel control={<Checkbox checked={copyShift1} onChange={(event) => setCopyShift1(event.target.checked)} />} label={copy.shift1} /><FormControlLabel control={<Checkbox checked={copyShift2} onChange={(event) => setCopyShift2(event.target.checked)} />} label={copy.shift2} /><FormControlLabel control={<Checkbox checked={copyShift3} onChange={(event) => setCopyShift3(event.target.checked)} />} label={copy.shift3} /></DialogContent><DialogActions><Button onClick={() => setCopyDialogOpen(false)}>{copy.cancel}</Button><Button variant="contained" onClick={applyCopy}>{copy.applyCopy}</Button></DialogActions></Dialog>
+    <AppPopup dir={isPersian ? 'rtl' : 'ltr'} open={copyDialogOpen} onClose={() => setCopyDialogOpen(false)} maxWidth="xs" title={copy.copyTitle} actions={[
+  { id: 'action-0', label: copy.cancel, onClick: () => setCopyDialogOpen(false) },
+  { id: 'action-1', label: copy.applyCopy, variant: "contained", onClick: applyCopy }
+]}><Typography variant="body2" sx={{ mb: 2 }}>{selectedRow ? `${copy.copyFrom}: ${selectedRow.WorkDate}` : copy.selectRow}</Typography><EosDateTimePicker fullWidth size="small" dateOnly language={language} label={copy.copyTo} value={copyToDate} onChange={setCopyToDate} /><FormControlLabel control={<Checkbox checked={copyShift1} onChange={(event) => setCopyShift1(event.target.checked)} />} label={copy.shift1} /><FormControlLabel control={<Checkbox checked={copyShift2} onChange={(event) => setCopyShift2(event.target.checked)} />} label={copy.shift2} /><FormControlLabel control={<Checkbox checked={copyShift3} onChange={(event) => setCopyShift3(event.target.checked)} />} label={copy.shift3} /></AppPopup>
   </ManagementWorkspaceFrame>;
 }

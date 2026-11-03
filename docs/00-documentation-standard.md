@@ -198,6 +198,8 @@
 
 ### ۱۰.۴. اجزا، جدول‌ها، فرم‌ها و بازخورد
 
+- همهٔ popupهای modal برنامه، چه CRUD و چه عملیات دیگر، باید از `AppPopup` استفاده کنند؛ `CrudDialog` و `ConfirmDialog` فقط adapter آن هستند. عنوان، قاب، footer، دکمه‌ها و busy از همین کامپوننت کنترل می‌شوند؛ فرم‌ها صرفاً محتوا و callback می‌دهند. ساخت مستقیم `Dialog`/`Modal` یا پوستهٔ ظاهری مستقل در featureها ممنوع است. قرارداد کامل در سند ۱۰ ثبت شده است؛ Menu/Tooltip/Popover/Drawer و popup داخلی کنترل انتخاب تاریخ/ساعت از این قاعدهٔ modal کسب‌وکاری مستثنا هستند.
+
 - componentهای پایهٔ مشترک (button، input، select، checkbox، dialog، drawer، tabs،
   table، pagination، alert، toast، skeleton و status) باید reuse شوند و منطق کسب‌وکار
   در component عمومی قرار نگیرد.

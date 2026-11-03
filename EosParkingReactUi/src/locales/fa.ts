@@ -1,4 +1,5 @@
 const fa = {
+  popup: { cancel: 'لغو', confirm: 'تأیید' },
   app: {
     direction: 'rtl', languageName: 'انگلیسی',
   },

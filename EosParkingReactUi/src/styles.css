@@ -2780,32 +2780,8 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   padding: 5px;
 }
 
-/* Keep CRUD dialogs visually close to the form body with a restrained Windows-style shell. */
-.crud-dialog-paper {
-  overflow: hidden;
-  border: 1px solid #cbd5dc;
-  border-radius: 6px !important;
-  background: #fbfcfd;
-  box-shadow: 0 10px 28px rgba(35, 55, 70, .18);
-}
-
-.crud-dialog-paper .MuiDialogTitle-root {
-  padding: 8px 16px 7px;
-  border-bottom: 1px solid #d8e0e5;
-  background: #f6f8fa;
-  color: #263f50;
-  font-size: .98rem;
-  font-weight: 750;
-}
-
-.crud-dialog-paper .MuiDialogContent-root {
-  padding: 16px 18px !important;
-  border-color: #d8e0e5;
-  background: #fbfcfd;
-}
-
 /* A shared compact rhythm for every form popup. */
-.crud-dialog-paper .form-section-column {
+.app-popup-paper .form-section-column {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -2813,30 +2789,15 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 
 /* Popup grids reserve room for at most ten compact rows; larger result sets
    scroll inside the grid instead of expanding the dialog beyond the viewport. */
-.crud-dialog-paper .app-data-grid-wrapper {
+.app-popup-paper .app-data-grid-wrapper {
   max-height: 307px;
   overflow: auto;
 }
 
-.crud-dialog-paper .app-data-grid .MuiTableHead-root .MuiTableCell-root {
+.app-popup-paper .app-data-grid .MuiTableHead-root .MuiTableCell-root {
   position: sticky;
   top: 0;
   z-index: 1;
-}
-
-.crud-dialog-paper .MuiDialogActions-root {
-  min-height: 40px;
-  padding: 4px 10px 5px;
-  border-top: 1px solid #d8e0e5;
-  background: #f6f8fa;
-  gap: 6px;
-}
-
-.crud-dialog-paper .MuiDialogActions-root .MuiButton-root {
-  min-height: 28px;
-  border-radius: 4px;
-  padding-inline: 12px;
-  font-size: .76rem;
 }
 
 .parking-floor-main-group,
@@ -2886,24 +2847,6 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 
 .parking-space-editor-group .parking-space-range-inputs {
   gap: 12px !important;
-}
-
-.app-root.app-theme-dark .crud-dialog-paper {
-  border-color: #465762;
-  background: #26323b;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .3);
-}
-
-.app-root.app-theme-dark .crud-dialog-paper .MuiDialogTitle-root,
-.app-root.app-theme-dark .crud-dialog-paper .MuiDialogActions-root {
-  border-color: #465762;
-  background: #2b3943;
-  color: #e2f1f7;
-}
-
-.app-root.app-theme-dark .crud-dialog-paper .MuiDialogContent-root {
-  border-color: #465762;
-  background: #26323b;
 }
 
 /* Compact page heading: clear context without spending workspace height. */
@@ -4475,13 +4418,6 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   font-size: .64rem;
 }
 /* Theme settings dialog: clear sections, paired palette swatches and a compact shape control grid. */
-.theme-settings-dialog .MuiDialog-paper {
-  overflow: hidden;
-}
-.theme-settings-dialog .MuiDialogTitle-root {
-  border-block-end: 1px solid var(--app-divider, #d7dce2);
-  background: var(--app-surface, #fff);
-}
 .theme-settings-content {
   display: grid;
   gap: 18px;

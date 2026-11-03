@@ -9,6 +9,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
+    env: { EOS_PARKING_VITE_CACHE_DIR: 'node_modules/.vite-playwright' },
     command: 'npm run dev -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,

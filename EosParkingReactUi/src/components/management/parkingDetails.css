@@ -1,0 +1,32 @@
+.parking-details-fields.form-section-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.parking-details-fields > .parking-details-information,
+.parking-details-fields > .MuiAlert-root { grid-column: 1 / -1; }
+.parking-details-fields > [role='region'] { min-width: 0; }
+.parking-details-fields .app-group-box {
+  height: 100%;
+  padding: 16px;
+  border: 1px solid var(--app-divider);
+  background: var(--app-surface);
+  border-radius: var(--app-control-radius, 4px);
+}
+.parking-details-fields .app-group-box-title { background: var(--app-surface); color: var(--app-text); }
+.parking-details-fields .parking-form-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.parking-details-fields .parking-details-information .parking-form-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.parking-details-fields .parking-form-fields > .MuiTextField-root { min-width: 0; width: 100%; }
+.parking-details-fields .MuiFormControlLabel-root { margin-inline: 0; min-width: 0; }
+.parking-details-fields .parking-shift-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.parking-details-fields .parking-shift-row > * { min-width: 0; width: 100%; }
+.parking-details-fields .parking-shifts { gap: 12px; }
+.parking-details-actions { display: flex; justify-content: flex-end; padding-block-start: 16px; }
+@media (max-width: 1050px) {
+  .parking-details-fields.form-section-column { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .parking-details-fields .parking-form-fields,
+  .parking-details-fields .parking-details-information .parking-form-fields { grid-template-columns: minmax(0, 1fr); }
+}

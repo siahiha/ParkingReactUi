@@ -1,22 +1,6 @@
+import { AppPopup } from '../AppPopup';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ExitToAppRoundedIcon from "@mui/icons-material/ExitToAppRounded";
@@ -1389,25 +1373,18 @@ export function TrafficRecordsWorkspace({
           />
         </ResourceState>
       </Box>
-      <Dialog
-        dir={isPersian ? "rtl" : "ltr"}
-        open={cargoOpen}
-        onClose={() => {
+      <AppPopup dir={isPersian ? "rtl" : "ltr"} open={cargoOpen} onClose={() => {
           if (!cargoLoading) setCargoOpen(false);
-        }}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>
-          {cargoOutbound
+        }} maxWidth="md" busy={cargoLoading} title={cargoOutbound
             ? isPersian
               ? "ثبت بار خروجی"
               : "Register outbound cargo"
             : isPersian
               ? "ثبت بار ورودی"
-              : "Register inbound cargo"}
-        </DialogTitle>
-        <DialogContent>
+              : "Register inbound cargo"} actions={[
+  { id: 'action-0', label: copy.cancel, onClick: () => setCargoOpen(false), disabled: cargoLoading },
+  { id: 'action-1', label: isPersian ? "ثبت بار" : "Register cargo", variant: "contained", onClick: () => void saveCargo(), disabled: cargoLoading }
+]}>
           {cargoError && (
             <Alert severity="error" sx={{ mb: 1 }}>
               {cargoError}
@@ -1586,29 +1563,11 @@ export function TrafficRecordsWorkspace({
               }
             />
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCargoOpen(false)} disabled={cargoLoading}>
-            {copy.cancel}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => void saveCargo()}
-            disabled={cargoLoading}
-          >
-            {isPersian ? "ثبت بار" : "Register cargo"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        dir={isPersian ? "rtl" : "ltr"}
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>{copy.editTitle}</DialogTitle>
-        <DialogContent>
+        </AppPopup>
+      <AppPopup dir={isPersian ? "rtl" : "ltr"} open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" busy={working} title={copy.editTitle} actions={[
+  { id: 'action-0', label: copy.cancel, onClick: () => setEditOpen(false) },
+  { id: 'action-1', label: copy.register, variant: "contained", onClick: () => void updateTraffic(), disabled: working }
+]}>
           <EosDateTimePicker
             language={language}
             label={copy.entry}
@@ -1625,18 +1584,7 @@ export function TrafficRecordsWorkspace({
             disabled={!canEditExit}
             sx={{ mt: 2 }}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>{copy.cancel}</Button>
-          <Button
-            variant="contained"
-            onClick={() => void updateTraffic()}
-            disabled={working}
-          >
-            {copy.register}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </AppPopup>
       <ConfirmDialog
         open={deleteOpen}
         title={copy.remove}
@@ -1647,14 +1595,10 @@ export function TrafficRecordsWorkspace({
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => void removeTraffic()}
       />
-      <Dialog
-        open={billOpen}
-        onClose={() => setBillOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>{isPersian ? "صورتحساب خروج" : "Exit bill"}</DialogTitle>
-        <DialogContent>
+      <AppPopup open={billOpen} onClose={() => setBillOpen(false)} maxWidth="sm" busy={working} title={isPersian ? "صورتحساب خروج" : "Exit bill"} actions={[
+  { id: 'action-0', label: copy.cancel, onClick: () => setBillOpen(false) },
+  { id: 'action-1', label: isPersian ? "تسویه نقدی" : "Cash settlement", variant: "contained", onClick: () => void settleCash(), disabled: working || !numberOf(valueOf(exitBill ?? {}, "DumpId")) }
+]}>
           <Box
             sx={{
               display: "grid",
@@ -1698,18 +1642,7 @@ export function TrafficRecordsWorkspace({
               </strong>
             </Typography>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBillOpen(false)}>{copy.cancel}</Button>
-          <Button
-            variant="contained"
-            onClick={() => void settleCash()}
-            disabled={working || !numberOf(valueOf(exitBill ?? {}, "DumpId"))}
-          >
-            {isPersian ? "تسویه نقدی" : "Cash settlement"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </AppPopup>
     </ManagementWorkspaceFrame>
   );
 }

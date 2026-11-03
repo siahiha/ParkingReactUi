@@ -1,3 +1,4 @@
+import { AppPopup } from '../../components/AppPopup';
 import { useEffect, useMemo, useState } from 'react';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -5,26 +6,7 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  FormControlLabel,
-  IconButton,
-  MenuItem,
-  Stack,
-  Switch,
-  Tab,
-  Tabs,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Divider, FormControlLabel, IconButton, MenuItem, Stack, Switch, Tab, Tabs, TextField, Tooltip, Typography } from '@mui/material';
 import { z } from 'zod';
 import { ApiError } from '../../api/client';
 import { memberApi, parkingApi, trafficApi } from '../../api/management';
@@ -765,14 +747,38 @@ export function MemberManagementWorkspace({ title, pageTitle, parkingId, languag
         </Box>
       </Box>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'}><DialogTitle>{t.deleteTitle}</DialogTitle><DialogContent><Typography>{t.deleteMessage}</Typography></DialogContent><DialogActions><Button onClick={() => setDeleteOpen(false)}>{t.cancel}</Button><Button color="error" variant="contained" onClick={() => void remove()} disabled={saving}>{t.confirm}</Button></DialogActions></Dialog>
-      <Dialog open={carOpen} onClose={() => setCarOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} fullWidth maxWidth="sm"><DialogTitle>{t.addCar}</DialogTitle><DialogContent><Box className="member-dialog-grid"><IranianPlateInput label={t.plate} value={carDraft.Plate} carType={carDraft.CarType} onCarTypeChange={(CarType) => setCarDraft((item) => ({ ...item, CarType }))} onChange={(Plate) => setCarDraft((item) => ({ ...item, Plate }))} error={carPlateInvalid} helperText={carPlateInvalid ? t.plateInvalid : undefined} /><TextField size="small" label={t.carName} value={carDraft.Name} onChange={(event) => setCarDraft((item) => ({ ...item, Name: event.target.value }))} /><TextField size="small" label={t.model} value={carDraft.DtoViewCarModelTitle} onChange={(event) => setCarDraft((item) => ({ ...item, DtoViewCarModelTitle: event.target.value }))} /><TextField size="small" label={t.color} value={carDraft.DtoViewCarColorTitle} onChange={(event) => setCarDraft((item) => ({ ...item, DtoViewCarColorTitle: event.target.value }))} /></Box></DialogContent><DialogActions><Button onClick={() => setCarOpen(false)}>{t.cancel}</Button><Button variant="contained" onClick={addCar}>{t.add}</Button></DialogActions></Dialog>
-      <Dialog open={saveFirstOpen} onClose={() => setSaveFirstOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'}><DialogTitle>{t.saveFirstTitle}</DialogTitle><DialogContent><Typography>{t.saveFirstMessage}</Typography></DialogContent><DialogActions><Button onClick={() => setSaveFirstOpen(false)}>{t.cancel}</Button><Button variant="contained" onClick={() => void saveMemberAndOpenRegistration()} disabled={saving}>{t.saveAndContinue}</Button></DialogActions></Dialog>
-      <Dialog open={replaceOpen} onClose={() => setReplaceOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'}><DialogTitle>{t.replacementTitle}</DialogTitle><DialogContent><Typography>{t.replacementMessage}</Typography></DialogContent><DialogActions><Button onClick={() => { setReplaceOpen(false); if (pendingRegistrationMember) void openRegistrationDialog(pendingRegistrationMember, false); }}>{t.makeReservation}</Button><Button variant="contained" onClick={() => { setReplaceOpen(false); if (pendingRegistrationMember) void openRegistrationDialog(pendingRegistrationMember, true); }}>{t.replaceMembership}</Button></DialogActions></Dialog>
-      <Dialog open={registrationOpen} onClose={() => setRegistrationOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} fullWidth maxWidth="xs"><DialogTitle>{t.addMembership}</DialogTitle><DialogContent><Box className="member-registration-dialog"><TextField select fullWidth size="small" label={t.type} value={registration?.MemberRegisterKindId || ''} onChange={(event) => selectRegistrationKind(Number(event.target.value))}>{registerKinds.map((kind) => <MenuItem key={kind.Id} value={kind.Id}>{kind.Title}</MenuItem>)}</TextField><MoneyTextField fullWidth size="small" label={t.credit} value={registration?.CreditAmount ?? ''} onValueChange={(value) => setRegistration((current) => current ? { ...current, CreditAmount: number(value) } : current)} /><TextField fullWidth size="small" label={t.tax} value={formatMoney(registration?.TaxValue ?? 0)} disabled slotProps={{ htmlInput: { dir: 'ltr' } }} /><EosDateTimePicker fullWidth size="small" label={t.start} value={registration?.StartDate.slice(0, 16) ?? ''} onChange={() => undefined} language={language} disabled /><EosDateTimePicker fullWidth size="small" label={t.end} value={registration?.EndDate?.slice(0, 16) ?? ''} onChange={() => undefined} language={language} disabled /></Box></DialogContent><DialogActions><Button onClick={() => setRegistrationOpen(false)}>{t.cancel}</Button><Button variant="contained" onClick={() => void requestPayment()} disabled={!registration?.MemberRegisterKindId || saving}>{t.payment}</Button></DialogActions></Dialog>
-      <Dialog open={spaceReleaseOpen} onClose={() => setSpaceReleaseOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'}><DialogTitle>{t.addMembership}</DialogTitle><DialogContent><Typography>{t.memberKindSpaceMessage}</Typography></DialogContent><DialogActions><Button onClick={() => setSpaceReleaseOpen(false)}>{t.cancel}</Button><Button variant="contained" onClick={() => void requestPaymentAfterSpaceRelease()} disabled={saving}>{t.confirmSpaceRelease}</Button></DialogActions></Dialog>
-      <Dialog open={paymentOpen} onClose={() => setPaymentOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} fullWidth maxWidth="xs"><DialogTitle>{t.payment}</DialogTitle><DialogContent><Box className="member-payment-summary"><Typography>{t.credit}: <strong dir="ltr">{formatMoney(paymentPreview?.CreditAmount ?? registration?.CreditAmount ?? 0)} {t.rial}</strong></Typography><Typography>{t.tax}: <strong dir="ltr">{formatMoney(paymentPreview?.Tax ?? registration?.TaxValue ?? 0)} {t.rial}</strong></Typography><Typography>{t.transfer}: <strong dir="ltr">{formatMoney(paymentPreview?.TransferAmount ?? 0)} {t.rial}</strong></Typography><Divider /><Typography variant="subtitle2">{t.payable}: <span dir="ltr">{formatMoney(paymentPreview?.TotalAmount ?? 0)} {t.rial}</span></Typography><Alert severity="info">{t.paymentDescription}</Alert></Box></DialogContent><DialogActions><Button onClick={() => setPaymentOpen(false)}>{t.cancel}</Button><Button variant="contained" onClick={() => void confirmPayment()} disabled={saving}>{t.confirmPayment}</Button></DialogActions></Dialog>
-      <Dialog open={cancellationOpen} onClose={() => setCancellationOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} fullWidth maxWidth="xs"><DialogTitle>{t.cancellation}</DialogTitle><DialogContent><Box className="member-cancellation-dialog"><Typography variant="body2">{t.creditStatus}: {cancellationCredit?.IsActive ? t.active : t.makeReservation}</Typography><Typography variant="body2">{t.creditType}: {creditTypeLabel(cancellationCredit?.MembershipCreditType)}</Typography><TextField select fullWidth size="small" label={t.cancellationType} value={cancellationType} onChange={(event) => setCancellationType(event.target.value)}><MenuItem value="1">{t.refund}</MenuItem><MenuItem value="2">{t.settlement}</MenuItem><MenuItem value="3">{t.terminate}</MenuItem></TextField></Box></DialogContent><DialogActions><Button onClick={() => setCancellationOpen(false)}>{t.cancel}</Button><Button color="error" variant="contained" onClick={() => void confirmCancellation()} disabled={!cancellationType || saving}>{t.cancelMembership}</Button></DialogActions></Dialog>
+      <AppPopup open={deleteOpen} onClose={() => setDeleteOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="sm" busy={saving} title={t.deleteTitle} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setDeleteOpen(false) },
+  { id: 'action-1', label: t.confirm, color: "error", variant: "contained", onClick: () => void remove(), disabled: saving }
+]}><Typography>{t.deleteMessage}</Typography></AppPopup>
+      <AppPopup open={carOpen} onClose={() => setCarOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="sm" title={t.addCar} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setCarOpen(false) },
+  { id: 'action-1', label: t.add, variant: "contained", onClick: addCar }
+]}><Box className="member-dialog-grid"><IranianPlateInput label={t.plate} value={carDraft.Plate} carType={carDraft.CarType} onCarTypeChange={(CarType) => setCarDraft((item) => ({ ...item, CarType }))} onChange={(Plate) => setCarDraft((item) => ({ ...item, Plate }))} error={carPlateInvalid} helperText={carPlateInvalid ? t.plateInvalid : undefined} /><TextField size="small" label={t.carName} value={carDraft.Name} onChange={(event) => setCarDraft((item) => ({ ...item, Name: event.target.value }))} /><TextField size="small" label={t.model} value={carDraft.DtoViewCarModelTitle} onChange={(event) => setCarDraft((item) => ({ ...item, DtoViewCarModelTitle: event.target.value }))} /><TextField size="small" label={t.color} value={carDraft.DtoViewCarColorTitle} onChange={(event) => setCarDraft((item) => ({ ...item, DtoViewCarColorTitle: event.target.value }))} /></Box></AppPopup>
+      <AppPopup open={saveFirstOpen} onClose={() => setSaveFirstOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="sm" busy={saving} title={t.saveFirstTitle} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setSaveFirstOpen(false) },
+  { id: 'action-1', label: t.saveAndContinue, variant: "contained", onClick: () => void saveMemberAndOpenRegistration(), disabled: saving }
+]}><Typography>{t.saveFirstMessage}</Typography></AppPopup>
+      <AppPopup open={replaceOpen} onClose={() => setReplaceOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="sm" title={t.replacementTitle} actions={[
+  { id: 'action-0', label: t.makeReservation, onClick: () => { setReplaceOpen(false); if (pendingRegistrationMember) void openRegistrationDialog(pendingRegistrationMember, false); } },
+  { id: 'action-1', label: t.replaceMembership, variant: "contained", onClick: () => { setReplaceOpen(false); if (pendingRegistrationMember) void openRegistrationDialog(pendingRegistrationMember, true); } }
+]}><Typography>{t.replacementMessage}</Typography></AppPopup>
+      <AppPopup open={registrationOpen} onClose={() => setRegistrationOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="xs" busy={saving} title={t.addMembership} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setRegistrationOpen(false) },
+  { id: 'action-1', label: t.payment, variant: "contained", onClick: () => void requestPayment(), disabled: !registration?.MemberRegisterKindId || saving }
+]}><Box className="member-registration-dialog"><TextField select fullWidth size="small" label={t.type} value={registration?.MemberRegisterKindId || ''} onChange={(event) => selectRegistrationKind(Number(event.target.value))}>{registerKinds.map((kind) => <MenuItem key={kind.Id} value={kind.Id}>{kind.Title}</MenuItem>)}</TextField><MoneyTextField fullWidth size="small" label={t.credit} value={registration?.CreditAmount ?? ''} onValueChange={(value) => setRegistration((current) => current ? { ...current, CreditAmount: number(value) } : current)} /><TextField fullWidth size="small" label={t.tax} value={formatMoney(registration?.TaxValue ?? 0)} disabled slotProps={{ htmlInput: { dir: 'ltr' } }} /><EosDateTimePicker fullWidth size="small" label={t.start} value={registration?.StartDate.slice(0, 16) ?? ''} onChange={() => undefined} language={language} disabled /><EosDateTimePicker fullWidth size="small" label={t.end} value={registration?.EndDate?.slice(0, 16) ?? ''} onChange={() => undefined} language={language} disabled /></Box></AppPopup>
+      <AppPopup open={spaceReleaseOpen} onClose={() => setSpaceReleaseOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="sm" busy={saving} title={t.addMembership} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setSpaceReleaseOpen(false) },
+  { id: 'action-1', label: t.confirmSpaceRelease, variant: "contained", onClick: () => void requestPaymentAfterSpaceRelease(), disabled: saving }
+]}><Typography>{t.memberKindSpaceMessage}</Typography></AppPopup>
+      <AppPopup open={paymentOpen} onClose={() => setPaymentOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="xs" busy={saving} title={t.payment} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setPaymentOpen(false) },
+  { id: 'action-1', label: t.confirmPayment, variant: "contained", onClick: () => void confirmPayment(), disabled: saving }
+]}><Box className="member-payment-summary"><Typography>{t.credit}: <strong dir="ltr">{formatMoney(paymentPreview?.CreditAmount ?? registration?.CreditAmount ?? 0)} {t.rial}</strong></Typography><Typography>{t.tax}: <strong dir="ltr">{formatMoney(paymentPreview?.Tax ?? registration?.TaxValue ?? 0)} {t.rial}</strong></Typography><Typography>{t.transfer}: <strong dir="ltr">{formatMoney(paymentPreview?.TransferAmount ?? 0)} {t.rial}</strong></Typography><Divider /><Typography variant="subtitle2">{t.payable}: <span dir="ltr">{formatMoney(paymentPreview?.TotalAmount ?? 0)} {t.rial}</span></Typography><Alert severity="info">{t.paymentDescription}</Alert></Box></AppPopup>
+      <AppPopup open={cancellationOpen} onClose={() => setCancellationOpen(false)} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="xs" busy={saving} title={t.cancellation} actions={[
+  { id: 'action-0', label: t.cancel, onClick: () => setCancellationOpen(false) },
+  { id: 'action-1', label: t.cancelMembership, color: "error", variant: "contained", onClick: () => void confirmCancellation(), disabled: !cancellationType || saving }
+]}><Box className="member-cancellation-dialog"><Typography variant="body2">{t.creditStatus}: {cancellationCredit?.IsActive ? t.active : t.makeReservation}</Typography><Typography variant="body2">{t.creditType}: {creditTypeLabel(cancellationCredit?.MembershipCreditType)}</Typography><TextField select fullWidth size="small" label={t.cancellationType} value={cancellationType} onChange={(event) => setCancellationType(event.target.value)}><MenuItem value="1">{t.refund}</MenuItem><MenuItem value="2">{t.settlement}</MenuItem><MenuItem value="3">{t.terminate}</MenuItem></TextField></Box></AppPopup>
     </ManagementWorkspaceFrame>
   );
 }

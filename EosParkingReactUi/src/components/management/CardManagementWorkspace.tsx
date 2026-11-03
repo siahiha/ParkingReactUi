@@ -1,5 +1,6 @@
+import { AppPopup } from '../AppPopup';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, TextField, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Checkbox, CircularProgress, FormControlLabel, IconButton, TextField, Tooltip, Typography } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -316,15 +317,11 @@ export function CardManagementWorkspace({ title, pageTitle, parkingId, language 
         </ResourceState>
       </Box>
       {saving && <Box className="inline-status-row" sx={{ mt: 1 }}><CircularProgress size={18} /><Typography variant="body2">{language === 'fa' ? 'در حال ذخیره تغییرات...' : 'Saving changes...'}</Typography></Box>}
-      {(pendingEdit || pendingNavigation) && <Dialog open onClose={() => { if (!saving) cancelPendingAction(); }} dir={language === 'fa' ? 'rtl' : 'ltr'}>
-        <DialogTitle>{copy.unsavedTitle}</DialogTitle>
-        <DialogContent><Typography>{copy.unsavedMessage}</Typography>{error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}</DialogContent>
-        <DialogActions>
-          <Button onClick={cancelPendingAction} disabled={saving}>{copy.stay}</Button>
-          <Button color="warning" onClick={() => void discardAndContinue()} disabled={saving}>{copy.discardAndContinue}</Button>
-          <Button variant="contained" onClick={() => void saveAndContinue()} disabled={saving}>{copy.saveAndContinue}</Button>
-        </DialogActions>
-      </Dialog>}
+      {(pendingEdit || pendingNavigation) && <AppPopup open onClose={() => { if (!saving) cancelPendingAction(); }} dir={language === 'fa' ? 'rtl' : 'ltr'} maxWidth="sm" busy={saving} title={copy.unsavedTitle} actions={[
+  { id: 'action-0', label: copy.stay, onClick: cancelPendingAction, disabled: saving },
+  { id: 'action-1', label: copy.discardAndContinue, color: "warning", onClick: () => void discardAndContinue(), disabled: saving },
+  { id: 'action-2', label: copy.saveAndContinue, variant: "contained", onClick: () => void saveAndContinue(), disabled: saving }
+]}><Typography>{copy.unsavedMessage}</Typography>{error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}</AppPopup>}
     </ManagementWorkspaceFrame>
   );
 }
