@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, useTheme, type ButtonProps, type DialogProps } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { appPopupStyles } from './appPopupStyles';
 
 export type PopupAction = {
   id: string;
@@ -43,15 +44,8 @@ export function AppPopup({ open, title, children, onClose, onConfirm, cancelLabe
   return <Dialog open={open} onClose={busy ? undefined : onClose}
     dir={dir ?? theme.direction} fullWidth maxWidth={maxWidth} fullScreen={fullScreen} aria-labelledby={titleId}
     slotProps={{ paper: { className: 'app-popup-paper', 'aria-busy': busy } }}
-    sx={{
-      '& .app-popup-paper': { border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', color: 'text.primary', overflow: 'hidden' },
-      '& .MuiDialogTitle-root': { px: 2, py: 1.5, fontSize: '.92rem', fontWeight: 800, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' },
-      '& .MuiDialogContent-root': { px: 2, py: 2, bgcolor: 'background.paper', overflowWrap: 'anywhere' },
-      '& .MuiDialogActions-root': { px: 2, py: 1, gap: .75, flexWrap: 'wrap', bgcolor: 'action.hover', borderTop: '1px solid', borderColor: 'divider' },
-      '& .MuiDialogActions-root > .MuiButton-root': { m: 0, minHeight: 32 },
-      '& .MuiDialogActions-root > .MuiButton-containedPrimary': { color: theme.palette.getContrastText(theme.palette.primary.main) },
-    }}>
-    <DialogTitle id={titleId}>{title}</DialogTitle>
+    sx={appPopupStyles(theme)}>
+    <DialogTitle id={titleId}><span className="app-popup-mark" aria-hidden="true" /><span className="app-popup-title-text">{title}</span></DialogTitle>
     <DialogContent>{children}</DialogContent>
     {buttons.length > 0 && <DialogActions>{buttons.map(action => <Button key={action.id} type="button"
       variant={action.variant ?? 'text'} color={action.color ?? 'primary'} disabled={busy || action.disabled}

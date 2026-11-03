@@ -35,6 +35,7 @@ for (const config of [
     await page.screenshot({ path: testInfo.outputPath(`${config.name}-card.png`), clip: box });
     await cards.first().getByRole('button').first().click();
     await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('dialog').screenshot({ path: testInfo.outputPath(`${config.name}-editor-popup.png`), animations: 'disabled' });
     await page.keyboard.press('Escape');
     await cards.first().getByRole('button').last().click();
     await expect(page.getByRole('dialog')).toBeVisible();
