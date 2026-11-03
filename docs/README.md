@@ -34,7 +34,8 @@ Splash
 |---|---|---|
 | استاندارد مستندسازی، طراحی و کدنویسی React | مرجع الزام‌آور پروژه | [00-documentation-standard.md](00-documentation-standard.md) |
 | راه‌اندازی و ورود | تحلیل اولیه | [01-authentication.md](01-authentication.md) |
-| داشبورد و منوی اصلی و گزارشات کلی | رفتار UI مستند؛ API ناقص | [02-dashboard-and-navigation.md](02-dashboard-and-navigation.md) |
+| Home وب، منو، route، داشبورد، گزارش‌ها و permission | قرارداد یکپارچه؛ بخشی از API نیازمند تأیید Backend | [25-home.md](25-home.md) |
+| DashboardForm ویندوز و گزارشات کلی آن | رفتار UI ویندوز مستند؛ API ناقص | [02-dashboard-and-navigation.md](02-dashboard-and-navigation.md) |
 | MainForm؛ کلیات، وضعیت پارکینگ، lifecycle و دسترسی | جزئیات خود فرم مستند؛ فرم‌های وابسته مرحله‌ای | [03-main-form-overview.md](03-main-form-overview.md) |
 | ساختار پارکینگ | تحلیل اولیه | [03-parking-configuration.md](03-parking-configuration.md) |
 | کاربران و دسترسی | تحلیل اولیه | [04-users-and-access.md](04-users-and-access.md) |
@@ -43,7 +44,7 @@ Splash
 | اعضا و کارت‌ها | فرم کارت با Grid و عملیات بالای صفحه؛ API ناقص | [05-members-and-cards.md](05-members-and-cards.md) |
 | ورود، خروج و پرداخت | تحلیل اولیه | [06-traffic-and-payment.md](06-traffic-and-payment.md) |
 | مانیتورینگ و تجهیزات | تحلیل اولیه | [07-monitoring-and-devices.md](07-monitoring-and-devices.md) |
-| گزارش‌ها | تحلیل اولیه | [08-reports.md](08-reports.md) |
+| استاندارد عمومی گزارش‌ها | قواعد فیلتر، خروجی و API؛ فهرست Home در سند ۲۵ | [08-reports.md](08-reports.md) |
 | اجزای مشترک UI | تحلیل اولیه | [10-shared-ui-components.md](10-shared-ui-components.md) |
 | فرم‌های باقی‌مانده به‌جز ManualTrafficControl | تحلیل تجمیعی؛ قرارداد API برخی فرم‌ها ناقص | [11-remaining-forms.md](11-remaining-forms.md) |
 | کنترل تردد دستی | UI کامل؛ معماری وب و Windows Service پیشنهادی؛ API نیازمند تکمیل backend | [12-manual-traffic-control-form.md](12-manual-traffic-control-form.md) |

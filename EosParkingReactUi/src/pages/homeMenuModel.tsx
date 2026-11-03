@@ -19,6 +19,7 @@ import TrafficRoundedIcon from '@mui/icons-material/TrafficRounded';
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import ViewModuleRoundedIcon from '@mui/icons-material/ViewModuleRounded';
 import type { Language } from '../i18n/instance';
+import i18n from '../i18n/instance';
 import { permissionNames } from '../api/contracts';
 import type { HomeUser } from './homeTypes';
 
@@ -28,95 +29,38 @@ export type HomeMenuGroup = { key: string; title: string; items: HomeMenuItem[];
 
 export const parkingCrudItems = new Set(['space-types', 'floors', 'zones', 'member-kinds']);
 
-export function createManagementItems(labels: { listMenu: string; users: string; accessLevels: string; exitPermission: string }): Array<HomeMenuItem & { key: ManagementSection }> {
+export function createManagementItems(language: Language): Array<HomeMenuItem & { key: ManagementSection }> {
+  const t = i18n.getFixedT(language);
   return [
-    { key: 'list', label: labels.listMenu, icon: <LocalParkingRoundedIcon /> },
-    { key: 'users', label: labels.users, icon: <PeopleAltRoundedIcon /> },
-    { key: 'access', label: labels.accessLevels, icon: <SecurityRoundedIcon /> },
-    { key: 'exit', label: labels.exitPermission, icon: <LoginRoundedIcon /> },
+    { key: 'list', label: t('homeMenu.items.list'), icon: <LocalParkingRoundedIcon /> },
+    { key: 'users', label: t('homeMenu.items.users'), icon: <PeopleAltRoundedIcon /> },
+    { key: 'access', label: t('homeMenu.items.access'), icon: <SecurityRoundedIcon /> },
+    { key: 'exit', label: t('homeMenu.items.exit'), icon: <LoginRoundedIcon /> },
   ];
 }
 
 function createReportGroups(language: Language): HomeMenuGroup[] {
-  if (language === 'fa') {
-    return [
-      { key: 'member-reports', title: 'گزارش اعضا', items: [
-        { key: 'member-report', label: 'گزارش اعضا', icon: <PeopleAltRoundedIcon /> },
-        { key: 'active-member-report', label: 'گزارش اعضای دارای عضویت فعال', icon: <PeopleAltRoundedIcon /> },
-        { key: 'inactive-member-report', label: 'گزارش اعضای فاقد عضویت فعال', icon: <PeopleAltRoundedIcon /> },
-        { key: 'member-register-history', label: 'سابقه عضویت اعضا', icon: <PeopleAltRoundedIcon /> },
-      ] },
-      { key: 'traffic-reports', title: 'گزارش تردد', items: [
-        { key: 'traffic-reports-list', label: 'ورود و خروج خودروها', icon: <TrafficRoundedIcon /> },
-        { key: 'door-traffic-reports', label: 'تعداد تردد روزانه درب‌ها', icon: <BarChartRoundedIcon /> },
-        { key: 'average-parking-time', label: 'متوسط مدت پارک خودرو', icon: <BarChartRoundedIcon /> },
-      ] },
-      { key: 'financial-reports', title: 'گزارش‌های مالی', items: [
-        { key: 'parking-income', label: 'درآمد پارکینگ', icon: <ReceiptLongRoundedIcon /> },
-        { key: 'monthly-parking-income', label: 'مقایسه درآمد ماهیانه پارکینگ', icon: <BarChartRoundedIcon /> },
-        { key: 'member-cash', label: 'گردش مالی اعضا', icon: <ReceiptLongRoundedIcon /> },
-        { key: 'user-performance', label: 'عملکرد مالی کاربران', icon: <BarChartRoundedIcon /> },
-        { key: 'membership-income', label: 'ریز درآمد فروش حق عضویت', icon: <ReceiptLongRoundedIcon /> },
-      ] },
-      { key: 'other-reports', title: 'سایر', items: [
-        { key: 'cargo-details', label: 'گزارش جزئیات حمل بار', icon: <TrafficRoundedIcon /> },
-      ] },
-      { key: 'management-reports', title: 'گزارش‌های مدیریتی', items: [
-        { key: 'management-monthly-income-comparison', label: 'مقایسه درآمد ماهانه پارکینگ‌ها', icon: <BarChartRoundedIcon /> },
-        { key: 'management-income-comparison', label: 'مقایسه درآمد پارکینگ‌ها', icon: <BarChartRoundedIcon /> },
-        { key: 'management-yearly-income-comparison', label: 'مقایسه درآمد سالانه پارکینگ‌ها', icon: <BarChartRoundedIcon /> },
-        { key: 'management-user-performance', label: 'عملکرد مالی کاربران', icon: <BarChartRoundedIcon /> },
-        { key: 'management-free-parking-income', label: 'ریز درآمد پارک آزاد خودروها', icon: <ReceiptLongRoundedIcon /> },
-      ] },
-    ];
-  }
-
+  const t = i18n.getFixedT(language);
+  const translate = t as unknown as (key: string) => string;
+  const item = (key: string, icon: ReactNode): HomeMenuItem => ({ key, label: translate(`homeMenu.items.${key}`), icon });
   return [
-    { key: 'member-reports', title: 'Member reports', items: [
-      { key: 'member-report', label: 'Member report', icon: <PeopleAltRoundedIcon /> },
-      { key: 'active-member-report', label: 'Members with active membership', icon: <PeopleAltRoundedIcon /> },
-      { key: 'inactive-member-report', label: 'Members without active membership', icon: <PeopleAltRoundedIcon /> },
-      { key: 'member-register-history', label: 'Member membership history', icon: <PeopleAltRoundedIcon /> },
-    ] },
-    { key: 'traffic-reports', title: 'Traffic reports', items: [
-      { key: 'traffic-reports-list', label: 'Vehicle entry and exit', icon: <TrafficRoundedIcon /> },
-      { key: 'door-traffic-reports', label: 'Daily door traffic', icon: <BarChartRoundedIcon /> },
-      { key: 'average-parking-time', label: 'Average vehicle parking time', icon: <BarChartRoundedIcon /> },
-    ] },
-    { key: 'financial-reports', title: 'Financial reports', items: [
-      { key: 'parking-income', label: 'Parking income', icon: <ReceiptLongRoundedIcon /> },
-      { key: 'monthly-parking-income', label: 'Monthly parking income comparison', icon: <BarChartRoundedIcon /> },
-      { key: 'member-cash', label: 'Member cash flow', icon: <ReceiptLongRoundedIcon /> },
-      { key: 'user-performance', label: 'User financial performance', icon: <BarChartRoundedIcon /> },
-      { key: 'membership-income', label: 'Membership sales income details', icon: <ReceiptLongRoundedIcon /> },
-    ] },
-    { key: 'other-reports', title: 'Other', items: [
-      { key: 'cargo-details', label: 'Cargo details report', icon: <TrafficRoundedIcon /> },
-    ] },
-    { key: 'management-reports', title: 'Management reports', items: [
-      { key: 'management-monthly-income-comparison', label: 'Monthly parking income comparison', icon: <BarChartRoundedIcon /> },
-      { key: 'management-income-comparison', label: 'Parking income comparison', icon: <BarChartRoundedIcon /> },
-      { key: 'management-yearly-income-comparison', label: 'Yearly parking income comparison', icon: <BarChartRoundedIcon /> },
-      { key: 'management-user-performance', label: 'User financial performance', icon: <BarChartRoundedIcon /> },
-      { key: 'management-free-parking-income', label: 'Free-parking income details', icon: <ReceiptLongRoundedIcon /> },
-    ] },
+    { key: 'member-reports', title: translate('homeMenu.groups.member-reports'), items: [item('member-report', <PeopleAltRoundedIcon />), item('active-member-report', <PeopleAltRoundedIcon />), item('inactive-member-report', <PeopleAltRoundedIcon />), item('member-register-history', <PeopleAltRoundedIcon />)] },
+    { key: 'traffic-reports', title: translate('homeMenu.groups.traffic-reports'), items: [item('traffic-reports-list', <TrafficRoundedIcon />), item('door-traffic-reports', <BarChartRoundedIcon />), item('average-parking-time', <BarChartRoundedIcon />)] },
+    { key: 'financial-reports', title: translate('homeMenu.groups.financial-reports'), items: [item('parking-income', <ReceiptLongRoundedIcon />), item('monthly-parking-income', <BarChartRoundedIcon />), item('member-cash', <ReceiptLongRoundedIcon />), item('user-performance', <BarChartRoundedIcon />), item('membership-income', <ReceiptLongRoundedIcon />)] },
+    { key: 'other-reports', title: translate('homeMenu.groups.other-reports'), items: [item('cargo-details', <TrafficRoundedIcon />)] },
+    { key: 'management-reports', title: translate('homeMenu.groups.management-reports'), items: [item('management-monthly-income-comparison', <BarChartRoundedIcon />), item('management-income-comparison', <BarChartRoundedIcon />), item('management-yearly-income-comparison', <BarChartRoundedIcon />), item('management-user-performance', <BarChartRoundedIcon />), item('management-free-parking-income', <ReceiptLongRoundedIcon />)] },
   ];
 }
 
 export function createParkingMenuGroups(language: Language): HomeMenuGroup[] {
-  if (language === 'fa') {
-    return [
-      { key: 'definitions', title: 'تعاریف و تنظیمات پارکینگ', items: [{ key: 'parking-details', label: 'مشخصات پارکینگ', icon: <SettingsRoundedIcon /> }, { key: 'equipment', label: 'تجهیزات', icon: <DevicesOtherRoundedIcon /> }, { key: 'space-types', label: 'انواع جای پارک', icon: <ViewModuleRoundedIcon /> }, { key: 'floors', label: 'طبقات و تقسیمات', icon: <LayersRoundedIcon /> }, { key: 'zones', label: 'زون‌های پارکینگ', icon: <GridViewRoundedIcon /> }, { key: 'doors', label: 'درب‌های پارکینگ', icon: <DoorFrontRoundedIcon /> }, { key: 'member-kinds', label: 'انواع عضویت', icon: <BadgeRoundedIcon /> }, { key: 'tariffs', label: 'تعرفه', icon: <SellRoundedIcon /> }, { key: 'cards', label: 'مدیریت کارت‌ها', icon: <CreditCardRoundedIcon /> }, { key: 'members', label: 'عضویت و ثبت‌نام', icon: <PeopleAltRoundedIcon /> }] },
-      { key: 'operations', title: 'عملیات پارکینگ', items: [{ key: 'monitoring', label: 'مانیتورینگ', icon: <MonitorHeartRoundedIcon /> }, { key: 'shifts', label: 'اختصاص شیفت', icon: <BadgeRoundedIcon /> }, { key: 'manual-traffic', label: 'کنترل ورود و خروج', icon: <LoginRoundedIcon /> }, { key: 'traffic-records', label: 'مدیریت ورودها و خروج‌ها', icon: <TrafficRoundedIcon /> }, { key: 'anpr-monitoring', label: 'مانیتورینگ تشخیص پلاک', icon: <MonitorHeartRoundedIcon /> }] },
-      { key: 'integrations', title: 'یکپارچه‌سازی سامانه‌ها', items: [{ key: 'integration-settings', label: 'تنظیم ارتباط با سیستم‌ها', icon: <SettingsRoundedIcon /> }, { key: 'ets-import', label: 'به‌روزرسانی اعضا از ETS', icon: <SyncRoundedIcon /> }, { key: 'excel-import', label: 'دریافت اطلاعات پرسنلی از Excel', icon: <UploadFileRoundedIcon /> }] },
-      { key: 'reports', title: 'گزارش‌ها', items: [], subgroups: createReportGroups(language) },
-    ];
-  }
+  const t = i18n.getFixedT(language);
+  const translate = t as unknown as (key: string) => string;
+  const item = (key: string, icon: ReactNode): HomeMenuItem => ({ key, label: translate(`homeMenu.items.${key}`), icon });
   return [
-    { key: 'definitions', title: 'Parking definitions and settings', items: [{ key: 'parking-details', label: 'Parking details', icon: <SettingsRoundedIcon /> }, { key: 'equipment', label: 'Equipment', icon: <DevicesOtherRoundedIcon /> }, { key: 'space-types', label: 'Parking space types', icon: <ViewModuleRoundedIcon /> }, { key: 'floors', label: 'Floors and divisions', icon: <LayersRoundedIcon /> }, { key: 'zones', label: 'Parking zones', icon: <GridViewRoundedIcon /> }, { key: 'doors', label: 'Parking doors', icon: <DoorFrontRoundedIcon /> }, { key: 'member-kinds', label: 'Membership types', icon: <BadgeRoundedIcon /> }, { key: 'tariffs', label: 'Tariffs', icon: <SellRoundedIcon /> }, { key: 'cards', label: 'Card management', icon: <CreditCardRoundedIcon /> }, { key: 'members', label: 'Membership and registration', icon: <PeopleAltRoundedIcon /> }] },
-    { key: 'operations', title: 'Parking operations', items: [{ key: 'monitoring', label: 'Monitoring', icon: <MonitorHeartRoundedIcon /> }, { key: 'shifts', label: 'Assign shift', icon: <BadgeRoundedIcon /> }, { key: 'manual-traffic', label: 'Entry and exit control', icon: <LoginRoundedIcon /> }, { key: 'traffic-records', label: 'Manage entries and exits', icon: <TrafficRoundedIcon /> }, { key: 'anpr-monitoring', label: 'ANPR monitoring', icon: <MonitorHeartRoundedIcon /> }] },
-    { key: 'integrations', title: 'System integrations', items: [{ key: 'integration-settings', label: 'Integration settings', icon: <SettingsRoundedIcon /> }, { key: 'ets-import', label: 'Update members from ETS', icon: <SyncRoundedIcon /> }, { key: 'excel-import', label: 'Import personnel from Excel', icon: <UploadFileRoundedIcon /> }] },
-    { key: 'reports', title: 'Reports', items: [], subgroups: createReportGroups(language) },
+    { key: 'definitions', title: translate('homeMenu.groups.definitions'), items: [item('parking-details', <SettingsRoundedIcon />), item('equipment', <DevicesOtherRoundedIcon />), item('space-types', <ViewModuleRoundedIcon />), item('floors', <LayersRoundedIcon />), item('zones', <GridViewRoundedIcon />), item('doors', <DoorFrontRoundedIcon />), item('member-kinds', <BadgeRoundedIcon />), item('tariffs', <SellRoundedIcon />), item('cards', <CreditCardRoundedIcon />), item('members', <PeopleAltRoundedIcon />)] },
+    { key: 'operations', title: translate('homeMenu.groups.operations'), items: [item('monitoring', <MonitorHeartRoundedIcon />), item('shifts', <BadgeRoundedIcon />), item('manual-traffic', <LoginRoundedIcon />), item('traffic-records', <TrafficRoundedIcon />), item('anpr-monitoring', <MonitorHeartRoundedIcon />)] },
+    { key: 'integrations', title: translate('homeMenu.groups.integrations'), items: [item('integration-settings', <SettingsRoundedIcon />), item('ets-import', <SyncRoundedIcon />), item('excel-import', <UploadFileRoundedIcon />)] },
+    { key: 'reports', title: translate('homeMenu.groups.reports'), items: [], subgroups: createReportGroups(language) },
   ];
 }
 

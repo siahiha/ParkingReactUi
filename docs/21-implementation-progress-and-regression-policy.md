@@ -9,7 +9,7 @@
 پروژه در مسیر `EosParkingReactUi` یک SPA مبتنی بر React و TypeScript است. در این مرحله، صفحه‌های زیر در UI وجود دارند:
 
 - Login؛
-- Home؛
+- Home؛ جزئیات قرارداد آن فقط در [سند ۲۵](25-home.md) نگهداری می‌شود؛
 - منوی همبرگری «پارکینگ‌ها» در بخش «مدیریت سامانه»؛
 - منوهای تعاریف، عملیات، ارتباط با سیستم‌ها و گزارش‌ها؛ منوی گزارش‌ها شامل دسته‌های اعضا، تردد، مالی، سایر و گزارش‌های مدیریتی است؛
 - تنظیمات theme، زبان و palette؛
@@ -57,7 +57,7 @@ identifier، URL، کد خطا و نام پروتکل مقدار فنی هستن
 
 | حوزه | وضعیت فعلی در UI | منبع کد/مستند | وضعیت تحویل |
 |---|---|---|---|
-| Login، session و Home | پیاده‌سازی شده و تست regression دارد؛ `/` و `/login` به `Login2Page` و `/login2` به `LoginPage` متصل است؛ هر دو صفحه از auth service مشترک استفاده می‌کنند؛ تنها route فعال Home `/home/*` است و پوسته‌ی آن با `HomeShell`، `HomeHeader`، `HomeNavigation`، `HomeTabs` و `HomeDashboard` ساخته می‌شود | `src/App.tsx`، `src/pages/Login2Page.tsx`، `src/pages/LoginPage.tsx`، `src/i18n/instance.ts`، `src/locales/fa.ts`، `src/locales/en.ts`، `src/styles.css`، `src/features/auth`، `src/pages/Home.tsx` و componentهای Home؛ جزئیات Login در سندهای ۰۱ و ۱۹ | قابل استفاده با قرارداد فعلی؛ داده‌ی داشبورد Home از `api/Parking/GetInfoById?id={parkingId}` می‌آید و قرارداد کامل response/error هنوز نیازمند تأیید است؛ متن‌های اختصاصی `Login2Page` هنوز در constant محلی `copy` قرار دارند |
+| Login، session و Home | Login پیاده‌سازی شده و تست regression دارد؛ تنها route فعال Home `/home/*` است. قرارداد route، پوسته، منو، داشبورد و API در [سند ۲۵](25-home.md) ثبت شده است | `src/App.tsx`، `src/features/auth` و سندهای ۰۱ و ۲۵ | وضعیت جزئی Home و موارد باز در سند ۲۵؛ Login هنوز ممکن است constant محلی مستقل داشته باشد |
 | صفحه‌ی مقصد منوی همبرگری «پارکینگ‌ها» | CRUD پیاده‌سازی شده در `ParkingDirectoryWorkspace`؛ کارت هر رکورد نام، آدرس، تلفن، شناسه و وضعیت «تجاری/غیرتجاری» و «دارای شیفت/بدون شیفت» را نشان می‌دهد؛ فرم ایجاد/ویرایش در Dialog و دارای تب‌های مشخصات، تنظیمات و شیفت‌هاست | `ParkingDirectoryWorkspace.tsx`، `ParkingFormFields.tsx` | پیاده‌سازی UI؛ API کامل و وجود propertyهای وضعیت در response فهرست نیازمند تأیید Backend |
 | کاربران و سطوح دسترسی | CRUD پیاده‌سازی شده؛ دابل‌کلیک ردیف‌های قابل ویرایش Popup ویرایش همان رکورد را باز می‌کند | `UserManagementWorkspace.tsx`، `AccessLevelWorkspace.tsx` | پیاده‌سازی UI؛ مجوز نهایی با Backend |
 | مشخصات پارکینگ | فرم تب‌بندی‌شده با گزینه‌های فعال‌سازی تب‌ها و `EosTimeOnDayPicker` برای ساعت‌های روزانه‌ی شیفت | `ParkingFormFields.tsx`، `EosTimeOnDayPicker.tsx`، `ParkingDetailsWorkspace.tsx`، `ParkingDirectoryWorkspace.tsx`؛ جزئیات در سند ۰۳ | propertyهای `IsCommercialParking` و `HasUserShifts` به `ParkingEntity` در سورس Backend افزوده شده و دیتابیس با EF automatic migrations به‌روز می‌شود؛ اعمال در محیط اجرا نیازمند build/deploy Backend است. ذخیره‌ی پارکینگ بدون شیفت همچنان به‌علت non-null بودن ساعت شیفت اول نیازمند تصمیم Backend است |
@@ -68,28 +68,16 @@ identifier، URL، کد خطا و نام پروتکل مقدار فنی هستن
 | درب‌ها | عمدتاً read-only | `ParkingDoorWorkspace.tsx` | عملیات کامل پیاده‌سازی نشده است؛ آیتم وب «کنترل فهرست خودرو» در منوی فعلی حذف شده است |
 | اختصاص شیفت، مدیریت تردد، مانیتورینگ و ANPR | workspace و wiring route/API در کد موجود است؛ ANPR شامل SSE event-driven، merge رکورد، lazy image، مدیریت خطای جزئی تجهیزات و workflow حذف تصویر است | `HomeFormRoutes.tsx`، `ShiftAssignmentWorkspace.tsx`، `TrafficRecordsWorkspace.tsx`، `AnprMonitoringWorkspace.tsx`، `management.ts` | قرارداد رسمی API، تصویر و deployment stream نیازمند تأیید Backend |
 | یکپارچه‌سازی، ETS و Excel | placeholder یا فاقد endpoint قابل اتکا | `homeMenuModel.tsx`، `ReadOnlyModuleWorkspace.tsx` | باز و نیازمند قرارداد Backend/تصمیم محصول |
-| منوی گزارش‌ها | ساختار سلسله‌مراتبی منو با دسته‌های «گزارش اعضا»، «گزارش تردد»، «گزارش‌های مالی»، «سایر» و «گزارش‌های مدیریتی» پیاده‌سازی شده؛ هر گزارش کلید و مسیر مستقل دارد. سه گزارش اعضا، سه گزارش تردد، پنج گزارش مالی، گزارش جزئیات حمل بار و پنج گزارش مدیریتی به فیلترهای واقعی و Viewer استیمول‌سافت متصل شده‌اند | `homeMenuModel.tsx`، `HomeNavigation.tsx`، `Home.tsx`، `features/reports/MemberReportWorkspace.tsx`، `features/reports/TrafficReportWorkspace.tsx`، `features/reports/FinancialReportWorkspace.tsx`، `features/reports/CargoReportWorkspace.tsx`، `features/reports/ManagementReportWorkspace.tsx`، `api/management.ts` | هفده گزارش قابل اجرا هستند و قالب‌های MRT با رندر async نمایش داده می‌شوند؛ نگاشت گزارش «مقایسه درآمد پارکینگ‌ها» مطابق رفتار فعلی ویندوز حفظ شده است |
+| منوی گزارش‌ها | قرارداد و وضعیت اتصال در [سند ۲۵](25-home.md) ثبت شده است | `homeMenuModel.tsx`، `HomeNavigation.tsx`، `HomeFormRoutes.tsx` و `features/reports` | جزئیات و موارد باز در سند ۲۵ |
 | دوربین RTSP | اتصال WebRTC/HLS، وضعیت، lifecycle مقاوم در برابر unmount و overlay ROI پایه پیاده‌سازی شده | سند ۲۴، `CameraStreamPreview.tsx` و تست lifecycle | drag/edit/delete تعاملی ROI هنوز انجام نشده است |
 
 ### رفتار route guard و مسیرهای غیرمجاز
 
-**وضعیت:** اصلاح‌شده در UI.
-
-- نبودن یا انقضای session همچنان کاربر را به Login می‌فرستد؛ این تنها حالت redirect به Login است.
-- route ناشناخته یا خارج از قرارداد `/home/*` بدون تغییر URL داخل پوسته‌ی Home نمایش داده می‌شود و پیام «این مسیر وجود ندارد» می‌گیرد؛ به این ترتیب Home unmount نمی‌شود و تب‌های باز از بین نمی‌روند.
-- route شناخته‌شده اما غیرمجاز، داخل پوسته‌ی Home باقی می‌ماند؛ تب آن route باز می‌شود و workspace به‌جای داده، پیام «شما به این قسمت دسترسی ندارید» و مسیر بازگشت به Home را نمایش می‌دهد.
-- این guard فقط کنترل UX و navigation است و جایگزین authorization سمت Backend نیست؛ پاسخ‌های 401/403 همچنان باید در API client و featureها مدیریت شوند.
-- تست مستقیم URL برای کاربر بدون مجوز باید در معیار تحویل باقی بماند.
+**وضعیت:** اصلاح‌شده در UI؛ قرارداد کامل route guard، مسیرهای ناشناخته/غیرمجاز و مرز آن با authorization Backend در [سند ۲۵](25-home.md) ثبت شده است.
 
 ### قرارداد فعلی Home
 
-- برنامه فقط یک Home دارد: route محافظت‌شده‌ی `/home/*`. route یا variant مستقلی با نام `/home3` وجود ندارد.
-- `HomeShell` پوسته‌ی مشترک است و `HomeHeader`، `HomeNavigation`، `HomeTabs` اختیاری، loading state و محتوای route را ترکیب می‌کند.
-- برند، لوگو و عنوان سامانه در بالاترین بخش `HomeHeader` قرار دارند؛ لوگو از `public/eos-parking-logo.png` خوانده می‌شود و Toolbar ارتفاع پایه‌ی `64px` دارد.
-- `HomeNavigation` سه ریشه‌ی «مدیریت سامانه»، «تعاریف و تنظیمات پارکینگ» و «گزارش‌ها» را نمایش می‌دهد؛ در دسکتاپ عرض navigation باز `264px` و فشرده `76px` است و در موبایل به Drawer تبدیل می‌شود.
-- حالت tabs/classic با تنظیم کاربر انتخاب می‌شود؛ `HomeTabs` فقط در حالت tabs نمایش داده می‌شود و تب Home قابل بستن نیست.
-- `HomeDashboard` اطلاعات پارکینگ انتخاب‌شده را از `api/Parking/GetInfoById?id={parkingId}` می‌گیرد؛ loading، نبود پارکینگ، خطا و refresh بخشی از قرارداد فعلی هستند.
-- تفاوت مدیر و کاربر عادی در visibility آیتم‌ها، مجوزها و ریشه‌ی اولیه‌ی navigation است، نه در دو layout مستقل.
+قرارداد فعلی Home، شامل تفاوت وب و ویندوز، route، پوسته، منو، داشبورد، polling، retry، permission و وضعیت API، در [سند مرجع Home وب](25-home.md) نگهداری می‌شود. این سند فقط وضعیت کلی پیاده‌سازی و سیاست regression را ثبت می‌کند.
 
 ### JavaScript خام و استثنای فنی مصوب
 
@@ -158,12 +146,9 @@ MediaMTX برای همین سناریو در نظر گرفته شده و مسی�
 - CORS باید origin دقیق UI را allow کند؛ استفاده از `Access-Control-Allow-Origin: *`
   همراه credential ممنوع است.
 
-### Permission و Home
+### Permission UI
 
-- permission نام‌دار به‌عنوان مسیر اصلی مجوز UI اضافه شده است؛
-- برای Backend قدیمی، fallback به `UserAccessLevelId === 1` حفظ شده است؛
-- sessionهای قبلی که permission جدید ندارند، در صورت وجود `canManageDashboard` یا سطح دسترسی قدیمی، همچنان layout مدیریتی را دریافت می‌کنند؛
-- Home برای مدیر و کاربر عادی یک `HomeShell` مشترک دارد؛ تفاوت فقط در `visibleManagementItems`، `visibleParkingGroups`، `canManageDashboard` و ریشه‌ی اولیه‌ی navigation است و تشخیص نقش نباید بدون تست تغییر کند.
+جزئیات permission و visibility Home در [سند مرجع Home وب](25-home.md) ثبت شده است. تغییرات عمومی API client و سازگاری session باید با آن قرارداد تطبیق داده شوند.
 
 ## Regressionهای شناسایی‌شده و اصلاح‌شده
 
@@ -178,9 +163,7 @@ MediaMTX برای همین سناریو در نظر گرفته شده و مسی�
 
 ### خرابی Home
 
-در یک تغییر، تشخیص مدیر فقط بر اساس permission نام‌دار انجام شد. Backend فعلی permission نام‌دار ارسال نمی‌کند و از `UserAccessLevelId` استفاده می‌کند. نتیجه، حذف navigation و منوی مدیریت از Home بود.
-
-Fallback قدیمی برگردانده شد و تست نمایش منوی مدیریت برای کاربر مدیر اضافه شد.
+یک regression در تشخیص مدیر و fallback قدیمی رخ داده بود. علت، اتکای صرف به permission نام‌دار در حالی بود که Backend فعلی از `UserAccessLevelId` نیز استفاده می‌کند. وضعیت اصلاح‌شده و قرارداد نهایی آن در [سند ۲۵](25-home.md) ثبت شده است.
 
 ## سیاست اجباری جلوگیری از Regression
 

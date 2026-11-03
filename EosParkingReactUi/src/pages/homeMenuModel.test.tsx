@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { homeCopy } from './homeCopy';
 import { createManagementItems, createParkingMenuGroups } from './homeMenuModel';
 
 describe('home menu model', () => {
   it('does not expose general reports under system management', () => {
-    const items = createManagementItems(homeCopy.fa);
+    const items = createManagementItems('fa');
 
     expect(items.map((item) => item.key)).toEqual(['list', 'users', 'access', 'exit']);
-    expect(items.some((item) => item.label === 'گزارش‌های کلی')).toBe(false);
+    expect(items.map((item) => String(item.key))).not.toContain('reports');
   });
 
   it('keeps management reports in the dedicated reports menu', () => {
