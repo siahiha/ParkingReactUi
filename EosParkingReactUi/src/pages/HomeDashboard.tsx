@@ -22,7 +22,7 @@ export function HomeDashboard({ language, selectedParkingName, selectedParkingId
   return <Box className="home3-dashboard">
     <HomeDashboardIntro language={language} selectedParkingName={selectedParkingName} />
     {parkingInfo.error && <Alert severity="error">{t('home.parkingInfoLoadError')}</Alert>}
-    <HomeDashboardOverview language={language} parkingInfo={parkingInfo.data} refreshing={parkingInfo.refreshing} onRefresh={() => void parkingInfo.refresh()} onNavigate={navigateTo} />
+    <HomeDashboardOverview parkingId={selectedParkingId} language={language} parkingInfo={parkingInfo.data} refreshing={parkingInfo.refreshing} onRefresh={() => void parkingInfo.refresh()} />
     <HomeDashboardLower onNavigate={navigateTo} />
   </Box>;
 }

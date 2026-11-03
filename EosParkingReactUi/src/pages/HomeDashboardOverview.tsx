@@ -1,46 +1,23 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Button, Chip, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material';
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import DirectionsCarRoundedIcon from '@mui/icons-material/DirectionsCarRounded';
 import DoorFrontRoundedIcon from '@mui/icons-material/DoorFrontRounded';
 import LocalParkingRoundedIcon from '@mui/icons-material/LocalParkingRounded';
-import NorthRoundedIcon from '@mui/icons-material/NorthRounded';
-import SouthRoundedIcon from '@mui/icons-material/SouthRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import type { Language } from '../i18n/instance';
 import { formatDateTime, formatNumber } from '../utils/formatters';
 import { occupancyPercentage, type HomeParkingInfo } from '../features/home/homeParkingInfoService';
+import { ParkingSpaceMap } from '../features/home/ParkingSpaceMap';
 
-type Props = { language: Language; parkingInfo: HomeParkingInfo | null; refreshing: boolean; onRefresh: () => void; onNavigate: (path: string) => void };
-const slots = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'C1', 'C2', 'C3', 'C4', 'D1', 'D2', 'D3', 'D4'];
-const occupiedSlots = new Set(['A3', 'A4', 'B2', 'B3', 'C2', 'D1', 'D4']);
+type Props = { parkingId: number; language: Language; parkingInfo: HomeParkingInfo | null; refreshing: boolean; onRefresh: () => void };
 
-export function HomeDashboardOverview({ language, parkingInfo, refreshing, onRefresh, onNavigate }: Props) {
-  const [selectedSlot, setSelectedSlot] = useState('A1');
-
+export function HomeDashboardOverview({ parkingId, language, parkingInfo, refreshing, onRefresh }: Props) {
   return <Box className="home3-overview">
     <MetricRail language={language} parkingInfo={parkingInfo} />
-    <ParkingMap selectedSlot={selectedSlot} onSelectSlot={setSelectedSlot} />
+    <ParkingSpaceMap parkingId={parkingId} language={language} />
     <DoorStatusPanel language={language} parkingInfo={parkingInfo} refreshing={refreshing} onRefresh={onRefresh} />
   </Box>;
-}
-
-function ParkingMap({ selectedSlot, onSelectSlot }: { selectedSlot: string; onSelectSlot: (slot: string) => void }) {
-  const { t } = useTranslation();
-  return <Paper className="home3-map-panel" elevation={0}>
-    <PanelHeading overline={t('home.liveOverview')} title={t('home.spaceMap')} icon={<LocalParkingRoundedIcon />} />
-    <Divider />
-    <Box className="home3-map-stage" aria-label={t('home.spaceMap')}>
-      <Box className="home3-map-axis home3-axis-x"><span>A</span><span>B</span><span>C</span><span>D</span></Box>
-      <Box className="home3-map-axis home3-axis-y"><span>01</span><span>02</span><span>03</span><span>04</span></Box>
-      <Box className="home3-map-road home3-road-one" /><Box className="home3-map-road home3-road-two" /><Box className="home3-map-road home3-road-three" />
-      <Box className="home3-map-gate home3-gate-north"><NorthRoundedIcon /><span>{t('home.gateNorth')}</span></Box>
-      <Box className="home3-map-gate home3-gate-south"><SouthRoundedIcon /><span>{t('home.gateSouth')}</span></Box>
-      <Box className="home3-slot-grid">{slots.map((slot) => { const occupied = occupiedSlots.has(slot); const selected = selectedSlot === slot; return <Button key={slot} className={`home3-slot ${occupied ? 'is-occupied' : 'is-free'} ${selected ? 'is-selected' : ''}`} onClick={() => onSelectSlot(slot)} aria-label={`${t('home.selectedBay')}: ${slot}`} aria-pressed={selected}><Typography component="span">{slot}</Typography>{occupied && <DirectionsCarRoundedIcon />}</Button>; })}</Box>
-    </Box>
-    <Box className="home3-map-footer"><Box className="home3-map-legend"><span><i className="is-free" />{t('home.freeSpace')}</span><span><i className="is-occupied" />{t('home.occupiedSpace')}</span><span><i className="is-selected" />{t('home.selectedSpace')}</span></Box><Typography>{t('home.selectedBay')}: <strong dir="ltr">{selectedSlot}</strong></Typography></Box>
-  </Paper>;
 }
 
 function DoorStatusPanel({ language, parkingInfo, refreshing, onRefresh }: { language: Language; parkingInfo: HomeParkingInfo | null; refreshing: boolean; onRefresh: () => void }) {
@@ -62,10 +39,6 @@ function MetricRail({ language, parkingInfo }: { language: Language; parkingInfo
   </Box>;
 }
 
-function PanelHeading({ overline, title, icon }: { overline: string; title: string; icon: ReactNode }) {
-  return <Box className="home3-panel-heading"><Box><Typography className="home3-panel-overline">{overline}</Typography><Typography className="home3-panel-title">{title}</Typography></Box>{icon}</Box>;
-}
-
 function MetricRow({ icon, label, value, note }: { icon: ReactNode; label: string; value: string; note: ReactNode }) {
   return <Box className="home3-metric-row"><Box className="home3-metric-icon">{icon}</Box><Box><Typography>{label}</Typography><Typography className="home3-metric-value">{value}</Typography><Typography className="home3-metric-note">{note}</Typography></Box></Box>;
 }
@@ -78,6 +51,4 @@ function DoorStatusItem({ language, door }: { language: Language; door: HomePark
     <Box className="home3-door-metrics"><Typography>{t('home.trafficToday')}<strong>{formatNumber(door.trafficCount, language)}</strong></Typography><Typography>{t('home.lastTraffic')}<strong dir="ltr">{door.lastTrafficDateTime ? formatDateTime(door.lastTrafficDateTime, language) : ''}</strong></Typography></Box>
   </Box>;
 }
-
-
 

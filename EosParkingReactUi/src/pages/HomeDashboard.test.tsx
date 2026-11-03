@@ -8,6 +8,16 @@ import { parkingApi } from '../api/management';
 import { HomeDashboard } from './HomeDashboard';
 import { HomeDashboardIntro } from './HomeDashboardIntro';
 import { HomeLoadingState } from './HomeLoadingState';
+import { parkingMapFixture } from '../features/home/parkingMapFixtures.test-support';
+import type { ParkingMapPage } from '../features/home/parkingMapService';
+
+vi.mock('../api/parkingMapRealtime', () => ({
+  ParkingMapRealtimeConnection: class {
+    constructor(_query: unknown, private onPage: (page: ParkingMapPage) => void) {}
+    start() { this.onPage(parkingMapFixture()); return Promise.resolve(); }
+    stop() {}
+  },
+}));
 
 function renderDashboard(onNavigate = vi.fn()) {
   return { onNavigate, ...render(<ThemeProvider theme={appTheme}><HomeDashboard language="fa" selectedParkingName="پارکینگ مرکزی" selectedParkingId={7} basePath="/home" onNavigate={onNavigate} /></ThemeProvider>) };
@@ -66,8 +76,8 @@ describe('Home dashboard', () => {
     const user = userEvent.setup();
     const { onNavigate } = renderDashboard();
 
-    await user.click(screen.getByRole('button', { name: 'جایگاه انتخابی: B4' }));
-    expect(screen.getByRole('button', { name: 'جایگاه انتخابی: B4' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'جایگاه B4، همکف، تخصیص‌یافته' }));
+    expect(screen.getByRole('button', { name: 'جایگاه B4، همکف، تخصیص‌یافته' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getAllByText('B4').length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: 'مدیریت اعضا' }));
@@ -85,5 +95,4 @@ describe('Home loading state', () => {
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(10);
   });
 });
-
 
