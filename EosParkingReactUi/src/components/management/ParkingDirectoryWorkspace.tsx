@@ -1,17 +1,11 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
-import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
-import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import HighlightOffRoundedIcon from '@mui/icons-material/HighlightOffRounded';
-import LocalPhoneRoundedIcon from '@mui/icons-material/LocalPhoneRounded';
-import TagRoundedIcon from '@mui/icons-material/TagRounded';
 import { ApiError } from '../../api/client';
 import { parkingApi } from '../../api/management';
 import { CrudDialog } from '../CrudDialog';
 import { ConfirmDialog } from '../ConfirmDialog';
-import { AppRecordCard } from '../AppRecordCard';
+import { ParkingDirectoryCard } from './ParkingDirectoryCard';
 import { ParkingFormFields, type ParkingFormState } from './ParkingFormFields';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
@@ -126,18 +120,7 @@ export function ParkingDirectoryWorkspace({ title, pageTitle, language }: Props)
         <ResourceState loading={loading} error={error} empty={rows.length === 0} loadingLabel={text('readonlyModule.loading')} emptyLabel={text('readonlyModule.empty')}>
           <Box className="parking-directory-list">{rows.map((row, index) => {
             const id = Number(row.Id ?? row.id ?? index);
-            const isCommercialParking = row.IsCommercialParking === true;
-            const hasUserShifts = row.HasUserShifts === true;
-            return <AppRecordCard key={id} className="parking-directory-card" contentClassName="parking-card-content" actionsClassName="parking-card-actions" actions={<><Tooltip title={copy.edit}><IconButton aria-label={copy.edit} onClick={() => edit(row)}><EditRoundedIcon /></IconButton></Tooltip><Tooltip title={copy.remove}><IconButton color="error" aria-label={copy.remove} onClick={() => requestRemove(row)}><DeleteOutlineRoundedIcon /></IconButton></Tooltip></>}>
-              <Typography variant="h6" className="parking-card-title">{String(row.ParkingName ?? row.parkingName ?? text('readonlyModule.noName'))}</Typography>
-              <Box className="parking-card-statuses">
-                <Box component="span" className={`parking-card-status ${isCommercialParking ? 'is-enabled' : 'is-disabled'}`}><span className="parking-card-status-icon" aria-hidden="true">{isCommercialParking ? <CheckCircleOutlineRoundedIcon /> : <HighlightOffRoundedIcon />}</span>{isCommercialParking ? copy.commercialEnabled : copy.commercialDisabled}</Box>
-                <Box component="span" className={`parking-card-status ${hasUserShifts ? 'is-enabled' : 'is-disabled'}`}><span className="parking-card-status-icon" aria-hidden="true">{hasUserShifts ? <CheckCircleOutlineRoundedIcon /> : <HighlightOffRoundedIcon />}</span>{hasUserShifts ? copy.shiftsEnabled : copy.shiftsDisabled}</Box>
-              </Box>
-              <Typography variant="body2" color="text.secondary" className="parking-card-address">{String(row.Address ?? row.address ?? '—')}</Typography>
-              <Divider sx={{ my: 1.5 }} />
-              <Box className="parking-card-meta"><Box className="parking-card-info-item"><LocalPhoneRoundedIcon /><Box><Typography variant="caption">{copy.phone}</Typography><Typography variant="body2">{String(row.PhonNumber ?? row.phonNumber ?? '—')}</Typography></Box></Box><Box className="parking-card-info-item"><TagRoundedIcon /><Box><Typography variant="caption">{text('readonlyModule.id')}</Typography><Typography variant="body2">{id}</Typography></Box></Box></Box>
-            </AppRecordCard>;
+            return <ParkingDirectoryCard key={id} id={id} row={row} language={language} onEdit={() => edit(row)} onRemove={() => requestRemove(row)} />;
           })}</Box>
         </ResourceState>
       </Box>

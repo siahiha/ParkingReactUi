@@ -1161,6 +1161,18 @@ body {
 }
 
 /* Keep Home3 tabs consistent with the classic Home tab treatment. */
+.home3-tabs .home3-tab-close {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px;
+  min-height: 16px;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 12px;
+  opacity: .65;
+}
+.home3-tabs .home3-tab-close:hover,
+.home3-tabs .home3-tab-close.Mui-focusVisible { opacity: 1; }
 .home3-tabs-rule { display: none; }
 .home3-tabs .MuiTabs-flexContainer { gap: 4px; }
 .home3-tabs .MuiTab-root {

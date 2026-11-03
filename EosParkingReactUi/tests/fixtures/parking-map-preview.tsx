@@ -11,6 +11,7 @@ import { createAppTheme, defaultThemeShape, type ThemeMode } from '../../src/the
 import type { PaletteName } from '../../src/components/homeProfileTypes';
 import { HomeDashboard } from '../../src/pages/HomeDashboard';
 import { HomeShell } from '../../src/pages/HomeShell';
+import { ParkingDirectoryWorkspace } from '../../src/components/management/ParkingDirectoryWorkspace';
 import '../../src/styles.css';
 
 const params = new URLSearchParams(location.search);
@@ -46,7 +47,7 @@ function ParkingMapPreview() {
     visibleParkingMenuGroups={[]} activeParkingMenu={null} canManageDashboard={true}
     sidebarCollapsed={params.get('expanded') !== '1'} onSidebarCollapsedChange={noop}
     mobileNavigationOpen={false} onMobileNavigationClose={noop}>
-    <HomeDashboard language={language} selectedParkingName={parkingName} selectedParkingId={7} basePath="/home" onNavigate={noop} />
+    {params.has('directory') ? <ParkingDirectoryWorkspace title={i18n.t('homeMenu.items.list')} language={language} /> : <HomeDashboard language={language} selectedParkingName={parkingName} selectedParkingId={7} basePath="/home" onNavigate={noop} />}
   </HomeShell></Box>
 </ThemeProvider></CacheProvider>;
 }
