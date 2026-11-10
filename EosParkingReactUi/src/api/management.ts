@@ -137,7 +137,8 @@ export const reportApi = {
 };
 
 export const trafficApi = {
-  getTraffics: (doorId: number) => apiRequest<unknown>(`api/traffic/GetTraffics?doorId=${doorId}`),
+  createEnterDump: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/CreateEnterDump', { method: 'POST', body: JSON.stringify(payload) }),
+  getTraffics: (doorId: number, signal?: AbortSignal) => apiRequest<unknown>(`api/traffic/GetTraffics?doorId=${doorId}`, { signal }),
   getAllTraffics: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/GetAllTraffics', { method: 'POST', body: JSON.stringify(payload) }),
   saveTraffic: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/Save', { method: 'POST', body: JSON.stringify(payload) }),
   doExitDump: (payload: ApiPayload) => apiRequest<unknown>('api/traffic/DoExitDump', { method: 'POST', body: JSON.stringify(payload) }),

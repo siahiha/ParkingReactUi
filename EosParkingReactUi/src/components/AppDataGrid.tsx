@@ -191,6 +191,7 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
           const activateRow = () => onRowClick?.(row, index);
           const activateRowForEdit = () => onRowDoubleClick?.(row, index);
           const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>) => {
+            if (event.target !== event.currentTarget) return;
             if (!onRowClick || (event.key !== 'Enter' && event.key !== ' ')) return;
             event.preventDefault();
             activateRow();

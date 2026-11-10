@@ -3,14 +3,14 @@
 **وضعیت:** در حال تکمیل؛ بازطراحی بصری Login، Home و navigation انجام شده و workspace مانیتورینگ
 و تشخیص پلاک در route واقعی UI قابل دسترسی است. قرارداد داده و API صفحه Home و قراردادهای
 تصویر/stream مانیتورینگ هنوز کامل نیست.
-**تاریخ آخرین بازبینی:** 2026-10-24
+**تاریخ آخرین تطبیق با کد:** 2026-11-04؛ این تاریخ به‌معنای اجرای تازهٔ تست مرورگر یا بازبینی تصویری نیست.
 **نوع سند:** گزارش وضعیت و تصمیم‌های طراحی نسخه وب
 
 ## ۱. هدف
 
 این سند وضعیت فعلی بازطراحی ظاهری UI نسخه React را ثبت می‌کند. تمرکز این مرحله روی ایجاد هویت بصری حرفه‌ای‌تر، خوانایی بهتر، سلسله‌مراتب دیداری واضح و نزدیک‌شدن محصول به یک **Industrial Operations Control Room** است.
 
-این سند فقط بر اساس کد موجود در همین workspace و مستندات پوشه `docs` تهیه شده است.
+این سند بر اساس کد موجود در همین workspace و مستندات پوشه `docs` تهیه شده است. در تطبیق 2026-11-04، رفتار پیاده‌سازی‌شده و assertionهای تست‌ها بررسی شدند؛ تست، build یا بازبینی تصویری تازه اجرا نشد.
 
 ## ۲. منبع و میزان اطمینان
 
@@ -18,7 +18,7 @@
 |---|---|---|
 | قواعد رنگ، تراکم، radius و سبک عملیاتی | `docs/18-ui-design-system.md` | تصمیم تثبیت‌شده محصول |
 | ساختار route و رفتار Login/Home | `src/App.tsx`، `src/pages/Login2Page.tsx`، `src/pages/LoginPage.tsx` و `src/pages/Home.tsx` | رفتار قابل مشاهده از کد |
-| صفحه‌های ورود و متن‌های آن | `src/pages/Login2Page.tsx`، `src/pages/LoginPage.tsx`، `src/i18n.ts` و `src/styles.css` | رفتار فعلی از کد؛ build بررسی شده |
+| صفحه‌های ورود و متن‌های آن | `src/pages/Login2Page.tsx`، `src/pages/LoginPage.tsx`، `src/i18n/instance.ts`، `src/locales/fa.ts`، `src/locales/en.ts` و `src/styles.css` | رفتار فعلی از کد؛ بدون اجرای تازهٔ build |
 | قرارداد Home، منو و داده‌های داشبورد | [سند ۲۵](25-home.md) و فایل‌های مرجع آن | مرجع قطعی قرارداد؛ جزئیات در این سند تکرار نمی‌شود |
 
 ## ۳. جهت هنری و بصری مصوب این مرحله
@@ -73,9 +73,12 @@ username، نمایش/پنهان‌سازی رمز و دکمه‌ی «ورود �
 | `EosParkingReactUi/src/pages/Login2Page.tsx` | صفحه‌ی اصلی ورود در `/` و `/login`، کارت شیشه‌ای، نقشه‌ی ثابت پارکینگ، فرم ورود و SSO |
 | `EosParkingReactUi/src/pages/LoginPage.tsx` | صفحه‌ی ورود کلاسیک در `/login2`، پنل معرفی، فرم ورود/SSO و صحنه‌ی شماتیک پارکینگ |
 | `EosParkingReactUi/src/components/ParkingControlLogo.tsx` و `EosParkingReactUi/public/eos-parking-logo.png` | لوگوی مشترک برنامه در صفحه‌های ورود و هماهنگی ظاهری با تم |
-| `EosParkingReactUi/src/i18n.ts` | متن‌های مشترک فارسی و انگلیسی Login و عنوان‌های فرم |
+| `EosParkingReactUi/src/i18n/instance.ts` و `src/locales/fa.ts`/`en.ts` | instance مشترک ترجمه و منابع مستقل زبان؛ ارجاع قدیمی به `src/i18n.ts` حذف شده است |
 | `EosParkingReactUi/src/App.tsx` | اتصال Login به مسیر و چرخه‌ی احراز هویت برنامه |
-| قرارداد Home | route، composition، داشبورد و API در [سند ۲۵](25-home.md) ثبت شده است |
+| قرارداد Home | route، composition، داشبورد، نقشه، عملیات سریع و API در [سند ۲۵](25-home.md) ثبت شده است |
+| `src/components/AppPopup.tsx` و `appPopupStyles.ts` | پوستهٔ واحد modalها، adapterهای CRUD/تأیید، ظاهر متصل به Theme و busy؛ مرجع سند ۱۰ |
+| `src/components/management/ParkingDirectoryCard.tsx` و `parkingDirectoryCards.css` | بازطراحی کارت پارکینگ با اطلاعات، وضعیت‌ها و عملیات؛ مرجع سند ۰۳ |
+| `ParkingDetailsWorkspace.tsx`، `ParkingFormFields.tsx` و `parkingDetails.css` | صفحهٔ مشخصات با sectionهای هم‌زمان و popup فهرست با تب؛ مرجع سند ۰۳ |
 | `EosParkingReactUi/src/styles.css` | پوسته‌ی Home، Header، navigation، responsive rules، focus state، dark mode و جلوگیری از overflow افقی |
 | `EosParkingReactUi/src/theme.ts` | یکپارچه‌سازی radius، typography، Paper، Button، Input و Chip |
 
@@ -110,15 +113,28 @@ username، نمایش/پنهان‌سازی رمز و دکمه‌ی «ورود �
 - کاهش حرکت با `prefers-reduced-motion` پشتیبانی می‌شود؛
 - تغییر ظاهر باعث حذف اعتبارسنجی و stateهای خطای فرم نشده است.
 
-## ۷. کنترل کیفیت انجام‌شده
+## ۷. پوشش کنترل کیفیت و وضعیت اجرا
 
-- `npm run build` در 2026-10-10 با موفقیت اجرا شد؛
-- TypeScript بدون خطا کامپایل شد؛
-- صفحه Login در بازبینی قبلی در مرورگر محلی بررسی شد؛ آخرین تغییرات جزئی چیدمان گیت با build و کد responsive تطبیق داده شدند؛ اجرای بررسی تصویری headless در این محیط به‌علت نبودن Chromium محلی ممکن نشد؛
-- اجرای محلی Vite در بازبینی قبلی بررسی شد و پاسخ `HTTP 200` از `http://localhost:5173/` دریافت شد؛
-- ساختار rail زیر Header، offset شدن workspace با عرض rail و کنترل overflow افقی در کد بازبینی شد؛
-- حالت responsive موبایل و حالت dark باید در بازبینی‌های بعدی با سناریوهای کامل‌تر تأیید شوند؛
-- هشدار فعلی build مربوط به حجم bundle نهایی است و خطای عملکردی نیست.
+### پوشش موجود در کد تست
+
+**رفتار فعلی از کد تست:** مسیرهای جدول نسبت به `EosParkingReactUi` هستند. این جدول وجود سناریو و assertion را ثبت می‌کند، نه نتیجهٔ موفق اجرای آن را.
+
+| حوزه | فایل تست | پوشش موجود |
+|---|---|---|
+| Popup مشترک | `tests/e2e/app-popup.spec.ts`، `src/components/AppPopup.test.tsx` | پوستهٔ CRUD/تأیید/custom، نام قابل‌دسترس، actions و busy؛ تست مرورگر همچنین Escape/backdrop، بازگشت focus، یکسانی styleها، bounds و کنتراست عنوان/label را بررسی و screenshot تولید می‌کند |
+| کارت پارکینگ | `tests/e2e/parking-directory.spec.ts`، `src/components/management/ParkingDirectoryCard.test.tsx` | سناریوهای light/dark و RTL/LTR دسکتاپ و RTL موبایل، متن طولانی، عدم overflow و قرارگیری actionها، بازشدن editor/تأیید حذف و screenshot |
+| مشخصات پارکینگ | `tests/e2e/parking-details.spec.ts`، `src/components/management/ParkingDetailsWorkspace.test.tsx` | در تست مرورگر: نبود tablist، نمایش سه region، قفل تنظیمات با خاموش‌شدن تجاری و حفظ مقدار، هم‌ردیفی تنظیمات/شیفت در دسکتاپ، عدم overflow و page error، screenshot در light/dark/LTR/mobile |
+| منوی گزارش | `tests/e2e/report-menu.spec.ts`، `src/pages/HomeNavigation.test.tsx` | کلیک از منوی فشرده تا route و عنوان هر ۱۸ گزارش با کاربر غیرمدیریتی دارای permission، نبود page error و حفظ بازشدن گروه‌ها در render مجدد؛ نتیجهٔ API گزارش تأیید نمی‌شود |
+| بازشدن فرم ایجاد | `tests/e2e/create-forms.spec.ts`، `src/components/CreateFormsRegression.test.tsx` | در تست مرورگر: افزودن طبقه/عضو با فهرست خالی و دارای رکورد، باقی‌ماندن برنامه، نبود page error و یک module URL برای React |
+| نقشه و ترکیب Home | `tests/e2e/parking-map.spec.ts` | جزئیات سناریوها و حدود تأیید runtime فقط در سند ۲۵ نگهداری می‌شود |
+
+تست‌های مرورگر فوق از fixture یا mock شبکه استفاده می‌کنند و جایگزین تست Backend مستقر نیستند. screenshot تولیدشده در تست نیز بدون بررسی خروجی، تأیید بصری انسانی محسوب نمی‌شود.
+
+### نتایج تاریخی و تأییدهای باقی‌مانده
+
+در نسخهٔ قبلی این سند، موفقیت build در 2026-10-10، کامپایل TypeScript، دریافت HTTP 200 از Vite و بازبینی قبلی Login ثبت شده بود. محدودیت نبود Chromium و هشدار حجم bundle نیز متعلق به همان بازبینی تاریخی هستند؛ از آن‌ها وضعیت محیط یا خروجی build فعلی نتیجه‌گیری نمی‌شود.
+
+در تطبیق 2026-11-04 فقط source و مستندات بررسی شده‌اند. اجرای مجدد سناریوها، بررسی خروجی تصویری و تأیید keyboard/contrast برای تمام componentها همچنان نیازمند نتیجهٔ اجرای مشخص است؛ پوشش سناریوهای بالا این الزام را برای کل برنامه تکمیل نمی‌کند.
 
 ## ۸. موارد باز و گام بعدی
 
@@ -128,7 +144,7 @@ username، نمایش/پنهان‌سازی رمز و دکمه‌ی «ورود �
 2. تطبیق کامل workspaceهای خارج از دامنه‌ی این snapshot؛
 3. تأیید قرارداد رسمی تصویر ANPR، نگاشت دوربین به درب و lifecycle stream؛
 4. بازبینی dark palette برای تمام componentهای MUI؛
-5. تست مرورگر در عرض‌های مختلف و keyboard navigation؛
-6. تکمیل workflowهای Quick Actions در صورت نیاز محصول.
+5. اجرای سناریوهای مرورگر موجود و ثبت نتیجه و خروجی تصویری، سپس تکمیل پوشش عرض‌ها و keyboard navigation برای بخش‌های فاقد سناریو؛
+6. وضعیت اتصال و محدودیت‌های عملیات سریع طبق سند ۲۵؛ وجود دکمه یا تست نمایش، به‌تنهایی تکمیل workflow عملیاتی را ثابت نمی‌کند.
 
-تا زمان تکمیل موارد بالا، وضعیت UI از نظر طراحی بصری «بازطراحی امضادار Login و بازطراحی اولیه Home انجام‌شده» و از نظر آماده‌بودن برای پیاده‌سازی کامل «نیازمند تکمیل API و workflow» است.
+بازطراحی Login، Home، کارت پارکینگ، sectionهای مشخصات پارکینگ و پوستهٔ واحد Popup در کد موجود است. آمادگی تحویل باید برای هر قابلیت با قرارداد API و نتیجهٔ تست همان نسخه ارزیابی شود؛ این تطبیق مستندات تأیید تحویل کامل برنامه نیست.

@@ -1,0 +1,53 @@
+.traffic-split-grids { min-inline-size: 0; }
+.traffic-split-grid-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 5px;
+}
+.traffic-split-panel { min-inline-size: 0; position: relative; overflow: hidden; }
+.traffic-split-panel .app-data-grid { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; table-layout: fixed; }
+.traffic-split-panel .app-data-grid .MuiTableCell-root:not(.app-data-grid-compact-cell) {
+  min-inline-size: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-overflow: clip;
+}
+.traffic-split-panel .app-data-grid-wrapper {
+  block-size: clamp(240px, 36vh, 430px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Keep the operator's scroll offsets when newer rows arrive above the viewport. */
+  overflow-anchor: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.traffic-split-panel .MuiTableHead-root {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--app-surface);
+}
+.traffic-split-panel .app-data-grid .MuiTableCell-root { padding-inline: 4px; }
+.traffic-split-panel .app-data-grid-header-content > span { padding-inline-end: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip; }
+.traffic-split-panel .app-data-grid .app-data-grid-compact-cell {
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+  padding-inline: 0;
+  overflow: visible;
+}
+.traffic-split-panel .traffic-grid-action { display: inline-flex; }
+.traffic-split-panel .traffic-grid-focused-action { visibility: hidden; }
+.traffic-split-panel .Mui-selected .traffic-grid-focused-action,
+.traffic-split-panel tr:focus-within .traffic-grid-focused-action { visibility: visible; }
+.traffic-split-panel .MuiTableBody-root tr:nth-of-type(even):not(.Mui-selected) { background: color-mix(in srgb, var(--app-primary) 4%, var(--app-surface)); }
+.traffic-split-panel .MuiIconButton-root { inline-size: 28px; block-size: 28px; padding: 2px; }
+.traffic-grid-empty { position: absolute; inset-block-start: 90px; inset-inline: 8px; text-align: center; pointer-events: none; }
+@media (min-width: 901px) {
+  .traffic-split-grid-layout[data-active-grid='entries'] { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .traffic-split-grid-layout[data-active-grid='exits'] { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+}
+@media (max-width: 900px) {
+  .traffic-split-grid-layout { grid-template-columns: minmax(0, 1fr); }
+}

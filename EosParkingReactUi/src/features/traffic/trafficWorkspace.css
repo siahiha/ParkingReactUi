@@ -1,0 +1,157 @@
+/* Only the live traffic route owns a bounded viewport; history pages retain their layout. */
+.home3-shell:has(.traffic-control-workspace) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  overflow: clip;
+}
+.home3-shell:has(.traffic-control-workspace) > .home3-header { flex: 0 0 auto; }
+.home3-shell:has(.traffic-control-workspace) > .home3-layout {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: clip;
+}
+.home3-main:has(.traffic-control-workspace) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: clip;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.home3-main:has(.traffic-control-workspace) > .home3-tabs { flex: 0 0 34px; margin-block: -8px 8px; margin-inline: -8px; }
+.home-content-section:has(> .traffic-control-workspace) {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: clip;
+}
+.home-workspace.traffic-control-workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  padding: 8px;
+  gap: 8px;
+  overflow: clip;
+}
+.traffic-control-workspace > .workspace-heading { flex: 0 0 auto; margin: 0; gap: 8px; }
+.traffic-control-workspace > .MuiDivider-root { flex: 0 0 auto; margin: 0; }
+.traffic-history-console { display: contents; }
+.traffic-history-console .traffic-operation-information,
+.traffic-history-console .traffic-operation-actions { display: contents; }
+.traffic-history-console .traffic-operation-actions > .MuiButton-root { min-block-size: 38px; margin-block-start: auto; white-space: nowrap; }
+.traffic-control-workspace .traffic-top-grid {
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-columns: minmax(400px, 34%) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 8px;
+  direction: inherit;
+}
+.traffic-control-console {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  border: 1px solid var(--app-divider);
+  border-radius: 4px;
+  background: var(--app-surface);
+}
+.traffic-control-workspace .traffic-entry-panel { padding: 8px; min-height: 0; block-size: auto; border: 0; border-radius: 0; }
+.traffic-control-workspace .traffic-entry-identity { flex: 0 0 auto; border-block-end: 1px solid var(--app-divider); }
+.traffic-control-workspace .traffic-vehicle-identification-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); direction: inherit; gap: 8px; align-items: center; }
+.traffic-control-workspace .traffic-vehicle-identification-grid > .MuiTypography-root { grid-column: 1 / -1; }
+.traffic-control-workspace .traffic-plate-field { order: -1; }
+.traffic-control-workspace .traffic-card-member-fields { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; direction: inherit; }
+.traffic-identity-details { display: grid; gap: 8px; min-inline-size: 0; }
+.traffic-personal-details { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.traffic-member-identity-row { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: 8px; flex: 1 1 240px; min-inline-size: 0; }
+.traffic-personal-photo { inline-size: 56px; block-size: 64px; object-fit: contain; }
+.traffic-credit-list { max-block-size: 150px; overflow: auto; }
+.traffic-credit-item { padding-block: 4px; }
+.traffic-entrance-image { max-inline-size: 100%; block-size: 100px; object-fit: contain; }
+.traffic-control-workspace .traffic-entry-operation { flex: 1 1 0; overflow: hidden; direction: inherit; }
+.traffic-control-workspace .traffic-operation-tall { grid-row: auto; }
+.traffic-control-workspace .traffic-operation-latest-layout { display: flex; flex: 1 1 0; min-height: 0; height: auto; }
+.traffic-control-workspace .traffic-operation-content { flex: 1 1 0; gap: 8px; min-height: 0; }
+.traffic-control-workspace .traffic-operation-information { display: grid; align-content: start; flex: 1 1 0; min-block-size: 0; overflow: auto; overscroll-behavior: contain; gap: 8px; }
+.traffic-control-workspace .traffic-operation-information > .MuiTypography-root { margin-bottom: 0; }
+.traffic-control-workspace .traffic-operation-actions { display: grid; flex: 0 0 auto; gap: 8px; padding-block-start: 8px; border-block-start: 1px solid var(--app-divider); }
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root { margin-block-start: 0; min-block-size: 32px; }
+.traffic-control-workspace .traffic-operation-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; padding: 0; }
+.traffic-control-workspace .traffic-operation-detail-row:first-child,
+.traffic-control-workspace .traffic-operation-detail-row:nth-child(6) { grid-column: 1 / -1; }
+.traffic-control-workspace .traffic-operation-detail-row { font-size: .75rem; line-height: 1.4; }
+.traffic-control-camera-column { display: flex; flex-direction: column; min-inline-size: 0; min-block-size: 0; gap: 8px; }
+.traffic-control-workspace .traffic-last-traffic-inline { flex: 0 0 auto; block-size: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 8px; padding: 8px; }
+.traffic-control-workspace .traffic-latest-detail-row { font-size: .75rem; }
+.traffic-control-workspace .traffic-latest-image-stack { grid-column: 1 / -1; flex-direction: row; block-size: 72px; }
+.traffic-control-workspace .traffic-plate-preview { flex: 0 0 132px; block-size: 72px; }
+.traffic-control-workspace .traffic-fullframe-preview { min-height: 0; flex: 1 1 0; }
+.traffic-control-workspace .traffic-fullframe-preview img,
+.traffic-control-workspace .traffic-plate-preview img { object-fit: contain; }
+.traffic-control-workspace .traffic-last-traffic-inline .traffic-last-traffic-placeholder { grid-column: 1 / -1; min-block-size: 32px; }
+.traffic-control-workspace .traffic-camera-panel { flex: 1 1 0; min-height: 0; height: auto; display: flex; }
+.traffic-control-workspace .traffic-camera-panel > .MuiPaper-root { overflow: auto; overscroll-behavior: contain; }
+.traffic-control-workspace .traffic-camera-panel > .MuiPaper-root,
+.traffic-control-workspace .traffic-camera-preview-box,
+.traffic-control-workspace .traffic-camera-preview-box > div,
+.traffic-control-workspace .camera-stream-preview {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}
+.traffic-control-workspace .camera-stream-media { flex: 1 1 0; height: auto; min-height: 0; }
+.traffic-control-workspace .traffic-split-grids {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 clamp(190px, 30%, 270px);
+  min-height: 0;
+  margin: 0;
+}
+.traffic-control-workspace .traffic-split-grid-layout { flex: 1 1 0; min-height: 0; }
+.traffic-control-workspace .traffic-split-panel { display: flex; flex-direction: column; min-height: 0; }
+.traffic-control-workspace .traffic-split-panel .app-data-grid-wrapper {
+  flex: 1 1 0;
+  block-size: 0;
+  min-block-size: 0;
+  overscroll-behavior: contain;
+}
+@media (min-width: 681px) and (max-height: 720px) {
+  .traffic-control-console { overflow: auto; overscroll-behavior: contain; }
+  .traffic-control-workspace .traffic-entry-operation { flex: 0 0 auto; min-block-size: 220px; overflow: visible; }
+  .traffic-control-workspace .traffic-operation-latest-layout,
+  .traffic-control-workspace .traffic-operation-content { flex: 0 0 auto; }
+  .traffic-control-workspace .traffic-operation-information { flex: 0 0 auto; max-block-size: 150px; }
+}
+@media (max-width: 900px) {
+  .traffic-control-workspace .traffic-split-grids { flex-basis: clamp(240px, 38%, 320px); }
+  .traffic-control-workspace .traffic-split-grid-layout { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .traffic-control-workspace .workspace-heading { flex-wrap: wrap; }
+  .traffic-control-workspace .traffic-top-grid { display: flex; flex-direction: column; overflow: auto; overscroll-behavior: contain; }
+  .traffic-control-console { flex: 0 0 auto; overflow: visible; }
+  .traffic-control-workspace .traffic-entry-operation,
+  .traffic-control-workspace .traffic-operation-content,
+  .traffic-control-workspace .traffic-operation-information { flex: 0 0 auto; overflow: visible; }
+  .traffic-control-workspace .traffic-operation-latest-layout { flex: 0 0 auto; }
+  .traffic-control-camera-column { flex: 0 0 auto; }
+  .traffic-control-workspace .traffic-camera-panel { height: 180px; flex: 0 0 180px; }
+  .traffic-control-workspace .traffic-last-traffic-inline { grid-template-columns: minmax(0, 1fr); }
+  .traffic-control-workspace .traffic-split-grids { flex-basis: 42%; min-block-size: 210px; }
+}
+@media (max-width: 460px) {
+  .traffic-control-workspace .traffic-vehicle-identification-grid { grid-template-columns: minmax(0, 1fr); }
+  .traffic-control-workspace .traffic-vehicle-identification-grid > .traffic-plate-field { max-inline-size: 190px; }
+  .traffic-control-workspace .traffic-card-member-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; }
+}

@@ -12,6 +12,7 @@ type RuntimeConfigFile = {
   anprSignalRUrl?: unknown;
   hshDetectionApiKey?: unknown;
   parkingServiceUrl?: unknown;
+  trafficRequireExitPermission?: unknown;
 };
 
 type ClientConfigResponse = {
@@ -24,6 +25,7 @@ export type AppConfig = {
   anprSignalRUrl: string;
   hshDetectionApiKey: string;
   parkingServiceUrl: string;
+  trafficRequireExitPermission: boolean;
   ssoUiBaseUrl: string;
   ssoClientId: string;
 };
@@ -33,6 +35,7 @@ const compileTimeConfig: AppConfig = {
   anprSignalRUrl: import.meta.env.VITE_ANPR_SIGNALR_URL || 'http://localhost:3012/signalr',
   hshDetectionApiKey: import.meta.env.VITE_HSH_DETECTION_API_KEY || '',
   parkingServiceUrl: import.meta.env.VITE_PARKING_SERVICE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/',
+  trafficRequireExitPermission: false,
   ssoUiBaseUrl: '',
   ssoClientId: '',
 };
@@ -118,6 +121,7 @@ export async function loadRuntimeConfig() {
     anprSignalRUrl: stringValue(readConfigValue(apiConfig, 'anprSignalRUrl'), stringValue(readConfigValue(bootstrap, 'anprSignalRUrl'), compileTimeConfig.anprSignalRUrl)),
     hshDetectionApiKey: stringValue(readConfigValue(apiConfig, 'hshDetectionApiKey'), stringValue(readConfigValue(bootstrap, 'hshDetectionApiKey'), compileTimeConfig.hshDetectionApiKey)),
     parkingServiceUrl: stringValue(readConfigValue(apiConfig, 'parkingServiceUrl'), stringValue(readConfigValue(bootstrap, 'parkingServiceUrl'), compileTimeConfig.parkingServiceUrl)),
+    trafficRequireExitPermission: booleanValue(readConfigValue(apiConfig, 'trafficRequireExitPermission'), booleanValue(readConfigValue(bootstrap, 'trafficRequireExitPermission'), compileTimeConfig.trafficRequireExitPermission)),
     ssoUiBaseUrl: ssoEnabled ? ssoUiBaseUrl : '',
     ssoClientId: ssoEnabled ? ssoClientId : '',
   };

@@ -51,14 +51,14 @@ Splash
 | درخواست‌های Backend برای نسخه وب | فهرست اجرایی قابلیت‌های غایب یا ناقص، قرارداد پیشنهادی و معیار پذیرش | [14-web-backend-requests.md](14-web-backend-requests.md) |
 | ممیزی سورس Windows برای بازسازی وب | شواهد مستقیم از checkout حاضر، ریسک‌های پیاده‌سازی و ابهام‌های باز | [15-windows-source-audit.md](15-windows-source-audit.md) |
 | بازبینی نهایی و گیت‌های تحویل | تطبیق فرم‌های فعال با سورس، تصمیم‌های تثبیت‌شده و خروجی‌های لازم از Backend | [16-final-review-and-delivery-gates.md](16-final-review-and-delivery-gates.md) |
-| معماری UI React | Stack ساده، نقش React Query، ساختار پروژه و قواعد کیفیت/پیاده‌سازی | [17-react-ui-architecture.md](17-react-ui-architecture.md) |
+| معماری فعلی UI React | پشته و ساختار موجود، state و fetch، AppDataGrid و AppPopup، فاصله با استاندارد و تنظیمات توسعه | [17-react-ui-architecture.md](17-react-ui-architecture.md) |
 | قوانین طراحی ظاهری و قواعد عملیاتی UI | theme یکپارچه، زبان/جهت، سبک Industrial Operations، تراکم، permission، audit و وضعیت‌های عملیاتی | [18-ui-design-system.md](18-ui-design-system.md) |
 | گزارش بازبینی و بازطراحی بصری UI | نتیجه بازطراحی Login/Home، تصمیم‌های بصری، responsive، داده‌های mock و موارد باز | [19-ui-visual-review-and-progress.md](19-ui-visual-review-and-progress.md) |
 | استاندارد تست UI با عامل هوش مصنوعی | دستورات، مرز لایه‌های تست، fixtureها، سناریوهای پذیرش و موارد وابسته به Backend | [20-ai-testing-standard.md](20-ai-testing-standard.md) |
 | وضعیت پیاده‌سازی و سیاست Regression | تغییرات انجام‌شده، regressionهای اصلاح‌شده و الزام حفظ قابلیت‌های قبلی | [21-implementation-progress-and-regression-policy.md](21-implementation-progress-and-regression-policy.md) |
 | زون‌های پارکینگ | تطبیق کامل Windows، Backend و React؛ workflow گرید، تیک‌ها، مدل داده، API و موارد باز | [23-parking-zones.md](23-parking-zones.md) |
 | یکپارچه‌سازی UI دوربین RTSP | قرارداد WebRTC/HLS، کامپوننت `CameraStreamPreview`، وضعیت اتصال، lifecycle، viewer و ROI | [24-rtsp-camera-ui-integration.md](24-rtsp-camera-ui-integration.md) |
-| یکپارچه‌سازی Trigger تشخیص پلاک | تنظیم دوربین، SignalR، فیلتر Trigger، cursor، Artifact تصویر، CORS/Proxy و خطوط قرمز امنیتی | [25-plate-detection-trigger-ui-integration.md](25-plate-detection-trigger-ui-integration.md) |
+| یکپارچه‌سازی Trigger تشخیص پلاک | **ناقص/نیازمند تأیید:** فایل ارجاع‌شدهٔ قبلی `25-plate-detection-trigger-ui-integration.md` در workspace موجود نیست؛ مستندسازی مستقل Trigger کامل تلقی نمی‌شود | پوشش موجود مانیتورینگ و ANPR: [07-monitoring-and-devices.md](07-monitoring-and-devices.md)؛ این ارجاع جایگزین قرارداد مستقل مفقود نیست |
 
 ## Pipeline پیشنهادی محصول
 

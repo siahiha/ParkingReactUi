@@ -1,4 +1,27 @@
 const fa = {
+  trafficIdentity: {
+    inactiveMember: 'عضویت غیرفعال است؛ ثبت تردد مجاز نیست.', blacklisted: 'خودرو در لیست سیاه است؛ این عملیات مجاز نیست.',
+    stolen: 'خودرو سرقتی گزارش شده است؛ خروج مجاز نیست.', observation: 'خودرو تحت‌نظر است.', exitNotApproved: 'مجوز خروج این تردد صادر نشده است.',
+    invalidQr: 'QR نامعتبر، تسویه‌شده یا متعلق به تردد دیگری است.',
+    personalPhoto: 'عکس پرسنلی عضو', nationalCode: 'کد ملی', memberVehicle: 'خودروی عضو', selectVehicle: 'خودروی عضو را انتخاب یا ثبت کنید.',
+    addVehicle: 'افزودن خودرو', editVehicle: 'ویرایش خودرو', saveVehicle: 'ذخیره خودرو', vehicleSaved: 'مشخصات خودرو ذخیره شد.',
+    vehicleRequired: 'نام خودرو و پلاک کامل الزامی است.', vehicleForbidden: 'مجوز ویرایش مشخصات خودرو را ندارید.', vehicleSaveError: 'ذخیره یا دریافت مشخصات خودرو ناموفق بود.',
+    vehicleName: 'نام خودرو', color: 'رنگ', model: 'مدل', memberships: 'اشتراک‌ها', active: 'فعال', reserved: 'رزرو',
+    creditTypes: ['اعتباری', 'مدت‌دار', 'اعتباری و مدت‌دار'], balance: 'مانده اعتبار', rial: 'ریال', noMembership: 'اشتراکی برای عضو وجود ندارد.',
+    creditError: 'جزئیات اشتراک دریافت نشد.', retry: 'تلاش مجدد', entranceImage: 'تصویر ثبت‌شده ورود',
+    refreshIdentity: 'استعلام مجدد', clear: 'پاک‌کردن',
+  },
+  trafficOperation: {
+    lookup: 'استعلام خودرو',
+    lookupFailed: 'استعلام خودرو انجام نشد؛ دوباره مشخصات خودرو را بررسی کنید.',
+    exitSaved: 'خروج خودرو ثبت شد.',
+    exitFailed: 'ثبت خروج خودرو انجام نشد.',
+    paymentFailed: 'تسویه انجام نشد.',
+  },
+  trafficGrid: {
+    entries: 'ورودها', exits: 'خروج‌ها', membership: 'عضویت', plate: 'پلاک', entryTime: 'زمان ورود', exitTime: 'زمان خروج', exit: 'خروج', cargo: 'ثبت بار', pay: 'پرداخت مبلغ خروج', paymentStatus: 'وضعیت پرداخت', amount: 'مبلغ پرداختی', inboundCargo: 'ثبت بار ورودی', outboundCargo: 'ثبت بار خروجی', search: 'جستجو در ترددها', searchHint: 'پلاک، کارت، کد عضویت، نام یا کد ملی', clear: 'پاک کردن', empty: 'ترددی برای نمایش وجود ندارد.', loading: 'در حال دریافت ترددها…', updatedAt: 'آخرین به‌روزرسانی: {{time}}', loadError: 'به‌روزرسانی ترددها انجام نشد؛ اطلاعات نمایش‌داده‌شده ممکن است قدیمی باشد.', forbidden: 'دسترسی مشاهدهٔ ترددها مجاز نیست.',
+    paymentTypes: ['پرداخت نشده', 'پرداخت نقدی', 'پرداخت بانکی', 'پرداخت نقدی پارکبان', 'پرداخت بانکی پارکبان', 'منقضی', 'پرداخت منقضی', 'پرداخت منقضی', 'پرداخت منقضی', 'پرداخت اولیه با پارکبان'],
+  },
   popup: { cancel: 'لغو', confirm: 'تأیید' },
   app: {
     direction: 'rtl', languageName: 'انگلیسی',

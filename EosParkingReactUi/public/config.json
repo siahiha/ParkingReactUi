@@ -1,3 +1,4 @@
 {
-  "apiBaseUrl": "/backend"
+  "apiBaseUrl": "/backend",
+  "trafficRequireExitPermission": false
 }

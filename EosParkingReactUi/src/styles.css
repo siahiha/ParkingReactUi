@@ -6275,18 +6275,23 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   pointer-events: none;
 }
 
-/* Pin the navigation toggle to the logical outer edge of the header. */
-@media (min-width: 901px) {
-  .home3-toolbar {
-    position: relative;
-    padding-inline-start: 66px !important;
-  }
-  .home3-menu-button {
-    position: absolute !important;
-    inset-inline-start: 0;
-    inset-block-start: 16px;
-    margin: 0 !important;
-  }
+/* The brand logo and hamburger share one navigation control. */
+.home3-brand-menu {
+  position: relative;
+  flex-shrink: 0;
+  padding: 4px !important;
+}
+.home3-brand-menu .home3-brand-menu-indicator {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  font-size: 16px;
+  color: var(--home3-menu-ink);
+  background: var(--home3-surface);
+}
+.home3-brand-menu.Mui-focusVisible {
+  outline: 2px solid var(--home3-icon-accent);
+  outline-offset: 2px;
 }
 
 /* Let the content column reclaim the space when the persistent menu collapses. */
@@ -6301,7 +6306,20 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
 .home3-toolbar { min-height: 74px !important; }
 .home3-layout { min-height: calc(100vh - 122px); }
 .home3-main { min-height: calc(100vh - 122px); }
-.home3-navigation-content { height: calc(100vh - 122px); }
+.home3-navigation-content { height: calc(100dvh - 74px); min-height: 0; box-sizing: border-box; }
+.home3-navigation.is-collapsed .home3-navigation-content { padding-inline: 8px; }
+.home3-nav-heading { flex: 0 0 auto; }
+.home3-nav-scroll {
+  flex: 1 1 0;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+.home3-drawer-surface { height: 100%; min-height: 0; overflow: hidden; }
 .home3-drawer .MuiDrawer-paper { top: 74px; height: calc(100% - 74px); }
 
 @media (max-width: 900px) {

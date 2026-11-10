@@ -1,4 +1,27 @@
 const en = {
+  trafficIdentity: {
+    inactiveMember: 'Membership is inactive; traffic cannot be registered.', blacklisted: 'This vehicle is blacklisted; this operation is not permitted.',
+    stolen: 'This vehicle is reported stolen; exit is not permitted.', observation: 'This vehicle is under observation.', exitNotApproved: 'Exit permission has not been issued for this traffic.',
+    invalidQr: 'The QR is invalid, already settled, or belongs to another traffic record.',
+    personalPhoto: 'Member photo', nationalCode: 'National ID', memberVehicle: 'Member vehicle', selectVehicle: 'Select or register the member vehicle.',
+    addVehicle: 'Add vehicle', editVehicle: 'Edit vehicle', saveVehicle: 'Save vehicle', vehicleSaved: 'Vehicle details saved.',
+    vehicleRequired: 'Vehicle name and a complete plate are required.', vehicleForbidden: 'You do not have permission to edit vehicle details.', vehicleSaveError: 'Saving or loading vehicle details failed.',
+    vehicleName: 'Vehicle name', color: 'Color', model: 'Model', memberships: 'Memberships', active: 'Active', reserved: 'Reserved',
+    creditTypes: ['Credit', 'Term', 'Credit and term'], balance: 'Remaining credit', rial: 'Rial', noMembership: 'No membership exists for this member.',
+    creditError: 'Membership details could not be loaded.', retry: 'Retry', entranceImage: 'Recorded entry image',
+    refreshIdentity: 'Refresh identity', clear: 'Clear identity',
+  },
+  trafficOperation: {
+    lookup: 'Look up vehicle',
+    lookupFailed: 'Vehicle lookup failed. Check the vehicle details again.',
+    exitSaved: 'Vehicle exit registered.',
+    exitFailed: 'Vehicle exit could not be registered.',
+    paymentFailed: 'Settlement failed.',
+  },
+  trafficGrid: {
+    entries: 'Entries', exits: 'Exits', membership: 'Membership', plate: 'Plate', entryTime: 'Entry time', exitTime: 'Exit time', exit: 'Exit', cargo: 'Register cargo', pay: 'Pay exit amount', paymentStatus: 'Payment status', amount: 'Amount paid', inboundCargo: 'Register inbound cargo', outboundCargo: 'Register outbound cargo', search: 'Search traffic', searchHint: 'Plate, card, member code, name or national ID', clear: 'Clear', empty: 'No traffic records to display.', loading: 'Loading traffic…', updatedAt: 'Last updated: {{time}}', loadError: 'Traffic could not be refreshed; the displayed information may be out of date.', forbidden: 'You are not authorized to view traffic.',
+    paymentTypes: ['Not paid', 'Cash payment', 'Bank payment', 'Cash payment by attendant', 'Bank payment by attendant', 'Expired', 'Expired payment', 'Expired payment', 'Expired payment', 'Initial payment by attendant'],
+  },
   popup: { cancel: 'Cancel', confirm: 'Confirm' },
   app: {
     direction: 'ltr', languageName: 'Persian',

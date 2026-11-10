@@ -1,11 +1,22 @@
+import { TrafficControlGrids } from '../../features/traffic/TrafficControlGrids';
+import { AppToast } from '../AppToast';
+import '../../features/traffic/trafficWorkspace.css';
+import { useDoorTraffics } from '../../features/traffic/useDoorTraffics';
+import { useTrafficOperations } from '../../features/traffic/useTrafficOperations';
+import { useTrafficIdentity } from '../../features/traffic/useTrafficIdentity';
+import { TrafficIdentityDetails } from '../../features/traffic/TrafficIdentityDetails';
+import { TrafficVehicleDialog } from '../../features/traffic/TrafficVehicleDialog';
+import type { TrafficIdentity, VehicleDraft } from '../../features/traffic/trafficIdentityService';
+import { trafficAlerts } from '../../features/traffic/trafficPolicy';
+import { appConfig } from '../../config';
+import { hasOpenTraffic, hasTrafficTime, TrafficOperationError, trafficResult } from '../../features/traffic/trafficOperationService';
+import { useTranslation } from 'react-i18next';
 import { AppPopup } from '../AppPopup';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Alert, Box, Button, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import ExitToAppRoundedIcon from "@mui/icons-material/ExitToAppRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
-import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import { ApiError } from "../../api/client";
 import { cargoApi, parkingApi, trafficApi } from "../../api/management";
 import type {
@@ -37,6 +48,8 @@ type Props = {
   parkingId: number;
   language: Language;
   showCameras?: boolean;
+  userId?: number;
+  canEditVehicle?: boolean;
 };
 type Option = { id: number; label: string };
 type TrafficRow = RecordValue;
@@ -151,10 +164,15 @@ export function TrafficRecordsWorkspace({
   parkingId,
   language,
   showCameras = false,
+  userId,
+  canEditVehicle = false,
 }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
+  const operations = useTrafficOperations();
+  const lookupSequence = useRef(0);
   const isPersian = language === "fa";
   const [doors, setDoors] = useState<Option[]>([]);
-  const [rows, setRows] = useState<TrafficRow[]>([]);
+  const [recordRows, setRows] = useState<TrafficRow[]>([]);
   const [startDate, setStartDate] = useState(() => {
     const value = new Date();
     value.setMonth(value.getMonth() - 1);
@@ -190,6 +208,13 @@ export function TrafficRecordsWorkspace({
   const [memberCode, setMemberCode] = useState("");
   const [carType, setCarType] = useState<VehiclePlateType>("0");
   const [entryDoorId, setEntryDoorId] = useState("");
+  const identity = useTrafficIdentity(parkingId, entryDoorId, canEditVehicle);
+  const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft | null>(null);
+  const [vehicleEditing, setVehicleEditing] = useState(false);
+  const [vehicleBusy, setVehicleBusy] = useState(false);
+  const [vehicleError, setVehicleError] = useState('');
+  const lookupInFlight = useRef(false);
+  const detectionLocked = useRef(false);
   const [entryDateTime, setEntryDateTime] = useState("");
   const [exitDateTime, setExitDateTime] = useState("");
   const [carInfo, setCarInfo] = useState<RecordValue | null>(null);
@@ -203,17 +228,29 @@ export function TrafficRecordsWorkspace({
     fullFrameUrl: string | null;
     plateImageUrl: string | null;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [recordLoading, setLoading] = useState(true);
+  const doorTraffics = useDoorTraffics(Number(entryDoorId), showCameras);
+  const rows = showCameras ? doorTraffics.rows : recordRows;
+  const loading = showCameras ? doorTraffics.loading : recordLoading;
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  useEffect(() => { detectionLocked.current = working || billOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo); }, [working, billOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo]);
   const handleDetection = useCallback<HshDetectionHandler>(async (event, loadArtifact) => {
+    const sequence = lookupSequence.current;
     const nextPlate = normalizeIranianPlateValue(event.plateText);
     const [fullFrameUrl, plateImageUrl] = await Promise.all([
       loadArtifact("FullFrameRaw").catch(() => null),
       loadArtifact("PlateCrop").catch(() => null),
     ]);
-    setLatestDetection((previous) => ({ event, fullFrameUrl, plateImageUrl }));
+    if (sequence !== lookupSequence.current) {
+      if (fullFrameUrl) URL.revokeObjectURL(fullFrameUrl);
+      if (plateImageUrl) URL.revokeObjectURL(plateImageUrl);
+      return;
+    }
+    setLatestDetection({ event, fullFrameUrl, plateImageUrl });
+    if (detectionLocked.current) return;
+    lookupSequence.current++;
     if (nextPlate) setPlate(nextPlate);
     setCarInfo(null);
     setMemberCredit(null);
@@ -233,7 +270,15 @@ export function TrafficRecordsWorkspace({
 
   useEffect(() => {
     setLatestDetection(null);
-  }, [entryDoorId]);
+    lookupSequence.current++;
+    setCarInfo(null);
+    setMemberCredit(null);
+    setOperationMode('idle');
+    setLookupLoading(false);
+    setVehicleDraft(null);
+    setVehicleError('');
+    return () => { lookupSequence.current++; };
+  }, [parkingId, entryDoorId]);
   const copy = isPersian
     ? {
         count: "رکورد",
@@ -311,17 +356,12 @@ export function TrafficRecordsWorkspace({
       .catch(() => setError(copy.loadError));
   }, [parkingId]);
   const load = async () => {
+    if (showCameras) { await doorTraffics.refresh(); return; }
     setLoading(true);
     setError("");
     setNotice("");
     try {
-      if (showCameras && !entryDoorId) {
-        setRows([]);
-        return;
-      }
-      const response = showCameras
-        ? await trafficApi.getTraffics(Number(entryDoorId))
-        : await trafficApi.getAllTraffics({
+      const response = await trafficApi.getAllTraffics({
             PageNumber: 1,
             PageSize: 500,
             Filters: {
@@ -347,44 +387,54 @@ export function TrafficRecordsWorkspace({
     }
   };
   useEffect(() => {
-    void load();
-  }, [parkingId, showCameras, showCameras ? entryDoorId : ""]);
-  const lookupCar = async () => {
-    if (!plate && !cardNumber && !memberCode) return;
+    if (!showCameras) void load();
+  }, [parkingId, showCameras]);
+  const applyIdentity = (details: TrafficIdentity) => {
+    const info = details.info;
+    identity.setDetails(details);
+    setCarInfo(info);
+    setPlate(normalizeIranianPlateValue(String(valueOf(info, 'Plate') ?? plate)));
+    setCardNumber(String(valueOf(info, 'CardNumber') ?? cardNumber));
+    setMemberCode(String(valueOf(info, 'MemberCode') ?? memberCode));
+    const selectedCar = details.cars.find(car => car.Id === numberOf(valueOf(info, 'CarId')));
+    if (selectedCar) setCarType(String(selectedCar.CarType) as VehiclePlateType);
+    setOperationMode(hasOpenTraffic(info) ? 'exit' : 'enter');
+  };
+  const operationError = (cause: unknown, fallback: string) => cause instanceof TrafficOperationError
+    ? cause.messageKey ? t(`trafficIdentity.${cause.messageKey}`) : cause.userMessage || fallback : fallback;
+  const lookupCar = async (force = false) => {
+    // Moving focus to Register must not launch a second lookup and disable the click.
+    if (lookupInFlight.current || working || billOpen || vehicleBusy || (!force && carInfo && operationMode !== 'idle') || (!plate && !cardNumber && !memberCode)) return;
+    const requestId = ++lookupSequence.current;
+    lookupInFlight.current = true;
     setLookupLoading(true);
     setError("");
     try {
-      const response = await trafficApi.getCarTrafficInfo(
+      if (showCameras) {
+        const details = await identity.lookup(plate, cardNumber, memberCode);
+        if (requestId !== lookupSequence.current) return;
+        applyIdentity(details);
+        return;
+      }
+      const info = await operations.lookup(
         parkingId,
         plate,
         cardNumber,
         memberCode,
       );
-      const root =
-        response && typeof response === "object"
-          ? (response as Record<string, unknown>)
-          : {};
-      const values =
-        root.Values ?? root.values ?? root.Data ?? root.data ?? response;
-      const info = Array.isArray(values)
-        ? (values[0] as RecordValue | undefined)
-        : values && typeof values === "object"
-          ? (values as RecordValue)
-          : null;
+      if (requestId !== lookupSequence.current) return;
       if (info) {
         setCarInfo(info);
-        setPlate(String(valueOf(info, "Plate") ?? plate));
+        setPlate(normalizeIranianPlateValue(String(valueOf(info, "Plate") ?? plate)));
         setCardNumber(String(valueOf(info, "CardNumber") ?? cardNumber));
         setMemberCode(String(valueOf(info, "MemberCode") ?? memberCode));
-        const hasOpenEntry =
-          Boolean(valueOf(info, "EnterDateTime")) &&
-          numberOf(valueOf(info, "DumpId")) > 0 &&
-          !valueOf(info, "ExitDateTime");
+        const hasOpenEntry = hasOpenTraffic(info);
         setOperationMode(hasOpenEntry ? "exit" : "enter");
         const memberId = numberOf(valueOf(info, "MemberId"));
         if (memberId > 0) {
           const creditResponse =
             await trafficApi.getMemberCurrentCreditInfo(memberId);
+          if (requestId !== lookupSequence.current) return;
           const creditRoot =
             creditResponse && typeof creditResponse === "object"
               ? (creditResponse as Record<string, unknown>)
@@ -406,21 +456,71 @@ export function TrafficRecordsWorkspace({
       } else {
         setOperationMode("enter");
       }
-    } catch {
-      setOperationMode("enter");
+    } catch (cause) {
+      if (requestId !== lookupSequence.current) return;
+      setCarInfo(null);
+      identity.setDetails(null);
+      setOperationMode("idle");
       setError(
-        isPersian ? "استعلام خودرو انجام نشد." : "Vehicle lookup failed.",
+        operationError(cause, t('trafficOperation.lookupFailed')),
       );
     } finally {
-      setLookupLoading(false);
+      lookupInFlight.current = false;
+      if (requestId === lookupSequence.current) setLookupLoading(false);
     }
+  };
+  const selectVehicle = async (nextPlate: string) => {
+    if (working || billOpen || lookupInFlight.current || vehicleBusy) return;
+    const requestId = ++lookupSequence.current;
+    lookupInFlight.current = true;
+    setLookupLoading(true); setError('');
+    try {
+      const details = await identity.lookup(nextPlate, '', '');
+      if (requestId !== lookupSequence.current) return;
+      if (numberOf(valueOf(details.info, 'MemberId')) !== numberOf(valueOf(carInfo ?? {}, 'MemberId'))) throw new TrafficOperationError();
+      applyIdentity(details);
+    } catch (cause) {
+      if (requestId === lookupSequence.current) setError(operationError(cause, t('trafficOperation.lookupFailed')));
+    } finally { lookupInFlight.current = false; if (requestId === lookupSequence.current) setLookupLoading(false); }
+  };
+  const openVehicle = (editing: boolean) => {
+    if (!canEditVehicle || !carInfo) return;
+    setVehicleEditing(editing); setVehicleError('');
+    setVehicleDraft({ plate: editing ? plate : '', name: editing ? String(valueOf(carInfo, 'CarName') ?? '') : '',
+      carType: editing ? Number(carType) : 0, color: editing ? String(valueOf(carInfo, 'CarColor') ?? '') : '',
+      model: editing ? String(valueOf(carInfo, 'CarModel') ?? '') : '' });
+  };
+  const saveVehicle = async (draft: VehicleDraft) => {
+    if (!canEditVehicle || vehicleBusy || !carInfo) return;
+    const requestId = ++lookupSequence.current;
+    const memberId = numberOf(valueOf(carInfo, 'MemberId'));
+    setVehicleBusy(true); setVehicleError('');
+    try {
+      const savedCarId = await identity.saveVehicle(memberId, draft);
+      if (requestId !== lookupSequence.current) return;
+      // The mutation is complete even if the follow-up lookup fails; do not offer a second save.
+      setVehicleDraft(null);
+      identity.setDetails(null); setCarInfo(null); setOperationMode('idle');
+      setPlate(draft.plate); setCarType(String(draft.carType) as VehiclePlateType);
+      setCardNumber(''); setMemberCode('');
+      const details = await identity.lookup(draft.plate, '', '');
+      if (requestId !== lookupSequence.current) return;
+      if (numberOf(valueOf(details.info, 'CarId')) !== savedCarId || numberOf(valueOf(details.info, 'MemberId')) !== memberId) throw new TrafficOperationError();
+      applyIdentity(details); setNotice(t('trafficIdentity.vehicleSaved'));
+    } catch (cause) {
+      if (requestId === lookupSequence.current) {
+        const message = operationError(cause, t('trafficIdentity.vehicleSaveError'));
+        setVehicleError(message); setError(message);
+      }
+    } finally { setVehicleBusy(false); }
   };
   const visibleRows = useMemo(() => rows, [rows]);
   const registerTraffic = async () => {
+    setNotice('');
     if (
       !isValidIranianPlate(plate, carType) ||
       !entryDoorId ||
-      !entryDateTime
+      (!showCameras && !entryDateTime)
     ) {
       setError(copy.required);
       return;
@@ -428,26 +528,27 @@ export function TrafficRecordsWorkspace({
     setWorking(true);
     setError("");
     try {
-      await trafficApi.createManualDump({
+      if (showCameras) {
+        if (needsVehicle) throw new TrafficOperationError('', 'selectVehicle');
+        await operations.enter({ parkingId, doorId: Number(entryDoorId), userId, plate, carType: Number(carType), info: carInfo ?? {} });
+      } else trafficResult(await trafficApi.createManualDump({
         plate,
         parkingId,
         carType: Number(carType),
         enterDateTime: apiDateTime(entryDateTime),
         exitDateTime: apiDateTime(exitDateTime),
         doorId: Number(entryDoorId),
-      });
+      }));
       setNotice(copy.saved);
       setPlate("");
       setCardNumber("");
       setMemberCode("");
       setEntryDateTime("");
       setExitDateTime("");
-      setCarInfo(null);
-      setMemberCredit(null);
-      setOperationMode("idle");
+      clearLookup();
       await load();
-    } catch {
-      setError(copy.saveError);
+    } catch (cause) {
+      setError(operationError(cause, copy.saveError));
     } finally {
       setWorking(false);
     }
@@ -543,7 +644,8 @@ export function TrafficRecordsWorkspace({
     setBillOpen(true);
   };
   const openExit = async (row: TrafficRow) => {
-    if (valueOf(row, "ExitDateTime")) {
+    const requestId = ++lookupSequence.current;
+    if (hasTrafficTime(valueOf(row, "ExitDateTime"))) {
       setError(
         isPersian
           ? "خروج خودرو قبلاً ثبت شده است."
@@ -568,27 +670,26 @@ export function TrafficRecordsWorkspace({
     setCardNumber(rowCard);
     setMemberCode(rowMember);
     setCarInfo(row);
+    identity.setDetails(null);
     setOperationMode("exit");
     setLookupLoading(true);
     setError("");
     try {
-      const response = await trafficApi.getCarTrafficInfo(
+      if (showCameras) {
+        const details = await identity.lookup(rowPlate, rowCard, rowMember);
+        if (requestId !== lookupSequence.current) return;
+        if (!hasOpenTraffic(details.info) || numberOf(valueOf(details.info, 'DumpId')) !== rowId) throw new TrafficOperationError();
+        applyIdentity(details);
+        return;
+      }
+      const info = await operations.lookup(
         parkingId,
         rowPlate,
         rowCard,
         rowMember,
       );
-      const root =
-        response && typeof response === "object"
-          ? (response as Record<string, unknown>)
-          : {};
-      const values =
-        root.Values ?? root.values ?? root.Data ?? root.data ?? response;
-      const info = Array.isArray(values)
-        ? (values[0] as RecordValue | undefined)
-        : values && typeof values === "object"
-          ? (values as RecordValue)
-          : null;
+      if (requestId !== lookupSequence.current) return;
+      if (!hasOpenTraffic(info) || numberOf(valueOf(info, 'DumpId')) !== rowId) throw new TrafficOperationError();
       if (info) {
         setCarInfo(info);
         setPlate(
@@ -604,17 +705,20 @@ export function TrafficRecordsWorkspace({
         );
         setCardNumber(String(valueOf(info, "CardNumber") ?? rowCard));
         setMemberCode(String(valueOf(info, "MemberCode") ?? rowMember));
-      } else setCarInfo(row);
-    } catch {
-      setCarInfo(row);
+      }
+    } catch (cause) {
+      if (requestId !== lookupSequence.current) return;
+      setCarInfo(null);
+      setOperationMode('idle');
+      setError(cause instanceof TrafficOperationError && cause.userMessage ? cause.userMessage : t('trafficOperation.lookupFailed'));
     } finally {
-      setLookupLoading(false);
+      if (requestId === lookupSequence.current) setLookupLoading(false);
     }
   };
-  const openCargo = async (row: TrafficRow) => {
+  const openCargo = async (row: TrafficRow, outbound = false) => {
     setSelectedId(numberOf(valueOf(row, "DumpId") ?? valueOf(row, "Id")));
     setCargoRow(row);
-    setCargoOutbound(false);
+    setCargoOutbound(outbound);
     setCargoForm({
       driverId: "",
       merchandiseId: "",
@@ -743,12 +847,16 @@ export function TrafficRecordsWorkspace({
     }
   };
   const clearLookup = () => {
+    lookupSequence.current++;
+    setLookupLoading(false);
     setCarInfo(null);
     setMemberCredit(null);
     setExitBill(null);
     setOperationMode("idle");
+    identity.clear();
   };
-  const previewExit = async () => {
+  const registerExit = async () => {
+    setNotice('');
     const dumpId = numberOf(valueOf(carInfo ?? {}, "DumpId"));
     if (!dumpId || !entryDoorId) {
       setError(
@@ -761,39 +869,22 @@ export function TrafficRecordsWorkspace({
     setWorking(true);
     setError("");
     try {
-      const response = await trafficApi.doExitDump({
-        Id: dumpId,
-        DoorId: Number(entryDoorId),
-        ExitDoorId: Number(entryDoorId),
-        CarId: numberOf(valueOf(carInfo ?? {}, "CarId")),
-        MemberId: numberOf(valueOf(carInfo ?? {}, "MemberId")),
-        CardId: numberOf(valueOf(carInfo ?? {}, "CardId")),
-        TariffId: numberOf(valueOf(carInfo ?? {}, "MemberTariffId")),
-        CarPlate: plate,
-        CarType: Number(carType),
-        EnterDateTime: valueOf(carInfo ?? {}, "EnterDateTime"),
-        ExitDateTime: apiDateTime(exitDateTime) ?? new Date().toISOString(),
-        DoSave: false,
-      });
-      const root =
-        response && typeof response === "object"
-          ? (response as Record<string, unknown>)
-          : {};
-      const values =
-        root.Values ?? root.values ?? root.Data ?? root.data ?? response;
-      const bill = Array.isArray(values)
-        ? ((values[0] as RecordValue | undefined) ?? null)
-        : values && typeof values === "object"
-          ? (values as RecordValue)
-          : null;
-      if (!bill) throw new Error("Exit bill is empty.");
+      const bill = await operations.exit({
+        parkingId, doorId: Number(entryDoorId), userId, plate, carType: Number(carType), info: carInfo ?? {},
+      }, apiDateTime(exitDateTime));
+      clearLookup();
+      setPlate('');
+      setCardNumber('');
+      setMemberCode('');
+      setEntryDateTime('');
+      setExitDateTime('');
       setExitBill(bill);
       setBillOpen(true);
-    } catch {
+      await load();
+      setNotice(t('trafficOperation.exitSaved'));
+    } catch (cause) {
       setError(
-        isPersian
-          ? "محاسبه مبلغ خروج انجام نشد."
-          : "Exit amount could not be calculated.",
+        operationError(cause, t('trafficOperation.exitFailed')),
       );
     } finally {
       setWorking(false);
@@ -802,9 +893,11 @@ export function TrafficRecordsWorkspace({
   const settleCash = async () => {
     const dumpId = numberOf(valueOf(exitBill ?? {}, "DumpId"));
     if (!dumpId) return;
+    setNotice('');
+    setError('');
     setWorking(true);
     try {
-      await trafficApi.payDump(dumpId, 1);
+      await operations.pay(dumpId);
       setBillOpen(false);
       setNotice(
         isPersian ? "تسویه نقدی انجام شد." : "Cash settlement completed.",
@@ -816,14 +909,14 @@ export function TrafficRecordsWorkspace({
       setEntryDateTime("");
       setExitDateTime("");
       await load();
-    } catch {
-      setError(isPersian ? "تسویه انجام نشد." : "Settlement failed.");
+    } catch (cause) {
+      setError(cause instanceof TrafficOperationError && cause.userMessage ? cause.userMessage : t('trafficOperation.paymentFailed'));
     } finally {
       setWorking(false);
     }
   };
   const handleOperation = () =>
-    operationMode === "exit" ? void previewExit() : void registerTraffic();
+    operationMode === "exit" ? void registerExit() : operationMode === 'enter' ? void registerTraffic() : void lookupCar();
   const actionButton = (
     label: string,
     icon: ReactNode,
@@ -957,87 +1050,6 @@ export function TrafficRecordsWorkspace({
           : "",
     },
   ];
-  const controlActionColumn = {
-    key: "Actions",
-    label: isPersian ? "عملیات" : "Operations",
-    width: 88,
-    minWidth: 88,
-    filterable: false,
-    render: (row: TrafficRow) => (
-      <Box
-        sx={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 0.25,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {actionButton(
-          isPersian ? "پرداخت مبلغ خروج" : "Pay exit amount",
-          <PaymentsRoundedIcon sx={{ fontSize: 18 }} />,
-          () => openPay(row),
-        )}
-        {actionButton(
-          isPersian ? "ثبت خروج" : "Register exit",
-          <ExitToAppRoundedIcon sx={{ fontSize: 18 }} />,
-          () => void openExit(row),
-        )}
-        {actionButton(
-          isPersian ? "ثبت بار" : "Register cargo",
-          <LocalShippingRoundedIcon sx={{ fontSize: 18 }} />,
-          () => void openCargo(row),
-        )}
-      </Box>
-    ),
-  };
-  const controlColumns = [
-    {
-      key: "MemberCode",
-      label: isPersian ? "کد عضویت" : "Member code",
-      width: 81,
-      minWidth: 81,
-    },
-    {
-      key: "CarPlate",
-      label: copy.plate,
-      width: 99,
-      minWidth: 99,
-      render: (row: TrafficRow) =>
-        valueOf(row, "CarPlateReversed") ?? valueOf(row, "CarPlate") ?? "—",
-    },
-    {
-      key: "CardNumber",
-      label: isPersian ? "شماره کارت" : "Card number",
-      width: 67,
-      minWidth: 67,
-    },
-    {
-      key: "EnterDateTime",
-      label: isPersian ? "زمان ورود" : "Entry time",
-      width: 95,
-      minWidth: 95,
-      render: (row: TrafficRow) =>
-        dateTime(valueOf(row, "EnterDateTime"), isPersian),
-    },
-    {
-      key: "ExitDateTime",
-      label: isPersian ? "زمان خروج" : "Exit time",
-      width: 91,
-      minWidth: 91,
-      render: (row: TrafficRow) =>
-        dateTime(valueOf(row, "ExitDateTime"), isPersian),
-    },
-    {
-      key: "PayType",
-      label: isPersian ? "وضعیت پرداخت" : "Payment status",
-      width: 93,
-      minWidth: 93,
-      render: (row: TrafficRow) =>
-        payTypeLabel(valueOf(row, "PayType"), isPersian),
-    },
-    controlActionColumn,
-  ];
-  const columns = showCameras ? controlColumns : recordColumns;
   const doorSelector = (
     <FormControl
       size="small"
@@ -1051,6 +1063,7 @@ export function TrafficRecordsWorkspace({
       <InputLabel>{copy.door}</InputLabel>
       <Select
         label={copy.door}
+        disabled={working || billOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft)}
         value={entryDoorId}
         onChange={(event) => setEntryDoorId(event.target.value)}
       >
@@ -1086,9 +1099,14 @@ export function TrafficRecordsWorkspace({
         : "";
   const billValue = (key: string, fallback = "—") =>
     String(valueOf(exitBill ?? {}, key) ?? fallback);
+  const policyAlerts = showCameras ? trafficAlerts(carInfo, operationMode === 'exit' ? 'exit' : 'enter', appConfig.trafficRequireExitPermission) : [];
+  const needsVehicle = showCameras && operationMode === 'enter' && Boolean(carInfo) && numberOf(valueOf(carInfo ?? {}, 'MemberId')) > 0
+    && !identity.details?.cars.some(car => car.Id === numberOf(valueOf(carInfo ?? {}, 'CarId')) && normalizeIranianPlateValue(car.Plate) === plate);
+  const identityBusy = working || operations.pending || billOpen || lookupLoading || vehicleBusy;
 
   return (
     <ManagementWorkspaceFrame
+      className={showCameras ? 'traffic-control-workspace' : undefined}
       title={title}
       pageTitle={pageTitle}
       language={language}
@@ -1096,258 +1114,283 @@ export function TrafficRecordsWorkspace({
       onRefresh={() => void load()}
       headingActions={doorSelector}
     >
-      {notice && (
+      {showCameras && <AppToast message={error || notice} severity={error ? 'error' : 'success'} onClose={() => { setError(''); setNotice(''); }} />}
+      {!showCameras && notice && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {notice}
         </Alert>
       )}
-      {error && (
+      {!showCameras && error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
       <Box className="traffic-top-grid">
-        <Tooltip
-          title={isPersian ? "شناسایی خودرو" : "Vehicle identification"}
-          placement="top"
-          arrow
-        >
-          <Paper
-            variant="outlined"
-            className="traffic-entry-identity traffic-entry-panel"
-            sx={{ p: 1.5 }}
+        <Box className={showCameras ? 'traffic-control-console' : 'traffic-history-console'}>
+          <Tooltip
+            title={isPersian ? "شناسایی خودرو" : "Vehicle identification"}
+            placement="top"
+            arrow
           >
-            <Box
-              className="traffic-vehicle-identification-grid"
-              onBlur={(event) => {
-                if (
-                  !event.currentTarget.contains(
-                    event.relatedTarget as Node | null,
-                  )
-                )
-                  void lookupCar();
-              }}
+            <Paper
+              variant="outlined"
+              className="traffic-entry-identity traffic-entry-panel"
+              sx={{ p: 1.5 }}
             >
-              <Box className="traffic-card-member-fields">
-                <TextField
-                  size="small"
-                  className="traffic-card-field"
-                  label={copy.card}
-                  value={cardNumber}
-                  onChange={(event) => {
-                    clearLookup();
-                    setCardNumber(event.target.value);
-                  }}
-                  onBlur={() => void lookupCar()}
-                />
-                <TextField
-                  size="small"
-                  className="traffic-member-field"
-                  label={copy.memberCode}
-                  value={memberCode}
-                  onChange={(event) => {
-                    clearLookup();
-                    setMemberCode(event.target.value);
-                  }}
-                  onBlur={() => void lookupCar()}
-                />
-              </Box>
-              <Box className="traffic-plate-field">
-                <IranianPlateInput
-                  label={copy.plate}
-                  value={plate}
-                  carType={carType}
-                  onCarTypeChange={setCarType}
-                  onChange={(value) => {
-                    clearLookup();
-                    setPlate(value);
-                  }}
-                  error={Boolean(plate) && !isValidIranianPlate(plate, carType)}
-                  helperText={
-                    Boolean(plate) && !isValidIranianPlate(plate, carType)
-                      ? isPersian
-                        ? "قالب پلاک کامل نیست."
-                        : "Complete the plate format."
-                      : undefined
-                  }
-                />
-              </Box>
-              {lookupLoading && (
-                <Typography variant="caption" color="text.secondary">
-                  {isPersian ? "در حال بررسی سوابق..." : "Checking history..."}
-                </Typography>
-              )}
-            </Box>
-          </Paper>
-        </Tooltip>
-        <Tooltip title={operationTitle} placement="top" arrow>
-          <Paper
-            variant="outlined"
-            className={`traffic-entry-operation traffic-entry-panel traffic-operation-latest-panel ${showCameras ? "traffic-operation-tall" : ""}`}
-            sx={{ p: 1.5 }}
-          >
-            <Box className="traffic-operation-latest-layout">
-              <Box className="traffic-operation-content">
-                {operationHint && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1.5 }}
-                  >
-                    {operationHint}
-                  </Typography>
-                )}
-                <Box className="traffic-operation-details" aria-label={isPersian ? "مشخصات پلاک انتخاب‌شده" : "Selected plate details"}>
-                  <Typography variant="body2" className="traffic-operation-detail-row">
-                    <span>{isPersian ? "پلاک" : "Plate"}</span>
-                    <strong dir="ltr">{plate || "—"}</strong>
-                  </Typography>
-                  {carInfo && (
-                    <>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "عضو" : "Member"}</span>
-                        <strong>{String(valueOf(carInfo, "MemberFullName") ?? valueOf(carInfo, "Name") ?? "—")}</strong>
-                      </Typography>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "کد عضویت" : "Member code"}</span>
-                        <strong>{String(valueOf(carInfo, "MemberCode") ?? "—")}</strong>
-                      </Typography>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "خودرو" : "Vehicle"}</span>
-                        <strong>{String(valueOf(carInfo, "CarName") ?? valueOf(carInfo, "CarModel") ?? "—")}</strong>
-                      </Typography>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "رنگ" : "Color"}</span>
-                        <strong>{String(valueOf(carInfo, "CarColor") ?? "—")}</strong>
-                      </Typography>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "تردد باز" : "Open traffic"}</span>
-                        <strong dir="ltr">{dateTime(valueOf(carInfo, "EnterDateTime"), isPersian)}</strong>
-                      </Typography>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "تعرفه" : "Tariff"}</span>
-                        <strong>{String(valueOf(carInfo, "MemberTariffName") ?? valueOf(carInfo, "TariffName") ?? valueOf(carInfo, "TarrifTitle") ?? "—")}</strong>
-                      </Typography>
-                      <Typography variant="body2" className="traffic-operation-detail-row">
-                        <span>{isPersian ? "اعتبار" : "Credit"}</span>
-                        <strong>{String(valueOf(memberCredit ?? {}, "Credit") ?? valueOf(memberCredit ?? {}, "CurrentCredit") ?? valueOf(carInfo, "CashAmount") ?? "—")}</strong>
-                      </Typography>
-                    </>
-                  )}
+              <Box
+                className="traffic-vehicle-identification-grid"
+                onBlur={(event) => {
+                  if (
+                    !event.currentTarget.contains(
+                      event.relatedTarget as Node | null,
+                    )
+                  )
+                    void lookupCar();
+                }}
+              >
+                <Box className="traffic-card-member-fields">
+                  <TextField
+                    size="small"
+                    className="traffic-card-field"
+                    label={copy.card}
+                    disabled={identityBusy}
+                    value={cardNumber}
+                    onChange={(event) => {
+                      clearLookup();
+                      setCardNumber(event.target.value);
+                    }}
+                    onBlur={() => void lookupCar()}
+                    onKeyDown={event => { if (showCameras && event.key === 'Enter') { event.preventDefault(); void lookupCar(); } }}
+                  />
+                  <TextField
+                    size="small"
+                    className="traffic-member-field"
+                    label={copy.memberCode}
+                    disabled={identityBusy}
+                    value={memberCode}
+                    onChange={(event) => {
+                      clearLookup();
+                      setMemberCode(event.target.value);
+                    }}
+                    onBlur={() => void lookupCar()}
+                  />
                 </Box>
-                {operationMode === "exit" && (
-                  <Typography variant="body2" sx={{ mb: 1.5 }}>
-                    {isPersian ? "زمان ورود: " : "Entry time: "}
-                    <strong>
-                      {dateTime(
-                        valueOf(carInfo ?? {}, "EnterDateTime"),
-                        isPersian,
-                      )}
-                    </strong>
+                <Box className="traffic-plate-field">
+                  <IranianPlateInput
+                    label={copy.plate}
+                    value={plate}
+                    carType={carType}
+                    disabled={identityBusy}
+                    onCarTypeChange={(value) => { clearLookup(); setCarType(value); }}
+                    onChange={(value) => {
+                      clearLookup();
+                      setPlate(value);
+                    }}
+                    error={Boolean(plate) && !isValidIranianPlate(plate, carType)}
+                    helperText={
+                      Boolean(plate) && !isValidIranianPlate(plate, carType)
+                        ? isPersian
+                          ? "قالب پلاک کامل نیست."
+                          : "Complete the plate format."
+                        : undefined
+                    }
+                  />
+                </Box>
+                {lookupLoading && (
+                  <Typography variant="caption" color="text.secondary">
+                    {isPersian ? "در حال بررسی سوابق..." : "Checking history..."}
                   </Typography>
                 )}
-                {operationMode === "enter" && (
-                  <EosDateTimePicker
-                    language={language}
-                    label={copy.entry}
-                    value={entryDateTime}
-                    onChange={setEntryDateTime}
-                  />
-                )}
-                {operationMode === "exit" && (
-                  <EosDateTimePicker
-                    language={language}
-                    label={copy.exit}
-                    value={exitDateTime}
-                    onChange={setExitDateTime}
-                  />
-                )}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  onClick={handleOperation}
-                  disabled={working || lookupLoading || operationMode === "idle"}
-                >
-                  {operationMode === "exit"
-                    ? (isPersian ? "محاسبه مبلغ و ثبت خروج" : "Calculate amount and register exit")
-                    : operationMode === "enter"
-                      ? (isPersian ? "ثبت ورود" : "Register entry")
-                      : copy.register}
-                </Button>
               </Box>
-              {showCameras && (
-                <Tooltip
-                  title={isPersian ? "آخرین تردد" : "Latest traffic"}
-                  placement="top"
-                  arrow
-                >
-                  <Box className="traffic-last-traffic-inline">
-                    {latestDetection ? (
-                      <>
-                        <Typography variant="body2" className="traffic-latest-detail-row">
-                          <span>{isPersian ? "تاریخ و ساعت" : "Date and time"}</span>
-                          <strong dir="ltr">{dateTime(latestDetection.event.occurredAtUtc, isPersian)}</strong>
-                        </Typography>
-                        <Typography variant="body2" className="traffic-latest-detail-row">
-                          <span>{isPersian ? "پلاک" : "Plate"}</span>
-                          <strong dir="ltr">{latestDetection.event.plateText || "—"}</strong>
-                        </Typography>
-                        <Box className="traffic-latest-image-stack">
-                          <Box className="traffic-plate-preview">
-                            {latestDetection.plateImageUrl ? (
-                              <Box
-                                component="img"
-                                src={latestDetection.plateImageUrl}
-                                alt={isPersian ? "تصویر پلاک آخرین تشخیص" : "Latest plate crop"}
-                              />
-                            ) : (
-                              <Typography variant="caption" color="text.secondary">
-                                {isPersian ? "تصویر پلاک موجود نیست" : "Plate image unavailable"}
-                              </Typography>
-                            )}
-                          </Box>
-                          <Box className="traffic-fullframe-preview">
-                            {latestDetection.fullFrameUrl ? (
-                              <Box
-                                component="img"
-                                src={latestDetection.fullFrameUrl}
-                                alt={isPersian ? "تصویر کامل آخرین تشخیص پلاک" : "Latest full-frame detection"}
-                              />
-                            ) : (
-                              <Typography variant="caption" color="text.secondary">
-                                {isPersian ? "تصویر Full Frame موجود نیست" : "Full-frame image unavailable"}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-                      </>
-                    ) : (
-                      <Box className="traffic-last-traffic-placeholder">
-                        <Typography variant="body2" color="text.secondary">
-                          {isPersian
-                            ? "تصویر آخرین تشخیص در دسترس نیست"
-                            : "Latest detection image is unavailable"}
-                        </Typography>
-                      </Box>
+            </Paper>
+          </Tooltip>
+          <Tooltip title={operationTitle} placement="top" arrow>
+            <Paper
+              variant="outlined"
+              className={`traffic-entry-operation traffic-entry-panel traffic-operation-latest-panel ${showCameras ? "traffic-operation-tall" : ""}`}
+              sx={{ p: 1.5 }}
+            >
+              <Box className="traffic-operation-latest-layout">
+                <Box className="traffic-operation-content">
+                  <Box className="traffic-operation-information">
+                    {operationHint && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 1.5 }}
+                      >
+                        {operationHint}
+                      </Typography>
                     )}
+                    <Box className="traffic-operation-details" aria-label={isPersian ? "مشخصات پلاک انتخاب‌شده" : "Selected plate details"}>
+                      <Typography variant="body2" className="traffic-operation-detail-row">
+                        <span>{isPersian ? "پلاک" : "Plate"}</span>
+                        <strong dir="ltr">{plate || "—"}</strong>
+                      </Typography>
+                      {carInfo && (
+                        <>
+                          <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "عضو" : "Member"}</span>
+                            <strong>{String(valueOf(carInfo, "MemberFullName") ?? valueOf(carInfo, "Name") ?? "—")}</strong>
+                          </Typography>
+                          <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "کد عضویت" : "Member code"}</span>
+                            <strong>{String(valueOf(carInfo, "MemberCode") ?? "—")}</strong>
+                          </Typography>
+                          <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "خودرو" : "Vehicle"}</span>
+                            <strong>{String(valueOf(carInfo, "CarName") ?? valueOf(carInfo, "CarModel") ?? "—")}</strong>
+                          </Typography>
+                          <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "رنگ" : "Color"}</span>
+                            <strong>{String(valueOf(carInfo, "CarColor") ?? "—")}</strong>
+                          </Typography>
+                          <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "تردد باز" : "Open traffic"}</span>
+                            <strong dir="ltr">{dateTime(valueOf(carInfo, "EnterDateTime"), isPersian)}</strong>
+                          </Typography>
+                          <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "تعرفه" : "Tariff"}</span>
+                            <strong>{String(valueOf(carInfo, "MemberTariffName") ?? valueOf(carInfo, "TariffName") ?? valueOf(carInfo, "TarrifTitle") ?? "—")}</strong>
+                          </Typography>
+                          {!showCameras && <Typography variant="body2" className="traffic-operation-detail-row">
+                            <span>{isPersian ? "اعتبار" : "Credit"}</span>
+                            <strong>{String(valueOf(memberCredit ?? {}, "Credit") ?? valueOf(memberCredit ?? {}, "CurrentCredit") ?? valueOf(carInfo, "CashAmount") ?? "—")}</strong>
+                          </Typography>}
+                        </>
+                      )}
+                    </Box>
+                    {showCameras && identity.details && <TrafficIdentityDetails details={identity.details} language={language}
+                      busy={identityBusy} canEdit={canEditVehicle} onSelect={nextPlate => void selectVehicle(nextPlate)}
+                      onAdd={() => openVehicle(false)} onEdit={() => openVehicle(true)} onRetry={() => void lookupCar(true)} />}
+                    {policyAlerts.map(alert => <Alert key={alert.key} severity={alert.blocked ? 'error' : 'warning'}>
+                      {t(`trafficIdentity.${alert.key}`)}{alert.description ? ` — ${alert.description}` : ''}
+                    </Alert>)}
                   </Box>
-                </Tooltip>
-              )}
-            </Box>
-          </Paper>
-        </Tooltip>
+                  <Box className="traffic-operation-actions">
+                    {operationMode === "exit" && !showCameras && (
+                      <Typography variant="body2" sx={{ mb: 1.5 }}>
+                        {isPersian ? "زمان ورود: " : "Entry time: "}
+                        <strong>
+                          {dateTime(
+                            valueOf(carInfo ?? {}, "EnterDateTime"),
+                            isPersian,
+                          )}
+                        </strong>
+                      </Typography>
+                    )}
+                    {operationMode === "enter" && !showCameras && (
+                      <EosDateTimePicker
+                        language={language}
+                        label={copy.entry}
+                        value={entryDateTime}
+                        onChange={setEntryDateTime}
+                      />
+                    )}
+                    {operationMode === "exit" && !showCameras && (
+                      <EosDateTimePicker
+                        language={language}
+                        label={copy.exit}
+                        value={exitDateTime}
+                        onChange={setExitDateTime}
+                      />
+                    )}
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      onClick={handleOperation}
+                      disabled={identityBusy || !entryDoorId || (!plate && !cardNumber && !memberCode) || needsVehicle || policyAlerts.some(alert => alert.blocked)}
+                    >
+                      {operationMode === "exit"
+                        ? (isPersian ? "محاسبه مبلغ و ثبت خروج" : "Calculate amount and register exit")
+                        : operationMode === "enter"
+                          ? (isPersian ? "ثبت ورود" : "Register entry")
+                          : t('trafficOperation.lookup')}
+                    </Button>
+                    {showCameras && <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button size="small" disabled={identityBusy || !carInfo} onClick={() => void lookupCar(true)}>{t('trafficIdentity.refreshIdentity')}</Button>
+                      <Button size="small" disabled={identityBusy} onClick={() => { clearLookup(); setPlate(''); setCardNumber(''); setMemberCode(''); setError(''); }}>{t('trafficIdentity.clear')}</Button>
+                    </Box>}
+                  </Box>
+                </Box>
+              </Box>
+            </Paper>
+          </Tooltip>
+        </Box>
         {showCameras && (
-          <TrafficCameraPanels
-            doorId={entryDoorId}
-            language={language}
-            onDetection={handleDetection}
-          />
+          <Box className="traffic-control-camera-column">
+            <TrafficCameraPanels
+              doorId={entryDoorId}
+              language={language}
+              onDetection={handleDetection}
+            />
+            <Tooltip
+              title={isPersian ? "آخرین تردد" : "Latest traffic"}
+              placement="top"
+              arrow
+            >
+              <Paper variant="outlined" className="traffic-last-traffic-inline">
+                {latestDetection ? (
+                  <>
+                    <Typography variant="body2" className="traffic-latest-detail-row">
+                      <span>{isPersian ? "تاریخ و ساعت" : "Date and time"}</span>
+                      <strong dir="ltr">{dateTime(latestDetection.event.occurredAtUtc, isPersian)}</strong>
+                    </Typography>
+                    <Typography variant="body2" className="traffic-latest-detail-row">
+                      <span>{isPersian ? "پلاک" : "Plate"}</span>
+                      <strong dir="ltr">{latestDetection.event.plateText || "—"}</strong>
+                    </Typography>
+                    <Box className="traffic-latest-image-stack">
+                      <Box className="traffic-plate-preview">
+                        {latestDetection.plateImageUrl ? (
+                          <Box
+                            component="img"
+                            src={latestDetection.plateImageUrl}
+                            alt={isPersian ? "تصویر پلاک آخرین تشخیص" : "Latest plate crop"}
+                          />
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">
+                            {isPersian ? "تصویر پلاک موجود نیست" : "Plate image unavailable"}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box className="traffic-fullframe-preview">
+                        {latestDetection.fullFrameUrl ? (
+                          <Box
+                            component="img"
+                            src={latestDetection.fullFrameUrl}
+                            alt={isPersian ? "تصویر کامل آخرین تشخیص پلاک" : "Latest full-frame detection"}
+                          />
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">
+                            {isPersian ? "تصویر Full Frame موجود نیست" : "Full-frame image unavailable"}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  </>
+                ) : (
+                  <Box className="traffic-last-traffic-placeholder">
+                    <Typography variant="body2" color="text.secondary">
+                      {isPersian
+                        ? "تصویر آخرین تشخیص در دسترس نیست"
+                        : "Latest detection image is unavailable"}
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Tooltip>
+          </Box>
         )}
       </Box>
-      <Box
-        className={`traffic-details-section ${showCameras ? "traffic-control-grid" : "traffic-records-grid"}`}
-      >
+      {showCameras ? (
+        <TrafficControlGrids key={`${parkingId}:${entryDoorId}`} rows={rows} language={language}
+          loading={doorTraffics.loading} error={doorTraffics.error} updatedAt={doorTraffics.updatedAt}
+           busy={identityBusy || cargoLoading || Boolean(vehicleDraft)}
+          onExit={(row) => void openExit(row)} onPay={openPay}
+          onCargo={(row, outbound) => void openCargo(row, outbound)} />
+      ) : <Box className="traffic-details-section traffic-records-grid">
         <ResourceState
           loading={loading}
           error=""
@@ -1358,7 +1401,7 @@ export function TrafficRecordsWorkspace({
           <AppDataGrid<TrafficRow>
             direction={isPersian ? "rtl" : "ltr"}
             rows={visibleRows}
-            columns={columns}
+            columns={recordColumns}
             filterable={false}
             rowKey={(row) =>
               String(valueOf(row, "DumpId") ?? valueOf(row, "Id"))
@@ -1372,7 +1415,9 @@ export function TrafficRecordsWorkspace({
             onRowDoubleClick={(row) => openEdit(row)}
           />
         </ResourceState>
-      </Box>
+      </Box>}
+      {showCameras && <TrafficVehicleDialog draft={vehicleDraft} editing={vehicleEditing} language={language} busy={vehicleBusy}
+        error={vehicleError} onClose={() => setVehicleDraft(null)} onSave={draft => void saveVehicle(draft)} />}
       <AppPopup dir={isPersian ? "rtl" : "ltr"} open={cargoOpen} onClose={() => {
           if (!cargoLoading) setCargoOpen(false);
         }} maxWidth="md" busy={cargoLoading} title={cargoOutbound
@@ -1638,7 +1683,7 @@ export function TrafficRecordsWorkspace({
             <Typography variant="body2" sx={{ gridColumn: { sm: "1 / -1" } }}>
               {isPersian ? "مبلغ قابل پرداخت: " : "Amount due: "}
               <strong>
-                {billValue("TotalCost", billValue("Amount", "0"))}
+                {billValue("CommonCost", "0")}
               </strong>
             </Typography>
           </Box>

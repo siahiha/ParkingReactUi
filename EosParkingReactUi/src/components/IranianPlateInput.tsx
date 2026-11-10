@@ -346,12 +346,11 @@ export function IranianPlateInput({
                   inputProps={numericProps("left", 2, `${label} - دو رقم اول`)}
                 />
                 <Autocomplete
-                  disableClearable
                   disabled={disabled}
                   options={letterOptions}
                   value={letterOptions.find(
                     (item) => item.value === parts.letter,
-                  )}
+                  ) ?? null}
                   inputValue={letterInputValue}
                   isOptionEqualToValue={(option, selected) =>
                     option.value === selected.value
@@ -364,6 +363,7 @@ export function IranianPlateInput({
                     setLetterInputValue(nextValue);
                   }}
                   onChange={(_, option) => {
+                    if (!option) { setLetterInputValue(''); update('letter', ''); return; }
                     setLetterInputValue(option.value);
                     update("letter", option.value);
                     window.setTimeout(() => middleInputRef.current?.focus(), 0);

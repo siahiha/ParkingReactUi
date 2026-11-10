@@ -13,12 +13,12 @@
 
 ## ۲. Theme واحد
 
-یک `ThemeProvider` در ریشه برنامه قرار می‌گیرد و همه صفحه‌ها از آن استفاده می‌کنند. theme شامل `colorSchemes` برای `light` و `dark` و CSS variables است.
+**رفتار فعلی:** `App.tsx` با `createAppTheme` و `ThemeProvider` تم فعال را از state برنامه می‌سازد؛ رنگ‌ها از `theme.ts` و متغیرهای مشترک `--app-*` مصرف می‌شوند. پیاده‌سازی فعلی مبتنی بر `colorSchemes` یا انتخاب خودکار مود سیستم نیست.
 
 ### حالت رنگ
 
-- سه انتخاب به کاربر ارائه شود: `system`، `light` و `dark`.
-- انتخاب پیش‌فرض `system` است؛ انتخاب کاربر فقط به‌عنوان preference غیرحساس ذخیره می‌شود.
+- نوع `ThemeMode` در کد فقط `light` و `dark` دارد؛ مقدار اولیه در نبود preference معتبر `light` است.
+- preferenceهای غیرحساس مود، palette روشن/تیره و shape از state و storage برنامه مدیریت می‌شوند؛ در حالت SSO، خواندن و ذخیرهٔ آن‌ها تابع نشست و preferenceهای SSO است. منبع: `App.tsx`، `theme.ts` و `ThemeSettingsDialog.tsx`.
 - تغییر theme نباید رنگ‌های دستی یا flicker ایجاد کند.
 - Dark mode از مشکی مطلق استفاده نمی‌کند؛ background، surface و border جدا اما کم‌کنتراست‌اند.
 
@@ -78,23 +78,22 @@
 
 ## ۵. الگوی componentهای مشترک
 
-این‌ها wrapperهای کوچک روی MUI هستند، نه یک design system دوم:
+جدول زیر اجزای موجود را معرفی می‌کند؛ نام‌های پیشنهادی قبلی مانند `AppLayout`، `AppButton`، `AppFormField` و `PermissionGuard` نباید به‌عنوان component پیاده‌سازی‌شده تلقی شوند. مرجع جزئیات اجزای مشترک [سند ۱۰](10-shared-ui-components.md) و مرجع پوستهٔ Home سند ۲۵ است.
 
 | wrapper | کاربرد |
 |---|---|
-| `AppLayout` | header، navigation، container و sidebar/drawer |
-| `PageHeader` | عنوان، breadcrumb و action اصلی |
-| `WorkspaceToolbar` | نوار action مشترک بالای کارت، فهرست یا جدول |
-| `AppButton` | variant و loading state یکسان برای Button MUI |
-| `ConfirmDialog` | تأیید حذف یا عملیات حساس |
-| `CrudDialog` | پوسته‌ی reusable برای فرم‌های ایجاد و ویرایش با دکمه‌های لغو و تأیید |
+| `HomeShell` | پوستهٔ Home؛ قرارداد در سند ۲۵ |
+| `ManagementWorkspaceFrame` | قاب workspace مدیریت و Header/Refresh |
+| `AppPopup` | تنها پوستهٔ modal کسب‌وکاری؛ مالک عنوان، قاب، محتوا، footer، دکمه‌ها و busy |
+| `ConfirmDialog` | adapter تأیید حذف یا عملیات حساس روی `AppPopup` |
+| `CrudDialog` | adapter ایجاد/ویرایش روی `AppPopup`؛ بدون پوستهٔ مستقل |
 | `AppGroupBox` | گروه‌بندی معنایی فرم با `fieldset/legend` و Caption روی خط Border |
 | `AppDataGrid` | پوسته‌ی مشترک Grid/Table با تراکم، مرزها، انتخاب ردیف، locale و RTL/LTR یکسان |
 | `AppRecordCard` | پوسته‌ی مشترک کارت رکورد با محتوای خلاصه و ناحیه‌ی action استاندارد |
-| `AppFormField` | اتصال یکدست MUI field به React Hook Form |
-| `StatusChip` | رنگ و icon معنایی وضعیت‌ها |
-| `LoadingState`، `EmptyState`، `ErrorState` | stateهای ثابت صفحه و جدول |
-| `PermissionGuard` | پنهان/غیرفعال‌کردن UX بر اساس مجوز UI |
+| `MoneyTextField`، `IranianPlateInput` | ورودی مشترک مبلغ و پلاک |
+| `EosDateTimePicker`، `EosTimeOnDayPicker` | ورودی مشترک تاریخ/ساعت و ساعتِ روز |
+| `BooleanStatusIcon` | تیک/ضربدر قابل‌دسترس برای وضعیت Boolean |
+| `ResourceState` | نمایش loading، empty و error در workspaceهای مدیریت |
 
 اگر یک wrapper تنها در یک صفحه استفاده می‌شود، ساخته نشود؛ همان component MUI با `sx` محلی استفاده شود.
 
@@ -104,7 +103,7 @@
 
 - MUI `TextField`، `Select`، `Autocomplete`، `Checkbox`، `RadioGroup` و `DatePicker` به‌عنوان کنترل پیش‌فرض استفاده شوند.
 - فیلد تاریخ‌وساعت فقط از `EosDateTimePicker`، فیلد تاریخِ تنها از همان کامپوننت با `dateOnly` و ساعتِ تنها از `EosTimeOnDayPicker` استفاده کند؛ قرارداد داده و قالب هر دو در `10-shared-ui-components.md` ثبت شده است.
-- در فرم‌های بزرگ و چندمرحله‌ای، React Hook Form و Zod مسئول state و validation باشند؛ فرم‌های فعلی Login و Home که سبک و محدود هستند از state محلی React استفاده می‌کنند و باید همین قرارداد اعتبارسنجی و نمایش خطا را رعایت کنند.
+- state فرم‌ها با React مدیریت می‌شود؛ validation فعلی بسته به feature از Zod یا تابع اختصاصی می‌آید. React Hook Form dependency پروژه نیست و الزام پیشنهادی قبلی آن حذف شده است؛ قواعد توسعه و فاصلهٔ کد موجود با استاندارد در سندهای ۰۰ و ۱۷ ثبت شده‌اند.
 - خطای هر فیلد زیر همان فیلد، و خطای عمومی API در بالای فرم نمایش داده شود.
 - دکمه Primary فقط یک مورد است؛ دکمه Cancel/Back همیشه قابل تشخیص و از عمل مخرب جداست.
 
@@ -148,12 +147,12 @@ TextField نام کاربری در صفحه Login مرجع بصری تمام ف�
 
 ### جدول‌ها
 
-- `MUI Data Grid Community` انتخاب پیش‌فرض است.
+- جدول مشترک فعلی `AppDataGrid` بر پایهٔ MUI `Table` است؛ `MUI Data Grid Community` dependency پروژه نیست.
 - pagination و sort برای گریدهای صفحه‌بندی‌شده یا حجیم باید server-side باشند و دادهٔ
   کامل در Browser دریافت نشود. `AppDataGrid` در حالت عادی فیلتر ستونی client-side روی
   دادهٔ موجود دارد؛ برای همان UI در گریدهای server-side باید query فیلتر به API رسمی
   نگاشت شود، نه اینکه کل داده برای فیلتر محلی دانلود شود.
-- `AppDataGrid` باید loading، empty، error، locale فارسی/انگلیسی، انتخاب تک/چندردیفی و تراکم `comfortable/compact` یکسان داشته باشد.
+- **رفتار فعلی:** `AppDataGrid` انتخاب تک/چندردیفی، فیلتر مشترک و جهت فارسی/انگلیسی دارد؛ loading/empty/error در workspace و اجزایی مانند `ResourceState` مدیریت می‌شوند. تراکم از Theme/CSS مشترک می‌آید و انتخاب‌گر عمومی `comfortable/compact` در API فعلی این component وجود ندارد.
 - ورودی فیلتر داخل سرستون و زیر عنوان ستون قرار می‌گیرد و پیش‌فرض مخفی است. روی هر
   سرستون یک منوی سه‌نقطه قرار دارد که گزینه‌های جستجو و فیلتر را در منوی شناور متصل
   به همان ستون نمایش می‌دهد؛ ردیف یا نوار ابزار جداگانه برای این گزینه‌ها استفاده
@@ -174,6 +173,7 @@ TextField نام کاربری در صفحه Login مرجع بصری تمام ف�
 
 ### Dialog و عملیات مخرب
 
+- تمام modalهای کسب‌وکاری باید از `AppPopup`، مستقیم یا از طریق adapterهای `CrudDialog` و `ConfirmDialog`، استفاده کنند. ساخت مستقیم `Dialog`/`Modal` یا پوستهٔ مستقل در feature مجاز نیست. Menu، Tooltip، Popover، Drawer و popup داخلی pickerها از این قاعده مستثنا هستند. قرارداد کامل actions، busy، Theme و اسکرول جدول در [سند ۱۰](10-shared-ui-components.md) مرجع است.
 - حذف فیزیکی همیشه `ConfirmDialog` دارد و نام/شناسه رکورد و اثر حذف را نشان می‌دهد.
 - هر Grid که action حذف دارد باید checkbox انتخاب ردیف و checkbox «انتخاب همه» در Header داشته باشد. حذف با یک یا چند ردیف انتخاب‌شده از Toolbar اجرا می‌شود؛ برای انتخاب چندردیفی، متن تأیید باید تعداد رکوردهای هدف را مشخص کند.
 - ویرایش فقط با دقیقاً یک ردیف انتخاب‌شده فعال است؛ حذف با حداقل یک ردیف قابل‌حذف فعال می‌شود. ردیف‌های سیستمی یا غیرقابل‌حذف نباید قابل انتخاب برای حذف باشند.
@@ -185,7 +185,7 @@ TextField نام کاربری در صفحه Login مرجع بصری تمام ف�
 - وقتی یک موجودیت باید کارت‌محور نمایش داده شود، صفحه فقط action اصلی ایجاد و کارت‌های رکوردها را نشان می‌دهد؛ فرم ایجاد یا ویرایش نباید به‌صورت پنل ثابت بالای فهرست قرار بگیرد.
 - کارت باید اطلاعات خلاصه و قابل شناسایی رکورد را نمایش دهد و actionهای ویرایش و حذف را با icon، tooltip و `aria-label` ارائه کند.
 - کارت‌ها باید با layout انعطاف‌پذیر و responsive چیده شوند؛ استفاده از جدول یا Data Grid برای همان فهرست مجاز نیست.
-- ایجاد و ویرایش باید هر دو یک Popup مشترک داشته باشند. Popup مشترک در وب با `CrudDialog` پیاده می‌شود و نباید برای هر موجودیت modal اختصاصی با رفتار تکراری ساخته شود.
+- ایجاد و ویرایش باید هر دو از adapter مشترک `CrudDialog` روی پوستهٔ `AppPopup` استفاده کنند و نباید برای هر موجودیت modal اختصاصی با رفتار تکراری ساخته شود.
 - Popup شامل عنوان، محتوای فرم، دکمه‌ی «لغو» و تنها یک دکمه‌ی Primary برای «تأیید/ذخیره» است. دکمه‌ی لغو mutation انجام نمی‌دهد.
 - Popup باید برای محتوای فرم `children` یا معادل generic داشته باشد تا بتواند در فرم‌های مختلف استفاده شود؛ مدل داده و endpoint نباید داخل پوسته‌ی Popup hard-code شود.
 - در زمان ارسال، دکمه‌ی تأیید disabled و در حالت loading باشد و بستن Popup نیز تا پایان mutation کنترل شود.
@@ -241,9 +241,9 @@ TextField نام کاربری در صفحه Login مرجع بصری تمام ف�
 1. routeهای feature با `lazy()` و `Suspense` بارگذاری شوند؛ dashboard اولیه همه فرم‌ها را import نکند.
 2. iconها با import نام‌دار از MUI وارد شوند؛ کل مجموعه icon یا کتابخانه دیگر import نشود.
 3. فقط componentهای MUI مورد استفاده import شوند؛ از importهای تجمیعی غیرضروری پرهیز شود.
-4. جدول‌ها pagination server-side دارند و تصویرها thumbnail/lazy-load هستند.
+4. برای دادهٔ حجیم یا endpoint صفحه‌بندی‌شده، pagination باید از قرارداد API همان قابلیت بیاید؛ همهٔ جدول‌های موجود server-side pagination ندارند. lazy-load تصویر نیز باید در قابلیت مصرف‌کننده بررسی شود و نباید برای کل برنامه تکمیل‌شده فرض شود.
 5. stream دوربین و object URL فقط در صفحه فعال وجود دارند و هنگام unmount/change context آزاد می‌شوند.
-6. React Query cache زمان‌دار و محدود دارد؛ تصاویر بزرگ یا frameهای زنده در Query cache ذخیره نمی‌شوند.
+6. React Query در پشتهٔ فعلی وجود ندارد؛ lifecycle داده، polling و پاک‌سازی تصویر باید در hook/component مالک کنترل شود. وجود cache سراسری یا سیاست stale-time عمومی نباید فرض شود.
 7. animationها کوتاه و محدود هستند؛ برای کاربران `prefers-reduced-motion` کاهش می‌یابند.
 8. هر dependency جدید باید دلیل ثبت‌شده داشته باشد و نباید قابلیت موجود MUI/React را تکرار کند.
 
@@ -258,9 +258,9 @@ TextField نام کاربری در صفحه Login مرجع بصری تمام ف�
 ## ۱۰. مراجع اجرایی
 
 - theme، CSS variables و style override از [MUI Theming](https://mui.com/material-ui/customization/theming/) پیروی می‌کند.
-- light/dark با `colorSchemes` MUI و preference کاربر پیاده می‌شود: [MUI Dark mode](https://mui.com/material-ui/customization/dark-mode/).
+- مرجع عمومی MUI برای مود روشن/تیره: [MUI Dark mode](https://mui.com/material-ui/customization/dark-mode/). پیاده‌سازی فعلی پروژه از state مود و `createAppTheme` استفاده می‌کند؛ این لینک به‌معنای استفادهٔ برنامه از `colorSchemes` نیست.
 - RTL باید direction در HTML، theme و styling engine را پوشش دهد: [MUI RTL](https://mui.com/material-ui/customization/right-to-left/).
-- ترجمه Data Grid با locale text کنترل می‌شود: [MUI Data Grid localization](https://mui.com/x/react-data-grid/localization/).
+- متن‌های جدول مشترک از instance i18next برنامه خوانده می‌شوند؛ `localeText` مربوط به MUI X Data Grid قرارداد `AppDataGrid` فعلی نیست.
 
 ## ۱۱. قواعد تکمیلی مصوب برای سامانه پارکینگ
 

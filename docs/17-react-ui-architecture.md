@@ -1,158 +1,92 @@
-# معماری پیشنهادی UI React
+# معماری فعلی UI React
 
-**وضعیت:** تصمیم پیشنهادی برای شروع پروژه UI.  
-**اصل انتخاب:** ساده‌ترین ابزارِ بالغی که مسئله را حل می‌کند انتخاب شود. هر وابستگی باید یک نیاز مشخص را پوشش دهد؛ کتابخانه‌های هم‌پوشان، state management سنگین و abstractionهای زودهنگام ممنوع‌اند.
+**وضعیت:** تطبیق با کد موجود در `EosParkingReactUi` در 2026-11-04؛ جایگزین پیشنهاد اولیهٔ معماری.
+**مرجع الزام‌آور:** [استاندارد مستندسازی و React](00-documentation-standard.md). توصیف رفتار فعلی، تأیید انطباق کامل کد با استاندارد نیست.
 
-## ۱. Stack نهایی پیشنهادی
+## ۱. پشتهٔ موجود
 
-| نیاز | انتخاب | دلیل |
+| نیاز | پیاده‌سازی فعلی | منبع |
 |---|---|---|
-| زبان و UI | React + TypeScript (`strict`) | type-safe بودن فرم‌ها، DTOها، enumها و عملیات حساس تردد/پرداخت؛ خوانایی و refactor امن‌تر |
-| build | Vite | راه‌اندازی و build ساده و سریع برای یک SPA داخلی |
-| مسیرها | React Router | layout، route guard و lazy loading صفحه‌ها |
-| داده API | TanStack Query (React Query) | cache، loading/error، invalidate، pagination و refresh داده‌های سرور |
-| فرم‌ها | React Hook Form + Zod | فرم‌های بزرگ با validation واضح و type-safe |
-| ظاهر | MUI با theme RTL و فونت فارسی | دکمه، dialog، form و table استاندارد؛ مناسب UI اداری/عملیاتی |
-| جدول | MUI Data Grid Community | جدول‌های اعضا، کارت، تردد و گزارش، بدون ساخت component اختصاصی از ابتدا |
-| Mock | MSW | توسعه مستقل UI تا تحویل قرارداد واقعی Backend |
-| تست | Vitest + React Testing Library + Playwright | تست واحد/component و سناریوی کامل مرورگر |
+| زبان و UI | React و TypeScript با `strict: true` و `allowJs: false` | `package.json`، `tsconfig.app.json` |
+| build | Vite و plugin React | `vite.config.ts` |
+| مسیرها | React Router؛ `BrowserRouter` در ریشه و routeهای اصلی و Home | `src/main.tsx`، `src/App.tsx`، `src/pages/HomeFormRoutes.tsx` |
+| دادهٔ API | fetch با client مشترک، سرویس و hook اختصاصی؛ در بعضی workspaceها مصرف مستقیم سرویس از component | `src/api/client.ts`، `src/api/management.ts`، `src/features/home` |
+| state فرم | state و hookهای React؛ Zod و validation اختصاصی بسته به feature | `ParkingFormFields.tsx`، `MemberManagementWorkspace.tsx`، `src/features/auth` |
+| ظاهر | MUI، Emotion، stylis RTL، Theme مشترک و CSS | `src/App.tsx`، `src/theme.ts`، `src/styles.css` |
+| جدول | `AppDataGrid` اختصاصی مبتنی بر MUI `Table` | `src/components/AppDataGrid.tsx` |
+| تاریخ و ساعت | MUI X Date Pickers و dayjs با کنترل‌های مشترک | `EosDateTimePicker.tsx`، `EosTimeOnDayPicker.tsx` |
+| ترجمه | i18next و react-i18next با منابع مستقل فارسی/انگلیسی | `src/i18n/instance.ts`، `src/locales` |
+| modal | `AppPopup` و adapterهای `CrudDialog` و `ConfirmDialog` | [سند ۱۰](10-shared-ui-components.md) |
+| تست | Vitest، Testing Library و Playwright؛ fixture و mock مرز شبکه | `package.json`، `src/**/*.test.*`، `tests/e2e` |
 
-### مواردی که عمداً استفاده نمی‌شوند
+**رفتار فعلی:** TanStack Query، React Hook Form، Zustand، Redux، Axios، MSW و `@mui/x-data-grid` در `package.json` dependency نیستند. پیشنهادهای قبلی دربارهٔ QueryClient، React Query cache، React Hook Form و MUI Data Grid Community توصیف این برنامه نیستند و مبنای پیاده‌سازی محسوب نمی‌شوند. افزودن dependency تابع سند ۰۰ است.
 
-- **Redux/Redux Toolkit:** در شروع نیاز نیست. داده‌های سرور با React Query و state کوچک UI با `useState`/`useReducer` یا Context مدیریت می‌شود.
-- **Zustand:** فقط اگر بعداً state مشترک و پیچیده‌ی UI شکل گرفت؛ در شروع اضافه نشود.
-- **Axios:** `fetch` استاندارد مرورگر و یک wrapper کوچک API کافی است.
-- **چند design system یا چند table/form library:** فقط MUI Data Grid و React Hook Form/Zod استفاده شود.
-- **SSR/Next.js:** برای dashboard داخلیِ authenticated و Backend جدا، در شروع نیازی نیست. Vite SPA انتخاب ساده‌تر است.
-- **PWA/offline queue:** خارج از scope است؛ سامانه فقط آنلاین است.
+`noUncheckedIndexedAccess` و `noImplicitOverride` در `tsconfig.app.json` فعلی تنظیم نشده‌اند؛ نمونهٔ پیشنهادی قبلی پیکربندی فعال نبود.
 
-## ۲. چرا TypeScript الزامی است
+## ۲. راه‌اندازی، پوسته و state
 
-این UI با entityهای متعدد، enum، دسترسی، پرداخت، تردد و قراردادهای Backend کار می‌کند. TypeScript باید اجباری باشد تا خطاهای نوعی مانند ارسال فیلد اشتباه، استفاده از مبلغ با نوع نادرست یا اشتباه در وضعیت عملیات، پیش از اجرا مشخص شوند.
+- `src/main.tsx` ابتدا `loadRuntimeConfig()` را اجرا و سپس React را با `StrictMode`، `BrowserRouter` و `NavigationGuardProvider` mount می‌کند.
+- `src/App.tsx` مالک state نشست، زبان، مود، palette و shape است؛ `ThemeProvider`، `LocalizationProvider` و cache RTL در همین لایه قرار دارند. `AuthContext` یا `QueryClientProvider` پیشنهادی قبلی در این ساختار وجود ندارد.
+- snapshot غیرحساس کاربر در `sessionStorage` برای بازسازی پوسته نگهداری می‌شود؛ cookie نشست مرجع احراز هویت است. جزئیات در [سند ۰۱](01-authentication.md) است.
+- `NavigationGuardContext` درخواست جابه‌جایی را برای workflowهای دارای تغییر ذخیره‌نشده هماهنگ می‌کند.
+- قرارداد route، permission، tabs/classic و داشبورد فقط در [سند ۲۵](25-home.md) نگهداری می‌شود.
 
-تنظیمات حداقلی:
+## ۳. داده، API و قرارداد Backend
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
-  }
-}
-```
+**رفتار فعلی:** `src/api/client.ts` مسئول base URL، fetch، cookie با مقدار پیش‌فرض `credentials: include`، timeout، cancellation و parse پاسخ است. ابطال نشست برای HTTP 401 و `ResponseResultType = 11` به handler ثبت‌شده اعلام می‌شود. parserها در `src/api/contracts.ts` و سرویس‌های feature قرار دارند؛ وجود آن‌ها به‌معنای اعتبارسنجی یکسان همهٔ پاسخ‌ها نیست.
 
-از `any` استفاده نشود. پاسخ API ابتدا با type/schema اعتبارسنجی و سپس وارد UI شود.
+دادهٔ سرور در state محلی hook/workspace نگهداری می‌شود و cache عمومی React Query وجود ندارد. برای نمونه، `useHomeParkingInfo` بارگذاری، refresh، cancellation، polling و retry محدود اختصاصی دارد؛ این رفتار عمومی همهٔ endpointها نیست و قرارداد دقیق آن در سند ۲۵ است.
 
-## ۳. نقش React Query
+**قاعدهٔ توسعه:** مسیر مرجع `UI → custom hook → feature service → src/api/client.ts → External Backend API` است. **ناقص/نیازمند اصلاح:** بعضی workspaceهای فعلی، از جمله `ParkingDetailsWorkspace.tsx` و `MemberManagementWorkspace.tsx`، API را از همان component فراخوانی می‌کنند؛ وجود این الگو مجوز استفاده در قابلیت جدید نیست.
 
-React Query برای **داده‌های سرور** استفاده می‌شود، نه برای همه stateهای برنامه:
+پروژه مصرف‌کنندهٔ Backend است؛ قرارداد ناقص باید در [درخواست‌های Backend](14-web-backend-requests.md) ثبت شود. mock تست، schema مصرف‌شده یا type کلاینت جایگزین تأیید رسمی قرارداد نیست.
 
-- لیست‌ها و جزئیات: اعضا، کارت‌ها، تعرفه‌ها، پارکینگ، تردد، گزارش و تنظیمات؛
-- cache و invalidate پس از ذخیره/حذف؛
-- pagination، filter و refetch کنترل‌شده؛
-- snapshot وضعیت تجهیزات و تصاویر metadata؛
-- نمایش یکپارچه‌ی `pending`، `error` و `success`.
-
-### تنظیمات ایمن و ساده
-
-```ts
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 30_000,
-    },
-    mutations: {
-      retry: false,
-    },
-  },
-});
-```
-
-- `GET`های غیرحساس می‌توانند یک retry محدود داشته باشند.
-- mutationهای ورود، خروج، پرداخت، حذف و فرمان تجهیز **retry خودکار ندارند**.
-- هر retry برای mutation حساس فقط بعد از قرارداد `idempotencyKey` و تصمیم صریح Backend فعال می‌شود.
-- React Query جای WebSocket/SSE نیست؛ realtime تجهیزات در یک hook کوچک جداگانه مصرف می‌شود و پس از دریافت event فقط queryهای مرتبط را invalidate می‌کند.
-
-## ۴. ساختار پوشه‌ها
+## ۴. ساختار فعلی source
 
 ```text
 src/
-  app/                 # router، providerها، theme و QueryClient
-  layouts/             # AppLayout، AuthLayout
+  main.tsx, App.tsx, config.ts, theme.ts, styles.css
+  api/                  # client، قراردادها، APIهای مدیریت و realtime
+  components/           # کنترل‌ها و پوسته‌های مشترک
+    definitions/
+    management/         # workspaceها و فرم‌های مدیریت
   features/
     auth/
-    dashboard/
-    parking/
+    home/
+    home3/              # پوشهٔ موجود؛ به‌معنای route مستقل نیست
     members/
-    cards/
-    traffic/
-    payments/
-    monitoring/
     reports/
-    settings/
-  shared/
-    api/               # fetch wrapper و client تولیدشده از OpenAPI
-    ui/                # componentهای کوچک و reusable مبتنی بر MUI
-    lib/               # تاریخ شمسی، فرمت مبلغ، error mapping
-    types/             # typeهای مشترک
-  mocks/               # handlerهای MSW و داده نمونه
+    tariffs/
+  hooks/
+  i18n/, locales/
+  pages/                # route، پوسته و navigation
+  utils/, assets/, test/, vendor/
+tests/
+  e2e/
+  fixtures/
 ```
 
-هر feature فقط این چهار لایه را کنار هم نگه می‌دارد: `api`، `components`، `pages` و `types`. از ایجاد لایه‌های زیاد مانند service/repository/manager برای هر فرم خودداری شود، مگر منطق مشترک واقعی وجود داشته باشد.
+پوشه‌های `app/`، `layouts/`، `shared/` و `mocks/` در نمودار پیشنهادی قبلی ساختار فعلی نیستند. معماری موجود ترکیبی از featureها و workspaceهای `components/management` است؛ انتقال کامل به معماری feature-based انجام‌شده تلقی نمی‌شود.
 
-## ۵. قواعد پیاده‌سازی مهم
+## ۵. فرم، جدول و modal
 
-### API و قرارداد Backend
+- state فرم با React مدیریت می‌شود و validation بسته به feature از Zod یا تابع اختصاصی می‌آید؛ فرم جدید تابع سند ۰۰ است.
+- `AppDataGrid` ردیف‌ها را از مصرف‌کننده می‌گیرد؛ فیلتر مشترک روی ردیف‌های دریافت‌شده با AND اعمال می‌شود. server-side pagination/filter/sort قابلیت عمومی خودکار این component نیست؛ هر مورد نیازمند قرارداد API خودش است.
+- پوستهٔ modalهای کسب‌وکاری `AppPopup` است؛ عنوان، footer، دکمه‌ها و busy در آن کنترل می‌شوند. محتوا، validation و mutation متعلق به feature هستند. قرارداد، استثناها و اسکرول جدول در [سند ۱۰](10-shared-ui-components.md) ثبت شده‌اند.
+- `ParkingFormFields` دو layout دارد: popup فهرست پارکینگ‌ها tabbed و صفحهٔ مشخصات دارای sectionهای هم‌زمان است؛ جزئیات در [سند ۰۳](03-parking-configuration.md) است.
 
-- یک wrapper کوچک روی `fetch` مسئول base URL، header احراز هویت، parse پاسخ و mapping خطا باشد.
-- با تحویل `openapi.json`، type و client API تولید شوند؛ DTOهای دست‌نویس تکراری حذف شوند.
-- UI مبلغ را محاسبه نمی‌کند؛ فقط ورودی را ارسال و خروجی authoritative Backend را نمایش می‌دهد.
-- برای APIهای تحویل‌نشده، MSW و type موقتِ مشخص استفاده شود؛ mock با برچسب واضح از API واقعی جدا باشد.
+## ۶. realtime، تصویر و تجهیزات
 
-### state و مجوز
+آداپتورهای realtime در `src/api` و hookهای feature قرار دارند؛ رفتار و cleanup هر صفحه باید از همان قابلیت استخراج شود. قرارداد نقشهٔ Home در سند ۲۵، مانیتورینگ در [سند ۰۷](07-monitoring-and-devices.md) و پخش دوربین در [سند ۲۴](24-rtsp-camera-ui-integration.md) است. reader جاوااسکریپتی MediaMTX استثنای ثبت‌شده در [سند ۲۱](21-implementation-progress-and-regression-policy.md) است.
 
-- `AuthContext` فقط session، کاربر، پارکینگ جاری و درب جاری را نگه دارد.
-- داده‌های فهرستی یا entityها در Context/Redux کپی نشوند؛ React Query منبع آن‌هاست.
-- route guard فقط تجربه UI را کنترل می‌کند؛ API مرجع نهایی authorization است.
+## ۷. کیفیت و فاصله با استاندارد
 
-### فرم و جدول
+**رفتار فعلی:** scriptهای `typecheck`، `test`، `test:watch`، `test:e2e` و `build` در `package.json` وجود دارند. script فعلی `lint` فقط `tsc -b --pretty false` است؛ اجرای آن تأیید ESLint یا Prettier محسوب نمی‌شود. این دو ابزار در dependencyهای فعلی ثبت نشده‌اند؛ الزام استاندارد به آن‌ها با وضعیت نصب متفاوت است.
 
-- هر فرم با React Hook Form و schema Zod نوشته شود؛ پیام خطای field از schema یا پاسخ Backend نمایش داده شود.
-- فرم‌های CRUD در dialog یا صفحه مستقل، بر اساس پیچیدگی، طراحی شوند؛ برای فرم‌های بزرگ مانند عضو و تعرفه، صفحه مستقل با tab مناسب‌تر است.
-- Data Grid باید server-side pagination/filter/sort مصرف کند؛ دریافت همه داده‌ها در Browser ممنوع است.
+تست‌ها در این تطبیق مستندات اجرا نشده‌اند. وجود تست، lazy workspace، guard یا parser به‌تنهایی تأیید کامل کیفیت، accessibility، قرارداد API یا پوشش همهٔ workflowها نیست. پوشش سناریوهای جدید در [سند ۱۹](19-ui-visual-review-and-progress.md) و سیاست تحویل در سندهای ۰۰، ۲۰ و ۲۱ ثبت شده است.
 
-### realtime، تصویر و تجهیزات
+## ۸. جلوگیری از چند نمونهٔ React در محیط توسعه
 
-- یک `useDeviceEvents` یا `useRealtimeEvents` کوچک برای اتصال eventها کافی است؛ به store سراسری بزرگ تبدیل نشود.
-- stream تصویر در component دوربین مدیریت می‌شود؛ در unmount، تغییر درب و قطع ارتباط، stream و object URL آزاد می‌شوند.
-- UI فقط command API را فراخوانی می‌کند و وضعیت `accepted/executing/succeeded/failed/timeout` را نشان می‌دهد؛ ارتباط سخت‌افزاری وظیفه Backend/Agent است.
+**رفتار فعلی:** `vite.config.ts` با `resolve.dedupe` مسیر React/React DOM و وابستگی‌های contextمحور MUI/Emotion را یکسان نگه می‌دارد. `optimizeDeps.entries` sourceهای برنامه، از جمله workspaceهای lazy، را اسکن می‌کند و runtimeهای React و ورودی‌های مشترک MUI صریحاً pre-bundle می‌شوند.
 
-## ۶. کیفیت، امنیت و تحویل
-
-- ESLint، Prettier و typecheck در CI اجباری باشند.
-- تست unit برای فرمت مبلغ/تاریخ، mapping خطا و guardها؛ تست component برای فرم‌ها؛ Playwright برای ورود، ورود خودرو، خروج، پرداخت نامشخص و عدم مجوز.
-- token و credential تجهیزات در LocalStorage یا source code ذخیره نشوند. روش session باید مطابق قرارداد Backend باشد.
-- routeها lazy-load شوند؛ تصویرهای بزرگ lazy-load شوند؛ buffer تصویر محدود باشد.
-
-## ۷. ترتیب پیشنهادی پیاده‌سازی
-
-1. اسکلت Vite، TypeScript strict، MUI RTL، Router، QueryClient، layout و mock API.
-2. Login، session/context، انتخاب پارکینگ و guardها.
-3. componentهای مشترک: صفحه، dialog تأیید، فرم، table، error/empty/loading state.
-4. CRUDهای ساختار پارکینگ، کاربران، اعضا و کارت‌ها.
-5. تردد، مدیریت سوابق، پرداخت و مجوز خروج با mockهای دقیق.
-6. مانیتورینگ، تصاویر و تجهیزات پس از تحویل قرارداد Backend.
-7. گزارش‌ها، import و تست end-to-end؛ سپس اتصال مرحله‌ای به API واقعی.
-
-## جلوگیری از چند نمونهٔ React در محیط توسعه
-
-**رفتار فعلی:** `vite.config.ts` با `resolve.dedupe` مسیر React/React DOM و وابستگی‌های contextمحور MUI/Emotion را یکسان نگه می‌دارد. `optimizeDeps.entries` تمام sourceهای برنامه، از جمله workspaceهای lazy، را از ابتدا اسکن می‌کند و runtimeهای React و ورودی‌های مشترک MUI نیز صریحاً pre-bundle می‌شوند.
-
-سرور توسعه از `node_modules/.vite` استفاده می‌کند؛ سرور Playwright با متغیر `EOS_PARKING_VITE_CACHE_DIR` کش مستقل `node_modules/.vite-playwright` دارد. اجرای هم‌زمان دو سرور با کش مشترک مجاز نیست: جایگزینی graph بهینه‌شده می‌تواند تب باز مرورگر را با module URLهای متفاوت React روبه‌رو کند و خطای `Invalid hook call` در `SvgIcon/useContext` ایجاد کند، حتی وقتی `npm ls` فقط یک نسخهٔ نصب‌شده را نشان می‌دهد. پس از تغییر تنظیمات یا مشاهدهٔ چنین خطایی، سرور باید تنظیمات جدید را بارگیری کند و تب قدیمی با refresh کامل بازخوانی شود؛ پاک‌کردن نشست یا نصب مجدد dependencyها پیش‌نیاز نیست. تست مرورگر افزودن طبقه/عضو، نبود page error و بارگیری React از یک module URL را کنترل می‌کند.
-
-## ۸. معیار «ساده و قابل نگهداری»
-
-هر package جدید باید پاسخ این سؤال را داشته باشد: «کدام نیاز مستندشده را حل می‌کند که ابزارهای فعلی حل نمی‌کنند؟» اگر پاسخ روشن نیست، اضافه نشود. هدف، featureهای کوچک، typeهای روشن، queryهای قابل نام‌گذاری و componentهای MUI ساده است؛ نه معماری پیچیده.
+سرور توسعه از `node_modules/.vite` استفاده می‌کند؛ سرور Playwright با متغیر `EOS_PARKING_VITE_CACHE_DIR` کش مستقل `node_modules/.vite-playwright` دارد. اجرای هم‌زمان دو سرور با کش مشترک می‌تواند graph بهینه‌شده را جایگزین و خطای `Invalid hook call` ایجاد کند. پس از تغییر تنظیمات، سرور باید آن‌ها را بارگیری کند و تب قدیمی refresh کامل شود. `tests/e2e/create-forms.spec.ts` بازماندن برنامه، نبود page error و استفاده از یک module URL برای React را هنگام افزودن طبقه/عضو بررسی می‌کند؛ نتیجهٔ اجرای تازه در این بازبینی ثبت نشده است.
