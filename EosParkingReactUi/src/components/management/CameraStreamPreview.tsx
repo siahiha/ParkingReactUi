@@ -101,7 +101,7 @@ function resolveStreamUrl(streamUrl: string): string | null {
   if (!resource) return null;
   try {
     if (/^https?:\/\//i.test(resource)) return new URL(resource).toString();
-    const base = appConfig.parkingServiceUrl.trim();
+    const base = appConfig.parkingServiceUrl.trim() || appConfig.apiBaseUrl.trim();
     if (base.startsWith('/')) {
       const path = resource.startsWith(base) ? resource : `${base.replace(/\/$/, '')}/${resource.replace(/^\/+/, '')}`;
       return new URL(path, globalThis.location.origin).toString();

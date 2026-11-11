@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CameraStreamPreview } from './CameraStreamPreview';
 import { cameraApi } from '../../api/management';
 import { ApiError } from '../../api/client';
+import { appConfig } from '../../config';
 
 vi.mock('../../api/management', async () => {
   const actual = await vi.importActual<typeof import('../../api/management')>('../../api/management');
@@ -20,6 +21,8 @@ vi.mock('../../api/management', async () => {
 
 const mockedCameraApi = vi.mocked(cameraApi);
 const camera = { cameraId: 'gate-1', name: 'Gate 1' };
+const originalConfig = { ...appConfig };
+afterEach(() => { cleanup(); Object.assign(appConfig, originalConfig); });
 
 describe('CameraStreamPreview lifecycle', () => {
   beforeEach(() => {
@@ -27,6 +30,8 @@ describe('CameraStreamPreview lifecycle', () => {
     mockedCameraApi.disconnect.mockResolvedValue(undefined);
     mockedCameraApi.getStatus.mockResolvedValue({ cameraId: camera.cameraId, state: 'Disconnected', error: null, viewerCount: 0, streamUrl: '', webRtcUrl: '', lastStateChangeUtc: '' });
     mockedCameraApi.getRois.mockResolvedValue([]);
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
   });
 
   it('disconnects a session that finishes connecting after the preview unmounts', async () => {
@@ -62,5 +67,41 @@ describe('CameraStreamPreview lifecycle', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Disconnect' })).toBeInTheDocument());
     expect(mockedCameraApi.connect).toHaveBeenCalledTimes(1);
     expect(mockedCameraApi.getRois).toHaveBeenCalledWith(camera.cameraId, 'viewer-2');
+  });
+
+  it.each([
+    { api: 'http://localhost:8050', media: '', expected: 'http://localhost:8050/api/rtspcamera/webrtc/gate-1/whep/viewer-1' },
+    { api: '/backend', media: '', expected: `${window.location.origin}/backend/api/rtspcamera/webrtc/gate-1/whep/viewer-1` },
+    { api: '/backend', media: '  ', expected: `${window.location.origin}/backend/api/rtspcamera/webrtc/gate-1/whep/viewer-1` },
+    { api: '/backend', media: 'http://localhost:8051', expected: 'http://localhost:8051/api/rtspcamera/webrtc/gate-1/whep/viewer-1' },
+  ])('plays WebRTC using the effective media base: $api / $media', async ({ api, media, expected }) => {
+    appConfig.apiBaseUrl = api;
+    appConfig.parkingServiceUrl = media;
+    const reader = vi.spyOn(window, 'MediaMTXWebRTCReader').mockImplementation(function () { return { close: vi.fn() }; });
+    mockedCameraApi.connect.mockResolvedValue({ status: { state: 'Connected' }, webRtcUrl: '/api/rtspcamera/webrtc/gate-1/whep/viewer-1' });
+    render(<CameraStreamPreview camera={camera} language="en" viewer="viewer-1" autoConnect />);
+    await waitFor(() => expect(reader).toHaveBeenCalledWith(expect.objectContaining({ url: expected })));
+  });
+
+  it('preserves an absolute WebRTC URL returned by the backend', async () => {
+    appConfig.apiBaseUrl = '/backend';
+    appConfig.parkingServiceUrl = 'http://localhost:8051';
+    const reader = vi.spyOn(window, 'MediaMTXWebRTCReader').mockImplementation(function () { return { close: vi.fn() }; });
+    mockedCameraApi.connect.mockResolvedValue({ status: { state: 'Connected' }, webRtcUrl: 'https://media.example/camera/whep' });
+    render(<CameraStreamPreview camera={camera} language="en" viewer="viewer-1" autoConnect />);
+    await waitFor(() => expect(reader).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://media.example/camera/whep' })));
+  });
+
+  it.each([
+    { media: '', expected: `${window.location.origin}/backend/api/rtspcamera/stream/gate-1/playlist.m3u8` },
+    { media: 'http://localhost:8051', expected: 'http://localhost:8051/api/rtspcamera/stream/gate-1/playlist.m3u8' },
+  ])('loads the HLS playlist using the effective media base: $media', async ({ media, expected }) => {
+    appConfig.apiBaseUrl = '/backend';
+    appConfig.parkingServiceUrl = media;
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('#EXTM3U\n#EXTINF:1,\nsegment.ts'));
+    mockedCameraApi.connect.mockResolvedValue({ status: { state: 'Connected' }, streamUrl: '/api/rtspcamera/stream/gate-1/playlist.m3u8' });
+    render(<CameraStreamPreview camera={camera} language="en" viewer="viewer-1" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Switch stream protocol' }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(expected, { cache: 'no-store' }));
   });
 });

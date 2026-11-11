@@ -173,6 +173,7 @@ type Props = {
   disabled?: boolean;
   error?: boolean;
   helperText?: string;
+  onComplete?: () => void;
 };
 
 /** Iranian private-vehicle plate entry compatible with the Windows EosPlateControl value. */
@@ -185,8 +186,12 @@ export function IranianPlateInput({
   disabled = false,
   error = false,
   helperText,
+  onComplete,
 }: Props) {
   const id = useId();
+  const firstInputRef = useRef<HTMLInputElement>(null);
+  const completeRef = useRef(onComplete);
+  useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
   const letterInputRef = useRef<HTMLInputElement>(null);
   const middleInputRef = useRef<HTMLInputElement>(null);
   const regionInputRef = useRef<HTMLInputElement>(null);
@@ -245,6 +250,7 @@ export function IranianPlateInput({
     if (nextValue.length !== maxLength) return;
     window.setTimeout(() => {
       if (nextInput?.current) nextInput.current.focus();
+      else if (completeRef.current) completeRef.current();
       else focusNextTabStop(event.target);
     }, 0);
   };
@@ -295,6 +301,7 @@ export function IranianPlateInput({
           {motor ? (
             <div className="iranian-plate-main iranian-motor-plate">
               <InputBase
+                inputRef={firstInputRef}
                 id={`${id}-left`}
                 value={toPersianDigits(motorValue.slice(0, 3))}
                 disabled={disabled}
@@ -314,6 +321,13 @@ export function IranianPlateInput({
               />
               <InputBase
                 inputRef={motorSecondInputRef}
+                onKeyDown={event => {
+                  if (event.key === 'Backspace' && !motorValue.slice(3)) firstInputRef.current?.focus();
+                  if (event.key === 'Enter' && isValidIranianPlate(value, carType)) {
+                    event.preventDefault();
+                    if (completeRef.current) completeRef.current(); else focusNextTabStop(event.target as HTMLElement);
+                  }
+                }}
                 value={toPersianDigits(motorValue.slice(3))}
                 disabled={disabled}
                 onChange={(event) =>
@@ -332,6 +346,7 @@ export function IranianPlateInput({
             <>
               <div className="iranian-plate-main iranian-car-plate">
                 <InputBase
+                  inputRef={firstInputRef}
                   id={`${id}-left`}
                   value={toPersianDigits(parts.left)}
                   disabled={disabled}
@@ -347,6 +362,12 @@ export function IranianPlateInput({
                 />
                 <Autocomplete
                   disabled={disabled}
+                  onKeyDown={event => {
+                    if (event.key === 'Backspace' && !letterInputValue) firstInputRef.current?.focus();
+                    if (event.key === 'Enter' && parts.letter && parts.letter === letterInputValue) {
+                      event.preventDefault(); middleInputRef.current?.focus();
+                    }
+                  }}
                   options={letterOptions}
                   value={letterOptions.find(
                     (item) => item.value === parts.letter,
@@ -385,6 +406,9 @@ export function IranianPlateInput({
                 />
                 <InputBase
                   inputRef={middleInputRef}
+                  onKeyDown={event => {
+                    if (event.key === 'Backspace' && !parts.middle) letterInputRef.current?.focus();
+                  }}
                   value={toPersianDigits(parts.middle)}
                   disabled={disabled}
                   onChange={(event) =>
@@ -407,6 +431,13 @@ export function IranianPlateInput({
                 <span>ایران</span>
                 <InputBase
                   inputRef={regionInputRef}
+                  onKeyDown={event => {
+                    if (event.key === 'Backspace' && !parts.region) middleInputRef.current?.focus();
+                    if (event.key === 'Enter' && isValidIranianPlate(value, carType)) {
+                      event.preventDefault();
+                      if (completeRef.current) completeRef.current(); else focusNextTabStop(event.target as HTMLElement);
+                    }
+                  }}
                   value={toPersianDigits(parts.region)}
                   disabled={disabled}
                   onChange={(event) =>

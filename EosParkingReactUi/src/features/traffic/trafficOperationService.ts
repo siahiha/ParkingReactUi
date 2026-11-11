@@ -110,6 +110,8 @@ export const trafficOperationService = {
   },
   async pay(dumpId: number) {
     if (dumpId <= 0) throw new TrafficOperationError();
-    trafficResult(await trafficApi.payDump(dumpId, 1));
+    const receipt = trafficResult(await trafficApi.payDump(dumpId, 1));
+    if (typeof receipt !== 'string' || !receipt.trim()) throw new TrafficOperationError();
+    return receipt;
   },
 };

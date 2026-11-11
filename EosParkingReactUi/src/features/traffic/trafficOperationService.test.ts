@@ -47,6 +47,15 @@ describe('traffic registration contract', () => {
     await expect(trafficOperationService.enter(input)).rejects.toThrow();
     await expect(trafficOperationService.exit({ ...input, info: openInfo }, null)).rejects.toThrow();
   });
+  it('requires a nonempty receipt before confirming a cash payment', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json('receipt-42'));
+    expect(await trafficOperationService.pay(42)).toBe('receipt-42');
+    expect(fetch.mock.calls[0][0]).toContain('/PayDump?dumpId=42&payType=1&transactionResponse=');
+    for (const result of [null, '', ' ', true, {}]) {
+      fetch.mockResolvedValueOnce(json(result));
+      await expect(trafficOperationService.pay(42)).rejects.toThrow();
+    }
+  });
   it('recognizes a null or DateTime.MinValue exit as an open entry and prevents duplicate entry', async () => {
     expect(hasOpenTraffic({ ...openInfo, ExitDateTime: '0001-01-01T00:00:00' })).toBe(true);
     expect(hasOpenTraffic({ ...openInfo, EnterDateTime: '0001-01-01T00:00:00' })).toBe(false);

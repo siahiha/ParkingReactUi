@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, CircularProgress, IconButton, Paper, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { useTranslation } from 'react-i18next';
 import { AppToast } from '../AppToast';
 import { parkingApi, type Camera } from '../../api/management';
@@ -176,6 +177,7 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
   const activeCamera = activeTab === 'entry' ? entryCamera : exitCamera;
   const hasBothCameras = Boolean(entryCamera && exitCamera);
   const selectedLabel = activeTab === 'entry' ? t('trafficLayout.entryCamera') : t('trafficLayout.exitCamera');
+  const hasDetectionConfigError = detectionError === t('trafficLayout.detectionConfigError');
 
   return <Box ref={panelRef} className="traffic-camera-panel" sx={{ minWidth: 0, height: '100%' }}>
     <Paper variant="outlined" sx={{ p: 1, minWidth: 0, height: '100%', boxSizing: 'border-box' }}>
@@ -190,10 +192,13 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
           if (request) void request.catch(() => setEnlargeError(true));
           else setEnlargeError(true);
         }}><FullscreenRoundedIcon fontSize="small" /></IconButton></span></Tooltip>
+      {hasDetectionConfigError && <Tooltip title={detectionError}>
+        <IconButton size="small" color="warning" aria-label={detectionError}><WarningAmberRoundedIcon fontSize="small" /></IconButton>
+      </Tooltip>}
       </Box>
       <AppToast message={enlargeError ? t('trafficLayout.enlargeError') : ''} severity="warning" onClose={() => setEnlargeError(false)} />
       {error && <Alert severity="warning" sx={{ mb: 1 }}>{error}</Alert>}
-      {detectionError && <Alert severity="warning" sx={{ mb: 1 }}>{detectionError}</Alert>}
+      {detectionError && !hasDetectionConfigError && <Alert severity="warning" sx={{ mb: 1 }}>{detectionError}</Alert>}
       {cameraLoading && <Box className="inline-status-row"><CircularProgress size={18} /><Typography variant="body2">{t('trafficLayout.cameraLoading')}</Typography></Box>}
       {!cameraLoading && !error && !entryCamera && !exitCamera && <Typography variant="body2" color="text.secondary">{t('trafficLayout.noCamera')}</Typography>}
       {!cameraLoading && activeCamera && <Box className="traffic-camera-preview-box" sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><Box sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><CameraStreamPreview key={`${doorId}-${activeCamera.cameraId}`} camera={{ ...activeCamera, name: `${selectedLabel}: ${activeCamera.name}` }} language={language} viewer={viewer} size={{ width: '100%', height: 210 }} showConnectionButton={false} showModeSwitcher={false} showRoiAction={false} autoConnect compact /></Box></Box>}

@@ -18,7 +18,7 @@ type Props = {
 };
 
 function actionColors(theme: Theme, tone: 'success' | 'primary' | 'secondary') {
-  const accent = tone === 'secondary' ? theme.palette.text.secondary : theme.palette[tone].main;
+  const accent = tone === 'secondary' ? theme.palette.text.primary : theme.palette[tone].main;
   return {
     '--traffic-action-accent': accent,
     '--traffic-action-ink': tone === 'secondary' ? accent : theme.palette[tone][theme.palette.mode === 'dark' ? 'light' : 'dark'],
@@ -40,16 +40,16 @@ function ActionIcon({ action, language }: { action: 'enter' | 'exit' | 'search' 
 export function TrafficOperationActions({ language, state, busy, blocked, canSearch, canCancel, onEnter, onExit, onSearch, onCancel }: Props) {
   const { t } = useTranslation(undefined, { lng: language });
   return <>
-    {state.showEnter && <Button size="small" color="success" variant={state.canEnter ? 'contained' : 'outlined'} disabled={busy || blocked || !state.canEnter}
+    {state.showEnter && <Button data-traffic-action="enter" size="small" color="success" variant={state.canEnter ? 'contained' : 'outlined'} disabled={busy || blocked || !state.canEnter}
       sx={theme => actionColors(theme, 'success')} startIcon={<ActionIcon action="enter" language={language} />}
       onClick={onEnter}>{t('trafficOperation.enter')}</Button>}
-    {state.showExit && <Button size="small" variant={state.canExit ? 'contained' : 'outlined'} disabled={busy || blocked || !state.canExit}
+    {state.showExit && <Button data-traffic-action="exit" size="small" variant={state.canExit ? 'contained' : 'outlined'} disabled={busy || blocked || !state.canExit}
       sx={theme => actionColors(theme, 'primary')} startIcon={<ActionIcon action="exit" language={language} />}
       onClick={onExit}>{t('trafficOperation.exit')}</Button>}
-    {state.showSearch && <Button size="small" variant="outlined" disabled={busy || !canSearch}
+    {state.showSearch && <Button data-traffic-action="search" size="small" variant="outlined" disabled={busy || !canSearch}
       sx={theme => actionColors(theme, 'primary')} startIcon={<ActionIcon action="search" language={language} />}
       onClick={onSearch}>{t('trafficOperation.search')}</Button>}
-    <Button size="small" color="secondary" variant="outlined" disabled={busy || !canCancel}
+    <Button data-traffic-action="cancel" size="small" color="secondary" variant="contained" disabled={busy || !canCancel}
       sx={theme => actionColors(theme, 'secondary')} startIcon={<ActionIcon action="cancel" language={language} />}
       onClick={onCancel}>{t('trafficOperation.cancel')}</Button>
   </>;

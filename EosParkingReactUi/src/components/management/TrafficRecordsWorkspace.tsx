@@ -4,8 +4,11 @@ import '../../features/traffic/trafficWorkspace.css';
 import { useDoorTraffics } from '../../features/traffic/useDoorTraffics';
 import { useTrafficOperations } from '../../features/traffic/useTrafficOperations';
 import { useTrafficDoor } from '../../features/traffic/useTrafficDoor';
+import { useTrafficKeyboardNavigation } from '../../features/traffic/useTrafficKeyboardNavigation';
 import { trafficActionState } from '../../features/traffic/trafficActionState';
 import { TrafficOperationActions } from '../../features/traffic/TrafficOperationActions';
+import { TrafficPaymentPopup, type TrafficPaymentPresentation } from '../../features/traffic/TrafficPaymentPopup';
+import { trafficPaymentPolicy, type TrafficPaymentSource } from '../../features/traffic/trafficPaymentPolicy';
 import { useTrafficIdentity } from '../../features/traffic/useTrafficIdentity';
 import { TrafficIdentitySummary } from '../../features/traffic/TrafficIdentitySummary';
 import { TrafficWorkspaceSplitter } from '../../features/traffic/TrafficWorkspaceSplitter';
@@ -242,6 +245,11 @@ export function TrafficRecordsWorkspace({
   const [lookupLoading, setLookupLoading] = useState(false);
   const [exitBill, setExitBill] = useState<RecordValue | null>(null);
   const [billOpen, setBillOpen] = useState(false);
+  const [paymentPresentation, setPaymentPresentation] = useState<TrafficPaymentPresentation | null>(null);
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentPending, setPaymentPending] = useState(false);
+  const paymentPaperRef = useRef<HTMLDivElement>(null);
+  const billBlocksInput = billOpen && paymentPresentation?.modal !== false;
   const [latestDetection, setLatestDetection] = useState<{
     event: HshDetectionEvent;
     fullFrameUrl: string | null;
@@ -254,8 +262,8 @@ export function TrafficRecordsWorkspace({
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  useEffect(() => { detectionLocked.current = working || billOpen || historyOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo); }, [working, billOpen, historyOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo]);
-  useEffect(() => { onBusyChange?.(working || lookupLoading || billOpen || editOpen || deleteOpen || cargoOpen); }, [onBusyChange, working, lookupLoading, billOpen, editOpen, deleteOpen, cargoOpen]);
+  useEffect(() => { detectionLocked.current = working || billBlocksInput || historyOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo); }, [working, billBlocksInput, historyOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo]);
+  useEffect(() => { onBusyChange?.(working || lookupLoading || billBlocksInput || editOpen || deleteOpen || cargoOpen); }, [onBusyChange, working, lookupLoading, billBlocksInput, editOpen, deleteOpen, cargoOpen]);
   const handleDetection = useCallback<HshDetectionHandler>(async (event, loadArtifact) => {
     const sequence = lookupSequence.current;
     const nextPlate = normalizeIranianPlateValue(event.plateText);
@@ -274,7 +282,6 @@ export function TrafficRecordsWorkspace({
     if (nextPlate) setPlate(nextPlate);
     setCarInfo(null);
     setMemberCredit(null);
-    setExitBill(null);
     setOperationMode("idle");
     const detectedAt = inputDateTime(event.occurredAtUtc);
     if (event.source.direction === "exit") setExitDateTime(detectedAt);
@@ -420,12 +427,20 @@ export function TrafficRecordsWorkspace({
     const selectedCar = details.cars.find(car => car.Id === numberOf(valueOf(info, 'CarId')));
     if (selectedCar) setCarType(String(selectedCar.CarType) as VehiclePlateType);
     setOperationMode(hasOpenTraffic(info) ? 'exit' : 'enter');
+    const needsSelection = !hasOpenTraffic(info) && numberOf(valueOf(info, 'MemberId')) > 0 && !selectedCar;
+    keyboard.requestFocus(needsSelection ? 'vehicle' : 'actions');
   };
   const operationError = (cause: unknown, fallback: string) => cause instanceof TrafficOperationError
     ? cause.messageKey ? t(`trafficIdentity.${cause.messageKey}`) : cause.userMessage || fallback : fallback;
-  const lookupCar = async (force = false) => {
+  const lookupCar = async (force = false, source?: 'plate' | 'card' | 'member') => {
     // Moving focus to Register must not launch a second lookup and disable the click.
-    if (lookupInFlight.current || working || billOpen || vehicleBusy || (!force && carInfo && operationMode !== 'idle') || (!plate && !cardNumber && !memberCode)) return;
+    if (lookupInFlight.current || working || billBlocksInput || vehicleBusy || (!force && carInfo && operationMode !== 'idle') || (!plate && !cardNumber && !memberCode)) return;
+    if (showCameras && source === 'plate' && !isValidIranianPlate(plate, carType)) return;
+    if (showCameras && ((source === 'card' && !cardNumber.trim()) || (source === 'member' && !memberCode.trim()))) return;
+    if (showCameras && source && source !== 'member' && trafficDoor.door?.authorizationType === 3) {
+      if (!cardNumber.trim()) { keyboard.requestFocus('card'); return; }
+      if (!isValidIranianPlate(plate, carType)) { keyboard.requestFocus('plate'); return; }
+    }
     const requestId = ++lookupSequence.current;
     lookupInFlight.current = true;
     setLookupLoading(true);
@@ -485,13 +500,14 @@ export function TrafficRecordsWorkspace({
       setError(
         operationError(cause, t('trafficOperation.lookupFailed')),
       );
+      if (source) keyboard.requestFocus(source);
     } finally {
       lookupInFlight.current = false;
       if (requestId === lookupSequence.current) setLookupLoading(false);
     }
   };
   const selectVehicle = async (nextPlate: string) => {
-    if (working || billOpen || lookupInFlight.current || vehicleBusy) return;
+    if (working || billBlocksInput || lookupInFlight.current || vehicleBusy) return;
     const requestId = ++lookupSequence.current;
     lookupInFlight.current = true;
     setLookupLoading(true); setError('');
@@ -506,7 +522,7 @@ export function TrafficRecordsWorkspace({
   };
   useEffect(() => {
     // A new camera event identifies the accepted plate; it never submits traffic.
-    if (showCameras && latestDetection && plate && plate === normalizeIranianPlateValue(latestDetection.event.plateText)) void lookupCar();
+    if (showCameras && latestDetection && plate && plate === normalizeIranianPlateValue(latestDetection.event.plateText)) void lookupCar(false, 'plate');
   }, [latestDetection]);
   const openVehicle = (editing: boolean) => {
     if (!canEditVehicle || !carInfo) return;
@@ -572,6 +588,7 @@ export function TrafficRecordsWorkspace({
       setEntryDateTime("");
       setExitDateTime("");
       clearLookup();
+      keyboard.requestFocus('plate');
       await load();
     } catch (cause) {
       setError(operationError(cause, copy.saveError));
@@ -647,8 +664,20 @@ export function TrafficRecordsWorkspace({
     setSelectedId(numberOf(valueOf(row, "DumpId") ?? valueOf(row, "Id")));
     setDeleteOpen(true);
   };
+  const showTrafficPayment = (bill: RecordValue, source: TrafficPaymentSource) => {
+    try {
+      const policy = trafficPaymentPolicy(bill, source);
+      setExitBill({ ...bill });
+      setPaymentPresentation({ ...policy, door: trafficDoor.door ? { ...trafficDoor.door } : null });
+      setPaymentError('');
+      setBillOpen(true);
+    } catch {
+      setError(t('trafficPayment.invalidBill'));
+    }
+  };
   const openPay = (row: TrafficRow) => {
-    if (!valueOf(row, "ExitDateTime")) {
+    if (billOpen) { paymentPaperRef.current?.focus(); return; }
+    if (!hasTrafficTime(valueOf(row, "ExitDateTime"))) {
       setError(
         isPersian
           ? "ابتدا خروج خودرو را ثبت کنید."
@@ -666,8 +695,7 @@ export function TrafficRecordsWorkspace({
       return;
     }
     setSelectedId(numberOf(valueOf(row, "DumpId") ?? valueOf(row, "Id")));
-    setExitBill(row);
-    setBillOpen(true);
+    showTrafficPayment(row, 'grid');
   };
   const openExit = async (row: TrafficRow) => {
     const requestId = ++lookupSequence.current;
@@ -877,11 +905,11 @@ export function TrafficRecordsWorkspace({
     setLookupLoading(false);
     setCarInfo(null);
     setMemberCredit(null);
-    setExitBill(null);
     setOperationMode("idle");
     identity.clear();
   };
   const registerExit = async () => {
+    if (billOpen) { paymentPaperRef.current?.focus(); return; }
     setNotice('');
     const dumpId = numberOf(valueOf(carInfo ?? {}, "DumpId"));
     if (!dumpId || !entryDoorId) {
@@ -905,9 +933,10 @@ export function TrafficRecordsWorkspace({
       setMemberCode('');
       setEntryDateTime('');
       setExitDateTime('');
-      setExitBill(bill);
-      setBillOpen(true);
+      keyboard.requestFocus('plate');
       await load();
+      // Exit countdown belongs to manual traffic, not the history editor.
+      showTrafficPayment(bill, showCameras ? 'exit' : 'grid');
       setNotice(t('trafficOperation.exitSaved'));
     } catch (cause) {
       setError(
@@ -919,13 +948,16 @@ export function TrafficRecordsWorkspace({
   };
   const settleCash = async () => {
     const dumpId = numberOf(valueOf(exitBill ?? {}, "DumpId"));
-    if (!dumpId) return;
+    if (!dumpId || !billOpen || !paymentPresentation || paymentPresentation.amount <= 0 || working || operations.pending) return;
     setNotice('');
-    setError('');
+    setPaymentError('');
     setWorking(true);
+    setPaymentPending(true);
     try {
       await operations.pay(dumpId);
       setBillOpen(false);
+      setExitBill(null);
+      setPaymentPresentation(null);
       setNotice(
         isPersian ? "تسویه نقدی انجام شد." : "Cash settlement completed.",
       );
@@ -937,10 +969,20 @@ export function TrafficRecordsWorkspace({
       setExitDateTime("");
       await load();
     } catch (cause) {
-      setError(cause instanceof TrafficOperationError && cause.userMessage ? cause.userMessage : t('trafficOperation.paymentFailed'));
+      setPaymentError(cause instanceof TrafficOperationError && cause.userMessage ? cause.userMessage : t('trafficOperation.paymentFailed'));
     } finally {
       setWorking(false);
+      setPaymentPending(false);
     }
+  };
+  const closeTrafficPayment = () => {
+    if (paymentPending) return;
+    // Modeless timeout must not steal focus from the next vehicle being entered.
+    if (paymentPaperRef.current?.contains(document.activeElement)) keyboard.requestFocus(carInfo ? 'actions' : 'plate');
+    setBillOpen(false);
+    setExitBill(null);
+    setPaymentPresentation(null);
+    setPaymentError('');
   };
   const handleOperation = () =>
     operationMode === "exit" ? void registerExit() : operationMode === 'enter' ? void registerTraffic() : void lookupCar();
@@ -1077,7 +1119,7 @@ export function TrafficRecordsWorkspace({
           : "",
     },
   ];
-  const doorSelector = (
+  const doorSelector = (<>
     <FormControl
       size="small"
       sx={{
@@ -1091,7 +1133,7 @@ export function TrafficRecordsWorkspace({
       <Select
         labelId={doorLabelId}
         label={copy.door}
-        disabled={working || billOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft)}
+        disabled={working || billBlocksInput || lookupLoading || vehicleBusy || Boolean(vehicleDraft)}
         value={entryDoorId}
         onChange={(event) => setEntryDoorId(event.target.value)}
       >
@@ -1102,6 +1144,13 @@ export function TrafficRecordsWorkspace({
         ))}
       </Select>
     </FormControl>
+    {showCameras && <Box className="traffic-door-type" role="status" aria-label={t('trafficLayout.doorType')}>
+      <Typography component="span" variant="caption" color="text.secondary">{t('trafficLayout.doorType')}:</Typography>
+      <Typography component="span" variant="caption" sx={{ fontWeight: 600 }}>
+        {trafficDoor.loading ? t('trafficLayout.doorLoading') : trafficDoor.door ? t('trafficLayout.doorTypes', { returnObjects: true })[trafficDoor.door.type] : t('trafficLayout.doorUnknown')}
+      </Typography>
+    </Box>}
+    </>
   );
   const operationTitle = showCameras ? t('trafficOperation.title') :
     operationMode === "exit"
@@ -1125,17 +1174,16 @@ export function TrafficRecordsWorkspace({
           ? "برای این شناسه تردد باز پیدا نشد؛ زمان ورود را ثبت کنید."
           : "No open traffic was found; register the entry time."
         : "";
-  const billValue = (key: string, fallback = "—") =>
-    String(valueOf(exitBill ?? {}, key) ?? fallback);
   const policyAlerts = showCameras ? trafficAlerts(carInfo, actionState.direction === 'exit' ? 'exit' : 'enter', appConfig.trafficRequireExitPermission) : [];
   const needsVehicle = showCameras && operationMode === 'enter' && Boolean(carInfo) && numberOf(valueOf(carInfo ?? {}, 'MemberId')) > 0
     && !identity.details?.cars.some(car => car.Id === numberOf(valueOf(carInfo ?? {}, 'CarId')) && normalizeIranianPlateValue(car.Plate) === plate);
-  const identityBusy = working || operations.pending || billOpen || historyOpen || lookupLoading || vehicleBusy;
+  const identityBusy = working || operations.pending || billBlocksInput || historyOpen || lookupLoading || vehicleBusy;
+  const keyboard = useTrafficKeyboardNavigation(showCameras, entryDoorId, identityBusy || trafficDoor.loading || Boolean(vehicleDraft));
   const cancelTraffic = () => {
     clearLookup(); setPlate(''); setCardNumber(''); setMemberCode(''); setEntryDateTime(''); setExitDateTime('');
     setLatestDetection(null); setError(''); setNotice('');
     // Restore keyboard entry after React clears and re-enables the plate fields.
-    requestAnimationFrame(() => plateFieldRef.current?.querySelector<HTMLInputElement>('input')?.focus());
+    keyboard.requestFocus('plate');
   };
   const closeHistory = () => {
     if (historyBusy) return;
@@ -1143,6 +1191,67 @@ export function TrafficRecordsWorkspace({
     void lookupCar(true);
     void doorTraffics.refresh();
   };
+
+  const plateInput = (
+    <Box ref={plateFieldRef} className="traffic-plate-field" onBlur={event => {
+      if (showCameras && !event.currentTarget.contains(event.relatedTarget as Node | null) && keyboard.shouldIdentifyOnBlur()) void lookupCar(false, 'plate');
+    }}>
+      <IranianPlateInput
+        label={copy.plate}
+        value={plate}
+        carType={carType}
+        disabled={identityBusy || (showCameras && trafficDoor.loading)}
+        onComplete={showCameras ? () => void lookupCar(false, 'plate') : undefined}
+        onCarTypeChange={(value) => { clearLookup(); setCarType(value); }}
+        onChange={(value) => {
+          clearLookup();
+          setPlate(value);
+        }}
+        error={Boolean(plate) && !isValidIranianPlate(plate, carType)}
+        helperText={
+          Boolean(plate) && !isValidIranianPlate(plate, carType)
+            ? isPersian
+              ? "قالب پلاک کامل نیست."
+              : "Complete the plate format."
+            : undefined
+        }
+      />
+    </Box>
+  );
+  const cardMemberInputs = (
+    <Box className="traffic-card-member-fields"
+      onKeyDown={event => {
+        if (showCameras && event.key === 'Enter') {
+          event.preventDefault();
+          void lookupCar(false, (event.target as HTMLElement).closest('.traffic-member-field') ? 'member' : 'card');
+        }
+      }}>
+      <TextField
+        size="small"
+        className="traffic-card-field"
+        label={copy.card}
+        disabled={identityBusy || (showCameras && trafficDoor.loading)}
+        value={cardNumber}
+        onChange={(event) => {
+          clearLookup();
+          setCardNumber(event.target.value);
+        }}
+        onBlur={() => { if (keyboard.shouldIdentifyOnBlur()) void lookupCar(false, 'card'); }}
+      />
+      <TextField
+        size="small"
+        className="traffic-member-field"
+        label={copy.memberCode}
+        disabled={identityBusy || (showCameras && trafficDoor.loading)}
+        value={memberCode}
+        onChange={(event) => {
+          clearLookup();
+          setMemberCode(event.target.value);
+        }}
+        onBlur={() => { if (keyboard.shouldIdentifyOnBlur()) void lookupCar(false, 'member'); }}
+      />
+    </Box>
+  );
 
   return (
     <ManagementWorkspaceFrame
@@ -1166,7 +1275,8 @@ export function TrafficRecordsWorkspace({
         </Alert>
       )}
       <Box ref={topPanelRef} className="traffic-top-grid" style={showCameras && topHeight !== null ? { flexBasis: `clamp(248px, ${topHeight}px, calc(100% - 200px))` } : undefined}>
-        <Box className={showCameras ? 'traffic-control-console' : 'traffic-history-console'}>
+        <Box ref={keyboard.consoleRef} className={showCameras ? 'traffic-control-console' : 'traffic-history-console'}
+          onKeyDownCapture={keyboard.onKeyDownCapture} onPointerDownCapture={keyboard.onPointerDownCapture}>
           <Tooltip
             title={isPersian ? "شناسایی خودرو" : "Vehicle identification"}
             placement="top"
@@ -1179,63 +1289,11 @@ export function TrafficRecordsWorkspace({
             >
               <Box
                 className="traffic-vehicle-identification-grid"
-                onBlur={(event) => {
-                  if (
-                    !event.currentTarget.contains(
-                      event.relatedTarget as Node | null,
-                    )
-                  )
-                    void lookupCar();
+                onBlur={event => {
+                  if (!showCameras && !event.currentTarget.contains(event.relatedTarget as Node | null)) void lookupCar();
                 }}
               >
-                <Box className="traffic-card-member-fields">
-                  <TextField
-                    size="small"
-                    className="traffic-card-field"
-                    label={copy.card}
-                    disabled={identityBusy}
-                    value={cardNumber}
-                    onChange={(event) => {
-                      clearLookup();
-                      setCardNumber(event.target.value);
-                    }}
-                    onBlur={() => void lookupCar()}
-                    onKeyDown={event => { if (showCameras && event.key === 'Enter') { event.preventDefault(); void lookupCar(); } }}
-                  />
-                  <TextField
-                    size="small"
-                    className="traffic-member-field"
-                    label={copy.memberCode}
-                    disabled={identityBusy}
-                    value={memberCode}
-                    onChange={(event) => {
-                      clearLookup();
-                      setMemberCode(event.target.value);
-                    }}
-                    onBlur={() => void lookupCar()}
-                  />
-                </Box>
-                <Box ref={plateFieldRef} className="traffic-plate-field">
-                  <IranianPlateInput
-                    label={copy.plate}
-                    value={plate}
-                    carType={carType}
-                    disabled={identityBusy}
-                    onCarTypeChange={(value) => { clearLookup(); setCarType(value); }}
-                    onChange={(value) => {
-                      clearLookup();
-                      setPlate(value);
-                    }}
-                    error={Boolean(plate) && !isValidIranianPlate(plate, carType)}
-                    helperText={
-                      Boolean(plate) && !isValidIranianPlate(plate, carType)
-                        ? isPersian
-                          ? "قالب پلاک کامل نیست."
-                          : "Complete the plate format."
-                        : undefined
-                    }
-                  />
-                </Box>
+                {showCameras ? <>{plateInput}{cardMemberInputs}</> : <>{cardMemberInputs}{plateInput}</>}
                 {lookupLoading && (
                   <Typography variant="caption" color="text.secondary">
                     {isPersian ? "در حال بررسی سوابق..." : "Checking history..."}
@@ -1309,6 +1367,7 @@ export function TrafficRecordsWorkspace({
                     </Box>}
                     {showCameras && !identity.details && <Typography variant="body2" color="text.secondary">{t('trafficIdentity.identifyHint')}</Typography>}
                     {showCameras && identity.details && <TrafficIdentitySummary details={identity.details} language={language}
+                      onAutomaticClose={() => keyboard.requestFocus(needsVehicle ? 'vehicle' : 'actions')}
                       busy={identityBusy} canEdit={canEditVehicle} onSelect={nextPlate => void selectVehicle(nextPlate)}
                       onAdd={() => openVehicle(false)} onEdit={() => openVehicle(true)} onRetry={() => void lookupCar(true)} />}
                     {policyAlerts.map(alert => <Alert key={alert.key} severity={alert.blocked ? 'error' : 'warning'}>
@@ -1638,54 +1697,10 @@ export function TrafficRecordsWorkspace({
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => void removeTraffic()}
       />
-      <AppPopup open={billOpen} onClose={() => setBillOpen(false)} maxWidth="sm" busy={working} title={isPersian ? "صورتحساب خروج" : "Exit bill"} actions={[
-  { id: 'action-0', label: copy.cancel, onClick: () => setBillOpen(false) },
-  { id: 'action-1', label: isPersian ? "تسویه نقدی" : "Cash settlement", variant: "contained", onClick: () => void settleCash(), disabled: working || !numberOf(valueOf(exitBill ?? {}, "DumpId")) }
-]}>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 1.5,
-              pt: 1,
-            }}
-          >
-            <Typography variant="body2">
-              {isPersian ? "پلاک: " : "Plate: "}
-              <strong>{billValue("CarPlate", plate)}</strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "زمان ورود: " : "Entry: "}
-              <strong>
-                {dateTime(valueOf(exitBill ?? {}, "EnterDateTime"), isPersian)}
-              </strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "زمان خروج: " : "Exit: "}
-              <strong>
-                {dateTime(valueOf(exitBill ?? {}, "ExitDateTime"), isPersian)}
-              </strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "مدت توقف: " : "Duration: "}
-              <strong>{billValue("TotalDuration")}</strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "هزینه عضویت: " : "Member cost: "}
-              <strong>{billValue("MemberCost", "0")}</strong>
-            </Typography>
-            <Typography variant="body2">
-              {isPersian ? "هزینه پارکینگ: " : "Parking cost: "}
-              <strong>{billValue("CommonCost", "0")}</strong>
-            </Typography>
-            <Typography variant="body2" sx={{ gridColumn: { sm: "1 / -1" } }}>
-              {isPersian ? "مبلغ قابل پرداخت: " : "Amount due: "}
-              <strong>
-                {billValue("CommonCost", "0")}
-              </strong>
-            </Typography>
-          </Box>
-        </AppPopup>
+      {billOpen && exitBill && paymentPresentation && <TrafficPaymentPopup
+        key={String(valueOf(exitBill, 'DumpId'))} bill={exitBill} presentation={paymentPresentation}
+        language={language} busy={paymentPending} error={paymentError} paperRef={paymentPaperRef}
+        onClose={closeTrafficPayment} onPay={() => void settleCash()} />}
     </ManagementWorkspaceFrame>
   );
 }

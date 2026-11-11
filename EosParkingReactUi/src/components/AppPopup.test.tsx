@@ -80,3 +80,27 @@ it('keeps all application modal shells centralized', () => {
   const exceptions = Object.entries(sources).filter(([path, source]) => !path.endsWith('.test.tsx') && !path.endsWith('/AppPopup.tsx') && /<(Dialog|Modal)\b/.test(source));
   expect(exceptions.map(([path]) => path)).toEqual([]);
 });
+
+it('allows background keyboard input in a modeless popup and scopes Escape to the popup', async () => {
+  const close = vi.fn();
+  const { rerender } = render(<><TextField label="شناسه بعدی" /><AppPopup open modal={false} compact width={336} title="هزینه" onClose={close}>جزئیات</AppPopup></>);
+  expect(document.querySelector('.MuiBackdrop-root')).toBeNull();
+  const input = screen.getByRole('textbox', { name: 'شناسه بعدی' });
+  await userEvent.setup().type(input, '1234');
+  expect(input).toHaveFocus();
+  expect(input).toHaveValue('1234');
+  fireEvent.keyDown(input, { key: 'Escape' });
+  expect(close).not.toHaveBeenCalled();
+  fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+  expect(close).toHaveBeenCalledOnce();
+  close.mockClear();
+  rerender(<AppPopup open modal={false} busy title="هزینه" onClose={close}>جزئیات</AppPopup>);
+  fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+  fireEvent.click(screen.getByRole('button', { name: 'لغو' }));
+  expect(close).not.toHaveBeenCalled();
+});
+
+it('uses a stable accessible label when the visual title includes changing status or another action', () => {
+  render(<AppPopup open title={<>هزینه <span>۵ ثانیه</span><Button>نمایش مبلغ</Button></>} ariaLabel="پرداخت" onClose={vi.fn()}>جزئیات</AppPopup>);
+  expect(screen.getByRole('dialog', { name: 'پرداخت' })).toBeVisible();
+});

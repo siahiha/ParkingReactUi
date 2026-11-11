@@ -43,6 +43,7 @@
   overflow: clip;
 }
 .traffic-control-workspace > .workspace-heading { flex: 0 0 auto; margin: 0; gap: 8px; }
+.traffic-door-type { display: inline-flex; align-items: center; gap: 4px; padding-block: 4px; white-space: nowrap; }
 .traffic-control-workspace > .MuiDivider-root { flex: 0 0 auto; margin: 0; }
 .traffic-history-console { display: contents; }
 .traffic-history-console .traffic-operation-information,

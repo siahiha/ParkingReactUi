@@ -52,7 +52,7 @@ async function setup(page: Page, canEdit = true) {
     if (url.pathname.endsWith('/CreateEnterDump') || url.pathname.endsWith('/DoExitDump')) {
       state.mutations.push({ path: url.pathname, payload: request.postDataJSON() });
       value = url.pathname.endsWith('/CreateEnterDump') ? { Id: 50, EnterDateTime: '2026-11-10T09:00:00' }
-        : { DumpId: 42, CarPlate: cars[0].Plate, EnterDateTime: '2026-11-10T08:00:00', ExitDateTime: '2026-11-10T09:00:00', CommonCost: 3000, MemberCost: 7000, TotalCost: 10000 };
+        : { DumpId: 42, MemberCode: '76101', CarPlate: cars[0].Plate, EnterDateTime: '2026-11-10T08:00:00', ExitDateTime: '2026-11-10T09:00:00', CommonCost: 3000, MemberCost: 7000, TotalCost: 10000, MemberDuration: 30, CommonDuration: 30 };
     }
     return route.fulfill({ json: { ResponseResultType: 1, Values: value } });
   });
@@ -92,11 +92,16 @@ for (const source of ['plate', 'card', 'member'] as const) {
     } else {
       const field = page.getByRole('textbox', { name: source === 'card' ? 'شماره کارت' : 'کد عضو', exact: true });
       await field.fill(source === 'card' ? '1234' : '76101');
-      await field.press('Tab');
+      const lookupRequest = page.waitForRequest(request => new URL(request.url()).pathname.endsWith('/GetCarTrafficInfo'));
+      await field.press('Enter');
+      const lookupUrl = new URL((await lookupRequest).url());
+      expect(lookupUrl.searchParams.get(source === 'card' ? 'memberCard' : 'memberCode')).toBe(source === 'card' ? '1234' : '76101');
     }
     const details = page.getByRole('dialog', { name: fa.trafficIdentity.detailsTitle, exact: true });
     await expect(details).toBeVisible();
     await expect(details.getByText('علی رضایی', { exact: true })).toBeVisible();
+    await expect(source === 'plate' ? page.locator('.traffic-operation-actions').getByRole('button', { name: fa.trafficOperation.enter, exact: true })
+      : page.getByRole('combobox', { name: fa.trafficIdentity.memberVehicle, exact: true })).toBeFocused();
     if (source === 'plate') await expect(details.getByText(cars[0].Plate, { exact: true })).toHaveCount(0);
     await expect(details.getByText(fa.trafficIdentity.tariff, { exact: true })).toHaveCount(0);
     await expect(details).toBeInViewport({ ratio: 1 });
@@ -107,6 +112,8 @@ for (const source of ['plate', 'card', 'member'] as const) {
     if (source === 'plate') expect((await details.boundingBox())!.height).toBeLessThan(450);
     await details.getByRole('button', { name: fa.trafficIdentity.close, exact: true }).click();
     await expect(details).toHaveCount(0);
+    await expect(source === 'plate' ? page.locator('.traffic-operation-actions').getByRole('button', { name: fa.trafficOperation.enter, exact: true })
+      : page.getByRole('combobox', { name: fa.trafficIdentity.memberVehicle, exact: true })).toBeFocused();
     const lookups = state.lookups;
     await page.getByRole('button', { name: fa.trafficOperation.search, exact: true }).click();
     const history = page.getByRole('dialog', { name: fa.homeMenu.items['traffic-records'], exact: true });
@@ -160,12 +167,57 @@ test('reveals identity with a short fade and slide, including on reopening, and 
   await page.getByRole('button', { name: fa.trafficIdentity.details, exact: true }).click();
   const details = page.getByRole('dialog', { name: fa.trafficIdentity.detailsTitle, exact: true });
   await expect(details).toBeVisible();
-  await expect.poll(() => details.evaluate(element => element.contains(document.activeElement))).toBe(true);
+  await expect.poll(() => details.evaluate(element => element.contains(document.activeElement))).toBe(false);
+  await expect(page.getByRole('button', { name: fa.trafficIdentity.details, exact: true })).toBeFocused();
   expect(await details.evaluate(element => ({ opacity: getComputedStyle(element).opacity, animations: element.getAnimations().length })))
     .toEqual({ opacity: '1', animations: 0 });
   expect(samples).toHaveLength(0);
   await closeIdentity(page);
 });
+
+for (const width of [1440, 390]) {
+  test(`keeps manual and automatic identity display nonmodal without taking focus at width ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const state = await setup(page);
+    state.open = true;
+    const originalOverflow = await page.evaluate(() => document.body.style.overflow);
+    await lookupCard(page);
+    const details = page.getByRole('dialog', { name: fa.trafficIdentity.detailsTitle, exact: true });
+    const opener = page.getByRole('button', { name: fa.trafficIdentity.details, exact: true });
+    // Reopening the automatically visible card must not introduce a modal or a focus jump.
+    await opener.focus();
+    await opener.press('Enter');
+    await expect(details).toBeVisible();
+    await expect(opener).toBeFocused();
+    await expect(details).not.toHaveAttribute('aria-modal', 'true');
+    await expect(page.locator('.MuiBackdrop-root')).toHaveCount(0);
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe(originalOverflow);
+    const card = page.getByRole('textbox', { name: 'شماره کارت', exact: true });
+    await card.focus();
+    await expect(card).toBeFocused();
+    await expect(details).toBeVisible();
+    await card.press('Tab');
+    await expect.poll(() => details.evaluate(element => element.contains(document.activeElement))).toBe(false);
+    await page.keyboard.press('Escape');
+    await expect(details).toHaveCount(0);
+    await opener.focus();
+    await opener.press('Enter');
+    await expect(details).toBeVisible();
+    await expect(opener).toBeFocused();
+    await details.getByRole('button', { name: fa.trafficIdentity.close, exact: true }).click();
+    await expect(details).toHaveCount(0);
+    await expect(opener).toBeFocused();
+    await opener.press('Enter');
+    await expect(details).toBeVisible();
+    const cancel = page.locator('.traffic-operation-actions').getByRole('button', { name: fa.trafficOperation.cancel, exact: true });
+    await cancel.focus();
+    await expect(cancel).toBeFocused();
+    await cancel.press('Enter');
+    await expect(card).toHaveValue('');
+    await expect(details).toHaveCount(0);
+    expect(state.mutations).toHaveLength(0);
+  });
+}
 
 test('does not automatically open member details for a guest or a failed lookup', async ({ page }) => {
   await setup(page);
@@ -208,6 +260,7 @@ test('shows complete identity, requires a member vehicle and omits removed captu
   await page.getByRole('combobox', { name: fa.trafficIdentity.memberVehicle }).click();
   await page.getByRole('option', { name: /22ب45678/ }).click();
   await expect(enter).toBeEnabled();
+  await expect(enter).toBeFocused();
   await page.screenshot({ path: testInfo.outputPath('traffic-identity.png'), fullPage: true });
   await enter.click();
   await expect.poll(() => state.mutations.length).toBe(1);
@@ -244,9 +297,10 @@ test('blocks inactive, blacklisted and stolen vehicles, warns for observation an
   await lookupCard(page); await closeIdentity(page);
   await expect(exit).toBeEnabled();
   await exit.click();
-  const bill = page.getByRole('dialog', { name: 'صورتحساب خروج' });
+  const bill = page.getByRole('dialog', { name: 'پرداخت حق پارک' });
   await expect(bill).toBeVisible();
-  await expect(bill.getByText('3000', { exact: true })).toHaveCount(2);
+  await expect(bill.locator('.traffic-payment-amount')).toHaveText('۳٬۰۰۰');
+  await expect(bill.getByRole('region', { name: 'حق عضویت استفاده شده' })).toContainText('۷٬۰۰۰');
 });
 
 test('reads Windows QR, adds and edits member vehicles through the permitted form', async ({ page }) => {

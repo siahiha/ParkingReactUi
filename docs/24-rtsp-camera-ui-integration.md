@@ -130,19 +130,26 @@ type CameraStreamPreviewProps = {
 
 ## تنظیم Base URL
 
-Base URL سرویس را در configuration پروژه‌ی React قرار دهید:
+**تصمیم محصول/رفتار فعلی وب:** مقدار پیش‌فرض `parkingServiceUrl` خالی است. اگر خالی، مفقود یا فقط فاصله باشد، مبنای URLهای نسبی پخش HLS و WebRTC همان `apiBaseUrl` نهاییِ runtime است؛ اگر مقدار داشته باشد، آدرس جداگانهٔ پخش استفاده می‌شود. URL کامل برگشتیِ stream از API مستقیماً مصرف می‌شود.
 
-```env
-VITE_PARKING_SERVICE_URL=http://localhost:3001
+نمونهٔ تنظیم پیش‌فرض در `public/config.json` (و فایل کنار خروجی Build):
+
+```json
+{
+  "apiBaseUrl": "/backend",
+  "parkingServiceUrl": ""
+}
 ```
 
-یا در صورت استفاده از Create React App:
+در این مثال، URL پخش `/api/rtspcamera/...` به `/backend/api/rtspcamera/...` تبدیل می‌شود و در توسعه از همان پراکسی API عبور می‌کند. در IIS باید قانون reverse proxy متناظر موجود باشد؛ تنظیم Vite در خروجی static اجرا نمی‌شود.
+
+فقط برای پخش از سرور مستقل، `parkingServiceUrl` را با آدرس آن سرور پر کنید. مقدار پیش‌فرض محیط توسعه نیز خالی است:
 
 ```env
-REACT_APP_PARKING_SERVICE_URL=http://localhost:3001
+VITE_PARKING_SERVICE_URL=
 ```
 
-همه‌ی endpointهای این سند نسبت به همین Base URL هستند.
+اولویت تنظیم این فیلد مانند قبل پاسخ موجود `GetClientConfig`، سپس فایل `config.json` و سپس متغیر محیط است؛ مقدار خالی صریح در هر سطح، ارث‌بری از API را انتخاب می‌کند. درخواست‌های کنترل اتصال/وضعیت/ROI همچنان از کلاینت مشترک و `apiBaseUrl` عبور می‌کنند؛ `parkingServiceUrl` فقط مبنای آدرس پخش است. هیچ قرارداد Backend تغییر نکرده است.
 
 ## مدل داده‌ی دوربین
 

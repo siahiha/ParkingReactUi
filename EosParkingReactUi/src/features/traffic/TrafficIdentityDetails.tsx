@@ -20,7 +20,7 @@ export function TrafficVehicleSelector({ details, language, busy, onSelect }: Pi
   const { t } = useTranslation(undefined, { lng: language });
   const vehicleLabelId = useId();
   const selected = details.cars.find(car => car.Id === Number(recordValue(details.info, 'CarId')))?.Plate ?? '';
-  return <Box className="traffic-vehicle-selector">
+  return <Box className="traffic-vehicle-selector" data-traffic-focus="vehicle">
     <FormControl fullWidth size="small" disabled={busy}>
       <InputLabel id={vehicleLabelId}>{t('trafficIdentity.memberVehicle')}</InputLabel>
       <Select labelId={vehicleLabelId} value={selected} label={t('trafficIdentity.memberVehicle')} onChange={event => onSelect(event.target.value)}>

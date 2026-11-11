@@ -1,5 +1,15 @@
 const fa = {
+  trafficPayment: {
+    title: 'پرداخت حق پارک', entryTime: 'تاریخ و زمان ورود', exitTime: 'تاریخ و زمان خروج',
+    totalStay: 'مجموع حضور', totalDuration: 'کل مدت حضور', totalCost: 'مبلغ کل', membershipUsed: 'حق عضویت استفاده شده',
+    roundedDuration: 'مدت گرد شده با ورودی', memberPaid: 'مبلغ پرداخت شده', receivable: 'دریافتی', tax: 'مالیات', amount: 'مبلغ', tariff: 'تعرفه',
+    payable: 'مبلغ قابل پرداخت', rial: 'ریال', confirmPay: 'تأیید و پرداخت', close: 'خروج', posPay: 'پرداخت با POS', showPrice: 'نمایش مجدد مبلغ روی LCD',
+    posUnavailable: 'ارتباط کارتخوان در دسترس نیست.', displayUnavailable: 'ارتباط نمایشگر مبلغ در دسترس نیست.',
+    countdown: '{{seconds}} ثانیه تا بسته شدن پنجره', duration: '{{days}} روز {{hours}} ساعت {{minutes}} دقیقه',
+    invalidBill: 'صورتحساب کامل دریافت نشد؛ از فهرست خروج‌ها دوباره تلاش کنید.',
+  },
   trafficLayout: {
+    doorType: 'نوع درب', doorTypes: ['ورودی', 'خروجی', 'ورود و خروج', 'داخلی'], doorLoading: 'در حال دریافت…', doorUnknown: 'نامشخص',
     resize: 'تنظیم ارتفاع تصاویر و جدول‌ها', latestDetection: 'آخرین تشخیص', fullFrame: 'تصویر کامل آخرین تشخیص پلاک', plateImage: 'تصویر پلاک آخرین تشخیص',
     enlarge: 'بزرگ‌نمایی تصویر', imageUnavailable: 'تصویر موجود نیست', detectionUnavailable: 'تصویر آخرین تشخیص در دسترس نیست',
     entryCamera: 'دوربین ورودی', exitCamera: 'دوربین خروجی', entry: 'ورودی', exit: 'خروجی',

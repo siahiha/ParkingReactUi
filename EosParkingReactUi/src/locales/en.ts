@@ -1,5 +1,15 @@
 const en = {
+  trafficPayment: {
+    title: 'Parking fee payment', entryTime: 'Entry date and time', exitTime: 'Exit date and time',
+    totalStay: 'Total stay', totalDuration: 'Total duration', totalCost: 'Total cost', membershipUsed: 'Membership used',
+    roundedDuration: 'Rounded duration including entry', memberPaid: 'Amount paid', receivable: 'Receivable', tax: 'Tax', amount: 'Amount', tariff: 'Tariff',
+    payable: 'Amount due', rial: 'Rial', confirmPay: 'Confirm and pay', close: 'Close', posPay: 'Pay with POS', showPrice: 'Show price on LCD again',
+    posUnavailable: 'The card terminal connection is unavailable.', displayUnavailable: 'The price display connection is unavailable.',
+    countdown: '{{seconds}} seconds until closing', duration: '{{days}}d {{hours}}h {{minutes}}m',
+    invalidBill: 'The bill is incomplete. Try again from the exits list.',
+  },
   trafficLayout: {
+    doorType: 'Door type', doorTypes: ['Entrance', 'Exit', 'Entrance and exit', 'Internal'], doorLoading: 'Loading…', doorUnknown: 'Unavailable',
     resize: 'Resize images and tables', latestDetection: 'Latest detection', fullFrame: 'Latest full-frame detection', plateImage: 'Latest plate crop',
     enlarge: 'Enlarge image', imageUnavailable: 'Image unavailable', detectionUnavailable: 'Latest detection image is unavailable',
     entryCamera: 'Entry camera', exitCamera: 'Exit camera', entry: 'Entry', exit: 'Exit',

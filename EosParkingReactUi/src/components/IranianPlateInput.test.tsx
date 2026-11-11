@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IranianPlateInput, isValidIranianPlate, parseIranianPlate, toIranianPlateValue } from './IranianPlateInput';
 
-function ControlledPlate() {
-  const [value, setValue] = useState('');
+function ControlledPlate({ initialValue = '', onComplete }: { initialValue?: string; onComplete?: () => void } = {}) {
+  const [value, setValue] = useState(initialValue);
   const [carType, setCarType] = useState('0');
-  return <><IranianPlateInput label="پلاک" value={value} carType={carType} onChange={setValue} onCarTypeChange={setCarType} /><input aria-label="فیلد بعدی" /></>;
+  return <><IranianPlateInput label="پلاک" value={value} carType={carType} onChange={setValue} onCarTypeChange={setCarType} onComplete={onComplete} /><input aria-label="فیلد بعدی" /></>;
 }
 
 describe('IranianPlateInput value helpers', () => {
+  afterEach(cleanup);
   it('uses the EosPlateControl storage order and normalizes Persian digits', () => {
     const parts = parseIranianPlate('۱۲ ب ۳۴۵ - ۶۷');
     expect(parts).toEqual({ left: '12', letter: 'ب', middle: '345', region: '67' });
@@ -32,5 +33,26 @@ describe('IranianPlateInput value helpers', () => {
     render(<ControlledPlate />);
     await user.type(screen.getByLabelText('پلاک - دو رقم اول'), '۱۲');
     await waitFor(() => expect(screen.getByLabelText('پلاک - حرف پلاک')).toHaveFocus());
+  });
+
+  it('returns to the preceding empty segment with Backspace', async () => {
+    const user = userEvent.setup();
+    render(<ControlledPlate />);
+    await user.click(screen.getByLabelText('پلاک - کد منطقه'));
+    await user.keyboard('{Backspace}');
+    expect(screen.getByLabelText('پلاک - سه رقم میانی')).toHaveFocus();
+    await user.keyboard('{Backspace}');
+    expect(screen.getByLabelText('پلاک - حرف پلاک')).toHaveFocus();
+    await user.keyboard('{Backspace}');
+    expect(screen.getByLabelText('پلاک - دو رقم اول')).toHaveFocus();
+  });
+
+  it.each([['12ب34567', 1], ['12ب3456', 0]] as const)('only completes a valid plate with Enter: %s', async (initialValue, calls) => {
+    const user = userEvent.setup();
+    const onComplete = vi.fn();
+    render(<ControlledPlate initialValue={initialValue} onComplete={onComplete} />);
+    await user.click(screen.getByLabelText('پلاک - کد منطقه'));
+    await user.keyboard('{Enter}');
+    expect(onComplete).toHaveBeenCalledTimes(calls);
   });
 });
