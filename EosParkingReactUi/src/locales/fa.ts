@@ -1,5 +1,18 @@
 const fa = {
+  trafficLayout: {
+    resize: 'تنظیم ارتفاع تصاویر و جدول‌ها', latestDetection: 'آخرین تشخیص', fullFrame: 'تصویر کامل آخرین تشخیص پلاک', plateImage: 'تصویر پلاک آخرین تشخیص',
+    enlarge: 'بزرگ‌نمایی تصویر', imageUnavailable: 'تصویر موجود نیست', detectionUnavailable: 'تصویر آخرین تشخیص در دسترس نیست',
+    entryCamera: 'دوربین ورودی', exitCamera: 'دوربین خروجی', entry: 'ورودی', exit: 'خروجی',
+    cameraError: 'اطلاعات دوربین‌های درب دریافت نشد.', detectionConfigError: 'قالب سرویس تشخیص پلاک دوربین معتبر نیست.', detectionError: 'ارتباط سرویس تشخیص پلاک برقرار نشد.',
+    cameraLoading: 'در حال دریافت دوربین…', noCamera: 'برای این درب دوربین فعالی تعریف نشده است.', cameraUnavailable: 'تصویر دوربین انتخاب‌شده در دسترس نیست.',
+    enlargeError: 'بزرگ‌نمایی تصویر در مرورگر در دسترس نیست.',
+  },
   trafficIdentity: {
+    guest: 'مهمان', vehicleDetails: 'مشخصات خودرو', validFrom: 'شروع', validUntil: 'پایان',
+    doorError: 'اطلاعات درب دریافت نشد؛ صفحه را به‌روزرسانی کنید.', directionUnavailable: 'این عملیات برای درب و وضعیت تردد جاری مجاز نیست.',
+    noEntry: 'ورودی ثبت نشده است.', alreadyEntered: 'برای این خودرو ورود باز وجود دارد.',
+    details: 'مشخصات', detailsTitle: 'مشخصات عضو و خودرو', close: 'بستن', member: 'عضو', memberCode: 'کد عضویت', tariff: 'تعرفه',
+    identifyHint: 'پلاک، شماره کارت یا کد عضو را وارد کنید.',
     inactiveMember: 'عضویت غیرفعال است؛ ثبت تردد مجاز نیست.', blacklisted: 'خودرو در لیست سیاه است؛ این عملیات مجاز نیست.',
     stolen: 'خودرو سرقتی گزارش شده است؛ خروج مجاز نیست.', observation: 'خودرو تحت‌نظر است.', exitNotApproved: 'مجوز خروج این تردد صادر نشده است.',
     invalidQr: 'QR نامعتبر، تسویه‌شده یا متعلق به تردد دیگری است.',
@@ -12,6 +25,8 @@ const fa = {
     refreshIdentity: 'استعلام مجدد', clear: 'پاک‌کردن',
   },
   trafficOperation: {
+    title: 'عملیات ورود و خروج',
+    enter: 'ورود', exit: 'خروج', search: 'جستجو', cancel: 'لغو',
     lookup: 'استعلام خودرو',
     lookupFailed: 'استعلام خودرو انجام نشد؛ دوباره مشخصات خودرو را بررسی کنید.',
     exitSaved: 'خروج خودرو ثبت شد.',
@@ -19,6 +34,7 @@ const fa = {
     paymentFailed: 'تسویه انجام نشد.',
   },
   trafficGrid: {
+    paymentShort: 'پرداخت', amountShort: 'مبلغ',
     entries: 'ورودها', exits: 'خروج‌ها', membership: 'عضویت', plate: 'پلاک', entryTime: 'زمان ورود', exitTime: 'زمان خروج', exit: 'خروج', cargo: 'ثبت بار', pay: 'پرداخت مبلغ خروج', paymentStatus: 'وضعیت پرداخت', amount: 'مبلغ پرداختی', inboundCargo: 'ثبت بار ورودی', outboundCargo: 'ثبت بار خروجی', search: 'جستجو در ترددها', searchHint: 'پلاک، کارت، کد عضویت، نام یا کد ملی', clear: 'پاک کردن', empty: 'ترددی برای نمایش وجود ندارد.', loading: 'در حال دریافت ترددها…', updatedAt: 'آخرین به‌روزرسانی: {{time}}', loadError: 'به‌روزرسانی ترددها انجام نشد؛ اطلاعات نمایش‌داده‌شده ممکن است قدیمی باشد.', forbidden: 'دسترسی مشاهدهٔ ترددها مجاز نیست.',
     paymentTypes: ['پرداخت نشده', 'پرداخت نقدی', 'پرداخت بانکی', 'پرداخت نقدی پارکبان', 'پرداخت بانکی پارکبان', 'منقضی', 'پرداخت منقضی', 'پرداخت منقضی', 'پرداخت منقضی', 'پرداخت اولیه با پارکبان'],
   },

@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Alert, Box, CircularProgress, Paper, Tab, Tabs, Typography } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Box, CircularProgress, IconButton, Paper, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
+import { useTranslation } from 'react-i18next';
+import { AppToast } from '../AppToast';
 import { parkingApi, type Camera } from '../../api/management';
 import {
   HshDetectionConnection,
@@ -18,7 +21,6 @@ type Props = {
 type RecordValue = Record<string, unknown>;
 type CameraTab = 'entry' | 'exit';
 
-const text = (language: Language, fa: string, en: string) => language === 'fa' ? fa : en;
 
 function unwrap(input: unknown): unknown {
   if (!input || typeof input !== 'object') return input;
@@ -90,6 +92,9 @@ function viewerId() {
 }
 
 export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
+  const panelRef = useRef<HTMLElement>(null);
+  const [enlargeError, setEnlargeError] = useState(false);
   const [entryCamera, setEntryCamera] = useState<Camera | null>(null);
   const [exitCamera, setExitCamera] = useState<Camera | null>(null);
   const [activeTab, setActiveTab] = useState<CameraTab>('entry');
@@ -108,8 +113,8 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
     setCameraLoading(true);
     Promise.all([parkingApi.getDoor(Number(doorId)), parkingApi.getDoorDevices(Number(doorId)).catch(() => null)]).then(([response, devicesResponse]) => {
       const row = record(response);
-      const entryLabel = text(language, 'دوربین ورودی', 'Entry camera');
-      const exitLabel = text(language, 'دوربین خروجی', 'Exit camera');
+      const entryLabel = t('trafficLayout.entryCamera');
+      const exitLabel = t('trafficLayout.exitCamera');
       const directEntry = cameraFrom(field(row, 'EnteranceCamera', 'EntranceCamera'), entryLabel, 'entry');
       const directExit = cameraFrom(field(row, 'ExitCamera'), exitLabel, 'exit');
       const linked = linkedCameraRows(response);
@@ -119,10 +124,10 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
       const entry = directEntry ?? cameraFrom(entryLinked ?? devices[0], entryLabel, 'entry');
       const exit = directExit ?? cameraFrom(exitLinked ?? devices[1], exitLabel, 'exit');
       if (active) { setEntryCamera(entry); setExitCamera(exit); setActiveTab(entry ? 'entry' : 'exit'); }
-    }).catch(() => { if (active) setError(text(language, 'اطلاعات دوربین‌های درب دریافت نشد.', 'Camera information could not be loaded.')); })
+    }).catch(() => { if (active) setError(t('trafficLayout.cameraError')); })
       .finally(() => { if (active) setCameraLoading(false); });
     return () => { active = false; };
-  }, [doorId, language]);
+  }, [doorId, language, t]);
 
   useEffect(() => {
     const cameras = [entryCamera, exitCamera].filter((camera): camera is Camera => Boolean(camera?.cameraId));
@@ -138,7 +143,7 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
         if (!configValue) return;
         const config = parseHshDetectionConfig(configValue);
         if (!config) {
-          if (active) setDetectionError(text(language, 'قالب سرویس تشخیص پلاک دوربین معتبر نیست.', 'The camera plate-detection setting is invalid.'));
+          if (active) setDetectionError(t('trafficLayout.detectionConfigError'));
           return;
         }
         const connection = new HshDetectionConnection(config, camera.cameraId);
@@ -153,7 +158,7 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
         await connection.start(handleDetection, (status: HshDetectionStatus) => {
           if (!active) return;
           if (status.state === 'error' || status.state === 'cursor-expired') {
-            setDetectionError(text(language, 'ارتباط سرویس تشخیص پلاک برقرار نشد.', 'The plate-detection service is unavailable.'));
+            setDetectionError(t('trafficLayout.detectionError'));
           } else if (status.state === 'connected') {
             setDetectionError('');
           }
@@ -166,24 +171,33 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
       active = false;
       void Promise.all(connections.map((connection) => connection.stop()));
     };
-  }, [entryCamera, exitCamera, language, onDetection]);
+  }, [entryCamera, exitCamera, language, onDetection, t]);
 
   const activeCamera = activeTab === 'entry' ? entryCamera : exitCamera;
   const hasBothCameras = Boolean(entryCamera && exitCamera);
-  const selectedLabel = activeTab === 'entry' ? text(language, 'دوربین ورودی', 'Entry camera') : text(language, 'دوربین خروجی', 'Exit camera');
+  const selectedLabel = activeTab === 'entry' ? t('trafficLayout.entryCamera') : t('trafficLayout.exitCamera');
 
-  return <Box className="traffic-camera-panel" sx={{ minWidth: 0, height: '100%' }}>
+  return <Box ref={panelRef} className="traffic-camera-panel" sx={{ minWidth: 0, height: '100%' }}>
     <Paper variant="outlined" sx={{ p: 1, minWidth: 0, height: '100%', boxSizing: 'border-box' }}>
+      <Box className="traffic-camera-toolbar">
       {hasBothCameras && <Tabs value={activeTab} onChange={(_event, value: CameraTab) => setActiveTab(value)} variant="fullWidth" sx={{ minHeight: 34, mb: 0.5 }}>
-        <Tab value="entry" label={text(language, 'ورودی', 'Entry')} sx={{ minHeight: 34, py: 0.25 }} />
-        <Tab value="exit" label={text(language, 'خروجی', 'Exit')} sx={{ minHeight: 34, py: 0.25 }} />
+        <Tab value="entry" label={t('trafficLayout.entry')} sx={{ minHeight: 34, py: 0.25 }} />
+        <Tab value="exit" label={t('trafficLayout.exit')} sx={{ minHeight: 34, py: 0.25 }} />
       </Tabs>}
+      <Tooltip title={t('trafficLayout.enlarge')}><span><IconButton size="small" disabled={!activeCamera} aria-label={t('trafficLayout.enlarge')}
+        onClick={() => {
+          const request = panelRef.current?.requestFullscreen?.();
+          if (request) void request.catch(() => setEnlargeError(true));
+          else setEnlargeError(true);
+        }}><FullscreenRoundedIcon fontSize="small" /></IconButton></span></Tooltip>
+      </Box>
+      <AppToast message={enlargeError ? t('trafficLayout.enlargeError') : ''} severity="warning" onClose={() => setEnlargeError(false)} />
       {error && <Alert severity="warning" sx={{ mb: 1 }}>{error}</Alert>}
       {detectionError && <Alert severity="warning" sx={{ mb: 1 }}>{detectionError}</Alert>}
-      {cameraLoading && <Box className="inline-status-row"><CircularProgress size={18} /><Typography variant="body2">{text(language, 'در حال دریافت دوربین...', 'Loading camera...')}</Typography></Box>}
-      {!cameraLoading && !error && !entryCamera && !exitCamera && <Typography variant="body2" color="text.secondary">{text(language, 'برای این درب دوربین فعالی تعریف نشده است.', 'No active camera is configured for this door.')}</Typography>}
+      {cameraLoading && <Box className="inline-status-row"><CircularProgress size={18} /><Typography variant="body2">{t('trafficLayout.cameraLoading')}</Typography></Box>}
+      {!cameraLoading && !error && !entryCamera && !exitCamera && <Typography variant="body2" color="text.secondary">{t('trafficLayout.noCamera')}</Typography>}
       {!cameraLoading && activeCamera && <Box className="traffic-camera-preview-box" sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><Box sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><CameraStreamPreview key={`${doorId}-${activeCamera.cameraId}`} camera={{ ...activeCamera, name: `${selectedLabel}: ${activeCamera.name}` }} language={language} viewer={viewer} size={{ width: '100%', height: 210 }} showConnectionButton={false} showModeSwitcher={false} showRoiAction={false} autoConnect compact /></Box></Box>}
-      {!cameraLoading && !activeCamera && (entryCamera || exitCamera) && <Typography variant="body2" color="text.secondary">{text(language, 'تصویر دوربین انتخاب‌شده در دسترس نیست.', 'The selected camera image is unavailable.')}</Typography>}
+      {!cameraLoading && !activeCamera && (entryCamera || exitCamera) && <Typography variant="body2" color="text.secondary">{t('trafficLayout.cameraUnavailable')}</Typography>}
     </Paper>
   </Box>;
 }

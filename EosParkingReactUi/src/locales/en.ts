@@ -1,5 +1,18 @@
 const en = {
+  trafficLayout: {
+    resize: 'Resize images and tables', latestDetection: 'Latest detection', fullFrame: 'Latest full-frame detection', plateImage: 'Latest plate crop',
+    enlarge: 'Enlarge image', imageUnavailable: 'Image unavailable', detectionUnavailable: 'Latest detection image is unavailable',
+    entryCamera: 'Entry camera', exitCamera: 'Exit camera', entry: 'Entry', exit: 'Exit',
+    cameraError: 'Camera information could not be loaded.', detectionConfigError: 'The camera plate-detection setting is invalid.', detectionError: 'The plate-detection service is unavailable.',
+    cameraLoading: 'Loading camera…', noCamera: 'No active camera is configured for this door.', cameraUnavailable: 'The selected camera image is unavailable.',
+    enlargeError: 'Image enlargement is unavailable in this browser.',
+  },
   trafficIdentity: {
+    guest: 'Guest', vehicleDetails: 'Vehicle details', validFrom: 'From', validUntil: 'Until',
+    doorError: 'Door information could not be loaded. Refresh the page.', directionUnavailable: 'This operation is not allowed for the current door and traffic state.',
+    noEntry: 'No entry is recorded.', alreadyEntered: 'This vehicle already has an open entry.',
+    details: 'Details', detailsTitle: 'Member and vehicle details', close: 'Close', member: 'Member', memberCode: 'Member code', tariff: 'Tariff',
+    identifyHint: 'Enter a plate, card number or member code.',
     inactiveMember: 'Membership is inactive; traffic cannot be registered.', blacklisted: 'This vehicle is blacklisted; this operation is not permitted.',
     stolen: 'This vehicle is reported stolen; exit is not permitted.', observation: 'This vehicle is under observation.', exitNotApproved: 'Exit permission has not been issued for this traffic.',
     invalidQr: 'The QR is invalid, already settled, or belongs to another traffic record.',
@@ -12,6 +25,8 @@ const en = {
     refreshIdentity: 'Refresh identity', clear: 'Clear identity',
   },
   trafficOperation: {
+    title: 'Entry and exit operations',
+    enter: 'Entry', exit: 'Exit', search: 'Search', cancel: 'Cancel',
     lookup: 'Look up vehicle',
     lookupFailed: 'Vehicle lookup failed. Check the vehicle details again.',
     exitSaved: 'Vehicle exit registered.',
@@ -19,6 +34,7 @@ const en = {
     paymentFailed: 'Settlement failed.',
   },
   trafficGrid: {
+    paymentShort: 'Payment', amountShort: 'Amount',
     entries: 'Entries', exits: 'Exits', membership: 'Membership', plate: 'Plate', entryTime: 'Entry time', exitTime: 'Exit time', exit: 'Exit', cargo: 'Register cargo', pay: 'Pay exit amount', paymentStatus: 'Payment status', amount: 'Amount paid', inboundCargo: 'Register inbound cargo', outboundCargo: 'Register outbound cargo', search: 'Search traffic', searchHint: 'Plate, card, member code, name or national ID', clear: 'Clear', empty: 'No traffic records to display.', loading: 'Loading traffic…', updatedAt: 'Last updated: {{time}}', loadError: 'Traffic could not be refreshed; the displayed information may be out of date.', forbidden: 'You are not authorized to view traffic.',
     paymentTypes: ['Not paid', 'Cash payment', 'Bank payment', 'Cash payment by attendant', 'Bank payment by attendant', 'Expired', 'Expired payment', 'Expired payment', 'Expired payment', 'Initial payment by attendant'],
   },

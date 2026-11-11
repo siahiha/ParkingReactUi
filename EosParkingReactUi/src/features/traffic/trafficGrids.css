@@ -8,8 +8,8 @@
 .traffic-split-panel .app-data-grid { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; table-layout: fixed; }
 .traffic-split-panel .app-data-grid .MuiTableCell-root:not(.app-data-grid-compact-cell) {
   min-inline-size: 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
   word-break: normal;
   text-overflow: clip;
 }
@@ -29,15 +29,19 @@
   background: var(--app-surface);
 }
 .traffic-split-panel .app-data-grid .MuiTableCell-root { padding-inline: 4px; }
+.traffic-split-panel .app-data-grid .MuiTableBody-root .MuiTableCell-root { block-size: 30px; height: 30px; padding-block: 0; box-sizing: border-box; }
+.traffic-grid-text { display: block; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.traffic-grid-search .MuiInputBase-root { block-size: 32px; }
+.traffic-grid-search .MuiTextField-root { max-inline-size: 420px; }
 .traffic-split-panel .app-data-grid-header-content > span { padding-inline-end: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip; }
 .traffic-split-panel .app-data-grid .app-data-grid-compact-cell {
-  width: 35px !important;
-  min-width: 35px !important;
-  max-width: 35px !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
   padding-inline: 0;
   overflow: visible;
 }
-.traffic-split-panel .traffic-grid-action { display: inline-flex; }
+.traffic-split-panel .traffic-grid-action { display: inline-flex; vertical-align: middle; }
 .traffic-split-panel .traffic-grid-focused-action { visibility: hidden; }
 .traffic-split-panel .Mui-selected .traffic-grid-focused-action,
 .traffic-split-panel tr:focus-within .traffic-grid-focused-action { visibility: visible; }
@@ -50,4 +54,11 @@
 }
 @media (max-width: 900px) {
   .traffic-split-grid-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 680px) {
+  .traffic-split-panel .app-data-grid .MuiTableCell-root:nth-child(2) { width: 78px; min-width: 0; }
+}
+@media (max-width: 360px) {
+  .traffic-split-panel .app-data-grid { min-inline-size: 320px; }
+  .traffic-split-panel .app-data-grid-wrapper { overflow-x: auto; }
 }

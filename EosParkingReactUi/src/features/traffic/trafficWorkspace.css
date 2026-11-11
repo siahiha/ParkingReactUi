@@ -23,7 +23,7 @@
   padding: 8px;
   box-sizing: border-box;
 }
-.home3-main:has(.traffic-control-workspace) > .home3-tabs { flex: 0 0 34px; margin-block: -8px 8px; margin-inline: -8px; }
+.home3-main:has(.traffic-control-workspace) > .home3-tabs { flex: 0 0 34px; margin-block: -8px 4px; margin-inline: -8px; }
 .home-content-section:has(> .traffic-control-workspace) {
   display: flex;
   flex: 1 1 0;
@@ -37,8 +37,9 @@
   flex: 1 1 0;
   min-height: 0;
   min-width: 0;
-  padding: 8px;
-  gap: 8px;
+  /* Override the shared workspace's !important padding only on this dense console. */
+  padding: 8px !important;
+  gap: 4px;
   overflow: clip;
 }
 .traffic-control-workspace > .workspace-heading { flex: 0 0 auto; margin: 0; gap: 8px; }
@@ -48,9 +49,9 @@
 .traffic-history-console .traffic-operation-actions { display: contents; }
 .traffic-history-console .traffic-operation-actions > .MuiButton-root { min-block-size: 38px; margin-block-start: auto; white-space: nowrap; }
 .traffic-control-workspace .traffic-top-grid {
-  flex: 1 1 0;
+  flex: 0 0 clamp(248px, 46%, 340px);
   min-height: 0;
-  grid-template-columns: minmax(400px, 34%) minmax(0, 1fr);
+  grid-template-columns: minmax(340px, 36%) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   gap: 8px;
   direction: inherit;
@@ -71,36 +72,37 @@
 .traffic-control-workspace .traffic-vehicle-identification-grid > .MuiTypography-root { grid-column: 1 / -1; }
 .traffic-control-workspace .traffic-plate-field { order: -1; }
 .traffic-control-workspace .traffic-card-member-fields { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; direction: inherit; }
-.traffic-identity-details { display: grid; gap: 8px; min-inline-size: 0; }
-.traffic-personal-details { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.traffic-member-identity-row { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: 8px; flex: 1 1 240px; min-inline-size: 0; }
-.traffic-personal-photo { inline-size: 56px; block-size: 64px; object-fit: contain; }
-.traffic-credit-list { max-block-size: 150px; overflow: auto; }
-.traffic-credit-item { padding-block: 4px; }
-.traffic-entrance-image { max-inline-size: 100%; block-size: 100px; object-fit: contain; }
+.traffic-control-workspace .traffic-card-member-fields .MuiInputBase-root { block-size: 32px; }
 .traffic-control-workspace .traffic-entry-operation { flex: 1 1 0; overflow: hidden; direction: inherit; }
 .traffic-control-workspace .traffic-operation-tall { grid-row: auto; }
 .traffic-control-workspace .traffic-operation-latest-layout { display: flex; flex: 1 1 0; min-height: 0; height: auto; }
 .traffic-control-workspace .traffic-operation-content { flex: 1 1 0; gap: 8px; min-height: 0; }
 .traffic-control-workspace .traffic-operation-information { display: grid; align-content: start; flex: 1 1 0; min-block-size: 0; overflow: auto; overscroll-behavior: contain; gap: 8px; }
 .traffic-control-workspace .traffic-operation-information > .MuiTypography-root { margin-bottom: 0; }
-.traffic-control-workspace .traffic-operation-actions { display: grid; flex: 0 0 auto; gap: 8px; padding-block-start: 8px; border-block-start: 1px solid var(--app-divider); }
+.traffic-control-workspace .traffic-operation-actions { display: flex; flex-wrap: nowrap; flex: 0 0 auto; gap: 8px; padding-block-end: 8px; border-block-end: 1px solid var(--app-divider); }
 .traffic-control-workspace .traffic-operation-actions .MuiButton-root { margin-block-start: 0; min-block-size: 32px; }
 .traffic-control-workspace .traffic-operation-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; padding: 0; }
 .traffic-control-workspace .traffic-operation-detail-row:first-child,
 .traffic-control-workspace .traffic-operation-detail-row:nth-child(6) { grid-column: 1 / -1; }
 .traffic-control-workspace .traffic-operation-detail-row { font-size: .75rem; line-height: 1.4; }
-.traffic-control-camera-column { display: flex; flex-direction: column; min-inline-size: 0; min-block-size: 0; gap: 8px; }
-.traffic-control-workspace .traffic-last-traffic-inline { flex: 0 0 auto; block-size: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 8px; padding: 8px; }
+.traffic-control-camera-column { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); min-inline-size: 0; min-block-size: 0; gap: 8px; }
+.traffic-control-workspace .traffic-last-traffic-inline { block-size: auto; display: flex; flex-direction: column; gap: 4px; padding: 8px; overflow: hidden; }
 .traffic-control-workspace .traffic-latest-detail-row { font-size: .75rem; }
-.traffic-control-workspace .traffic-latest-image-stack { grid-column: 1 / -1; flex-direction: row; block-size: 72px; }
-.traffic-control-workspace .traffic-plate-preview { flex: 0 0 132px; block-size: 72px; }
-.traffic-control-workspace .traffic-fullframe-preview { min-height: 0; flex: 1 1 0; }
+.traffic-control-workspace .traffic-plate-preview { flex: 0 0 36px; block-size: 36px; }
+.traffic-control-workspace .traffic-fullframe-preview { min-block-size: 0; flex: 1 1 0; }
+.traffic-control-workspace .traffic-fullframe-preview,
+.traffic-control-workspace .traffic-plate-preview { position: relative; }
+.traffic-control-workspace .traffic-fullframe-preview .MuiIconButton-root,
+.traffic-control-workspace .traffic-plate-preview .MuiIconButton-root { position: absolute; inset-block-end: 2px; inset-inline-end: 2px; background: var(--app-surface); }
+.traffic-detection-plate { flex: 0 0 auto; text-align: center; }
 .traffic-control-workspace .traffic-fullframe-preview img,
 .traffic-control-workspace .traffic-plate-preview img { object-fit: contain; }
-.traffic-control-workspace .traffic-last-traffic-inline .traffic-last-traffic-placeholder { grid-column: 1 / -1; min-block-size: 32px; }
+.traffic-control-workspace .traffic-last-traffic-inline .traffic-last-traffic-placeholder { min-block-size: 32px; }
+.traffic-control-workspace .traffic-last-traffic-placeholder,
+.traffic-control-workspace .traffic-fullframe-preview,
+.traffic-control-workspace .traffic-plate-preview { background: color-mix(in srgb, var(--app-primary) 4%, var(--app-surface)); }
 .traffic-control-workspace .traffic-camera-panel { flex: 1 1 0; min-height: 0; height: auto; display: flex; }
-.traffic-control-workspace .traffic-camera-panel > .MuiPaper-root { overflow: auto; overscroll-behavior: contain; }
+.traffic-control-workspace .traffic-camera-panel > .MuiPaper-root { overflow: hidden; }
 .traffic-control-workspace .traffic-camera-panel > .MuiPaper-root,
 .traffic-control-workspace .traffic-camera-preview-box,
 .traffic-control-workspace .traffic-camera-preview-box > div,
@@ -111,10 +113,17 @@
   min-height: 0;
 }
 .traffic-control-workspace .camera-stream-media { flex: 1 1 0; height: auto; min-height: 0; }
+.traffic-control-workspace .camera-stream-preview { padding: 0; border: 0; }
+.traffic-camera-toolbar { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.traffic-camera-toolbar .MuiTabs-root { flex: 1; min-inline-size: 0; min-block-size: 28px; }
+.traffic-camera-toolbar .MuiTab-root { min-inline-size: 0; min-block-size: 28px; padding: 2px 8px; }
+.traffic-camera-toolbar .MuiIconButton-root { flex: 0 0 auto; }
+.traffic-camera-panel:fullscreen { background: var(--app-surface); padding: 8px; box-sizing: border-box; }
+.traffic-camera-panel:fullscreen .camera-stream-media { flex: 1 1 0; height: auto; }
 .traffic-control-workspace .traffic-split-grids {
   display: flex;
   flex-direction: column;
-  flex: 0 0 clamp(190px, 30%, 270px);
+  flex: 1 1 0;
   min-height: 0;
   margin: 0;
 }
@@ -126,31 +135,195 @@
   min-block-size: 0;
   overscroll-behavior: contain;
 }
-@media (min-width: 681px) and (max-height: 720px) {
-  .traffic-control-console { overflow: auto; overscroll-behavior: contain; }
-  .traffic-control-workspace .traffic-entry-operation { flex: 0 0 auto; min-block-size: 220px; overflow: visible; }
-  .traffic-control-workspace .traffic-operation-latest-layout,
-  .traffic-control-workspace .traffic-operation-content { flex: 0 0 auto; }
-  .traffic-control-workspace .traffic-operation-information { flex: 0 0 auto; max-block-size: 150px; }
+.traffic-workspace-splitter { display: flex; align-items: center; justify-content: center; flex: 0 0 8px; inline-size: 100%; min-block-size: 8px; padding: 0; color: var(--app-primary); background: var(--app-surface); border: 0; border-block: 1px solid var(--app-divider); cursor: row-resize; touch-action: none; }
+.traffic-identity-summary { display: grid; gap: 4px; min-inline-size: 0; }
+.traffic-identity-summary-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-inline-size: 0; }
+.traffic-identity-summary-heading .MuiButton-root { inline-size: auto; min-inline-size: max-content; flex: 0 0 auto; margin: 0; }
+.traffic-identity-summary-heading .MuiTypography-root { min-inline-size: 0; }
+.traffic-identity-summary-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-inline-size: 0; }
+.traffic-identity-summary-meta > :first-child { min-inline-size: 0; }
+.traffic-identity-summary-meta > :nth-child(2) { flex: 0 0 auto; }
+.traffic-vehicle-selector { display: grid; gap: 4px; padding-block-start: 4px; }
+.MuiPaper-root.traffic-identity-popover {
+  display: flex;
+  flex-direction: column;
+  inline-size: 400px;
+  max-inline-size: calc(100vw - 32px);
+  max-block-size: calc(100dvh - 32px);
+  overflow: hidden;
+  padding: 0;
+  color: var(--identity-text);
+  background: var(--identity-surface);
+  border: 1px solid var(--identity-line);
+  border-radius: var(--app-popup-radius, 5px);
+  animation: traffic-identity-appear 200ms cubic-bezier(.2, .7, .3, 1);
+}
+@keyframes traffic-identity-appear {
+  from { translate: 0 6px; }
+  to { translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .MuiPaper-root.traffic-identity-popover { animation: none; }
+}
+.traffic-identity-popover-heading {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-block: 2px;
+  padding-inline: 12px;
+  border-block-end: 1px solid color-mix(in srgb, var(--identity-line) 70%, transparent);
+  background: color-mix(in srgb, var(--identity-accent) 3%, var(--identity-surface));
+}
+.traffic-identity-popover-heading .MuiTypography-root { display: flex; align-items: center; gap: 8px; color: var(--identity-muted); font-size: .7rem; font-weight: 500; }
+.traffic-identity-popover-heading .MuiTypography-root .MuiSvgIcon-root { font-size: 16px; color: var(--identity-accent); }
+.traffic-identity-popover-heading .MuiIconButton-root { inline-size: 28px; block-size: 28px; color: var(--identity-muted); border-radius: var(--app-control-radius, 4px); }
+.traffic-identity-popover-heading .MuiIconButton-root .MuiSvgIcon-root { font-size: 17px; }
+.traffic-identity-details { display: flex; flex-direction: column; min-inline-size: 0; min-block-size: 0; }
+.traffic-identity-card-body { padding: 8px 12px; min-block-size: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.traffic-identity-profile { display: flex; gap: 8px; align-items: center; padding-block-end: 8px; }
+.traffic-identity-profile .traffic-identity-avatar {
+  flex: 0 0 40px;
+  inline-size: 40px;
+  block-size: 48px;
+  color: var(--identity-accent);
+  background: color-mix(in srgb, var(--identity-accent) 6%, var(--identity-surface));
+  border: 1px solid var(--identity-line);
+  border-radius: var(--app-control-radius, 4px);
+}
+.traffic-identity-avatar img { object-fit: contain; }
+.traffic-identity-person { flex: 1 1 auto; min-inline-size: 0; }
+.traffic-identity-popover .traffic-identity-eyebrow { display: flex; align-items: center; gap: 4px; color: var(--identity-muted); font-size: .64rem; line-height: 1.7; font-weight: 400; }
+.traffic-identity-eyebrow .MuiSvgIcon-root { font-size: 16px; }
+.traffic-identity-popover .traffic-identity-name { margin-block: 0 4px; font-size: .88rem; line-height: 1.6; font-weight: 700; overflow-wrap: anywhere; }
+.traffic-identity-identifiers { display: flex; flex-wrap: wrap; column-gap: 12px; row-gap: 2px; margin: 0; }
+.traffic-identity-identifiers > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 4px; min-inline-size: 0; }
+.traffic-identity-identifiers dt,
+.traffic-identity-fields dt,
+.traffic-credit-dates dt { color: var(--identity-muted); font-size: .62rem; line-height: 1.7; font-weight: 400; }
+.traffic-identity-identifiers dd,
+.traffic-identity-fields dd { margin: 0; font-size: .75rem; line-height: 1.7; font-weight: 500; overflow-wrap: anywhere; }
+.traffic-identity-identifiers dd { text-align: start; font-variant-numeric: tabular-nums; }
+.traffic-identity-section { padding-block: 6px; border-block-start: 1px solid var(--identity-line); }
+.traffic-identity-vehicle-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.traffic-identity-vehicle-name { min-inline-size: 0; overflow-wrap: anywhere; }
+.traffic-identity-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; margin: 6px 0 0; }
+.traffic-identity-fields > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; min-inline-size: 0; }
+.traffic-identity-fields > div:last-child { grid-column: 1 / -1; }
+.traffic-identity-popover .traffic-identity-section-title { margin-block-end: 2px; color: var(--identity-muted); font-size: .7rem; font-weight: 500; }
+.traffic-credit-list { overflow: visible; }
+.traffic-credit-item { padding-block: 4px; }
+.traffic-credit-item + .traffic-credit-item { border-block-start: 1px dashed var(--identity-line); }
+.traffic-credit-heading { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+.traffic-credit-heading h5 { min-inline-size: 0; font-size: .75rem; line-height: 1.7; font-weight: 600; overflow-wrap: anywhere; }
+.traffic-credit-heading .traffic-credit-status { display: inline-flex; align-items: center; flex: 0 0 auto; gap: 4px; padding: 0 6px; color: var(--identity-muted); background: color-mix(in srgb, var(--identity-muted) 6%, var(--identity-surface)); border-radius: var(--app-button-radius, 3px); font-size: .62rem; line-height: 1.8; }
+.traffic-credit-status::before { content: ''; inline-size: 4px; block-size: 4px; border-radius: 50%; background: currentColor; }
+.traffic-credit-heading .traffic-credit-status.is-active { color: var(--identity-success); background: color-mix(in srgb, var(--identity-success) 7%, var(--identity-surface)); }
+.traffic-credit-meta { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; column-gap: 12px; row-gap: 2px; margin-block-start: 2px; }
+.traffic-credit-meta .MuiTypography-root { font-size: .64rem; }
+.traffic-credit-balance { display: inline-flex; align-items: baseline; gap: 4px; flex-wrap: wrap; color: var(--identity-muted); }
+.traffic-credit-balance strong { color: var(--identity-text); font-size: .77rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.traffic-credit-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 4px 0 0; }
+.traffic-credit-dates > div { display: flex; flex-wrap: wrap; column-gap: 4px; align-items: baseline; }
+.traffic-credit-dates dd { margin: 0; color: var(--identity-muted); font-size: .68rem; line-height: 1.7; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.traffic-identity-entry-image { display: flex; align-items: center; gap: 8px; margin: 0; padding-block-start: 8px; border-block-start: 1px solid var(--identity-line); }
+.traffic-identity-entry-image img { inline-size: 80px; block-size: 48px; object-fit: contain; border: 1px solid var(--identity-line); border-radius: var(--app-control-radius, 4px); background: color-mix(in srgb, var(--identity-accent) 3%, var(--identity-surface)); }
+.traffic-identity-entry-image figcaption { color: var(--identity-muted); font-size: .65rem; }
+.traffic-identity-footer { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; padding: 4px 12px; border-block-start: 1px solid var(--identity-line); background: color-mix(in srgb, var(--identity-accent) 2%, var(--identity-surface)); }
+.traffic-identity-footer .MuiButton-root { min-inline-size: 0; min-block-size: 28px; padding: 2px 8px; font-size: .7rem; font-weight: 500; white-space: nowrap; }
+.traffic-identity-footer .MuiButton-outlined { border-color: var(--identity-line); }
+.traffic-identity-footer .MuiButton-startIcon { margin-inline-start: 0; margin-inline-end: 4px; }
+.traffic-identity-footer .MuiButton-startIcon .MuiSvgIcon-root { font-size: 16px; }
+.traffic-identity-popover .MuiButtonBase-root.Mui-focusVisible { outline: 2px solid var(--identity-accent); outline-offset: 2px; }
+.traffic-identity-popover .MuiIconButton-root.Mui-focusVisible { outline-offset: 0; }
+.traffic-control-workspace .traffic-operation-information .MuiAlert-root { padding: 4px 8px; }
+.traffic-control-workspace .traffic-operation-information .MuiAlert-message { padding-block: 2px; }
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root {
+  flex: 0 1 88px;
+  min-inline-size: 0;
+  min-block-size: 32px;
+  block-size: 32px;
+  margin: 0;
+  padding-inline: 8px;
+  gap: 4px;
+  padding-block: 4px;
+  border: 1px solid color-mix(in srgb, var(--app-divider) 72%, var(--app-surface));
+  color: var(--traffic-action-accent);
+  background: var(--app-surface);
+  white-space: nowrap;
+  font-size: .75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: none;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root > .MuiButton-startIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  block-size: 16px;
+  margin: 0;
+}
+.traffic-control-workspace .traffic-operation-actions .MuiButton-startIcon > .MuiSvgIcon-root { font-size: 16px; }
+.traffic-control-workspace .traffic-operation-actions .MuiButton-contained:not(.Mui-disabled) {
+  color: var(--traffic-action-ink);
+  background: color-mix(in srgb, var(--traffic-action-accent) 8%, var(--app-surface));
+  border-color: color-mix(in srgb, var(--traffic-action-accent) 32%, var(--app-surface));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--traffic-action-accent) 28%, transparent);
+  font-weight: 600;
+}
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root:not(.Mui-disabled):hover {
+  color: var(--traffic-action-ink);
+  border-color: color-mix(in srgb, var(--traffic-action-accent) 45%, var(--app-surface));
+  background: color-mix(in srgb, var(--traffic-action-accent) 6%, var(--app-surface));
+}
+.traffic-control-workspace .traffic-operation-actions .MuiButton-contained:not(.Mui-disabled):hover { background: color-mix(in srgb, var(--traffic-action-accent) 13%, var(--app-surface)); }
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root.Mui-focusVisible {
+  outline: 2px solid var(--traffic-action-accent);
+  outline-offset: 2px;
+}
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root:not(.Mui-disabled):active { background: color-mix(in srgb, var(--traffic-action-accent) 18%, var(--app-surface)); box-shadow: none; }
+.traffic-control-workspace .traffic-operation-actions .MuiButton-root.Mui-disabled {
+  color: color-mix(in srgb, var(--traffic-action-muted) 60%, var(--app-surface));
+  background: color-mix(in srgb, var(--app-divider) 8%, var(--app-surface));
+  border-color: color-mix(in srgb, var(--app-divider) 45%, var(--app-surface));
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .traffic-control-workspace .traffic-operation-actions .MuiButton-root { transition: none; }
 }
 @media (max-width: 900px) {
-  .traffic-control-workspace .traffic-split-grids { flex-basis: clamp(240px, 38%, 320px); }
   .traffic-control-workspace .traffic-split-grid-layout { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .traffic-control-workspace .traffic-top-grid { grid-template-columns: minmax(320px, 45%) minmax(0, 1fr); }
+  .traffic-control-camera-column { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 680px) {
+  .home3-shell:has(.traffic-control-workspace) { height: auto; min-height: 100dvh; overflow: visible; }
+  .home3-shell:has(.traffic-control-workspace) > .home3-layout { display: block; inline-size: 100%; }
+  .home3-shell:has(.traffic-control-workspace) > .home3-layout,
+  .home3-main:has(.traffic-control-workspace),
+  .home-content-section:has(> .traffic-control-workspace),
+  .home-workspace.traffic-control-workspace { overflow: visible; height: auto; flex: 1 1 auto; }
   .traffic-control-workspace .workspace-heading { flex-wrap: wrap; }
-  .traffic-control-workspace .traffic-top-grid { display: flex; flex-direction: column; overflow: auto; overscroll-behavior: contain; }
+  .traffic-control-workspace .traffic-top-grid { display: flex; flex-direction: column; flex: 0 0 auto; }
   .traffic-control-console { flex: 0 0 auto; overflow: visible; }
   .traffic-control-workspace .traffic-entry-operation,
   .traffic-control-workspace .traffic-operation-content,
   .traffic-control-workspace .traffic-operation-information { flex: 0 0 auto; overflow: visible; }
   .traffic-control-workspace .traffic-operation-latest-layout { flex: 0 0 auto; }
-  .traffic-control-camera-column { flex: 0 0 auto; }
-  .traffic-control-workspace .traffic-camera-panel { height: 180px; flex: 0 0 180px; }
-  .traffic-control-workspace .traffic-last-traffic-inline { grid-template-columns: minmax(0, 1fr); }
-  .traffic-control-workspace .traffic-split-grids { flex-basis: 42%; min-block-size: 210px; }
+  .traffic-control-workspace .traffic-operation-content { inline-size: 100%; }
+  .traffic-control-camera-column { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: minmax(0, 1fr); block-size: 240px; }
+  .traffic-control-workspace .traffic-last-traffic-inline { display: flex; }
+  .traffic-control-workspace .traffic-camera-panel { height: auto; }
+  .traffic-control-workspace .traffic-split-grids { flex: 1 1 auto; }
+  .traffic-control-workspace .traffic-split-grid-layout { flex: 1 1 auto; grid-template-rows: none; }
+  .traffic-control-workspace .traffic-split-panel .app-data-grid-wrapper { flex: 0 0 270px; block-size: 270px; }
+  .traffic-workspace-splitter { display: none; }
 }
 @media (max-width: 460px) {
+  .traffic-control-workspace .traffic-operation-actions .MuiButton-root { padding-inline: 4px; }
   .traffic-control-workspace .traffic-vehicle-identification-grid { grid-template-columns: minmax(0, 1fr); }
   .traffic-control-workspace .traffic-vehicle-identification-grid > .traffic-plate-field { max-inline-size: 190px; }
   .traffic-control-workspace .traffic-card-member-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; }

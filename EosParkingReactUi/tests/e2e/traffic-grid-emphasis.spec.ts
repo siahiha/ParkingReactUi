@@ -27,7 +27,9 @@ async function expectFittedGrid(panel: Locator) {
       const textNodes = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
       let node = textNodes.nextNode();
       while (node) {
-        if (node.textContent?.trim()) {
+        const detailedText = node.parentElement?.closest('.traffic-grid-text');
+        if (detailedText && !detailedText.getAttribute('aria-label')) problems.push('missing full text on compact cell');
+        if (node.textContent?.trim() && !detailedText) {
           const range = document.createRange();
           range.selectNodeContents(node);
           for (const textBounds of range.getClientRects()) {
@@ -79,7 +81,7 @@ for (const config of [
       let value: unknown = [];
       if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'پارکینگ مرکزی' }];
       if (url.pathname.endsWith('/GetParkingDoors')) value = [{ Id: 8, Title: 'درب اصلی' }];
-      if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, Title: 'درب اصلی' };
+      if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, Title: 'درب اصلی', DoorType: 2 };
       if (url.pathname.endsWith('/GetTraffics')) {
         refreshes++;
         value = hasNewEntry ? [...rows, { ...rows[0], DumpId: 33, EnterDateTime: '2026-11-10T12:00:00Z' }] : rows;
@@ -102,6 +104,14 @@ for (const config of [
     await expect(entries).toBeFocused();
     await expect(entries.getByRole('columnheader')).toHaveCount(5);
     await expect(exits.getByRole('columnheader')).toHaveCount(7);
+    await expect.poll(() => entries.locator('tbody tr').evaluateAll(rows => rows.every(row => {
+      const height = row.getBoundingClientRect().height;
+      return height >= 30 && height <= 32;
+    }))).toBe(true);
+    const memberText = entries.locator('.traffic-grid-text').first();
+    await memberText.focus();
+    await expect(page.getByRole('tooltip')).toContainText('VeryLongUnbrokenMembershipLabelForTheTrafficGrid');
+    await entries.focus();
 
     const expectBothFitted = async () => {
       await expectFittedGrid(entries);

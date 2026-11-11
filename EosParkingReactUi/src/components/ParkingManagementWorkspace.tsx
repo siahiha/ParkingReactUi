@@ -24,10 +24,11 @@ type Props = {
   canEdit?: boolean;
   canDelete?: boolean;
   canEditVehicle?: boolean;
+  canSearchHistory?: boolean;
 };
 
 /** Route-level composition only. Each resource owns its own state, API workflow and form. */
-export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingId, language, userId, canEdit = true, canDelete = true, canEditVehicle = false }: Props) {
+export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingId, language, userId, canEdit = true, canDelete = true, canEditVehicle = false, canSearchHistory = false }: Props) {
   if (itemKey === 'parking-list') return <ParkingDirectoryWorkspace title={title} pageTitle={pageTitle} language={language} />;
   if (itemKey === 'parking-details') return <ParkingDetailsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'users') return <UserManagementWorkspace title={title} pageTitle={pageTitle} language={language} />;
@@ -37,7 +38,7 @@ export function ParkingManagementWorkspace({ itemKey, title, pageTitle, parkingI
   if (itemKey === 'doors') return <ParkingDoorWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} canEdit={canEdit} canDelete={canDelete} />;
   if (itemKey === 'monitoring') return <MonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'shifts') return <ShiftAssignmentWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
-  if (itemKey === 'manual-traffic') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} userId={userId} canEditVehicle={canEditVehicle} showCameras />;
+  if (itemKey === 'manual-traffic') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} userId={userId} canEditVehicle={canEditVehicle} canSearchHistory={canSearchHistory} showCameras />;
   if (itemKey === 'traffic-records') return <TrafficRecordsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'anpr-monitoring') return <AnprMonitoringWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;
   if (itemKey === 'integration-settings') return <IntegrationSettingsWorkspace title={title} pageTitle={pageTitle} parkingId={parkingId} language={language} />;

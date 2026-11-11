@@ -47,7 +47,7 @@ function TrafficTable({ title, rows, columns, language, emphasized, initialFocus
   }, [rows]);
   return <Paper ref={panelRef} component="section" variant="outlined" className={`traffic-split-panel${emphasized ? ' is-emphasized' : ''}`} aria-labelledby={headingId} tabIndex={0}
     {...events}>
-    <Typography component="h3" variant="subtitle2" id={headingId} sx={{ px: 1, py: 0.75 }}>
+    <Typography component="h3" variant="subtitle2" id={headingId} sx={{ px: 1, py: 0.25 }}>
       {title} ({formatNumber(rows.length, language)})
     </Typography>
     <AppDataGrid rows={rows} columns={columns} rowKey={trafficId} direction={language === 'fa' ? 'rtl' : 'ltr'}
@@ -65,6 +65,13 @@ export function TrafficControlGrids({ rows, language, loading, error, updatedAt,
   const [cargoMenu, setCargoMenu] = useState<{ anchor: HTMLElement; row: TrafficGridRow; grid: TrafficGridId } | null>(null);
   const emphasis = useTrafficGridEmphasis(cargoMenu?.grid ?? null);
   const { entries, exits } = useMemo(() => splitTrafficRows(rows, search), [rows, search]);
+  const detailText = (value: string, visible = value, direction?: 'ltr') => <Tooltip title={value} arrow>
+    <span className="traffic-grid-text" tabIndex={0} dir={direction}>{visible}</span>
+  </Tooltip>;
+  const timeText = (value: unknown) => {
+    const date = new Date(String(value ?? ''));
+    return detailText(formatDateTime(value, language), Number.isNaN(date.getTime()) ? '—' : formatTime(date, language, { hour: '2-digit', minute: '2-digit', hour12: false }), 'ltr');
+  };
   const action = (label: string, image: string, run: (anchor: HTMLElement) => void, always = false) =>
     <Tooltip title={label} arrow slotProps={{ popper: { modifiers: [{ name: 'preventOverflow', options: { rootBoundary: 'viewport', tether: false, padding: 8 } }] } }}><span className={always ? 'traffic-grid-action' : 'traffic-grid-action traffic-grid-focused-action'}>
       <IconButton size="small" aria-label={label} disabled={busy}
@@ -75,38 +82,38 @@ export function TrafficControlGrids({ rows, language, loading, error, updatedAt,
     </span></Tooltip>;
   const membership: AppDataGridColumn<TrafficGridRow> = {
     key: 'MembershipDisplay', label: t('trafficGrid.membership'),
-    render: row => membershipText(row) || '—',
+    render: row => detailText(membershipText(row) || '—'),
   };
   const plate: AppDataGridColumn<TrafficGridRow> = {
-    key: 'CarPlate', label: t('trafficGrid.plate'),
+    key: 'CarPlate', label: t('trafficGrid.plate'), width: 86,
     render: row => <span dir="ltr">{trafficField(row, 'CarPlateReversed') ?? trafficField(row, 'CarPlate') ?? '—'}</span>,
   };
   const cargo = (grid: TrafficGridId): AppDataGridColumn<TrafficGridRow> => ({
-    key: 'CargoAction', label: '', width: 35, compact: true,
+    key: 'CargoAction', label: '', width: 30, compact: true,
     render: row => action(t('trafficGrid.cargo'), cargoIcon, anchor => setCargoMenu({ anchor, row, grid })),
   });
   const entryColumns: AppDataGridColumn<TrafficGridRow>[] = [membership, plate,
-    { key: 'EnterDateTime', label: t('trafficGrid.entryTime'), render: row => formatDateTime(trafficField(row, 'EnterDateTime'), language) },
-    { key: 'ExitAction', label: t('trafficGrid.exit'), width: 35, compact: true, render: row => action(t('trafficGrid.exit'), exitIcon, () => onExit(row), true) }, cargo('entries'),
+    { key: 'EnterDateTime', label: t('trafficGrid.entryTime'), width: 54, render: row => timeText(trafficField(row, 'EnterDateTime')) },
+    { key: 'ExitAction', label: t('trafficGrid.exit'), width: 30, compact: true, render: row => action(t('trafficGrid.exit'), exitIcon, () => onExit(row), true) }, cargo('entries'),
   ];
   const exitColumns: AppDataGridColumn<TrafficGridRow>[] = [membership, plate,
-    { key: 'ExitDateTime', label: t('trafficGrid.exitTime'), render: row => formatDateTime(trafficField(row, 'ExitDateTime'), language) },
-    { key: 'PayType', label: t('trafficGrid.paymentStatus'), render: row => {
+    { key: 'ExitDateTime', label: t('trafficGrid.exitTime'), width: 54, render: row => timeText(trafficField(row, 'ExitDateTime')) },
+    { key: 'PayType', label: t('trafficGrid.paymentShort'), render: row => {
       const value = trafficField(row, 'PayType');
       const index = Number(value);
-      return value === null || value === undefined ? '—' : Number.isInteger(index) && index >= 0 && index <= 9
-        ? t('trafficGrid.paymentTypes', { returnObjects: true })[index] : String(value);
+      return detailText(value === null || value === undefined ? '—' : Number.isInteger(index) && index >= 0 && index <= 9
+        ? t('trafficGrid.paymentTypes', { returnObjects: true })[index] : String(value));
     } },
-    { key: 'CommonCost', label: t('trafficGrid.amount'), render: row => formatNumber(trafficField(row, 'CommonCost') as string | number | null, language) },
+    { key: 'CommonCost', label: t('trafficGrid.amountShort'), width: 92, render: row => formatNumber(trafficField(row, 'CommonCost') as string | number | null, language) },
     cargo('exits'),
-    { key: 'PayAction', label: '', width: 35, compact: true, render: row => action(t('trafficGrid.pay'), paymentIcon, () => onPay(row)) },
+    { key: 'PayAction', label: '', width: 30, compact: true, render: row => action(t('trafficGrid.pay'), paymentIcon, () => onPay(row)) },
   ];
   const chooseCargo = (outbound: boolean) => {
     if (cargoMenu) onCargo(cargoMenu.row, outbound);
     setCargoMenu(null);
   };
   return <Box className="traffic-details-section traffic-split-grids" dir={language === 'fa' ? 'rtl' : 'ltr'}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+    <Box className="traffic-grid-search" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
       <TextField size="small" label={t('trafficGrid.search')} placeholder={t('trafficGrid.searchHint')}
         value={search} onChange={event => setSearch(event.target.value)} sx={{ flex: '1 1 260px' }} />
       <Button size="small" onClick={() => setSearch('')} disabled={!search}>{t('trafficGrid.clear')}</Button>

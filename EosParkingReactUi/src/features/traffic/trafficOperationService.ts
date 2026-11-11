@@ -4,9 +4,10 @@ import { trafficApi } from '../../api/management';
 import { recordValue, type RecordValue } from '../../components/management/managementTypes';
 import { appConfig } from '../../config';
 import { trafficAlerts, type TrafficAlert } from './trafficPolicy';
+import type { TrafficDoorType } from './trafficDoorService';
 
 export class TrafficOperationError extends Error {
-  constructor(public readonly userMessage = '', public readonly messageKey: TrafficAlert['key'] | 'invalidQr' | 'vehicleForbidden' | 'selectVehicle' | '' = '') { super('Traffic operation failed'); }
+  constructor(public readonly userMessage = '', public readonly messageKey: TrafficAlert['key'] | 'invalidQr' | 'vehicleForbidden' | 'selectVehicle' | 'directionUnavailable' | '' = '') { super('Traffic operation failed'); }
 }
 
 const envelopeSchema = z.object({
@@ -47,7 +48,7 @@ export function hasOpenTraffic(info: RecordValue) {
 }
 
 export type TrafficOperationInput = {
-  parkingId: number; doorId: number; userId?: number; plate: string; carType: number; info: RecordValue;
+  parkingId: number; doorId: number; doorType?: TrafficDoorType; userId?: number; plate: string; carType: number; info: RecordValue;
 };
 
 async function tariffIdFor(input: TrafficOperationInput): Promise<number> {
@@ -74,6 +75,9 @@ async function dumpPayload(input: TrafficOperationInput) {
 }
 
 function checkTraffic(input: TrafficOperationInput, direction: 'enter' | 'exit') {
+  if (input.doorType !== undefined && input.doorType !== 2 && input.doorType !== (direction === 'enter' ? 0 : 1)) {
+    throw new TrafficOperationError('', 'directionUnavailable');
+  }
   const blocked = trafficAlerts(input.info, direction, appConfig.trafficRequireExitPermission).find(alert => alert.blocked);
   if (blocked) throw new TrafficOperationError('', blocked.key);
 }

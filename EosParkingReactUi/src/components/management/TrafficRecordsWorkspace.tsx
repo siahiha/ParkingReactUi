@@ -3,8 +3,13 @@ import { AppToast } from '../AppToast';
 import '../../features/traffic/trafficWorkspace.css';
 import { useDoorTraffics } from '../../features/traffic/useDoorTraffics';
 import { useTrafficOperations } from '../../features/traffic/useTrafficOperations';
+import { useTrafficDoor } from '../../features/traffic/useTrafficDoor';
+import { trafficActionState } from '../../features/traffic/trafficActionState';
+import { TrafficOperationActions } from '../../features/traffic/TrafficOperationActions';
 import { useTrafficIdentity } from '../../features/traffic/useTrafficIdentity';
-import { TrafficIdentityDetails } from '../../features/traffic/TrafficIdentityDetails';
+import { TrafficIdentitySummary } from '../../features/traffic/TrafficIdentitySummary';
+import { TrafficWorkspaceSplitter } from '../../features/traffic/TrafficWorkspaceSplitter';
+import { TrafficDetectionPanel } from '../../features/traffic/TrafficDetectionPanel';
 import { TrafficVehicleDialog } from '../../features/traffic/TrafficVehicleDialog';
 import type { TrafficIdentity, VehicleDraft } from '../../features/traffic/trafficIdentityService';
 import { trafficAlerts } from '../../features/traffic/trafficPolicy';
@@ -12,7 +17,7 @@ import { appConfig } from '../../config';
 import { hasOpenTraffic, hasTrafficTime, TrafficOperationError, trafficResult } from '../../features/traffic/trafficOperationService';
 import { useTranslation } from 'react-i18next';
 import { AppPopup } from '../AppPopup';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Alert, Box, Button, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -50,6 +55,9 @@ type Props = {
   showCameras?: boolean;
   userId?: number;
   canEditVehicle?: boolean;
+  canSearchHistory?: boolean;
+  initialIdentity?: { plate: string; card: string; member: string; doorId: string };
+  onBusyChange?: (busy: boolean) => void;
 };
 type Option = { id: number; label: string };
 type TrafficRow = RecordValue;
@@ -166,8 +174,15 @@ export function TrafficRecordsWorkspace({
   showCameras = false,
   userId,
   canEditVehicle = false,
+  canSearchHistory = false,
+  initialIdentity,
+  onBusyChange,
 }: Props) {
   const { t } = useTranslation(undefined, { lng: language });
+  const doorLabelId = useId();
+  const topPanelRef = useRef<HTMLElement>(null);
+  const plateFieldRef = useRef<HTMLDivElement>(null);
+  const [topHeight, setTopHeight] = useState<number | null>(null);
   const operations = useTrafficOperations();
   const lookupSequence = useRef(0);
   const isPersian = language === "fa";
@@ -203,11 +218,14 @@ export function TrafficRecordsWorkspace({
     reason: "",
     description: "",
   });
-  const [plate, setPlate] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [memberCode, setMemberCode] = useState("");
+  const [plate, setPlate] = useState(initialIdentity?.plate ?? '');
+  const [cardNumber, setCardNumber] = useState(initialIdentity?.card ?? '');
+  const [memberCode, setMemberCode] = useState(initialIdentity?.member ?? '');
   const [carType, setCarType] = useState<VehiclePlateType>("0");
   const [entryDoorId, setEntryDoorId] = useState("");
+  const trafficDoor = useTrafficDoor(Number(entryDoorId), showCameras);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyBusy, setHistoryBusy] = useState(false);
   const identity = useTrafficIdentity(parkingId, entryDoorId, canEditVehicle);
   const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft | null>(null);
   const [vehicleEditing, setVehicleEditing] = useState(false);
@@ -218,6 +236,7 @@ export function TrafficRecordsWorkspace({
   const [entryDateTime, setEntryDateTime] = useState("");
   const [exitDateTime, setExitDateTime] = useState("");
   const [carInfo, setCarInfo] = useState<RecordValue | null>(null);
+  const actionState = trafficActionState(trafficDoor.door?.type, carInfo);
   const [memberCredit, setMemberCredit] = useState<RecordValue | null>(null);
   const [operationMode, setOperationMode] = useState<OperationMode>("idle");
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -235,7 +254,8 @@ export function TrafficRecordsWorkspace({
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  useEffect(() => { detectionLocked.current = working || billOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo); }, [working, billOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo]);
+  useEffect(() => { detectionLocked.current = working || billOpen || historyOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo); }, [working, billOpen, historyOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo]);
+  useEffect(() => { onBusyChange?.(working || lookupLoading || billOpen || editOpen || deleteOpen || cargoOpen); }, [onBusyChange, working, lookupLoading, billOpen, editOpen, deleteOpen, cargoOpen]);
   const handleDetection = useCallback<HshDetectionHandler>(async (event, loadArtifact) => {
     const sequence = lookupSequence.current;
     const nextPlate = normalizeIranianPlateValue(event.plateText);
@@ -351,7 +371,8 @@ export function TrafficRecordsWorkspace({
       .then((response) => {
         const next = optionRows(response);
         setDoors(next);
-        setEntryDoorId(String(next[0]?.id ?? ""));
+        const initialDoor = next.find(door => String(door.id) === initialIdentity?.doorId);
+        setEntryDoorId(String(initialDoor?.id ?? next[0]?.id ?? ""));
       })
       .catch(() => setError(copy.loadError));
   }, [parkingId]);
@@ -483,6 +504,10 @@ export function TrafficRecordsWorkspace({
       if (requestId === lookupSequence.current) setError(operationError(cause, t('trafficOperation.lookupFailed')));
     } finally { lookupInFlight.current = false; if (requestId === lookupSequence.current) setLookupLoading(false); }
   };
+  useEffect(() => {
+    // A new camera event identifies the accepted plate; it never submits traffic.
+    if (showCameras && latestDetection && plate && plate === normalizeIranianPlateValue(latestDetection.event.plateText)) void lookupCar();
+  }, [latestDetection]);
   const openVehicle = (editing: boolean) => {
     if (!canEditVehicle || !carInfo) return;
     setVehicleEditing(editing); setVehicleError('');
@@ -529,8 +554,9 @@ export function TrafficRecordsWorkspace({
     setError("");
     try {
       if (showCameras) {
+        if (!actionState.canEnter) throw new TrafficOperationError('', 'directionUnavailable');
         if (needsVehicle) throw new TrafficOperationError('', 'selectVehicle');
-        await operations.enter({ parkingId, doorId: Number(entryDoorId), userId, plate, carType: Number(carType), info: carInfo ?? {} });
+        await operations.enter({ parkingId, doorId: Number(entryDoorId), doorType: trafficDoor.door?.type, userId, plate, carType: Number(carType), info: carInfo ?? {} });
       } else trafficResult(await trafficApi.createManualDump({
         plate,
         parkingId,
@@ -869,8 +895,9 @@ export function TrafficRecordsWorkspace({
     setWorking(true);
     setError("");
     try {
+      if (showCameras && !actionState.canExit) throw new TrafficOperationError('', 'directionUnavailable');
       const bill = await operations.exit({
-        parkingId, doorId: Number(entryDoorId), userId, plate, carType: Number(carType), info: carInfo ?? {},
+        parkingId, doorId: Number(entryDoorId), doorType: showCameras ? trafficDoor.door?.type : undefined, userId, plate, carType: Number(carType), info: carInfo ?? {},
       }, apiDateTime(exitDateTime));
       clearLookup();
       setPlate('');
@@ -1060,8 +1087,9 @@ export function TrafficRecordsWorkspace({
         "& .MuiSelect-select": { py: 0.5 },
       }}
     >
-      <InputLabel>{copy.door}</InputLabel>
+      <InputLabel id={doorLabelId}>{copy.door}</InputLabel>
       <Select
+        labelId={doorLabelId}
         label={copy.door}
         disabled={working || billOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft)}
         value={entryDoorId}
@@ -1075,7 +1103,7 @@ export function TrafficRecordsWorkspace({
       </Select>
     </FormControl>
   );
-  const operationTitle =
+  const operationTitle = showCameras ? t('trafficOperation.title') :
     operationMode === "exit"
       ? isPersian
         ? "ثبت خروج"
@@ -1099,10 +1127,22 @@ export function TrafficRecordsWorkspace({
         : "";
   const billValue = (key: string, fallback = "—") =>
     String(valueOf(exitBill ?? {}, key) ?? fallback);
-  const policyAlerts = showCameras ? trafficAlerts(carInfo, operationMode === 'exit' ? 'exit' : 'enter', appConfig.trafficRequireExitPermission) : [];
+  const policyAlerts = showCameras ? trafficAlerts(carInfo, actionState.direction === 'exit' ? 'exit' : 'enter', appConfig.trafficRequireExitPermission) : [];
   const needsVehicle = showCameras && operationMode === 'enter' && Boolean(carInfo) && numberOf(valueOf(carInfo ?? {}, 'MemberId')) > 0
     && !identity.details?.cars.some(car => car.Id === numberOf(valueOf(carInfo ?? {}, 'CarId')) && normalizeIranianPlateValue(car.Plate) === plate);
-  const identityBusy = working || operations.pending || billOpen || lookupLoading || vehicleBusy;
+  const identityBusy = working || operations.pending || billOpen || historyOpen || lookupLoading || vehicleBusy;
+  const cancelTraffic = () => {
+    clearLookup(); setPlate(''); setCardNumber(''); setMemberCode(''); setEntryDateTime(''); setExitDateTime('');
+    setLatestDetection(null); setError(''); setNotice('');
+    // Restore keyboard entry after React clears and re-enables the plate fields.
+    requestAnimationFrame(() => plateFieldRef.current?.querySelector<HTMLInputElement>('input')?.focus());
+  };
+  const closeHistory = () => {
+    if (historyBusy) return;
+    setHistoryOpen(false);
+    void lookupCar(true);
+    void doorTraffics.refresh();
+  };
 
   return (
     <ManagementWorkspaceFrame
@@ -1111,7 +1151,7 @@ export function TrafficRecordsWorkspace({
       pageTitle={pageTitle}
       language={language}
       loading={loading}
-      onRefresh={() => void load()}
+      onRefresh={() => { void load(); if (showCameras && trafficDoor.error) trafficDoor.refresh(); }}
       headingActions={doorSelector}
     >
       {showCameras && <AppToast message={error || notice} severity={error ? 'error' : 'success'} onClose={() => { setError(''); setNotice(''); }} />}
@@ -1125,7 +1165,7 @@ export function TrafficRecordsWorkspace({
           {error}
         </Alert>
       )}
-      <Box className="traffic-top-grid">
+      <Box ref={topPanelRef} className="traffic-top-grid" style={showCameras && topHeight !== null ? { flexBasis: `clamp(248px, ${topHeight}px, calc(100% - 200px))` } : undefined}>
         <Box className={showCameras ? 'traffic-control-console' : 'traffic-history-console'}>
           <Tooltip
             title={isPersian ? "شناسایی خودرو" : "Vehicle identification"}
@@ -1175,7 +1215,7 @@ export function TrafficRecordsWorkspace({
                     onBlur={() => void lookupCar()}
                   />
                 </Box>
-                <Box className="traffic-plate-field">
+                <Box ref={plateFieldRef} className="traffic-plate-field">
                   <IranianPlateInput
                     label={copy.plate}
                     value={plate}
@@ -1212,8 +1252,15 @@ export function TrafficRecordsWorkspace({
             >
               <Box className="traffic-operation-latest-layout">
                 <Box className="traffic-operation-content">
+                  {showCameras && <Box className="traffic-operation-actions">
+                    <TrafficOperationActions language={language} state={actionState}
+                      busy={identityBusy || trafficDoor.loading} blocked={needsVehicle || policyAlerts.some(alert => alert.blocked)}
+                      canSearch={canSearchHistory} canCancel={Boolean(plate || cardNumber || memberCode || carInfo || latestDetection)}
+                      onEnter={() => void registerTraffic()} onExit={() => void registerExit()}
+                      onSearch={() => { if (canSearchHistory && carInfo) setHistoryOpen(true); }} onCancel={cancelTraffic} />
+                  </Box>}
                   <Box className="traffic-operation-information">
-                    {operationHint && (
+                    {!showCameras && operationHint && (
                       <Typography
                         variant="body2"
                         color="text.secondary"
@@ -1222,7 +1269,7 @@ export function TrafficRecordsWorkspace({
                         {operationHint}
                       </Typography>
                     )}
-                    <Box className="traffic-operation-details" aria-label={isPersian ? "مشخصات پلاک انتخاب‌شده" : "Selected plate details"}>
+                    {!showCameras && <Box className="traffic-operation-details" aria-label={isPersian ? "مشخصات پلاک انتخاب‌شده" : "Selected plate details"}>
                       <Typography variant="body2" className="traffic-operation-detail-row">
                         <span>{isPersian ? "پلاک" : "Plate"}</span>
                         <strong dir="ltr">{plate || "—"}</strong>
@@ -1259,16 +1306,20 @@ export function TrafficRecordsWorkspace({
                           </Typography>}
                         </>
                       )}
-                    </Box>
-                    {showCameras && identity.details && <TrafficIdentityDetails details={identity.details} language={language}
+                    </Box>}
+                    {showCameras && !identity.details && <Typography variant="body2" color="text.secondary">{t('trafficIdentity.identifyHint')}</Typography>}
+                    {showCameras && identity.details && <TrafficIdentitySummary details={identity.details} language={language}
                       busy={identityBusy} canEdit={canEditVehicle} onSelect={nextPlate => void selectVehicle(nextPlate)}
                       onAdd={() => openVehicle(false)} onEdit={() => openVehicle(true)} onRetry={() => void lookupCar(true)} />}
                     {policyAlerts.map(alert => <Alert key={alert.key} severity={alert.blocked ? 'error' : 'warning'}>
                       {t(`trafficIdentity.${alert.key}`)}{alert.description ? ` — ${alert.description}` : ''}
                     </Alert>)}
+                    {showCameras && trafficDoor.error && <Alert severity="error">{t('trafficIdentity.doorError')}</Alert>}
+                    {showCameras && carInfo && actionState.direction === 'exit' && !actionState.canExit && <Alert severity="warning">{t('trafficIdentity.noEntry')}</Alert>}
+                    {showCameras && carInfo && actionState.direction === 'enter' && !actionState.canEnter && <Alert severity="warning">{t('trafficIdentity.alreadyEntered')}</Alert>}
                   </Box>
-                  <Box className="traffic-operation-actions">
-                    {operationMode === "exit" && !showCameras && (
+                  {!showCameras && <Box className="traffic-operation-actions">
+                    {operationMode === "exit" && (
                       <Typography variant="body2" sx={{ mb: 1.5 }}>
                         {isPersian ? "زمان ورود: " : "Entry time: "}
                         <strong>
@@ -1279,7 +1330,7 @@ export function TrafficRecordsWorkspace({
                         </strong>
                       </Typography>
                     )}
-                    {operationMode === "enter" && !showCameras && (
+                    {operationMode === "enter" && (
                       <EosDateTimePicker
                         language={language}
                         label={copy.entry}
@@ -1287,7 +1338,7 @@ export function TrafficRecordsWorkspace({
                         onChange={setEntryDateTime}
                       />
                     )}
-                    {operationMode === "exit" && !showCameras && (
+                    {operationMode === "exit" && (
                       <EosDateTimePicker
                         language={language}
                         label={copy.exit}
@@ -1308,11 +1359,7 @@ export function TrafficRecordsWorkspace({
                           ? (isPersian ? "ثبت ورود" : "Register entry")
                           : t('trafficOperation.lookup')}
                     </Button>
-                    {showCameras && <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button size="small" disabled={identityBusy || !carInfo} onClick={() => void lookupCar(true)}>{t('trafficIdentity.refreshIdentity')}</Button>
-                      <Button size="small" disabled={identityBusy} onClick={() => { clearLookup(); setPlate(''); setCardNumber(''); setMemberCode(''); setError(''); }}>{t('trafficIdentity.clear')}</Button>
-                    </Box>}
-                  </Box>
+                  </Box>}
                 </Box>
               </Box>
             </Paper>
@@ -1325,65 +1372,11 @@ export function TrafficRecordsWorkspace({
               language={language}
               onDetection={handleDetection}
             />
-            <Tooltip
-              title={isPersian ? "آخرین تردد" : "Latest traffic"}
-              placement="top"
-              arrow
-            >
-              <Paper variant="outlined" className="traffic-last-traffic-inline">
-                {latestDetection ? (
-                  <>
-                    <Typography variant="body2" className="traffic-latest-detail-row">
-                      <span>{isPersian ? "تاریخ و ساعت" : "Date and time"}</span>
-                      <strong dir="ltr">{dateTime(latestDetection.event.occurredAtUtc, isPersian)}</strong>
-                    </Typography>
-                    <Typography variant="body2" className="traffic-latest-detail-row">
-                      <span>{isPersian ? "پلاک" : "Plate"}</span>
-                      <strong dir="ltr">{latestDetection.event.plateText || "—"}</strong>
-                    </Typography>
-                    <Box className="traffic-latest-image-stack">
-                      <Box className="traffic-plate-preview">
-                        {latestDetection.plateImageUrl ? (
-                          <Box
-                            component="img"
-                            src={latestDetection.plateImageUrl}
-                            alt={isPersian ? "تصویر پلاک آخرین تشخیص" : "Latest plate crop"}
-                          />
-                        ) : (
-                          <Typography variant="caption" color="text.secondary">
-                            {isPersian ? "تصویر پلاک موجود نیست" : "Plate image unavailable"}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Box className="traffic-fullframe-preview">
-                        {latestDetection.fullFrameUrl ? (
-                          <Box
-                            component="img"
-                            src={latestDetection.fullFrameUrl}
-                            alt={isPersian ? "تصویر کامل آخرین تشخیص پلاک" : "Latest full-frame detection"}
-                          />
-                        ) : (
-                          <Typography variant="caption" color="text.secondary">
-                            {isPersian ? "تصویر Full Frame موجود نیست" : "Full-frame image unavailable"}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </>
-                ) : (
-                  <Box className="traffic-last-traffic-placeholder">
-                    <Typography variant="body2" color="text.secondary">
-                      {isPersian
-                        ? "تصویر آخرین تشخیص در دسترس نیست"
-                        : "Latest detection image is unavailable"}
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            </Tooltip>
+            <TrafficDetectionPanel detection={latestDetection} language={language} />
           </Box>
         )}
       </Box>
+      {showCameras && <TrafficWorkspaceSplitter panelRef={topPanelRef} onResize={setTopHeight} language={language} />}
       {showCameras ? (
         <TrafficControlGrids key={`${parkingId}:${entryDoorId}`} rows={rows} language={language}
           loading={doorTraffics.loading} error={doorTraffics.error} updatedAt={doorTraffics.updatedAt}
@@ -1402,7 +1395,7 @@ export function TrafficRecordsWorkspace({
             direction={isPersian ? "rtl" : "ltr"}
             rows={visibleRows}
             columns={recordColumns}
-            filterable={false}
+            filterable={Boolean(initialIdentity)}
             rowKey={(row) =>
               String(valueOf(row, "DumpId") ?? valueOf(row, "Id"))
             }
@@ -1418,6 +1411,11 @@ export function TrafficRecordsWorkspace({
       </Box>}
       {showCameras && <TrafficVehicleDialog draft={vehicleDraft} editing={vehicleEditing} language={language} busy={vehicleBusy}
         error={vehicleError} onClose={() => setVehicleDraft(null)} onSave={draft => void saveVehicle(draft)} />}
+      {showCameras && historyOpen && carInfo && <AppPopup open title={t('homeMenu.items.traffic-records')}
+        onClose={closeHistory} busy={historyBusy} maxWidth="xl" cancelLabel={t('trafficIdentity.close')}>
+        <TrafficRecordsWorkspace title={t('trafficOperation.search')} parkingId={parkingId} language={language}
+          initialIdentity={{ plate, card: cardNumber, member: memberCode, doorId: entryDoorId }} onBusyChange={setHistoryBusy} />
+      </AppPopup>}
       <AppPopup dir={isPersian ? "rtl" : "ltr"} open={cargoOpen} onClose={() => {
           if (!cargoLoading) setCargoOpen(false);
         }} maxWidth="md" busy={cargoLoading} title={cargoOutbound

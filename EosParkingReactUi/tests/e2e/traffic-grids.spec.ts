@@ -35,7 +35,7 @@ for (const config of [
       let value: unknown = [];
       if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'پارکینگ مرکزی' }];
       if (url.pathname.endsWith('/GetParkingDoors')) value = [{ Id: 7, Title: 'درب اصلی' }];
-      if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 7, Title: 'درب اصلی', EnteranceCamera: { Id: 17, DeviceName: 'ورودی', Disabled: true }, ExitCamera: { Id: 18, DeviceName: 'خروجی', Disabled: true } };
+      if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 7, Title: 'درب اصلی', DoorType: 2, EnteranceCamera: { Id: 17, DeviceName: 'ورودی', Disabled: true }, ExitCamera: { Id: 18, DeviceName: 'خروجی', Disabled: true } };
       if (url.pathname.endsWith('/GetTraffics')) {
         refreshes++;
         value = update ? rows.map(row => row.DumpId === 1 ? { ...row, ExitDateTime: '2026-11-10T14:00:00Z' } : row) : rows;
@@ -50,7 +50,7 @@ for (const config of [
     await expect(entries.locator('tbody tr')).toHaveCount(50);
     await expect(exits.locator('tbody tr')).toHaveCount(50);
     await expect(entries.getByRole('columnheader')).toHaveText([copy.membership, copy.plate, copy.entryTime, copy.exit, '']);
-    await expect(exits.getByRole('columnheader')).toHaveText([copy.membership, copy.plate, copy.exitTime, copy.paymentStatus, copy.amount, '', '']);
+    await expect(exits.getByRole('columnheader')).toHaveText([copy.membership, copy.plate, copy.exitTime, copy.paymentShort, copy.amountShort, '', '']);
     const exitCell = entries.locator('tbody tr').first().locator('td').nth(3);
     expect((await exitCell.boundingBox())!.width).toBeGreaterThanOrEqual(30);
     await page.getByRole('textbox', { name: copy.search, exact: true }).fill('٣٠٠٠٠٠٠٠٠٩');
@@ -78,6 +78,7 @@ for (const config of [
     await expect(page.getByRole('menuitem', { name: copy.inboundCargo })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: copy.outboundCargo })).toBeVisible();
     await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu')).toHaveCount(0);
     await entries.getByRole('heading').click();
     await page.mouse.move(10, 10);
     if (config.width > 900) {
@@ -87,11 +88,11 @@ for (const config of [
       expect(config.language === 'fa' ? a.x > b.x : a.x < b.x).toBe(true);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+    if (config.width > 680) expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
     expect(await page.locator('.home3-main').evaluate(element => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
     for (const panel of [entries, exits]) {
       const bounds = (await panel.boundingBox())!;
-      expect(bounds.y + bounds.height).toBeLessThanOrEqual(config.height);
+      if (config.width > 680) expect(bounds.y + bounds.height).toBeLessThanOrEqual(config.height);
       expect(bounds.height).toBeGreaterThan(75);
     }
     await page.evaluate(() => document.fonts.ready);

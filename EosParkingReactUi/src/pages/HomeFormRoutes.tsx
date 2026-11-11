@@ -97,6 +97,7 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
     return <MemberManagementWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }
   return <ParkingManagementWorkspace itemKey={item.key} title={item.label} parkingId={selectedParkingId} language={language} userId={user.id}
+    canSearchHistory={visibleParkingMenuItems.some(menu => menu.key === 'traffic-records')}
     canEditVehicle={user.canManageDashboard || hasPart1(1n << 43n, 'ParkingManualIOEditCarInfo')} />;
 }
 

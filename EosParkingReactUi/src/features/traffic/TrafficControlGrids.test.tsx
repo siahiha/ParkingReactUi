@@ -15,7 +15,7 @@ describe('traffic control grids', () => {
     const entries = screen.getByRole('region', { name: 'ورودها (۱)' });
     const exits = screen.getByRole('region', { name: 'خروج‌ها (۱)' });
     expect(within(entries).getAllByRole('columnheader').map(cell => cell.textContent)).toEqual(['عضویت', 'پلاک', 'زمان ورود', 'خروج', '']);
-    expect(within(exits).getAllByRole('columnheader').map(cell => cell.textContent)).toEqual(['عضویت', 'پلاک', 'زمان خروج', 'وضعیت پرداخت', 'مبلغ پرداختی', '', '']);
+    expect(within(exits).getAllByRole('columnheader').map(cell => cell.textContent)).toEqual(['عضویت', 'پلاک', 'زمان خروج', 'پرداخت', 'مبلغ', '', '']);
     fireEvent.doubleClick(within(entries).getByText('علی - 123'));
     expect(base.onExit).toHaveBeenCalledWith(rows[0]);
     fireEvent.click(within(exits).getByRole('button', { name: 'پرداخت مبلغ خروج' }));

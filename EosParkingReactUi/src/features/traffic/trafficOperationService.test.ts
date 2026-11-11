@@ -7,6 +7,12 @@ const openInfo = { ...input.info, DumpId: 42, EnterDateTime: '2026-11-10T08:00:0
 
 describe('traffic registration contract', () => {
   afterEach(() => vi.restoreAllMocks());
+  it('rejects entry at exit-only/internal doors and exit at entry-only/internal doors before sending a mutation', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch');
+    for (const doorType of [1, 3] as const) await expect(trafficOperationService.enter({ ...input, doorType })).rejects.toHaveProperty('messageKey', 'directionUnavailable');
+    for (const doorType of [0, 3] as const) await expect(trafficOperationService.exit({ ...input, info: openInfo, doorType }, null)).rejects.toHaveProperty('messageKey', 'directionUnavailable');
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it('posts a live entry with resolved identifiers and lets the server set entry time', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({ Id: 42, EnterDateTime: '2026-11-10T08:00:00' }));
     expect(await trafficOperationService.enter(input)).toHaveProperty('Id', 42);

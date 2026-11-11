@@ -19,7 +19,7 @@ test('entry and exit buttons persist traffic and retain the form on API business
     let message = '';
     if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'پارکینگ' }];
     if (url.pathname.endsWith('/GetParkingDoors')) value = [{ Id: 8, Title: 'درب اصلی' }];
-    if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, Title: 'درب اصلی' };
+    if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, Title: 'درب اصلی', DoorType: 2 };
     if (url.pathname.endsWith('/GetTraffics')) value = entered ? [{ ...row, ExitDateTime: exited ? '2026-11-10T10:00:00' : null }] : [];
     if (url.pathname.endsWith('/GetCarTrafficInfo')) value = { ...row, Plate: row.CarPlate, DumpId: entered ? 42 : 0, EnterDateTime: entered ? row.EnterDateTime : null };
     if (url.pathname.endsWith('/CreateEnterDump')) {
@@ -40,7 +40,7 @@ test('entry and exit buttons persist traffic and retain the form on API business
   const card = page.getByRole('textbox', { name: 'شماره کارت', exact: true });
   await card.fill('1234');
   await card.press('Tab');
-  const enter = page.getByRole('button', { name: 'ثبت ورود', exact: true });
+  const enter = page.locator('.traffic-operation-actions').getByRole('button', { name: 'ورود', exact: true });
   await expect(enter).toBeEnabled();
   const dateInputs = page.getByRole('textbox', { name: /^تاریخ و زمان (ورود|خروج)$/ });
   await expect(dateInputs).toHaveCount(0);
@@ -56,7 +56,7 @@ test('entry and exit buttons persist traffic and retain the form on API business
   expect(mutations[1].body).toMatchObject({ DoSave: true, SourceType: 2, DoorId: 8, CardId: 12, PersistBy: 7 });
   expect(mutations[1].body).not.toHaveProperty('EnterDateTime');
   await entries.getByRole('button', { name: 'خروج', exact: true }).click();
-  const exit = page.getByRole('button', { name: 'محاسبه مبلغ و ثبت خروج', exact: true });
+  const exit = page.locator('.traffic-operation-actions').getByRole('button', { name: 'خروج', exact: true });
   await expect(exit).toBeEnabled();
   await expect(dateInputs).toHaveCount(0);
   await exit.click();
