@@ -7,6 +7,8 @@ import VideocamRoundedIcon from '@mui/icons-material/VideocamRounded';
 import { ApiError } from '../../api/client';
 import { cameraApi, type Camera, parkingApi } from '../../api/management';
 import { parseHshDetectionConfig } from '../../api/hshDetectionRealtime';
+import { parseShahabDetectionConfig } from '../../api/shahabDetectionConfig';
+import { useTranslation } from 'react-i18next';
 import { AppDataGrid } from '../AppDataGrid';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { CrudDialog } from '../CrudDialog';
@@ -56,6 +58,7 @@ function toCamera(draft: Draft): Camera {
 }
 
 export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const [rows, setRows] = useState<RecordValue[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
@@ -105,8 +108,8 @@ export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language
       setError(text(language, 'نام و اطلاعات ارتباطی معتبر الزامی است.', 'Name and valid connection details are required.'));
       return;
     }
-    if (camera && draft.detectionServerAddress.trim() && !parseHshDetectionConfig(draft.detectionServerAddress)) {
-      setError(text(language, 'فرمت سرویس تشخیص پلاک باید مانند Eos|http://192.168.1.20:5080|customer-gate-plate باشد.', 'Use the plate-detection format Eos|http://192.168.1.20:5080|customer-gate-plate.'));
+    if (camera && draft.detectionServerAddress.trim() && !parseHshDetectionConfig(draft.detectionServerAddress) && !parseShahabDetectionConfig(draft.detectionServerAddress)) {
+      setError(t('trafficLayout.detectionSettingError'));
       return;
     }
     setBusy(true);
@@ -185,7 +188,7 @@ export function CameraEquipmentWorkspace({ title, pageTitle, parkingId, language
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
             {!camera && <TextField select label={text(language, 'نوع ارتباط', 'Connection type')} value={draft.connectionType} onChange={(event) => update('connectionType', event.target.value)}><MenuItem value="0">{text(language, 'سریال', 'Serial')}</MenuItem><MenuItem value="1">TCP/IP</MenuItem></TextField>}
             {camera ? <>{field('ip', text(language, 'آدرس دوربین', 'Camera address'), { dir: 'ltr' })}{field('port', text(language, 'پورت دوربین', 'Camera port'), { dir: 'ltr' })}{field('username', text(language, 'نام کاربری', 'Username'), { dir: 'ltr' })}{field('password', text(language, 'رمز عبور', 'Password'), { dir: 'ltr', type: 'password' })}{field('rtspUrl', 'RTSP URL', { dir: 'ltr' })}</> : <>{tcp ? <>{field('ip', text(language, 'آدرس دستگاه', 'Device address'), { dir: 'ltr' })}{field('port', text(language, 'پورت', 'Port'), { dir: 'ltr' })}</> : <>{field('comPort', 'COM', { dir: 'ltr' })}{field('baudRate', text(language, 'نرخ انتقال داده', 'Baud rate'), { dir: 'ltr' })}</>}{field('relay', text(language, 'رله', 'Relay'), { dir: 'ltr' })}{field('readTimeout', text(language, 'انتظار برای خواندن', 'Read timeout'), { dir: 'ltr' })}{field('writeTimeout', text(language, 'انتظار برای نوشتن', 'Write timeout'), { dir: 'ltr' })}{<FormControlLabel control={<Checkbox size="small" checked={draft.pcCheck} onChange={(event) => update('pcCheck', event.target.checked)} />} label={text(language, 'کنترل PC', 'PC check')} />}{draft.deviceType === '1' && <FormControlLabel control={<Checkbox size="small" checked={draft.byService} onChange={(event) => update('byService', event.target.checked)} />} label={text(language, 'کنترل از سرویس', 'By service')} />}</>}
-            {camera && <Box sx={{ gridColumn: { md: '1 / -1' }, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>{field('detectionServerAddress', text(language, 'سرویس تشخیص پلاک', 'Plate detection service'), { dir: 'ltr', placeholder: 'Eos|http://192.168.1.20:5080|customer-gate-plate', helperText: text(language, 'فرمت: Eos|آدرس سرویس|شناسه Trigger', 'Format: Eos|service URL|Trigger ID') })}{field('detectionLeft', text(language, 'چپ محدوده', 'Detection left'), { dir: 'ltr' })}{field('detectionTop', text(language, 'بالای محدوده', 'Detection top'), { dir: 'ltr' })}{field('detectionWidth', text(language, 'عرض تصویر', 'Detection width'), { dir: 'ltr' })}{field('detectionHeight', text(language, 'ارتفاع تصویر', 'Detection height'), { dir: 'ltr' })}</Box>}
+            {camera && <Box sx={{ gridColumn: { md: '1 / -1' }, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>{field('detectionServerAddress', t('trafficLayout.detectionSettingLabel'), { dir: 'ltr', placeholder: 'db://cameraid=1', helperText: t('trafficLayout.detectionSettingHint') })}{field('detectionLeft', text(language, 'چپ محدوده', 'Detection left'), { dir: 'ltr' })}{field('detectionTop', text(language, 'بالای محدوده', 'Detection top'), { dir: 'ltr' })}{field('detectionWidth', text(language, 'عرض تصویر', 'Detection width'), { dir: 'ltr' })}{field('detectionHeight', text(language, 'ارتفاع تصویر', 'Detection height'), { dir: 'ltr' })}</Box>}
           </Box>
           <Box sx={{ mt: 2, display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
             {camera ? <><Button size="small" startIcon={<VideocamRoundedIcon />} onClick={() => setPreview(toCamera(draft))}>{text(language, 'تست ارتباط دوربین', 'Test camera connection')}</Button>{preview && <CameraStreamPreview camera={preview} language={language} viewer={viewer} size={200} />}</> : <Button size="small" onClick={() => setMessage(text(language, 'آماده تست اتصال دستگاه است.', 'The device is ready for connection testing.'))}>{text(language, 'تست اتصال', 'Test connection')}</Button>}

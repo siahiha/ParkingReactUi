@@ -424,8 +424,9 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
 
   return <Paper className="camera-stream-preview" variant="outlined" sx={{ mt: compact ? 0.25 : 1.5, width: previewSize.width, maxWidth: '100%', p: compact ? 0.5 : 0.75, borderRadius: compact ? 1 : 1.5, overflow: 'hidden' }}>
     <Stack direction="row" spacing={compact ? 0.5 : 0.75} sx={{ alignItems: 'center', minHeight: compact ? 20 : 24, overflow: 'hidden' }}>
-      {showStatus && <Tooltip title={statusDetails} arrow>
-        <Box component="span" sx={{ display: 'inline-flex', flexShrink: 0, color: statusColor(status.state), cursor: 'help' }}>
+      {(showStatus || error) && <Tooltip title={statusDetails} arrow>
+        <Box component="span" role="img" tabIndex={0} aria-label={statusDetails} sx={{ display: 'inline-flex', flexShrink: 0, color: error ? 'warning.main' : statusColor(status.state), cursor: 'help',
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 } }}>
           {status.state === 'Connected' ? <PowerRoundedIcon sx={{ fontSize: 20 }} /> : <PowerOffRoundedIcon sx={{ fontSize: 20 }} />}
         </Box>
       </Tooltip>}

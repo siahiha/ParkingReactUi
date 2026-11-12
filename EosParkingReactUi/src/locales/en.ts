@@ -1,4 +1,18 @@
 const en = {
+  liveUpdates: {
+    monitoringForbidden: 'Monitoring access is forbidden.', doorsFailed: 'Loading live doors failed.',
+    trafficForbidden: 'Live traffic access is forbidden.', trafficFailed: 'Loading live traffic failed.',
+    anprFailed: 'Live ANPR connection failed.',
+  },
+  plateHistory: {
+    time: 'Time', direction: 'Direction', loading: 'Loading today’s detections…', loadError: 'Today’s history could not be loaded. Retrying.', todayCount: '{{value}} detections today',
+    title: 'Recent plates', records: 'Detected plate history', search: 'Search plates', filter: 'Filter detections',
+    all: 'All', fresh: 'Fresh', repeated: 'Repeated', noDetection: 'No detections', empty: 'No plate has been received yet.', noResults: 'No plates found.',
+    secondsAgo: '{{value}} seconds ago', minutesAgo: '{{value}} minutes ago', hoursAgo: '{{value}} hours ago', count: '{{value}} of {{total}} detections',
+    moveHint: 'Drag to move, or use the arrow keys.', camera: 'Camera {{id}}',
+    selectPlate: 'Select plate {{plate}}, {{state}}, {{direction}}', replacePrompt: 'Replace the current details with plate {{plate}}?',
+    replace: 'Replace and look up', keepCurrent: 'Keep current details',
+  },
   trafficPayment: {
     title: 'Parking fee payment', entryTime: 'Entry date and time', exitTime: 'Exit date and time',
     totalStay: 'Total stay', totalDuration: 'Total duration', totalCost: 'Total cost', membershipUsed: 'Membership used',
@@ -9,9 +23,20 @@ const en = {
     invalidBill: 'The bill is incomplete. Try again from the exits list.',
   },
   trafficLayout: {
+    shahabStatus: 'Shahab plate detection: {{status}}',
+    shahabLastMessage: 'Last message received: {{time}}', shahabNoMessage: 'No message received yet.',
+    shahabStates: {
+      connected: 'Connected and receiving', connecting: 'Connecting', reconnecting: 'Reconnecting',
+      unavailable: 'The plate-detection service is unavailable.', unauthorized: 'Sign in again',
+      forbidden: 'Access denied', notFound: 'Door or camera not found', invalidConfiguration: 'The camera plate-detection setting is invalid.',
+    },
+    detectionSettingLabel: 'Plate detection service',
+    detectionSettingHint: 'Shahab: db://cameraid=1 — Other service: Eos|service URL|Trigger ID',
+    detectionSettingError: 'Enter a valid Shahab camera ID, such as db://cameraid=1, or Eos|service URL|Trigger ID.',
     doorType: 'Door type', doorTypes: ['Entrance', 'Exit', 'Entrance and exit', 'Internal'], doorLoading: 'Loading…', doorUnknown: 'Unavailable',
     resize: 'Resize images and tables', latestDetection: 'Latest detection', fullFrame: 'Latest full-frame detection', plateImage: 'Latest plate crop',
     enlarge: 'Enlarge image', imageUnavailable: 'Image unavailable', detectionUnavailable: 'Latest detection image is unavailable',
+    showBothCameras: 'Show both cameras', showCameraTabs: 'Show cameras in tabs', bothCameras: 'Entry and exit together',
     entryCamera: 'Entry camera', exitCamera: 'Exit camera', entry: 'Entry', exit: 'Exit',
     cameraError: 'Camera information could not be loaded.', detectionConfigError: 'The camera plate-detection setting is invalid.', detectionError: 'The plate-detection service is unavailable.',
     cameraLoading: 'Loading camera…', noCamera: 'No active camera is configured for this door.', cameraUnavailable: 'The selected camera image is unavailable.',

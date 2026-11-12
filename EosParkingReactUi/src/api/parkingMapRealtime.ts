@@ -1,4 +1,4 @@
-import { appConfig } from '../config';
+import { anprSignalRUrl } from '../config';
 import { loadLegacySignalRClient, type LegacySignalRConnection, type LegacySignalRProxy } from './legacySignalRClient';
 import { parseParkingMapError, parseParkingMapUpdate, type ParkingMapPage, type ParkingMapQuery, type ParkingMapStatus } from '../features/home/parkingMapService';
 
@@ -26,7 +26,7 @@ export class ParkingMapRealtimeConnection {
     try {
       const client = await loadLegacySignalRClient();
       if (this.stopped) return;
-      const connection = client.hubConnection(appConfig.anprSignalRUrl.replace(/\/$/, ''), { useDefaultPath: false, withCredentials: true });
+      const connection = client.hubConnection(anprSignalRUrl().replace(/\/$/, ''), { useDefaultPath: false, withCredentials: true });
       const proxy = connection.createHubProxy('parkingMapHub');
       this.connection = connection;
       this.proxy = proxy;

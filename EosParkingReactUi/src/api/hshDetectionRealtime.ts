@@ -22,6 +22,7 @@ export type HshDetectionSource = {
 export type HshDetectionArtifact = Record<string, unknown>;
 
 export type HshDetectionEvent = {
+  suppressAutomaticInput?: boolean;
   eventId: string;
   sequence: number;
   eventType: string;

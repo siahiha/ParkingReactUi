@@ -13,6 +13,8 @@ import { useTrafficIdentity } from '../../features/traffic/useTrafficIdentity';
 import { TrafficIdentitySummary } from '../../features/traffic/TrafficIdentitySummary';
 import { TrafficWorkspaceSplitter } from '../../features/traffic/TrafficWorkspaceSplitter';
 import { TrafficDetectionPanel } from '../../features/traffic/TrafficDetectionPanel';
+import { FloatingPlateHistory } from '../../features/traffic/FloatingPlateHistory';
+import { usePlateDetectionHistory } from '../../features/traffic/usePlateDetectionHistory';
 import { TrafficVehicleDialog } from '../../features/traffic/TrafficVehicleDialog';
 import type { TrafficIdentity, VehicleDraft } from '../../features/traffic/trafficIdentityService';
 import { trafficAlerts } from '../../features/traffic/trafficPolicy';
@@ -184,6 +186,7 @@ export function TrafficRecordsWorkspace({
   const { t } = useTranslation(undefined, { lng: language });
   const doorLabelId = useId();
   const topPanelRef = useRef<HTMLElement>(null);
+  const detectionPanelRef = useRef<HTMLDivElement>(null);
   const plateFieldRef = useRef<HTMLDivElement>(null);
   const [topHeight, setTopHeight] = useState<number | null>(null);
   const operations = useTrafficOperations();
@@ -226,6 +229,9 @@ export function TrafficRecordsWorkspace({
   const [memberCode, setMemberCode] = useState(initialIdentity?.member ?? '');
   const [carType, setCarType] = useState<VehiclePlateType>("0");
   const [entryDoorId, setEntryDoorId] = useState("");
+  const { items: plateHistoryItems, status: plateHistoryStatus, recordDetection, receiveSnapshot, setHistoryStatus } = usePlateDetectionHistory(`${parkingId}:${entryDoorId}`);
+  const [plateHistoryOpen, setPlateHistoryOpen] = useState(false);
+  const [historyPlateLookup, setHistoryPlateLookup] = useState<{ doorId: string; plate: string } | null>(null);
   const trafficDoor = useTrafficDoor(Number(entryDoorId), showCameras);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyBusy, setHistoryBusy] = useState(false);
@@ -252,9 +258,11 @@ export function TrafficRecordsWorkspace({
   const billBlocksInput = billOpen && paymentPresentation?.modal !== false;
   const [latestDetection, setLatestDetection] = useState<{
     event: HshDetectionEvent;
+    acceptedForInput: boolean;
     fullFrameUrl: string | null;
     plateImageUrl: string | null;
   } | null>(null);
+  const detectionSequence = useRef(0);
   const [recordLoading, setLoading] = useState(true);
   const doorTraffics = useDoorTraffics(Number(entryDoorId), showCameras);
   const rows = showCameras ? doorTraffics.rows : recordRows;
@@ -262,31 +270,35 @@ export function TrafficRecordsWorkspace({
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  useEffect(() => { detectionLocked.current = working || billBlocksInput || historyOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo); }, [working, billBlocksInput, historyOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo]);
+  useEffect(() => { detectionLocked.current = working || billBlocksInput || historyOpen || plateHistoryOpen || lookupLoading || vehicleBusy || Boolean(vehicleDraft) || Boolean(carInfo) || Boolean(plate || cardNumber || memberCode); }, [working, billBlocksInput, historyOpen, plateHistoryOpen, lookupLoading, vehicleBusy, vehicleDraft, carInfo, plate, cardNumber, memberCode]);
   useEffect(() => { onBusyChange?.(working || lookupLoading || billBlocksInput || editOpen || deleteOpen || cargoOpen); }, [onBusyChange, working, lookupLoading, billBlocksInput, editOpen, deleteOpen, cargoOpen]);
   const handleDetection = useCallback<HshDetectionHandler>(async (event, loadArtifact) => {
-    const sequence = lookupSequence.current;
+    recordDetection(event);
+    const sequence = ++detectionSequence.current;
     const nextPlate = normalizeIranianPlateValue(event.plateText);
+    const acceptedForInput = !detectionLocked.current && !event.suppressAutomaticInput && Boolean(nextPlate);
+    setLatestDetection({ event, acceptedForInput, fullFrameUrl: null, plateImageUrl: null });
+    if (acceptedForInput) {
+      lookupSequence.current++;
+      setPlate(nextPlate);
+      setCarInfo(null);
+      setMemberCredit(null);
+      setOperationMode('idle');
+      const detectedAt = inputDateTime(event.occurredAtUtc);
+      if (event.source.direction === 'exit') setExitDateTime(detectedAt);
+      else setEntryDateTime(detectedAt);
+    }
     const [fullFrameUrl, plateImageUrl] = await Promise.all([
       loadArtifact("FullFrameRaw").catch(() => null),
       loadArtifact("PlateCrop").catch(() => null),
     ]);
-    if (sequence !== lookupSequence.current) {
+    if (sequence !== detectionSequence.current) {
       if (fullFrameUrl) URL.revokeObjectURL(fullFrameUrl);
       if (plateImageUrl) URL.revokeObjectURL(plateImageUrl);
       return;
     }
-    setLatestDetection({ event, fullFrameUrl, plateImageUrl });
-    if (detectionLocked.current) return;
-    lookupSequence.current++;
-    if (nextPlate) setPlate(nextPlate);
-    setCarInfo(null);
-    setMemberCredit(null);
-    setOperationMode("idle");
-    const detectedAt = inputDateTime(event.occurredAtUtc);
-    if (event.source.direction === "exit") setExitDateTime(detectedAt);
-    else setEntryDateTime(detectedAt);
-  }, []);
+    setLatestDetection({ event, acceptedForInput, fullFrameUrl, plateImageUrl });
+  }, [recordDetection]);
 
   useEffect(() => {
     return () => {
@@ -297,6 +309,7 @@ export function TrafficRecordsWorkspace({
 
   useEffect(() => {
     setLatestDetection(null);
+    detectionSequence.current++;
     lookupSequence.current++;
     setCarInfo(null);
     setMemberCredit(null);
@@ -304,7 +317,7 @@ export function TrafficRecordsWorkspace({
     setLookupLoading(false);
     setVehicleDraft(null);
     setVehicleError('');
-    return () => { lookupSequence.current++; };
+    return () => { lookupSequence.current++; detectionSequence.current++; };
   }, [parkingId, entryDoorId]);
   const copy = isPersian
     ? {
@@ -522,8 +535,17 @@ export function TrafficRecordsWorkspace({
   };
   useEffect(() => {
     // A new camera event identifies the accepted plate; it never submits traffic.
-    if (showCameras && latestDetection && plate && plate === normalizeIranianPlateValue(latestDetection.event.plateText)) void lookupCar(false, 'plate');
-  }, [latestDetection]);
+    if (showCameras && latestDetection?.acceptedForInput && plate && plate === normalizeIranianPlateValue(latestDetection.event.plateText)) void lookupCar(false, 'plate');
+  }, [latestDetection?.event.eventId]);
+  useEffect(() => {
+    if (!historyPlateLookup) return;
+    // Run the normal plate validation after React applies the explicit history selection.
+    if (historyPlateLookup.doorId === entryDoorId && historyPlateLookup.plate === plate) {
+      if (!isValidIranianPlate(plate, carType)) keyboard.requestFocus('plate');
+      void lookupCar(false, 'plate');
+    }
+    setHistoryPlateLookup(null);
+  }, [historyPlateLookup]);
   const openVehicle = (editing: boolean) => {
     if (!canEditVehicle || !carInfo) return;
     setVehicleEditing(editing); setVehicleError('');
@@ -1180,6 +1202,7 @@ export function TrafficRecordsWorkspace({
   const identityBusy = working || operations.pending || billBlocksInput || historyOpen || lookupLoading || vehicleBusy;
   const keyboard = useTrafficKeyboardNavigation(showCameras, entryDoorId, identityBusy || trafficDoor.loading || Boolean(vehicleDraft));
   const cancelTraffic = () => {
+    detectionSequence.current++;
     clearLookup(); setPlate(''); setCardNumber(''); setMemberCode(''); setEntryDateTime(''); setExitDateTime('');
     setLatestDetection(null); setError(''); setNotice('');
     // Restore keyboard entry after React clears and re-enables the plate fields.
@@ -1194,7 +1217,7 @@ export function TrafficRecordsWorkspace({
 
   const plateInput = (
     <Box ref={plateFieldRef} className="traffic-plate-field" onBlur={event => {
-      if (showCameras && !event.currentTarget.contains(event.relatedTarget as Node | null) && keyboard.shouldIdentifyOnBlur()) void lookupCar(false, 'plate');
+      if (showCameras && !event.currentTarget.contains(event.relatedTarget as Node | null) && keyboard.shouldIdentifyOnBlur(event.relatedTarget)) void lookupCar(false, 'plate');
     }}>
       <IranianPlateInput
         label={copy.plate}
@@ -1236,7 +1259,7 @@ export function TrafficRecordsWorkspace({
           clearLookup();
           setCardNumber(event.target.value);
         }}
-        onBlur={() => { if (keyboard.shouldIdentifyOnBlur()) void lookupCar(false, 'card'); }}
+        onBlur={event => { if (keyboard.shouldIdentifyOnBlur(event.relatedTarget)) void lookupCar(false, 'card'); }}
       />
       <TextField
         size="small"
@@ -1248,7 +1271,7 @@ export function TrafficRecordsWorkspace({
           clearLookup();
           setMemberCode(event.target.value);
         }}
-        onBlur={() => { if (keyboard.shouldIdentifyOnBlur()) void lookupCar(false, 'member'); }}
+        onBlur={event => { if (keyboard.shouldIdentifyOnBlur(event.relatedTarget)) void lookupCar(false, 'member'); }}
       />
     </Box>
   );
@@ -1430,11 +1453,28 @@ export function TrafficRecordsWorkspace({
               doorId={entryDoorId}
               language={language}
               onDetection={handleDetection}
+              onHistory={receiveSnapshot}
+              onHistoryStatus={setHistoryStatus}
+              historyOpen={plateHistoryOpen}
             />
-            <TrafficDetectionPanel detection={latestDetection} language={language} />
+            <TrafficDetectionPanel detection={latestDetection} language={language} panelRef={detectionPanelRef} />
           </Box>
         )}
       </Box>
+      {showCameras && entryDoorId && <FloatingPlateHistory key={`plate-history:${parkingId}:${entryDoorId}`} items={plateHistoryItems} status={plateHistoryStatus} language={language} anchorRef={detectionPanelRef}
+        busy={identityBusy || trafficDoor.loading || Boolean(trafficDoor.error) || Boolean(vehicleDraft) || cargoLoading || editOpen || deleteOpen}
+        hasCurrentInput={Boolean(plate || cardNumber || memberCode || carInfo)} onOpenChange={setPlateHistoryOpen}
+        onSelect={item => {
+          if (identityBusy || lookupInFlight.current || trafficDoor.loading || trafficDoor.error || vehicleDraft || cargoLoading || editOpen || deleteOpen) return false;
+          const nextPlate = normalizeIranianPlateValue(item.plate);
+          detectionLocked.current = true;
+          clearLookup();
+          setPlate(nextPlate); setCardNumber(''); setMemberCode(''); setEntryDateTime(''); setExitDateTime('');
+          setCarType(/^\d{8}$/.test(nextPlate) ? '1' : '0');
+          setError(''); setNotice('');
+          setHistoryPlateLookup({ doorId: entryDoorId, plate: nextPlate });
+          return true;
+        }} />}
       {showCameras && <TrafficWorkspaceSplitter panelRef={topPanelRef} onResize={setTopHeight} language={language} />}
       {showCameras ? (
         <TrafficControlGrids key={`${parkingId}:${entryDoorId}`} rows={rows} language={language}

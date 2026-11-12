@@ -70,14 +70,21 @@ describe('paged parking-space map', () => {
     expect(screen.queryByText('B4')).not.toBeInTheDocument();
   });
 
-  it('keeps data marked stale on disconnect and clears it on access revocation', () => {
+  it('keeps stale data with a heading tooltip, recovers, and clears data on access revocation', async () => {
+    const user = userEvent.setup();
     renderMap(); deliver();
     act(() => boundary.connections.at(-1)!.status('reconnecting'));
     expect(screen.getByText('B4')).toBeVisible();
-    expect(screen.getByText('اطلاعات نمایش‌داده‌شده ممکن است به‌روز نباشد.')).toBeVisible();
+    expect(screen.queryByText('اطلاعات نمایش‌داده‌شده ممکن است به‌روز نباشد.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await user.hover(screen.getByRole('img', { name: /اطلاعات نمایش‌داده‌شده ممکن است به‌روز نباشد/ }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('اطلاعات نمایش‌داده‌شده ممکن است به‌روز نباشد.');
+    deliver();
+    expect(screen.queryByRole('img', { name: /ممکن است به‌روز نباشد/ })).not.toBeInTheDocument();
     act(() => boundary.connections.at(-1)!.status('forbidden'));
     expect(screen.queryByText('B4')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('دسترسی به جایگاه‌های این پارکینگ مجاز نیست.');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /دسترسی به جایگاه‌های این پارکینگ مجاز نیست/ })).toBeVisible();
   });
 
   it('renders an empty snapshot and releases the connection on unmount', () => {

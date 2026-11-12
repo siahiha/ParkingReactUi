@@ -34,6 +34,7 @@ export function useTrafficKeyboardNavigation(enabled: boolean, doorId: string, b
   };
   return { consoleRef, requestFocus, onKeyDownCapture,
     onPointerDownCapture: () => { movingBackward.current = false; },
-    shouldIdentifyOnBlur: () => !enabled || !movingBackward.current,
+    shouldIdentifyOnBlur: (nextTarget?: EventTarget | null) => (!enabled || !movingBackward.current)
+      && !(nextTarget instanceof HTMLElement && nextTarget.closest('[data-traffic-action="cancel"], [data-traffic-history]')),
   };
 }

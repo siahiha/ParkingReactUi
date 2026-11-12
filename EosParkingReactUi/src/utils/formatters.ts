@@ -3,11 +3,14 @@ import type { Language } from '../i18n/instance';
 const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
 const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
 
-export function normalizeMoneyInput(value: string): string {
+export function normalizeDigits(value: string): string {
   return value
     .replace(/[۰-۹]/g, (digit) => String(persianDigits.indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)))
-    .replace(/[^0-9]/g, '');
+    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)));
+}
+
+export function normalizeMoneyInput(value: string): string {
+  return normalizeDigits(value).replace(/[^0-9]/g, '');
 }
 
 export function formatMoney(value: string | number | null | undefined): string {

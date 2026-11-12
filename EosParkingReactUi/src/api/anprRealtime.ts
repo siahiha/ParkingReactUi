@@ -1,5 +1,5 @@
 import jquery from 'jquery';
-import { appConfig } from '../config';
+import { anprSignalRUrl } from '../config';
 
 export type AnprRealtimeRecord = Record<string, unknown>;
 export type AnprRealtimeErrorHandler = (error: unknown) => void;
@@ -31,15 +31,17 @@ export class AnprRealtimeConnection {
   private reconnectTimer: number | null = null;
   private onRecord: (record: AnprRealtimeRecord) => void = () => undefined;
   private onError: AnprRealtimeErrorHandler = () => undefined;
+  private onConnected: () => void = () => undefined;
 
-  public constructor(url = appConfig.anprSignalRUrl) {
+  public constructor(url = anprSignalRUrl()) {
     this.url = url.replace(/\/$/, '');
   }
 
-  public async start(isEosAnpr: boolean, onRecord: (record: AnprRealtimeRecord) => void, onError: AnprRealtimeErrorHandler) {
+  public async start(isEosAnpr: boolean, onRecord: (record: AnprRealtimeRecord) => void, onError: AnprRealtimeErrorHandler, onConnected: () => void = () => undefined) {
     this.source = isEosAnpr;
     this.onRecord = onRecord;
     this.onError = onError;
+    this.onConnected = onConnected;
     this.disposed = false;
     if (import.meta.env.MODE === 'test') return;
     await this.connect();
@@ -67,15 +69,21 @@ export class AnprRealtimeConnection {
 
     try {
       const signalR = await this.loadClient();
+      if (this.disposed) return;
       const connection = signalR.hubConnection(this.url, {
         qs: {},
         useDefaultPath: false,
         withCredentials: true,
       });
       const proxy = connection.createHubProxy('anprHub');
-      proxy.on('anprDetected', record => this.onRecord(record));
-      connection.error(error => this.onError(error));
-      connection.disconnected(() => this.scheduleReconnect());
+      proxy.on('anprDetected', record => { if (!this.disposed && this.connection === connection) this.onRecord(record); });
+      connection.error(error => { if (!this.disposed && this.connection === connection) this.onError(error); });
+      connection.disconnected(() => {
+        if (!this.disposed && this.connection === connection) {
+          this.onError(new Error('Live ANPR connection closed.'));
+          this.scheduleReconnect();
+        }
+      });
       this.connection = connection;
       this.proxy = proxy;
       await connection.start();
@@ -84,9 +92,12 @@ export class AnprRealtimeConnection {
         return;
       }
       await proxy.invoke('subscribe', this.source);
+      if (!this.disposed && this.connection === connection) this.onConnected();
     } catch (error) {
-      this.onError(error);
-      this.scheduleReconnect();
+      if (!this.disposed) {
+        this.onError(error);
+        this.scheduleReconnect();
+      }
     }
   }
 

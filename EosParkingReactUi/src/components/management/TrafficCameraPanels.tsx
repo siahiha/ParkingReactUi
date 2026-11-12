@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Box, CircularProgress, IconButton, Paper, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, IconButton, Paper, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { ConnectionStatusIndicator } from '../ConnectionStatusIndicator';
 import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
+import ViewColumnRoundedIcon from '@mui/icons-material/ViewColumnRounded';
+import TabRoundedIcon from '@mui/icons-material/TabRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import WifiRoundedIcon from '@mui/icons-material/WifiRounded';
+import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
+import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import { useTranslation } from 'react-i18next';
 import { AppToast } from '../AppToast';
 import { parkingApi, type Camera } from '../../api/management';
@@ -12,12 +18,19 @@ import {
   type HshDetectionStatus,
 } from '../../api/hshDetectionRealtime';
 import { CameraStreamPreview } from './CameraStreamPreview';
+import { parseShahabDetectionConfig } from '../../api/shahabDetectionConfig';
+import { useShahabTrafficDetection } from '../../features/traffic/useShahabTrafficDetection';
 import type { Language } from './managementTypes';
+import { formatDateTime } from '../../utils/formatters';
+import type { ShahabHistorySnapshot, ShahabHistoryStatus } from '../../api/shahabTrafficRealtime';
 
 type Props = {
   doorId: string;
   language: Language;
   onDetection?: HshDetectionHandler;
+  onHistory?: (snapshot: ShahabHistorySnapshot) => void;
+  onHistoryStatus?: (status: ShahabHistoryStatus) => void;
+  historyOpen?: boolean;
 };
 type RecordValue = Record<string, unknown>;
 type CameraTab = 'entry' | 'exit';
@@ -92,17 +105,19 @@ function viewerId() {
   }
 }
 
-export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
+export function TrafficCameraPanels({ doorId, language, onDetection, onHistory, onHistoryStatus, historyOpen }: Props) {
   const { t } = useTranslation(undefined, { lng: language });
   const panelRef = useRef<HTMLElement>(null);
   const [enlargeError, setEnlargeError] = useState(false);
   const [entryCamera, setEntryCamera] = useState<Camera | null>(null);
   const [exitCamera, setExitCamera] = useState<Camera | null>(null);
   const [activeTab, setActiveTab] = useState<CameraTab>('entry');
+  const [simultaneousView, setSimultaneousView] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [error, setError] = useState('');
   const [detectionError, setDetectionError] = useState('');
   const [viewer] = useState(viewerId);
+  const { status: shahabStatus, lastMessageAt } = useShahabTrafficDetection(doorId, entryCamera, exitCamera, onDetection, onHistory, onHistoryStatus, historyOpen);
 
   useEffect(() => {
     let active = true;
@@ -141,7 +156,7 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
     const start = async () => {
       await Promise.all(cameras.map(async (camera) => {
         const configValue = camera.detectionServerAddress?.trim();
-        if (!configValue) return;
+        if (!configValue || camera.enabled === false || parseShahabDetectionConfig(configValue)) return;
         const config = parseHshDetectionConfig(configValue);
         if (!config) {
           if (active) setDetectionError(t('trafficLayout.detectionConfigError'));
@@ -176,32 +191,61 @@ export function TrafficCameraPanels({ doorId, language, onDetection }: Props) {
 
   const activeCamera = activeTab === 'entry' ? entryCamera : exitCamera;
   const hasBothCameras = Boolean(entryCamera && exitCamera);
-  const selectedLabel = activeTab === 'entry' ? t('trafficLayout.entryCamera') : t('trafficLayout.exitCamera');
-  const hasDetectionConfigError = detectionError === t('trafficLayout.detectionConfigError');
+  const showBothCameras = simultaneousView && hasBothCameras;
+  const viewActionLabel = t(showBothCameras ? 'trafficLayout.showCameraTabs' : 'trafficLayout.showBothCameras');
+  // Stable keys preserve the active preview; distinct viewers keep the backend from ejecting the other camera.
+  const visibleCameras = [entryCamera, exitCamera].filter((camera): camera is Camera => Boolean(camera && (showBothCameras || camera === activeCamera)));
+  const shahabPending = shahabStatus === 'connecting' || shahabStatus === 'reconnecting';
+  const shahabLabel = shahabStatus ? t('trafficLayout.shahabStatus', { status: t(`trafficLayout.shahabStates.${shahabStatus}`) }) : '';
 
   return <Box ref={panelRef} className="traffic-camera-panel" sx={{ minWidth: 0, height: '100%' }}>
     <Paper variant="outlined" sx={{ p: 1, minWidth: 0, height: '100%', boxSizing: 'border-box' }}>
       <Box className="traffic-camera-toolbar">
-      {hasBothCameras && <Tabs value={activeTab} onChange={(_event, value: CameraTab) => setActiveTab(value)} variant="fullWidth" sx={{ minHeight: 34, mb: 0.5 }}>
+      <Box className="traffic-camera-view-heading">
+      {hasBothCameras && !showBothCameras && <Tabs value={activeTab} onChange={(_event, value: CameraTab) => setActiveTab(value)} variant="fullWidth" sx={{ minHeight: 34, mb: 0.5 }}>
         <Tab value="entry" label={t('trafficLayout.entry')} sx={{ minHeight: 34, py: 0.25 }} />
         <Tab value="exit" label={t('trafficLayout.exit')} sx={{ minHeight: 34, py: 0.25 }} />
       </Tabs>}
+      {showBothCameras && <Typography variant="caption" noWrap>{t('trafficLayout.bothCameras')}</Typography>}
+      </Box>
       <Tooltip title={t('trafficLayout.enlarge')}><span><IconButton size="small" disabled={!activeCamera} aria-label={t('trafficLayout.enlarge')}
         onClick={() => {
           const request = panelRef.current?.requestFullscreen?.();
           if (request) void request.catch(() => setEnlargeError(true));
           else setEnlargeError(true);
         }}><FullscreenRoundedIcon fontSize="small" /></IconButton></span></Tooltip>
-      {hasDetectionConfigError && <Tooltip title={detectionError}>
+      {shahabStatus && <Tooltip describeChild title={<Box>
+        <Typography variant="inherit">{shahabLabel}</Typography>
+        <Typography variant="inherit">{lastMessageAt
+          ? t('trafficLayout.shahabLastMessage', { time: formatDateTime(lastMessageAt, language) })
+          : t('trafficLayout.shahabNoMessage')}</Typography>
+      </Box>}>
+        <IconButton size="small" color={shahabStatus === 'connected' ? 'success' : shahabPending ? 'warning' : 'error'} aria-label={shahabLabel}>
+          {shahabStatus === 'connected' ? <WifiRoundedIcon fontSize="small" /> : shahabPending ? <SyncRoundedIcon fontSize="small" /> : <WifiOffRoundedIcon fontSize="small" />}
+        </IconButton>
+      </Tooltip>}
+      {detectionError && <Tooltip title={detectionError}>
         <IconButton size="small" color="warning" aria-label={detectionError}><WarningAmberRoundedIcon fontSize="small" /></IconButton>
+      </Tooltip>}
+      <ConnectionStatusIndicator message={error} />
+      {hasBothCameras && <Tooltip title={viewActionLabel}>
+        <IconButton size="small" color={showBothCameras ? 'primary' : 'default'} aria-label={viewActionLabel} aria-pressed={showBothCameras}
+          onClick={() => setSimultaneousView(value => !value)}>
+          {showBothCameras ? <TabRoundedIcon fontSize="small" /> : <ViewColumnRoundedIcon fontSize="small" />}
+        </IconButton>
       </Tooltip>}
       </Box>
       <AppToast message={enlargeError ? t('trafficLayout.enlargeError') : ''} severity="warning" onClose={() => setEnlargeError(false)} />
-      {error && <Alert severity="warning" sx={{ mb: 1 }}>{error}</Alert>}
-      {detectionError && !hasDetectionConfigError && <Alert severity="warning" sx={{ mb: 1 }}>{detectionError}</Alert>}
       {cameraLoading && <Box className="inline-status-row"><CircularProgress size={18} /><Typography variant="body2">{t('trafficLayout.cameraLoading')}</Typography></Box>}
       {!cameraLoading && !error && !entryCamera && !exitCamera && <Typography variant="body2" color="text.secondary">{t('trafficLayout.noCamera')}</Typography>}
-      {!cameraLoading && activeCamera && <Box className="traffic-camera-preview-box" sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><Box sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}><CameraStreamPreview key={`${doorId}-${activeCamera.cameraId}`} camera={{ ...activeCamera, name: `${selectedLabel}: ${activeCamera.name}` }} language={language} viewer={viewer} size={{ width: '100%', height: 210 }} showConnectionButton={false} showModeSwitcher={false} showRoiAction={false} autoConnect compact /></Box></Box>}
+      {!cameraLoading && visibleCameras.length > 0 && <Box className={`traffic-camera-preview-box${showBothCameras ? ' is-simultaneous' : ''}`} sx={{ minWidth: 0, width: '100%', p: 0, m: 0 }}>
+        {visibleCameras.map(camera => <Box key={`${doorId}-${camera.direction}-${camera.cameraId}`} role="group"
+          aria-label={t(camera.direction === 'exit' ? 'trafficLayout.exitCamera' : 'trafficLayout.entryCamera')} sx={{ minWidth: 0, p: 0, m: 0 }}>
+          <CameraStreamPreview camera={{ ...camera, name: `${t(camera.direction === 'exit' ? 'trafficLayout.exitCamera' : 'trafficLayout.entryCamera')}: ${camera.name}` }}
+            language={language} viewer={`${viewer}-${doorId}-${camera.direction}-${camera.cameraId}`}
+            size={{ width: '100%', height: 210 }} showConnectionButton={false} showModeSwitcher={false} showRoiAction={false} autoConnect compact />
+        </Box>)}
+      </Box>}
       {!cameraLoading && !activeCamera && (entryCamera || exitCamera) && <Typography variant="body2" color="text.secondary">{t('trafficLayout.cameraUnavailable')}</Typography>}
     </Paper>
   </Box>;

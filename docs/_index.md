@@ -24,9 +24,14 @@
 | user، access level | `04-1-access-level-form.md`، `04-2-users-form.md` | `04-users-and-access.md` |
 | member، membership، card | `05-members-and-cards.md` | `10-shared-ui-components.md`، `11-remaining-forms.md` |
 | traffic، payment، exit، manual traffic | `06-traffic-and-payment.md`، `12-manual-traffic-control-form.md` | `14-web-backend-requests.md` |
+| اولویت تصویر، چیدمان دوربین و عملیات | بخش ۳.۶.۴ `12-manual-traffic-control-form.md` | بخش ۳.۶.۱ برای چینش فعلی؛ بخش ۳.۵.۲ برای دستیار پلاک‌های اخیر |
+| Shahab، شهاب، db:// | بخش ۳.۵.۱ `12-manual-traffic-control-form.md` | `24-rtsp-camera-ui-integration.md` برای تصویر زنده |
+| Hsh، Eos\|، Trigger قدیمی، cursor | `26-legacy-hsh-plate-detection.md` | `12-manual-traffic-control-form.md` برای تفاوت با مسیر هدف شهاب |
+| Publish، Release، Rebuild، IIS، Windows Service | `27-api-publish-and-hosting.md` | `Services/EosParkingApiWindowsService/Hosting/README.md` برای راهنمای فنی میزبان |
 | monitoring، equipment، RTSP، WebRTC، HLS، ROI | `07-monitoring-and-devices.md`، `24-rtsp-camera-ui-integration.md` | `11-remaining-forms.md` |
 | reports | `25-home.md`، `08-reports.md` | `11-remaining-forms.md` برای workflowهای تخصصی |
 | shared components، grid، filter، plate، money | `10-shared-ui-components.md` | `18-ui-design-system.md` |
+| خطای ارتباط زنده، Tooltip، SignalR، polling | قانون مشترک خطاهای ارتباط زنده در `00-documentation-standard.md` | `ConnectionStatusIndicator` در سند ۱۰؛ اسناد ۷، ۱۲ و ۲۵ برای مصرف‌کننده‌ها |
 | backend contract، missing endpoint، status code | `14-web-backend-requests.md` | سند تخصصی همان feature |
 | Windows audit و scope | `15-windows-source-audit.md` | `03-main-form-overview.md`، `16-final-review-and-delivery-gates.md` |
 
@@ -36,5 +41,10 @@
 - `25` تنها مرجع قرارداد Home وب، منوها، routeها، داشبورد، گزارش‌های Home، permission و APIهای مرتبط است.
 - `21` مرجع خلاصه‌ی وضعیت پیاده‌سازی UI و موارد باز است و قرارداد Home را تکرار نمی‌کند.
 - `23` و `24` اسناد تطبیق تخصصیِ به‌روز برای زون و دوربین هستند.
+- `27` راهنمای انتشار بستهٔ مشترک Backend است؛ ساخت UI React را توصیف نمی‌کند.
 - اگر دو سند درباره‌ی status یک feature اختلاف داشتند، سند تخصصیِ جدیدتر و سپس
   کد فعلی مرجع بررسی است؛ اختلاف باید در `21` ثبت شود.
+- **تصمیم محصول برای کنترل ورود و خروج:** در تطبیق رفتار فعلی، سورس جاری بر شرح
+  قدیمی اسناد تقدم دارد؛ بخش ۹ سند ۱۲ قرارداد API موجود را از Controllerها ثبت
+  می‌کند. قراردادها و چیدمان‌های پیشنهادی جایگزین رفتار پیاده‌شده نیستند. اصلاح
+  اختلاف‌های این حوزه نیز در سند ۲۱ ثبت می‌شود.

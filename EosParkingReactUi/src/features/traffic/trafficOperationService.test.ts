@@ -1,12 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { trafficOperationService, trafficResult, hasOpenTraffic } from './trafficOperationService';
 
-const json = (Values: unknown, ResponseResultType = 1, Message = '') => new Response(JSON.stringify({ Values, ResponseResultType, Message }), { headers: { 'content-type': 'application/json' } });
+const json = (Values: unknown, ResponseResultType: unknown = 1, Message = '') => new Response(JSON.stringify({ Values, ResponseResultType, Message }), { headers: { 'content-type': 'application/json' } });
 const input = { parkingId: 7, doorId: 8, userId: 9, plate: '12ب34567', carType: 0, info: { CarId: 10, MemberId: 11, CardId: 12, MemberTariffId: 13 } };
 const openInfo = { ...input.info, DumpId: 42, EnterDateTime: '2026-11-10T08:00:00', ExitDateTime: null, ExitPermission: true };
 
 describe('traffic registration contract', () => {
   afterEach(() => vi.restoreAllMocks());
+  it.each([1, '1'])('accepts the documented success value %j with either envelope casing', resultType => {
+    expect(trafficResult({ ResponseResultType: resultType, Values: 42 })).toBe(42);
+    expect(trafficResult({ responseResultType: resultType, values: 42 })).toBe(42);
+  });
+  it.each(['ok', 'OK', 'Ok', 0, 2, 9, '', null, undefined, true])('rejects an uncontracted success value %j', resultType => {
+    expect(() => trafficResult({ ResponseResultType: resultType, Values: { Id: 42 } })).toThrow('Traffic operation failed');
+  });
+  it('does not confirm a payment from an uncontracted ok result, even with a receipt', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(json('receipt-42', 'ok'));
+    await expect(trafficOperationService.pay(42)).rejects.toThrow('Traffic operation failed');
+  });
   it('rejects entry at exit-only/internal doors and exit at entry-only/internal doors before sending a mutation', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch');
     for (const doorType of [1, 3] as const) await expect(trafficOperationService.enter({ ...input, doorType })).rejects.toHaveProperty('messageKey', 'directionUnavailable');

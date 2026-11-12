@@ -20,8 +20,12 @@ async function expectFittedGrid(panel: Locator) {
         problems.push(`clipped cell: ${cell.textContent}`);
       }
       const label = cell.querySelector<HTMLElement>('.app-data-grid-header-content > span');
-      if (label && (label.scrollWidth > label.clientWidth + 1 || label.scrollHeight > label.clientHeight + 1)) {
-        problems.push(`clipped header: ${label.textContent}`);
+      if (label) {
+        const style = getComputedStyle(label);
+        if (style.whiteSpace !== 'nowrap' || label.scrollHeight > label.clientHeight + 1) problems.push(`wrapped header: ${label.textContent}`);
+        if (label.scrollWidth > label.clientWidth + 1 && (style.textOverflow !== 'ellipsis' || label.title !== label.textContent)) {
+          problems.push(`clipped header without full title: ${label.textContent}`);
+        }
       }
       // Text can overflow an inline descendant without changing its own clientWidth.
       const textNodes = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
@@ -29,7 +33,8 @@ async function expectFittedGrid(panel: Locator) {
       while (node) {
         const detailedText = node.parentElement?.closest('.traffic-grid-text');
         if (detailedText && !detailedText.getAttribute('aria-label')) problems.push('missing full text on compact cell');
-        if (node.textContent?.trim() && !detailedText) {
+        const headerText = node.parentElement?.closest('.app-data-grid-header-content > span');
+        if (node.textContent?.trim() && !detailedText && !headerText) {
           const range = document.createRange();
           range.selectNodeContents(node);
           for (const textBounds of range.getClientRects()) {
@@ -66,7 +71,8 @@ for (const config of [
     await page.route('**/config.json', route => route.fulfill({ json: { apiBaseUrl: '/backend' } }));
     const rows = Array.from({ length: 32 }, (_, index) => ({
       DumpId: index + 1, CarId: index + 101, CardId: index + 201,
-      CarPlate: `12ب${String(index).padStart(3, '0')}67`, CardNumber: String(3000 + index),
+      CarPlate: `12${index % 2 ? 'ب' : 'الف'}${String(index).padStart(3, '0')}67`, CardNumber: String(3000 + index),
+      CarPlateReversed: `67 - ${String(index).padStart(3, '0')}- ${index % 2 ? 'ب' : 'الف'}- 12`,
       MemberFullName: `عضو ${index + 1} VeryLongUnbrokenMembershipLabelForTheTrafficGrid`,
       MemberCode: `12345678901234567890${index + 1}`, MemberNationalCode: String(3000000000 + index),
       EnterDateTime: new Date(Date.UTC(2026, 10, 10, 8, index)).toISOString(),
@@ -76,6 +82,7 @@ for (const config of [
     let refreshes = 0;
     let hasNewEntry = false;
     let lookups = 0;
+    let failRefresh = false;
     await page.route('**/backend/api/**', route => {
       const url = new URL(route.request().url());
       let value: unknown = [];
@@ -84,6 +91,7 @@ for (const config of [
       if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, Title: 'درب اصلی', DoorType: 2 };
       if (url.pathname.endsWith('/GetTraffics')) {
         refreshes++;
+        if (failRefresh) return route.fulfill({ status: 503, json: {} });
         value = hasNewEntry ? [...rows, { ...rows[0], DumpId: 33, EnterDateTime: '2026-11-10T12:00:00Z' }] : rows;
       }
       if (url.pathname.endsWith('/GetCarTrafficInfo')) {
@@ -190,6 +198,25 @@ for (const config of [
     await page.mouse.move(0, 0);
     await page.getByRole('textbox', { name: copy.search, exact: true }).focus();
     await expectEmphasized(entries, exits, 'entries');
+    const gridHeight = (await entries.boundingBox())!.height;
+    failRefresh = true;
+    const connectionIcon = entries.getByRole('img', { name: copy.loadError });
+    await expect(connectionIcon).toBeVisible({ timeout: 10000 });
+    await expect(exits.getByRole('img', { name: copy.loadError })).toBeVisible();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expect(page.getByText(copy.loadError, { exact: true })).toHaveCount(0);
+    await expect(entries.locator('tbody tr')).toHaveCount(17);
+    await expect(entries.locator('tr.Mui-selected td').first()).toHaveText(selectedMember!);
+    expect((await entries.boundingBox())!.height).toBeCloseTo(gridHeight, 0);
+    await connectionIcon.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(copy.loadError);
+    await connectionIcon.focus();
+    await expect(connectionIcon).toBeFocused();
+    await expectBothFitted();
+    await page.screenshot({ path: testInfo.outputPath(`traffic-live-error-${config.name}.png`), fullPage: true });
+    failRefresh = false;
+    await expect(connectionIcon).toHaveCount(0, { timeout: 10000 });
+    await expect(entries.locator('tbody tr')).toHaveCount(17);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`traffic-grid-emphasis-${config.name}.png`), fullPage: true });

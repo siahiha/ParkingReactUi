@@ -50,12 +50,16 @@ type AppDataGridProps<T> = {
   defaultCaseSensitive?: boolean;
   allowSearchOptions?: boolean;
   allowCaseSensitive?: boolean;
+  getRowClassName?: (row: T) => string;
+  getRowLabel?: (row: T) => string;
+  normalizeFilterText?: (value: string) => string;
+  onColumnMenuOpenChange?: (open: boolean) => void;
 };
 
 type ColumnMenuState = { key: string; anchor: HTMLElement } | null;
 
 /** Shared compact table/grid shell. Column actions belong in the header menu. */
-export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selectedKey = null, selectedKeys = [], onRowClick, onRowFocus, onRowDoubleClick, onSelectionChange, isRowSelectable, filterable = true, defaultFilterOpen = false, defaultSearchMode = 'contains', defaultCaseSensitive = false, allowSearchOptions = true, allowCaseSensitive = true }: AppDataGridProps<T>) {
+export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selectedKey = null, selectedKeys = [], onRowClick, onRowFocus, onRowDoubleClick, onSelectionChange, isRowSelectable, filterable = true, defaultFilterOpen = false, defaultSearchMode = 'contains', defaultCaseSensitive = false, allowSearchOptions = true, allowCaseSensitive = true, getRowClassName, getRowLabel, normalizeFilterText, onColumnMenuOpenChange }: AppDataGridProps<T>) {
   const text = i18n.getFixedT(direction === 'rtl' ? 'fa' : 'en');
   const copy = {
     selectAllRows: text('grid.selectAllRows'), selectRow: text('grid.selectRow'), showColumnFilters: text('grid.showColumnFilters'), hideColumnFilters: text('grid.hideColumnFilters'), searchMode: text('grid.searchMode'), contains: text('grid.contains'), startsWith: text('grid.startsWith'), equals: text('grid.equals'), caseSensitive: text('grid.caseSensitive'), clearFilters: text('grid.clearFilters'), filterColumn: text('grid.filterColumn'), noFilterResults: text('grid.noFilterResults'), columnMenu: text('grid.columnMenu'), showColumnSearch: text('grid.showColumnSearch'), hideColumnSearch: text('grid.hideColumnSearch'), clearColumnFilter: text('grid.clearColumnFilter'), yes: text('grid.yes'), no: text('grid.no'),
@@ -99,12 +103,14 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
     const query = filters[column.key]?.trim() ?? '';
     if (!query) return true;
     const value = valueForColumn(row, index, column);
-    const actual = caseSensitive ? value : value.toLocaleLowerCase();
-    const expected = caseSensitive ? query : query.toLocaleLowerCase();
+    const normalizedValue = normalizeFilterText ? normalizeFilterText(value) : value;
+    const normalizedQuery = normalizeFilterText ? normalizeFilterText(query) : query;
+    const actual = caseSensitive ? normalizedValue : normalizedValue.toLocaleLowerCase();
+    const expected = caseSensitive ? normalizedQuery : normalizedQuery.toLocaleLowerCase();
     if (searchMode === 'equals') return actual === expected;
     if (searchMode === 'startsWith') return actual.startsWith(expected);
     return actual.includes(expected);
-  })), [columns, filters, rowEntries, searchMode, caseSensitive]);
+  })), [columns, filters, rowEntries, searchMode, caseSensitive, normalizeFilterText]);
   const selectableEntries = visibleEntries.filter(({ row, index }) => isRowSelectable?.(row, index) ?? true);
   const selectedSet = new Set(selectedKeys.map(String));
   const selectedSelectableCount = selectableEntries.filter(({ row, index }) => selectedSet.has(String(rowKey(row, index)))).length;
@@ -114,10 +120,11 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
   const activeMenuFilter = activeMenuColumn ? filters[activeMenuColumn.key]?.trim() ?? '' : '';
   const activeMenuFilterOpen = activeMenuColumn ? openFilterColumns.includes(activeMenuColumn.key) : false;
   const hasActiveFilters = Object.values(filters).some((value) => value.trim().length > 0);
-  const closeColumnMenu = () => setColumnMenu(null);
+  const closeColumnMenu = () => { setColumnMenu(null); onColumnMenuOpenChange?.(false); };
   const openColumnMenu = (event: React.MouseEvent<HTMLElement>, column: AppDataGridColumn<T>) => {
     event.stopPropagation();
     setColumnMenu({ key: column.key, anchor: event.currentTarget });
+    onColumnMenuOpenChange?.(true);
   };
   const focusColumnFilter = (key: string) => {
     window.requestAnimationFrame(() => filterInputRefs.current[key]?.focus());
@@ -172,7 +179,7 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
   const headerCell = (column: AppDataGridColumn<T>) => <TableCell key={column.key} sx={columnCellSx(column)} className={`app-data-grid-header-cell-root${isCompactColumn(column) ? ' app-data-grid-compact-cell' : ''}`}>
     <Box className="app-data-grid-header-cell-content">
       <Box className="app-data-grid-header-content">
-        <span>{column.label}</span>
+        <span title={column.label}>{column.label}</span>
         {filterable && column.filterable !== false && <button type="button" className={`app-data-grid-column-menu-button${filters[column.key]?.trim() ? ' is-active' : ''}`} aria-label={`${copy.columnMenu}: ${column.label}`} title={`${copy.columnMenu}: ${column.label}`} aria-haspopup="menu" aria-expanded={columnMenu?.key === column.key} aria-controls={columnMenu?.key === column.key ? menuId : undefined} onClick={(event) => openColumnMenu(event, column)}><MoreVertRoundedIcon fontSize="small" /></button>}
       </Box>
       {filterable && column.filterable !== false && openFilterColumns.includes(column.key) && <TextField className="app-data-grid-filter-input" size="small" variant="outlined" value={filters[column.key] ?? ''} placeholder={column.filterPlaceholder ?? copy.filterColumn} onChange={(event) => updateFilter(column.key, event.target.value)} inputRef={(node) => { filterInputRefs.current[column.key] = node; }} slotProps={{ htmlInput: { 'aria-label': column.label } }} />}
@@ -196,7 +203,8 @@ export function AppDataGrid<T>({ rows, columns, rowKey, direction = 'ltr', selec
             event.preventDefault();
             activateRow();
           };
-          return <TableRow key={String(key)} hover selected={selectedKey === key || checked} onClick={activateRow} onFocus={() => onRowFocus?.(row, index)} onDoubleClick={activateRowForEdit} onKeyDown={handleRowKeyDown} tabIndex={onRowClick || onRowFocus ? 0 : undefined} className={onRowClick || onRowFocus ? 'app-data-grid-row' : undefined}>
+          return <TableRow key={String(key)} hover selected={selectedKey === key || checked} onClick={activateRow} onFocus={() => onRowFocus?.(row, index)} onDoubleClick={activateRowForEdit} onKeyDown={handleRowKeyDown} tabIndex={onRowClick || onRowFocus ? 0 : undefined}
+            aria-label={getRowLabel?.(row)} className={[onRowClick || onRowFocus ? 'app-data-grid-row' : '', getRowClassName?.(row)].filter(Boolean).join(' ') || undefined}>
             {selectionEnabled && <TableCell className="app-data-grid-selection-cell" padding="checkbox"><Checkbox size="small" checked={checked} disabled={!selectable} onClick={(event) => event.stopPropagation()} onChange={(event) => toggleRow(key, event.target.checked)} slotProps={{ input: { 'aria-label': copy.selectRow } }} /></TableCell>}
             {columns.map((column) => <TableCell key={column.key} sx={columnCellSx(column)} className={isCompactColumn(column) ? 'app-data-grid-compact-cell' : undefined}>{booleanForColumn(column) ? <BooleanStatusIcon value={booleanValueForColumn(row, index, column)} trueLabel={column.trueLabel ?? booleanLabels.yes} falseLabel={column.falseLabel ?? booleanLabels.no} /> : column.render ? column.render(row, index) : '—'}</TableCell>)}
           </TableRow>;

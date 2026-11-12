@@ -77,6 +77,10 @@ snapshot اولیه از `GetAnprRecordWithPicTop20LastHour` می‌گیرد و 
 دوربین نیز در `CameraStreamPreview.test.tsx` بررسی می‌شود تا اگر اتصال پس از unmount
 تکمیل شد، session آزاد شود.
 
+## قرارداد فعلی نمایش خطاهای زنده در وب
+
+طبق قانون مشترک [استاندارد مستندسازی](00-documentation-standard.md)، خطای دریافت خودکار درب‌ها در عنوان «درب‌های پارکینگ» و خطای ترددهای زنده در عنوان «ترددها» به‌صورت `ConnectionStatusIndicator` با Tooltip هاور/فوکوس نمایش داده می‌شود؛ Alert متنی ندارد. دو state مستقل‌اند و موفقیت ترددها خطای درب‌ها را پاک نمی‌کند. در `AnprMonitoringWorkspace`، خطای SignalR فقط در سربرگ مانیتورینگ است؛ پس از subscribe موفق یا دریافت معتبر رفع می‌شود و موفقیت اتصال، خطای مستقل بارگذاری/حذف را پاک نمی‌کند. در `CameraStreamPreview`، جزئیات خطای پخش در Tooltip نشانگر کنار نام دوربین قرار دارند و با کیبورد نیز قابل خواندن‌اند. خطاهای فرم تجهیزات، حذف، تصویر یک رکورد و دریافت اولیهٔ مستقل از ارتباط زنده، feedback عملیاتی خود را حفظ می‌کنند. منابع: `MonitoringWorkspace.tsx`، `AnprMonitoringWorkspace.tsx`، `anprRealtime.ts` و `CameraStreamPreview.tsx`.
+
 ## EquipmentForm
 
 - مشاهده‌ی تجهیزات پارکینگ

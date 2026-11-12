@@ -1,0 +1,11 @@
+.plate-history-handle { cursor: grab; touch-action: none; user-select: none; box-sizing: border-box; transition: border-color 140ms ease, box-shadow 140ms ease; }
+.plate-history-floating.is-dragging .plate-history-handle { cursor: grabbing; }
+.plate-history-arrival { position: absolute; inset: 0; opacity: 0; pointer-events: none; animation: plate-history-arrival 1.6s ease-out both; }
+.plate-history-panel { animation: plate-history-open 120ms ease-out both; }
+.plate-history-grid .app-data-grid-wrapper { scrollbar-width: thin; }
+@keyframes plate-history-arrival { from { opacity: 0.22; } to { opacity: 0; } }
+@keyframes plate-history-open { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .plate-history-arrival, .plate-history-panel { animation: none; }
+  .plate-history-handle { transition: none; }
+}

@@ -33,7 +33,7 @@
 .traffic-grid-text { display: block; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .traffic-grid-search .MuiInputBase-root { block-size: 32px; }
 .traffic-grid-search .MuiTextField-root { max-inline-size: 420px; }
-.traffic-split-panel .app-data-grid-header-content > span { padding-inline-end: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip; }
+.traffic-split-panel .app-data-grid-header-content > span { padding-inline-end: 0; white-space: nowrap; overflow: hidden; overflow-wrap: normal; text-overflow: ellipsis; }
 .traffic-split-panel .app-data-grid .app-data-grid-compact-cell {
   width: 30px !important;
   min-width: 30px !important;
@@ -54,9 +54,6 @@
 }
 @media (max-width: 900px) {
   .traffic-split-grid-layout { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 680px) {
-  .traffic-split-panel .app-data-grid .MuiTableCell-root:nth-child(2) { width: 78px; min-width: 0; }
 }
 @media (max-width: 360px) {
   .traffic-split-panel .app-data-grid { min-inline-size: 320px; }

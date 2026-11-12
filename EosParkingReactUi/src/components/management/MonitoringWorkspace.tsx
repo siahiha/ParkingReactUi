@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Paper, MenuItem, TextField, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Paper, MenuItem, TextField, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
@@ -8,6 +9,7 @@ import { ApiError } from '../../api/client';
 import { parkingApi } from '../../api/management';
 import { formatDateTime } from '../../utils/formatters';
 import { AppDataGrid } from '../AppDataGrid';
+import { ConnectionStatusIndicator } from '../ConnectionStatusIndicator';
 import { BooleanStatusIcon } from '../BooleanStatusIcon';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
@@ -62,6 +64,7 @@ function mergeTrafficRows(current: TrafficRow[], incoming: TrafficRow[], limit: 
 }
 
 export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const [doors, setDoors] = useState<DoorRow[]>([]);
   const [selectedDoorIds, setSelectedDoorIds] = useState<Array<string | number>>([]);
   const [trafficRows, setTrafficRows] = useState<TrafficRow[]>([]);
@@ -69,7 +72,8 @@ export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: P
   const [trafficType, setTrafficType] = useState('2');
   const [loadingDoors, setLoadingDoors] = useState(false);
   const [loadingTraffic, setLoadingTraffic] = useState(false);
-  const [error, setError] = useState('');
+  const [doorsError, setDoorsError] = useState('');
+  const [trafficError, setTrafficError] = useState('');
   const doorsRef = useRef<DoorRow[]>([]);
   const initializedParkingRef = useRef<number | null>(null);
   const latestTrafficDateTimeRef = useRef<number | null>(null);
@@ -81,16 +85,17 @@ export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: P
       const next = asRows(await parkingApi.getDoorsLive(parkingId));
       doorsRef.current = next;
       setDoors((current) => rowsAreEqual(current, next) ? current : next);
+      setDoorsError('');
       setSelectedDoorIds((current) => {
         const filtered = current.filter((id) => next.some((door) => String(value(door, 'Id')) === String(id)));
         return filtered.length === current.length && filtered.every((id, index) => String(id) === String(current[index])) ? current : filtered;
       });
     } catch (cause) {
-      setError(cause instanceof ApiError && cause.status === 403 ? text(language, 'دسترسی مشاهده مانیتورینگ مجاز نیست.', 'Monitoring access is forbidden.') : text(language, 'دریافت وضعیت درب‌ها ناموفق بود.', 'Loading live doors failed.'));
+      setDoorsError(cause instanceof ApiError && cause.status === 403 ? t('liveUpdates.monitoringForbidden') : t('liveUpdates.doorsFailed'));
     } finally {
       setLoadingDoors(false);
     }
-  }, [language, parkingId]);
+  }, [t, parkingId]);
 
   const loadTraffic = useCallback(async (reset = false) => {
     if (trafficRequestRef.current) return;
@@ -111,9 +116,9 @@ export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: P
         return Number.isNaN(timestamp) ? max : Math.max(max, timestamp);
       }, latestTrafficDateTimeRef.current ?? 0);
       latestTrafficDateTimeRef.current = receivedMaxDateTime > 0 ? receivedMaxDateTime : latestTrafficDateTimeRef.current;
-      setError('');
+      setTrafficError('');
     } catch (cause) {
-      setError(cause instanceof ApiError && cause.status === 403 ? text(language, 'دسترسی مشاهده ترددهای زنده مجاز نیست.', 'Live traffic access is forbidden.') : text(language, 'دریافت ترددهای زنده ناموفق بود.', 'Loading live traffic failed.'));
+      setTrafficError(cause instanceof ApiError && cause.status === 403 ? t('liveUpdates.trafficForbidden') : t('liveUpdates.trafficFailed'));
     } finally {
       setLoadingTraffic(false);
     }
@@ -124,7 +129,7 @@ export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: P
     } finally {
       if (trafficRequestRef.current === request) trafficRequestRef.current = null;
     }
-  }, [language, parkingId, selectedDoorIds, trafficCount, trafficType]);
+  }, [t, parkingId, selectedDoorIds, trafficCount, trafficType]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -164,19 +169,21 @@ export function MonitoringWorkspace({ title, pageTitle, parkingId, language }: P
   ];
 
   return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={loadingDoors || loadingTraffic} onRefresh={() => { void loadDoors(); void loadTraffic(true); }}>
-    {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(260px, 0.32fr) minmax(0, 1fr)' }, gap: 2, alignItems: 'stretch' }}>
       <Box sx={{ display: 'grid', gap: 2, alignContent: 'start', minWidth: 0 }}>
         <Paper variant="outlined" sx={{ p: 1.5 }}><Typography variant="subtitle2" sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mb: 1 }}>{text(language, 'پیام‌های لیست کنترل', 'Control-list messages')}</Typography>{controlRows.length === 0 ? <Typography variant="body2" color="text.secondary">{text(language, 'پیامی وجود ندارد.', 'No control-list messages.')}</Typography> : controlRows.map((row) => <Box key={String(value(row, 'Id') ?? value(row, 'DumpDateTime'))} sx={{ py: 1, borderBottom: 1, borderColor: 'divider' }}><Typography variant="body2">{String(value(row, 'Plate') ?? '—')}</Typography><Typography variant="caption" color="text.secondary">{String(value(row, 'Description') ?? trafficTypeLabel(value(row, 'ControlType'), language))}</Typography></Box>)}</Paper>
         <Accordion disableGutters elevation={0} sx={{ minWidth: 0, border: 1, borderColor: 'divider', '&::before': { display: 'none' } }}>
           <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />} sx={{ minHeight: 42, px: 1.5, '&.Mui-expanded': { minHeight: 42 }, '& .MuiAccordionSummary-content': { my: 0.75, alignItems: 'center', justifyContent: 'space-between', gap: 1 } }}>
-            <Typography variant="subtitle2">{text(language, 'درب‌های پارکینگ', 'Parking doors')}</Typography>
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography component="span" variant="subtitle2">{text(language, 'درب‌های پارکینگ', 'Parking doors')}</Typography>
+              <ConnectionStatusIndicator message={doorsError} />
+            </Box>
             <Typography variant="caption" color="text.secondary">{selectedDoorIds.length ? text(language, `${selectedDoorIds.length} درب انتخاب شده`, `${selectedDoorIds.length} selected`) : text(language, 'همه درب‌ها', 'All doors')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 1.5, minWidth: 0, borderTop: 1, borderColor: 'divider' }}><ResourceState loading={loadingDoors && doors.length === 0} error="" empty={doors.length === 0} loadingLabel={text(language, 'در حال دریافت درب‌ها...', 'Loading doors...')} emptyLabel={text(language, 'دربی برای نمایش وجود ندارد.', 'No doors found.')}><Box className="monitoring-door-grid" sx={{ maxHeight: 320, maxWidth: '100%', minWidth: 0, overflow: 'auto' }}><AppDataGrid<DoorRow> direction={language === 'fa' ? 'rtl' : 'ltr'} rows={doors} columns={doorColumns} rowKey={(row, index) => String(value(row, 'Id') ?? index)} selectedKeys={selectedDoorIds} onSelectionChange={setSelectedDoorIds} /></Box></ResourceState></AccordionDetails>
         </Accordion>
       </Box>
-      <Paper variant="outlined" sx={{ p: 1.5, minWidth: 0 }}><Box sx={{ direction: language === 'fa' ? 'rtl' : 'ltr', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: 1, borderBottom: 1, borderColor: 'divider', pb: 1, mb: 1 }}><Typography variant="subtitle2" sx={{ direction: language === 'fa' ? 'rtl' : 'ltr', whiteSpace: 'nowrap', justifySelf: 'start' }}>{text(language, 'ترددها', 'Traffic')}</Typography><Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center', justifySelf: 'end', direction: 'ltr' }}><TextField select size="small" label={text(language, 'نوع', 'Type')} value={trafficType} onChange={(event) => setTrafficType(event.target.value)} sx={{ width: { xs: 86, sm: 94 }, '& .MuiInputBase-root': { height: 26, fontSize: '0.7rem' }, '& .MuiInputLabel-root': { fontSize: '0.7rem' }, '& .MuiInputBase-input': { py: 0.25, px: 0.75 } }}><MenuItem value="0">{text(language, 'ورودی', 'In')}</MenuItem><MenuItem value="1">{text(language, 'خروجی', 'Out')}</MenuItem><MenuItem value="2">{text(language, 'هر دو', 'Both')}</MenuItem></TextField><TextField select size="small" label={text(language, 'تعداد', 'Count')} value={trafficCount} onChange={(event) => setTrafficCount(event.target.value)} sx={{ width: { xs: 74, sm: 82 }, '& .MuiInputBase-root': { height: 26, fontSize: '0.7rem' }, '& .MuiInputLabel-root': { fontSize: '0.7rem' }, '& .MuiInputBase-input': { py: 0.25, px: 0.75 } }}>{['10', '50', '100', '300', '500', '1000', '10000'].map((count) => <MenuItem key={count} value={count}>{count}</MenuItem>)}</TextField>{loadingTraffic && <Typography variant="caption" color="text.secondary" sx={{ direction: language === 'fa' ? 'rtl' : 'ltr' }}>{text(language, 'در حال دریافت...', 'Updating...')}</Typography>}</Box></Box>{error && trafficRows.length === 0 && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}<Box sx={{ minHeight: 160 }}><AppDataGrid<TrafficRow> direction={language === 'fa' ? 'rtl' : 'ltr'} defaultFilterOpen rows={trafficRows} columns={trafficColumns} rowKey={(row, index) => String(value(row, 'Id') ?? index)} /></Box></Paper>
+      <Paper variant="outlined" sx={{ p: 1.5, minWidth: 0 }}><Box sx={{ direction: language === 'fa' ? 'rtl' : 'ltr', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: 1, borderBottom: 1, borderColor: 'divider', pb: 1, mb: 1 }}><Typography variant="subtitle2" sx={{ direction: language === 'fa' ? 'rtl' : 'ltr', whiteSpace: 'nowrap', justifySelf: 'start' }}>{text(language, 'ترددها', 'Traffic')}<ConnectionStatusIndicator message={trafficError} /></Typography><Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center', justifySelf: 'end', direction: 'ltr' }}><TextField select size="small" label={text(language, 'نوع', 'Type')} value={trafficType} onChange={(event) => setTrafficType(event.target.value)} sx={{ width: { xs: 86, sm: 94 }, '& .MuiInputBase-root': { height: 26, fontSize: '0.7rem' }, '& .MuiInputLabel-root': { fontSize: '0.7rem' }, '& .MuiInputBase-input': { py: 0.25, px: 0.75 } }}><MenuItem value="0">{text(language, 'ورودی', 'In')}</MenuItem><MenuItem value="1">{text(language, 'خروجی', 'Out')}</MenuItem><MenuItem value="2">{text(language, 'هر دو', 'Both')}</MenuItem></TextField><TextField select size="small" label={text(language, 'تعداد', 'Count')} value={trafficCount} onChange={(event) => setTrafficCount(event.target.value)} sx={{ width: { xs: 74, sm: 82 }, '& .MuiInputBase-root': { height: 26, fontSize: '0.7rem' }, '& .MuiInputLabel-root': { fontSize: '0.7rem' }, '& .MuiInputBase-input': { py: 0.25, px: 0.75 } }}>{['10', '50', '100', '300', '500', '1000', '10000'].map((count) => <MenuItem key={count} value={count}>{count}</MenuItem>)}</TextField>{loadingTraffic && <Typography variant="caption" color="text.secondary" sx={{ direction: language === 'fa' ? 'rtl' : 'ltr' }}>{text(language, 'در حال دریافت...', 'Updating...')}</Typography>}</Box></Box><Box sx={{ minHeight: 160 }}><AppDataGrid<TrafficRow> direction={language === 'fa' ? 'rtl' : 'ltr'} defaultFilterOpen rows={trafficRows} columns={trafficColumns} rowKey={(row, index) => String(value(row, 'Id') ?? index)} /></Box></Paper>
     </Box>
   </ManagementWorkspaceFrame>;
 }

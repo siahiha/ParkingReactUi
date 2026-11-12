@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Alert, Box, Button, IconButton, LinearProgress, Menu, MenuItem, Paper, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Button, IconButton, LinearProgress, Menu, MenuItem, Paper, TextField, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AppDataGrid, type AppDataGridColumn } from '../../components/AppDataGrid';
+import { ConnectionStatusIndicator } from '../../components/ConnectionStatusIndicator';
 import { formatDateTime, formatNumber, formatTime } from '../../utils/formatters';
 import type { Language } from '../../i18n/instance';
 import { membershipText, splitTrafficRows, trafficField, trafficId, type TrafficGridRow } from './trafficGridData';
@@ -24,10 +25,11 @@ type Props = {
   onPay: (row: TrafficGridRow) => void;
   onCargo: (row: TrafficGridRow, outbound: boolean) => void;
 };
-function TrafficTable({ title, rows, columns, language, emphasized, initialFocus = false, events, onActivate }: {
+function TrafficTable({ title, rows, columns, language, emphasized, initialFocus = false, events, onActivate, errorMessage }: {
   title: string; rows: TrafficGridRow[]; columns: AppDataGridColumn<TrafficGridRow>[];
   language: Language; emphasized: boolean; initialFocus?: boolean; events: TrafficGridEvents;
   onActivate?: (row: TrafficGridRow) => void;
+  errorMessage: string;
 }) {
   const { t } = useTranslation(undefined, { lng: language });
   const headingId = useId();
@@ -47,9 +49,12 @@ function TrafficTable({ title, rows, columns, language, emphasized, initialFocus
   }, [rows]);
   return <Paper ref={panelRef} component="section" variant="outlined" className={`traffic-split-panel${emphasized ? ' is-emphasized' : ''}`} aria-labelledby={headingId} tabIndex={0}
     {...events}>
-    <Typography component="h3" variant="subtitle2" id={headingId} sx={{ px: 1, py: 0.25 }}>
-      {title} ({formatNumber(rows.length, language)})
-    </Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, minHeight: 28, boxSizing: 'border-box' }}>
+      <Typography component="h3" variant="subtitle2" id={headingId}>
+        {title} ({formatNumber(rows.length, language)})
+      </Typography>
+      <ConnectionStatusIndicator message={errorMessage} />
+    </Box>
     <AppDataGrid rows={rows} columns={columns} rowKey={trafficId} direction={language === 'fa' ? 'rtl' : 'ltr'}
       filterable={false} selectedKey={selection?.id}
       onRowClick={(row, index) => setSelection({ id: trafficId(row), index })}
@@ -85,7 +90,7 @@ export function TrafficControlGrids({ rows, language, loading, error, updatedAt,
     render: row => detailText(membershipText(row) || '—'),
   };
   const plate: AppDataGridColumn<TrafficGridRow> = {
-    key: 'CarPlate', label: t('trafficGrid.plate'), width: 86,
+    key: 'CarPlate', label: t('trafficGrid.plate'), width: 120,
     render: row => <span dir="ltr">{trafficField(row, 'CarPlateReversed') ?? trafficField(row, 'CarPlate') ?? '—'}</span>,
   };
   const cargo = (grid: TrafficGridId): AppDataGridColumn<TrafficGridRow> => ({
@@ -119,14 +124,13 @@ export function TrafficControlGrids({ rows, language, loading, error, updatedAt,
       <Button size="small" onClick={() => setSearch('')} disabled={!search}>{t('trafficGrid.clear')}</Button>
       {updatedAt && <Typography variant="caption" color="text.secondary">{t('trafficGrid.updatedAt', { time: formatTime(updatedAt, language) })}</Typography>}
     </Box>
-    {error && <Alert severity="error">{error === 'forbidden' ? t('trafficGrid.forbidden') : t('trafficGrid.loadError')}</Alert>}
     {loading && <LinearProgress aria-label={t('trafficGrid.loading')} />}
     <Box className="traffic-split-grid-layout" data-active-grid={emphasis.activeGrid ?? undefined}>
       <TrafficTable title={t('trafficGrid.entries')} rows={entries} columns={entryColumns} language={language} emphasized={emphasis.activeGrid === 'entries'}
-        initialFocus events={emphasis.eventsFor('entries')}
+        initialFocus events={emphasis.eventsFor('entries')} errorMessage={error ? t(`trafficGrid.${error}`) : ''}
         onActivate={busy ? undefined : onExit} />
       <TrafficTable title={t('trafficGrid.exits')} rows={exits} columns={exitColumns} language={language} emphasized={emphasis.activeGrid === 'exits'}
-        events={emphasis.eventsFor('exits')} />
+        events={emphasis.eventsFor('exits')} errorMessage={error ? t(`trafficGrid.${error}`) : ''} />
     </Box>
     <Menu anchorEl={cargoMenu?.anchor} open={Boolean(cargoMenu)} onClose={() => setCargoMenu(null)}>
       <MenuItem onClick={() => chooseCargo(false)}><Box component="img" src={inboundIcon} alt="" sx={{ inlineSize: 16, blockSize: 16, marginInlineEnd: 1 }} />{t('trafficGrid.inboundCargo')}</MenuItem>

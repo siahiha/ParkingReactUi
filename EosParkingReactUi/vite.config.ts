@@ -15,9 +15,17 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // SignalR 2 advertises /signalr in negotiation, so its push transports
+      // must also reach IIS without the /backend prefix used for the first request.
+      '/signalr': {
+        target: 'http://localhost:8050',
+        changeOrigin: true,
+        ws: true,
+      },
       '/backend': {
         target: 'http://localhost:8050',
         changeOrigin: true,
+        ws: true,
         rewrite: (path) => path.replace(/^\/backend/, ''),
       },
       // The local Hsh service on port 5080 does not currently emit CORS

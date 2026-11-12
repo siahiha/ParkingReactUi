@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, Chip, FormControl, InputLabel, MenuItem, Paper, Select, Skeleton, TablePagination, Tooltip, Typography } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, Skeleton, TablePagination, Tooltip, Typography } from '@mui/material';
 import LocalParkingRoundedIcon from '@mui/icons-material/LocalParkingRounded';
 import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
@@ -9,6 +9,7 @@ import { formatDateTime, formatNumber, formatTime } from '../../utils/formatters
 import { useParkingMap } from './useParkingMap';
 import type { ParkingMapSpace } from './parkingMapService';
 import { ParkingMapEmptyState } from './ParkingMapEmptyState';
+import { ConnectionStatusIndicator } from '../../components/ConnectionStatusIndicator';
 
 export function ParkingSpaceMap({ parkingId, language }: { parkingId: number; language: Language }) {
   return <ParkingSpaceMapContent key={parkingId} parkingId={parkingId} language={language} />;
@@ -40,11 +41,17 @@ function ParkingSpaceMapContent({ parkingId, language }: { parkingId: number; la
   const failed = ['unavailable', 'unauthorized', 'forbidden', 'notFound'].includes(map.status);
   const errorCode = map.status === 'unauthorized' || map.status === 'forbidden' || map.status === 'notFound' ? map.status : 'unavailable';
   const stale = Boolean(data && map.status !== 'connected');
+  const canRetry = failed && map.status !== 'unauthorized' && map.status !== 'forbidden';
+  const connectionMessage = [t(`parkingMap.connection.${map.status}`),
+    failed ? t(`parkingMap.errors.${errorCode}`) : '', stale ? t('parkingMap.stale') : '',
+    canRetry ? t('home.retry') : ''].filter(Boolean).join(' — ');
 
   return <Paper className="home3-map-panel home3-space-map" elevation={0} aria-label={t('home.spaceMap')}>
     <Box className="home3-panel-heading home3-space-map-heading">
       <Box className="home3-map-heading-title"><Box className="home3-map-heading-icon"><LocalParkingRoundedIcon /></Box><Typography className="home3-panel-title">{t('home.spaceMap')}</Typography></Box>
-      <Chip size="small" className={`home3-map-connection is-${map.status}`} label={t(`parkingMap.connection.${map.status}`)} />
+      <ConnectionStatusIndicator message={connectionMessage}
+        color={map.status === 'connected' ? 'success' : failed ? 'error' : stale ? 'warning' : 'info'}
+        onClick={canRetry ? map.retry : undefined} />
     </Box>
     {data && <Box className="home3-space-map-toolbar">
       {data.sections.length > 0 && <FormControl size="small" className="home3-map-zone-filter">
@@ -59,10 +66,6 @@ function ParkingSpaceMapContent({ parkingId, language }: { parkingId: number; la
       </FormControl>}
       <Typography className="home3-map-total">{t('parkingMap.total', { total: formatNumber(data.totalCount, language) })}</Typography>
     </Box>}
-    {failed && <Alert severity="error" action={map.status === 'unauthorized' || map.status === 'forbidden' ? undefined : <Button color="inherit" size="small" onClick={map.retry}>{t('home.retry')}</Button>}>
-      {t(`parkingMap.errors.${errorCode}`)}
-    </Alert>}
-    {stale && !failed && <Alert severity="warning">{t('parkingMap.stale')}</Alert>}
     <Box className={`home3-map-canvas ${selected ? 'has-selection' : ''}`}>
     {!data && !failed && <Box className="home3-space-map-loading" role="status" aria-label={t('common.loading')}>
       {Array.from({ length: 20 }, (_, index) => <Skeleton key={index} variant="rounded" height={38} />)}

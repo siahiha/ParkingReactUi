@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, CircularProgress, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Tooltip, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { ApiError } from '../../api/client';
@@ -8,6 +9,7 @@ import { AnprRealtimeConnection } from '../../api/anprRealtime';
 import { appConfig } from '../../config';
 import { formatDateTime } from '../../utils/formatters';
 import { AppDataGrid } from '../AppDataGrid';
+import { ConnectionStatusIndicator } from '../ConnectionStatusIndicator';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { CameraStreamPreview } from './CameraStreamPreview';
 import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
@@ -174,6 +176,7 @@ const mergeAnprRows = (current: Row[], incoming: Row[], limit: number) => {
 };
 
 export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const [rows, setRows] = useState<Row[]>([]);
   const [doors, setDoors] = useState<Door[]>([]);
   const [doorCameras, setDoorCameras] = useState<Camera[]>([]);
@@ -186,6 +189,7 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   const [refreshing, setRefreshing] = useState(false);
   const [loadingPicture, setLoadingPicture] = useState(false);
   const [error, setError] = useState('');
+  const [liveError, setLiveError] = useState(false);
   const [pictureError, setPictureError] = useState('');
   const [cameraError, setCameraError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -306,6 +310,7 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   useEffect(() => {
     let active = true;
     const realtime = new AnprRealtimeConnection();
+    setLiveError(false);
     void realtime.start(source, (incoming) => {
       if (!active) return;
       const previousRows = rowsRef.current;
@@ -315,11 +320,10 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
       setLoading(false);
       setRefreshing(false);
       selectRecord(selectAnprRowAfterRefresh(previousRows, updatedRows, selectedKeyRef.current, false, stableRecordKey));
-      setError('');
-    }, (cause) => {
-      if (active) setError(text(language, 'اتصال زنده تشخیص پلاک برقرار نشد.', 'Live ANPR connection failed.'));
-      console.warn('ANPR SignalR error', cause);
-    });
+      setLiveError(false);
+    }, () => {
+      if (active) setLiveError(true);
+    }, () => { if (active) setLiveError(false); });
     return () => {
       active = false;
       realtime.stop();
@@ -408,6 +412,7 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
   };
 
   return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={refreshing} onRefresh={() => { void loadRecords(true); }} headingActions={<>
+    <ConnectionStatusIndicator message={liveError ? t('liveUpdates.anprFailed') : ''} />
     <FormControl size="small" sx={{ width: 136 }}><InputLabel>{text(language, 'منبع تشخیص', 'ANPR source')}</InputLabel><Select label={text(language, 'منبع تشخیص', 'ANPR source')} value={source ? 'elmo' : 'shahab'} onChange={(event) => setSource(event.target.value === 'elmo')}><MenuItem value="shahab">{text(language, 'شهاب', 'Shahab')}</MenuItem><MenuItem value="elmo">{text(language, 'الموصنعت', 'Elmo Sanat')}</MenuItem></Select></FormControl>
     <Tooltip title={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} arrow><span><IconButton className="workspace-refresh-button" color="error" aria-label={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} onClick={() => setConfirmOpen(true)} disabled={deleting}><DeleteSweepRoundedIcon /></IconButton></span></Tooltip>
   </>}>

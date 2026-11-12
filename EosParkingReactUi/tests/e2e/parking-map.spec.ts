@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
+import fa from '../../src/locales/fa';
 
 function luminance(rgb: number[]) {
   const linear = rgb.slice(0, 3).map(value => {
@@ -61,6 +62,9 @@ export async function loadLegacySignalRClient() {
         window.addEventListener('map-test-push', () => {
           if (!stopped) callbacks.parkingMapUpdated?.({ ...snapshot, Page: { ...snapshot.Page, generatedAtUtc: new Date().toISOString(), items: snapshot.Page.items.map(s => ({ ...s, isAssigned: true })) } });
         });
+        window.addEventListener('map-test-error', event => {
+          if (!stopped) callbacks.parkingMapError?.({ RequestId: requestId, Code: event.detail });
+        });
         return snapshot;
       }
     };
@@ -92,6 +96,33 @@ test('pages and filters actual visible cards, and accepts a background push', as
   await page.evaluate(() => window.dispatchEvent(new Event('map-test-push')));
   await expect(map.locator('.home3-space-tile.is-unassigned')).toHaveCount(0);
   await expect(map.locator('.home3-map-gate')).toHaveCount(0);
+});
+
+test('keeps live map failures in a heading tooltip, retries and clears revoked data', async ({ page }, testInfo) => {
+  await page.goto('/tests/fixtures/parking-map-preview.html');
+  const map = page.getByLabel(fa.home.spaceMap, { exact: true });
+  const firstSpace = map.locator('.home3-space-tile').first();
+  await expect(map.locator('.home3-space-tile')).toHaveCount(20);
+  await firstSpace.click();
+  const height = (await map.boundingBox())!.height;
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('map-test-error', { detail: 'unavailable' })));
+  const indicator = map.getByRole('button', { name: new RegExp(fa.parkingMap.errors.unavailable) });
+  await expect(indicator).toBeVisible();
+  await expect(map.getByRole('alert')).toHaveCount(0);
+  await expect(map.getByText(fa.parkingMap.errors.unavailable, { exact: true })).toHaveCount(0);
+  await expect(map.locator('.home3-space-tile')).toHaveCount(20);
+  await expect(firstSpace).toHaveAttribute('aria-pressed', 'true');
+  expect((await map.boundingBox())!.height).toBeCloseTo(height, 0);
+  await indicator.hover();
+  await expect(page.getByRole('tooltip')).toContainText(fa.parkingMap.errors.unavailable);
+  await page.screenshot({ path: testInfo.outputPath('map-live-error-tooltip.png'), animations: 'disabled' });
+  await indicator.click();
+  await expect(indicator).toHaveCount(0);
+  await expect(map.locator('.home3-space-tile')).toHaveCount(20);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('map-test-error', { detail: 'forbidden' })));
+  await expect(map.getByRole('img', { name: new RegExp(fa.parkingMap.errors.forbidden) })).toBeVisible();
+  await expect(map.locator('.home3-space-tile')).toHaveCount(0);
+  await expect(map.getByRole('alert')).toHaveCount(0);
 });
 
 for (const config of [

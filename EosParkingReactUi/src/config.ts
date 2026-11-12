@@ -32,7 +32,7 @@ export type AppConfig = {
 
 const compileTimeConfig: AppConfig = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/',
-  anprSignalRUrl: import.meta.env.VITE_ANPR_SIGNALR_URL || 'http://localhost:3012/signalr',
+  anprSignalRUrl: import.meta.env.VITE_ANPR_SIGNALR_URL || '',
   hshDetectionApiKey: import.meta.env.VITE_HSH_DETECTION_API_KEY || '',
   parkingServiceUrl: (import.meta.env.VITE_PARKING_SERVICE_URL || '').trim(),
   trafficRequireExitPermission: false,
@@ -41,6 +41,11 @@ const compileTimeConfig: AppConfig = {
 };
 
 export let appConfig: AppConfig = compileTimeConfig;
+
+/** IIS hosts the hub under the API; Windows Service installations can override its separate listener. */
+export function anprSignalRUrl() {
+  return appConfig.anprSignalRUrl.trim() || `${appConfig.apiBaseUrl.trim().replace(/\/+$/, '')}/signalr`;
+}
 export let isSsoEnabled = false;
 
 function stringValue(value: unknown, fallback: string) {

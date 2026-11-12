@@ -1,4 +1,18 @@
 const fa = {
+  liveUpdates: {
+    monitoringForbidden: 'دسترسی مشاهده مانیتورینگ مجاز نیست.', doorsFailed: 'دریافت وضعیت درب‌ها ناموفق بود.',
+    trafficForbidden: 'دسترسی مشاهده ترددهای زنده مجاز نیست.', trafficFailed: 'دریافت ترددهای زنده ناموفق بود.',
+    anprFailed: 'اتصال زنده تشخیص پلاک برقرار نشد.',
+  },
+  plateHistory: {
+    time: 'زمان', direction: 'جهت', loading: 'دریافت تشخیص‌های امروز…', loadError: 'تاریخچهٔ امروز دریافت نشد؛ تلاش مجدد انجام می‌شود.', todayCount: '{{value}} تشخیص امروز',
+    title: 'پلاک‌های اخیر', records: 'فهرست پلاک‌های تشخیص‌داده‌شده', search: 'جستجوی پلاک', filter: 'فیلتر تشخیص‌ها',
+    all: 'همه', fresh: 'تازه', repeated: 'تکراری', noDetection: 'بدون تشخیص', empty: 'هنوز پلاکی دریافت نشده است.', noResults: 'پلاکی پیدا نشد.',
+    secondsAgo: '{{value}} ثانیه پیش', minutesAgo: '{{value}} دقیقه پیش', hoursAgo: '{{value}} ساعت پیش', count: '{{value}} از {{total}} تشخیص',
+    moveHint: 'برای جابه‌جایی بکشید؛ با کلیدهای جهت نیز جابه‌جا می‌شود.', camera: 'دوربین {{id}}',
+    selectPlate: 'انتخاب پلاک {{plate}}، {{state}}، {{direction}}', replacePrompt: 'پلاک {{plate}} جایگزین اطلاعات فعلی شود؟',
+    replace: 'جایگزینی و استعلام', keepCurrent: 'حفظ اطلاعات فعلی',
+  },
   trafficPayment: {
     title: 'پرداخت حق پارک', entryTime: 'تاریخ و زمان ورود', exitTime: 'تاریخ و زمان خروج',
     totalStay: 'مجموع حضور', totalDuration: 'کل مدت حضور', totalCost: 'مبلغ کل', membershipUsed: 'حق عضویت استفاده شده',
@@ -9,9 +23,20 @@ const fa = {
     invalidBill: 'صورتحساب کامل دریافت نشد؛ از فهرست خروج‌ها دوباره تلاش کنید.',
   },
   trafficLayout: {
+    shahabStatus: 'تشخیص پلاک شهاب: {{status}}',
+    shahabLastMessage: 'آخرین پیام دریافتی: {{time}}', shahabNoMessage: 'هنوز پیامی دریافت نشده است.',
+    shahabStates: {
+      connected: 'متصل و دریافت فعال', connecting: 'در حال اتصال', reconnecting: 'در حال اتصال مجدد',
+      unavailable: 'ارتباط سرویس تشخیص پلاک برقرار نشد.', unauthorized: 'نیاز به ورود مجدد',
+      forbidden: 'دسترسی مجاز نیست', notFound: 'درب یا دوربین یافت نشد', invalidConfiguration: 'قالب سرویس تشخیص پلاک دوربین معتبر نیست.',
+    },
+    detectionSettingLabel: 'سرویس تشخیص پلاک',
+    detectionSettingHint: 'شهاب: db://cameraid=1 — سرویس دیگر: Eos|آدرس سرویس|شناسه Trigger',
+    detectionSettingError: 'آدرس تشخیص را با شناسهٔ معتبر دوربین شهاب مانند db://cameraid=1 یا قالب Eos|آدرس سرویس|شناسه Trigger وارد کنید.',
     doorType: 'نوع درب', doorTypes: ['ورودی', 'خروجی', 'ورود و خروج', 'داخلی'], doorLoading: 'در حال دریافت…', doorUnknown: 'نامشخص',
     resize: 'تنظیم ارتفاع تصاویر و جدول‌ها', latestDetection: 'آخرین تشخیص', fullFrame: 'تصویر کامل آخرین تشخیص پلاک', plateImage: 'تصویر پلاک آخرین تشخیص',
     enlarge: 'بزرگ‌نمایی تصویر', imageUnavailable: 'تصویر موجود نیست', detectionUnavailable: 'تصویر آخرین تشخیص در دسترس نیست',
+    showBothCameras: 'نمایش هم‌زمان دوربین‌ها', showCameraTabs: 'نمایش دوربین‌ها به‌صورت تب', bothCameras: 'ورود و خروج هم‌زمان',
     entryCamera: 'دوربین ورودی', exitCamera: 'دوربین خروجی', entry: 'ورودی', exit: 'خروجی',
     cameraError: 'اطلاعات دوربین‌های درب دریافت نشد.', detectionConfigError: 'قالب سرویس تشخیص پلاک دوربین معتبر نیست.', detectionError: 'ارتباط سرویس تشخیص پلاک برقرار نشد.',
     cameraLoading: 'در حال دریافت دوربین…', noCamera: 'برای این درب دوربین فعالی تعریف نشده است.', cameraUnavailable: 'تصویر دوربین انتخاب‌شده در دسترس نیست.',

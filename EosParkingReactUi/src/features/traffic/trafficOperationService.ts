@@ -23,7 +23,8 @@ export function trafficResult(response: unknown): unknown {
   const parsed = envelopeSchema.safeParse(response);
   if (!parsed.success) throw new TrafficOperationError();
   const result = parsed.data;
-  if (!['1', 'ok'].includes(String(result.ResponseResultType ?? result.responseResultType).toLowerCase())) {
+  const resultType = result.ResponseResultType ?? result.responseResultType;
+  if (resultType !== 1 && resultType !== '1') {
     // Message is the backend's public validation message; RealMessage may contain internal diagnostics.
     throw new TrafficOperationError(result.Message ?? result.message ?? '');
   }

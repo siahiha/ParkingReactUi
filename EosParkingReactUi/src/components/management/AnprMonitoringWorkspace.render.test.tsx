@@ -1,8 +1,19 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import '../../i18n/instance';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AnprMonitoringWorkspace } from './AnprMonitoringWorkspace';
 import { anprApi, parkingApi } from '../../api/management';
+
+const live = vi.hoisted(() => ({ error: (_cause: unknown) => {}, connected: () => {} }));
+vi.mock('../../api/anprRealtime', () => ({
+  AnprRealtimeConnection: class {
+    start(_source: boolean, _record: unknown, error: (cause: unknown) => void, connected: () => void) {
+      live.error = error; live.connected = connected; return Promise.resolve();
+    }
+    stop() {}
+  },
+}));
 
 vi.mock('../../api/management', async () => {
   const actual = await vi.importActual<typeof import('../../api/management')>('../../api/management');
@@ -29,6 +40,7 @@ const mockedAnprApi = vi.mocked(anprApi);
 const mockedParkingApi = vi.mocked(parkingApi);
 
 describe('AnprMonitoringWorkspace', () => {
+  afterEach(cleanup);
   beforeEach(() => {
     vi.clearAllMocks();
     mockedParkingApi.getDoors.mockResolvedValue({ Values: [{ Id: 7, Title: 'Gate 7' }] });
@@ -38,6 +50,22 @@ describe('AnprMonitoringWorkspace', () => {
     mockedAnprApi.listMemberPlates.mockResolvedValue({ Values: [{ Plate: '12الف345' }] });
     mockedAnprApi.listRecent.mockResolvedValue({ Values: [{ Id: 10, Plate: '12الف345', InsertTime: '2026-09-25T10:00:00Z' }] });
     mockedAnprApi.getPictureById.mockResolvedValue({ Values: { Id: 10, CarPic: [], PlatePic: [] } });
+  });
+
+  it('keeps live connection errors in the heading and does not erase a separate load error on reconnect', async () => {
+    mockedAnprApi.listRecent.mockRejectedValueOnce(new Error('snapshot failed'));
+    const user = userEvent.setup();
+    render(<AnprMonitoringWorkspace title="ANPR monitoring" parkingId={1} language="en" />);
+    const loadError = await screen.findByRole('alert');
+    expect(loadError).toHaveTextContent('ANPR records could not be loaded.');
+    act(() => live.error(new Error('disconnected')));
+    const indicator = screen.getByRole('img', { name: 'Live ANPR connection failed.' });
+    expect(screen.queryByText('Live ANPR connection failed.')).not.toBeInTheDocument();
+    await user.hover(indicator);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Live ANPR connection failed.');
+    act(() => live.connected());
+    expect(screen.queryByRole('img', { name: 'Live ANPR connection failed.' })).not.toBeInTheDocument();
+    expect(loadError).toHaveTextContent('ANPR records could not be loaded.');
   });
 
   it('loads the recent record grid and member status workflow', async () => {

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import '../../i18n/instance';
 import { TrafficControlGrids } from './TrafficControlGrids';
 
@@ -10,6 +11,30 @@ const rows = [
 const base = { rows, language: 'fa' as const, loading: false, error: '' as const, updatedAt: null, onExit: vi.fn(), onPay: vi.fn(), onCargo: vi.fn() };
 describe('traffic control grids', () => {
   afterEach(() => { cleanup(); vi.clearAllMocks(); });
+  it('shows refresh failures only in each heading and preserves selection and scroll through recovery', async () => {
+    const user = userEvent.setup();
+    const view = render(<TrafficControlGrids {...base} />);
+    const row = screen.getByText('علی - 123').closest('tr')!;
+    fireEvent.click(row);
+    const wrapper = row.closest('.app-data-grid-wrapper')!;
+    wrapper.scrollTop = 80;
+    view.rerender(<TrafficControlGrids {...base} error="loadError" />);
+    const message = 'به‌روزرسانی ترددها انجام نشد؛ اطلاعات نمایش‌داده‌شده ممکن است قدیمی باشد.';
+    expect(screen.queryByText(message)).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    for (const title of ['ورودها (۱)', 'خروج‌ها (۱)']) {
+      const panel = screen.getByRole('region', { name: title });
+      const indicator = within(panel).getByRole('img', { name: message });
+      expect(indicator.parentElement).toContainElement(within(panel).getByRole('heading', { name: title }));
+    }
+    await user.hover(screen.getAllByRole('img', { name: message })[0]);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(message);
+    view.rerender(<TrafficControlGrids {...base} />);
+    expect(screen.queryByRole('img', { name: message })).not.toBeInTheDocument();
+    expect(row).toHaveClass('Mui-selected');
+    expect(row.closest('.app-data-grid-wrapper')).toBe(wrapper);
+    expect(wrapper.scrollTop).toBe(80);
+  });
   it('renders the Windows columns and invokes exit on double-click without opening an editor', () => {
     render(<TrafficControlGrids {...base} />);
     const entries = screen.getByRole('region', { name: 'ورودها (۱)' });
