@@ -8,6 +8,7 @@ import { ManagementWorkspaceFrame } from './ManagementWorkspaceFrame';
 import { ResourceState } from './ResourceState';
 import { emptyParkingForm, parkingFormFromRow, parkingPayload, type Language, type ParkingForm, type RecordValue } from './managementTypes';
 import { parkingCopy, validateParkingForm } from './parkingCopy';
+import { parkingSettingsChangedEvent } from '../../features/home/parkingSelectionService';
 import './parkingDetails.css';
 
 type Props = { title: string; pageTitle?: string; parkingId: number; language: Language };
@@ -56,6 +57,7 @@ export function ParkingDetailsWorkspace({ title, pageTitle, parkingId, language 
       await parkingApi.save(parkingPayload(form));
       setMessage(copy.saved);
       await load();
+      window.dispatchEvent(new Event(parkingSettingsChangedEvent));
     } catch {
       setMessage(copy.saveError);
     } finally {

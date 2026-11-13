@@ -1,3 +1,4 @@
+import '../i18n/instance';
 import { useState } from 'react';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -12,6 +13,17 @@ function ControlledPlate({ initialValue = '', onComplete }: { initialValue?: str
 
 describe('IranianPlateInput value helpers', () => {
   afterEach(cleanup);
+  it('localizes vehicle actions and segment names when English is explicitly selected', () => {
+    const props = { label: 'Plate', value: '', carType: '0', onChange: vi.fn(), onCarTypeChange: vi.fn() };
+    const view = render(<IranianPlateInput {...props} language="en" />);
+    expect(screen.getByRole('button', { name: 'Motorcycle' })).toHaveAttribute('title', 'Motorcycle');
+    expect(screen.getByRole('textbox', { name: 'Plate - first two digits' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Plate - middle three digits' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Car / pickup' })).toBeVisible();
+    view.rerender(<IranianPlateInput {...props} language="en" carType="1" />);
+    expect(screen.getByRole('textbox', { name: 'Plate - first three motorcycle digits' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Plate - last five motorcycle digits' })).toBeVisible();
+  });
   it('uses the EosPlateControl storage order and normalizes Persian digits', () => {
     const parts = parseIranianPlate('۱۲ ب ۳۴۵ - ۶۷');
     expect(parts).toEqual({ left: '12', letter: 'ب', middle: '345', region: '67' });

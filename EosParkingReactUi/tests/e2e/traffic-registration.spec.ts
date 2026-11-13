@@ -17,7 +17,7 @@ test('entry and exit buttons persist traffic and retain the form on API business
     let value: unknown = [];
     let resultType = 1;
     let message = '';
-    if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'پارکینگ' }];
+    if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'پارکینگ', IsCommercialParking: true }];
     if (url.pathname.endsWith('/GetParkingDoors')) value = [{ Id: 8, Title: 'درب اصلی' }];
     if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, Title: 'درب اصلی', DoorType: 2 };
     if (url.pathname.endsWith('/GetTraffics')) value = entered ? [{ ...row, ExitDateTime: exited ? '2026-11-10T10:00:00' : null }] : [];
@@ -37,6 +37,15 @@ test('entry and exit buttons persist traffic and retain the form on API business
     return route.fulfill({ json: { ResponseResultType: resultType, Values: value, Message: message } });
   });
   await page.goto('/home/parking/manual-traffic');
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    const plate = page.locator('.traffic-plate-field .iranian-plate-control');
+    await expect(plate).toBeVisible();
+    const size = await plate.boundingBox();
+    expect(size?.width).toBe(190);
+    expect(size?.height).toBe(56);
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
   const card = page.getByRole('textbox', { name: 'شماره کارت', exact: true });
   await card.fill('1234');
   await card.press('Tab');

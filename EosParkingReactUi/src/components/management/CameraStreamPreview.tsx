@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { captureVideoFrame, type CameraFrameCapture } from '../../features/traffic/trafficImageCapture';
 import { Box, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
@@ -18,6 +20,7 @@ export type CameraStreamMode = 'Hls' | 'WebRTC';
 export type CameraStreamSize = number | { width: number | string; height?: number | string };
 
 export type CameraStreamPreviewProps = {
+  frameCaptureRef?: Ref<CameraFrameCapture>;
   camera: Camera;
   language: Language;
   viewer: string;
@@ -39,12 +42,12 @@ export type CameraStreamPreviewProps = {
   compact?: boolean;
 };
 
-const text = (language: Language, fa: string, en: string) => language === 'fa' ? fa : en;
+type PreviewError = '' | 'connectionFailed' | 'alreadyRegistered' | 'streamFailed' | 'browserUnsupported' | 'streamUnavailable' | 'streamTimeout' | 'videoError' | 'roiSaveError';
 
 function statusLabel(state: CameraStatusState, language: Language) {
-  const text = i18n.getFixedT(language) as unknown as (key: string) => string;
-  const keys: Record<CameraStatusState, string> = { Disconnected: 'camera.disconnected', Connecting: 'camera.connecting', Connected: 'camera.connected', Failed: 'camera.failed', Stopping: 'camera.stopping' };
-  return String(text(keys[state] ?? keys.Disconnected));
+  const t = i18n.getFixedT(language);
+  const keys = { Disconnected: 'camera.disconnected', Connecting: 'camera.connecting', Connected: 'camera.connected', Failed: 'camera.failed', Stopping: 'camera.stopping' } as const;
+  return t(keys[state] ?? keys.Disconnected);
 }
 
 function statusColor(state: CameraStatusState) {
@@ -126,14 +129,10 @@ function connectResponse(input: unknown, fallback: CameraStatus) {
   };
 }
 
-function backendErrorMessage(cause: unknown, language: Language) {
-  if (!(cause instanceof ApiError) || !cause.body || typeof cause.body !== 'object') return null;
+function hasBackendError(cause: unknown) {
+  if (!(cause instanceof ApiError) || !cause.body || typeof cause.body !== 'object') return false;
   const body = cause.body as Record<string, unknown>;
-  const rawMessage = String(body.ExceptionMessage ?? body.Message ?? '').trim();
-  if (rawMessage.toLowerCase().includes('already registered')) {
-    return i18n.getFixedT(language)('camera.alreadyRegistered');
-  }
-  return rawMessage || null;
+  return Boolean(String(body.ExceptionMessage ?? body.Message ?? '').trim());
 }
 
 function isAlreadyRegisteredError(cause: unknown) {
@@ -146,7 +145,8 @@ function sharedWebRtcUrl(cameraId: string, viewerId: string) {
   return `/api/rtspcamera/webrtc/${encodeURIComponent(cameraId)}/whep/${encodeURIComponent(viewerId)}`;
 }
 
-export function CameraStreamPreview({ camera, language, viewer, size = 200, showPlaybackControls = false, showStatus = true, showConnectionButton = true, showModeSwitcher = true, autoConnect = false, showRoiAction = true, compact = false }: CameraStreamPreviewProps) {
+export function CameraStreamPreview({ camera, language, viewer, size = 200, showPlaybackControls = false, showStatus = true, showConnectionButton = true, showModeSwitcher = true, autoConnect = false, showRoiAction = true, compact = false, frameCaptureRef }: CameraStreamPreviewProps) {
+  const { t } = useTranslation(undefined, { lng: language });
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const readerRef = useRef<{ close: () => void } | null>(null);
@@ -160,10 +160,14 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   const [streamMode, setStreamMode] = useState<CameraStreamMode>('WebRTC');
   const [streamUrl, setStreamUrl] = useState('');
   const [webRtcUrl, setWebRtcUrl] = useState('');
-  const [error, setError] = useState('');
+  const [errorKey, setError] = useState<PreviewError>('');
+  const error = errorKey ? t(`cameraPreview.${errorKey}`) : '';
   const [rois, setRois] = useState<CameraRoi[]>([]);
   const [videoReady, setVideoReady] = useState(false);
   statusRef.current = status;
+  useImperativeHandle(frameCaptureRef, () => ({
+    capture: () => status.state === 'Connected' && videoReady && !errorKey ? captureVideoFrame(videoRef.current) : null,
+  }), [status.state, videoReady, errorKey, camera.cameraId, viewer]);
 
   const connect = async (requestedMode: CameraStreamMode = streamMode) => {
     if (connectInFlightRef.current || !mountedRef.current) return;
@@ -219,7 +223,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
             return;
           }
           setStatus(nextStatus);
-          setError(nextStatus.error || '');
+          setError(nextStatus.error || nextStatus.state === 'Failed' ? 'connectionFailed' : '');
           setStreamUrl(nextStatus.state === 'Failed' ? '' : result.streamUrl || nextStatus.streamUrl || '');
           setWebRtcUrl(nextStatus.state === 'Failed' ? '' : result.webRtcUrl || nextStatus.webRtcUrl || '');
           const nextRois = await cameraApi.getRois(camera.cameraId, viewer);
@@ -233,7 +237,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
           if (isCancelled()) return;
           lastCause = cause;
           if (isAlreadyRegisteredError(cause) && await reuseActiveSession()) return;
-          if (!backendErrorMessage(cause, language) || attempt === 2) throw cause;
+          if (!hasBackendError(cause) || attempt === 2) throw cause;
           await releasePreviousSession();
           await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)));
         }
@@ -241,7 +245,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
     } catch (cause) {
       if (isCancelled()) return;
       setStatus((current) => ({ ...current, state: 'Failed' }));
-      setError(backendErrorMessage(lastCause ?? cause, language) ?? (cause instanceof ApiError ? `HTTP ${cause.status}` : text(language, 'ارتباط با دوربین برقرار نشد.', 'Camera connection failed.')));
+      setError(isAlreadyRegisteredError(lastCause ?? cause) ? 'alreadyRegistered' : 'connectionFailed');
     } finally {
       if (connectionAttemptRef.current === attemptId) connectInFlightRef.current = false;
     }
@@ -289,7 +293,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
       void cameraApi.getStatus(camera.cameraId).then((response) => {
         const next = normalizeStatus(response, statusRef.current ?? initialStatus);
         setStatus(next);
-        setError(next.error || (next.state === 'Failed' ? text(language, 'Stream دوربین با خطا متوقف شد.', 'The camera stream failed.') : ''));
+        setError(next.error || next.state === 'Failed' ? 'streamFailed' : '');
         if (next.state === 'Failed') {
           setStreamUrl('');
           setWebRtcUrl('');
@@ -305,13 +309,13 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
     setVideoReady(false);
     const url = resolveStreamUrl(webRtcUrl);
     if (!url || !window.MediaMTXWebRTCReader) {
-      setError(text(language, 'WebRTC در مرورگر آماده نیست.', 'WebRTC is not available in this browser.'));
+      setError('browserUnsupported');
       return undefined;
     }
     let cancelled = false;
     const reader = new window.MediaMTXWebRTCReader({
       url,
-      onError: (cause) => { if (!cancelled) setError(typeof cause === 'string' ? cause : text(language, 'اتصال WebRTC برقرار نشد.', 'WebRTC connection failed.')); },
+      onError: () => { if (!cancelled) setError('connectionFailed'); },
       onTrack: (event) => {
         if (cancelled) return;
         video.srcObject = event.streams[0];
@@ -335,7 +339,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
     setVideoReady(false);
     const url = resolveStreamUrl(streamUrl);
     if (!url) {
-      setError(text(language, 'آدرس stream دریافتی از Backend معتبر نیست.', 'The stream URL returned by the Backend is invalid.'));
+      setError('streamUnavailable');
       return undefined;
     }
     let cancelled = false;
@@ -353,13 +357,13 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
     };
     const start = async () => {
       if (!(await waitForManifest()) || cancelled) {
-        if (!cancelled) setError(text(language, 'فهرست تصویر دوربین آماده نشد.', 'The camera stream playlist did not become ready in time.'));
+        if (!cancelled) setError('streamTimeout');
         return;
       }
       if (Hls.isSupported()) {
         hls = new Hls({ enableWorker: true, lowLatencyMode: true, liveSyncDurationCount: 1, liveMaxLatencyDurationCount: 3, maxLiveSyncPlaybackRate: 1.5, maxBufferLength: 3, backBufferLength: 0, manifestLoadingMaxRetry: 10, manifestLoadingRetryDelay: 1000 });
         hlsRef.current = hls;
-        hls.on(Hls.Events.ERROR, (_event, data) => { if (data?.fatal && !cancelled) setError(text(language, 'خطای دریافت یا decode تصویر دوربین.', 'Camera stream or decode error.')); });
+        hls.on(Hls.Events.ERROR, (_event, data) => { if (data?.fatal && !cancelled) setError('videoError'); });
         hls.on(Hls.Events.MANIFEST_PARSED, () => { void video.play().catch(() => undefined); });
         hls.attachMedia(video);
         hls.loadSource(url);
@@ -367,7 +371,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
         video.src = url;
         void video.play().catch(() => undefined);
       } else {
-        setError(text(language, 'مرورگر از HLS پشتیبانی نمی‌کند.', 'This browser does not support HLS.'));
+        setError('browserUnsupported');
       }
     };
     void start();
@@ -385,12 +389,12 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
     if (status.state !== 'Connected') return;
     setError('');
     try {
-      const response = await cameraApi.saveRoi({ cameraId: camera.cameraId, viewerId: viewer, id: '', text: text(language, 'محدوده تشخیص', 'Detection region'), color: '#2e7d32', x: 0.2, y: 0.2, width: 0.4, height: 0.3 });
+      const response = await cameraApi.saveRoi({ cameraId: camera.cameraId, viewerId: viewer, id: '', text: t('cameraPreview.detectionRegion'), color: '#2e7d32', x: 0.2, y: 0.2, width: 0.4, height: 0.3 });
       const roi = asRoi(response);
       if (!roi) throw new Error('ROI response did not contain a saved ROI.');
       setRois((current) => [...current, roi]);
     } catch (cause) {
-      setError(cause instanceof ApiError ? `HTTP ${cause.status}` : text(language, 'ثبت ROI انجام نشد.', 'ROI could not be saved.'));
+      setError('roiSaveError');
     }
   };
 
@@ -410,7 +414,7 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
   const activeStream = streamMode === 'WebRTC' ? webRtcUrl : streamUrl;
   const isConnected = status.state === 'Connected';
   const isBusy = status.state === 'Connecting' || status.state === 'Stopping';
-  const statusDetails = error || String(status.error ?? '') || statusLabel(status.state, language);
+  const statusDetails = error || (status.error ? t('cameraPreview.connectionFailed') : statusLabel(status.state, language));
   const previewSize = typeof size === 'number' ? { width: size, height: size } : size;
   const hasToolbar = showConnectionButton || showModeSwitcher || showRoiAction;
   const switchMode = () => void connect(streamMode === 'WebRTC' ? 'Hls' : 'WebRTC');
@@ -437,20 +441,20 @@ export function CameraStreamPreview({ camera, language, viewer, size = 200, show
 
     {activeStream ? <Box className="camera-stream-media" sx={{ mt: compact ? 0.25 : 0.75, position: 'relative', width: previewSize.width, ...mediaFrameSize, maxWidth: '100%', bgcolor: 'common.black', borderRadius: compact ? 0.5 : 0.75, overflow: 'hidden' }}>
       <video ref={videoRef} autoPlay muted controls={showPlaybackControls} playsInline onPlay={resumeLive} onPause={pauseLive} onLoadedData={() => setVideoReady(true)} onCanPlay={() => setVideoReady(true)} onPlaying={() => setVideoReady(true)} onDoubleClick={() => { void videoRef.current?.parentElement?.requestFullscreen?.(); }} style={{ ...mediaSize, objectFit: 'contain', display: 'block' }} />
-      {!videoReady && <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }}><Typography variant="caption" color="common.white">{text(language, 'در حال دریافت تصویر...', 'Receiving video...')}</Typography></Box>}
+      {!videoReady && <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }}><Typography variant="caption" color="common.white">{t('cameraPreview.receiving')}</Typography></Box>}
       <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{rois.map((roi) => <Box key={roi.id} sx={{ position: 'absolute', left: `${roi.x * 100}%`, top: `${roi.y * 100}%`, width: `${roi.width * 100}%`, height: `${roi.height * 100}%`, border: `2px solid ${roi.color || '#2e7d32'}` }} />)}</Box>
-    </Box> : <Box className="camera-stream-media" sx={{ mt: compact ? 0.25 : 0.75, width: previewSize.width, ...mediaFrameSize, maxWidth: '100%', display: 'grid', placeItems: 'center', bgcolor: 'action.hover', borderRadius: compact ? 0.5 : 0.75 }}><Typography variant="caption" color="text.secondary" align="center">{text(language, 'پیش‌نمایش فعال نیست.', 'Preview is not running.')}</Typography></Box>}
+    </Box> : <Box className="camera-stream-media" sx={{ mt: compact ? 0.25 : 0.75, width: previewSize.width, ...mediaFrameSize, maxWidth: '100%', display: 'grid', placeItems: 'center', bgcolor: 'action.hover', borderRadius: compact ? 0.5 : 0.75 }}><Typography variant="caption" color="text.secondary" align="center">{t('cameraPreview.inactive')}</Typography></Box>}
 
     {hasToolbar && <Stack direction="row" spacing={0.25} sx={{ mt: compact ? 0.25 : 0.5, minHeight: compact ? 22 : 28, alignItems: 'center', justifyContent: 'center' }}>
-      {showConnectionButton && <Tooltip title={isConnected ? text(language, 'قطع اتصال', 'Disconnect') : text(language, 'اتصال به دوربین', 'Connect to camera')} arrow>
-        <span><IconButton size="small" color={isConnected ? 'error' : 'primary'} aria-label={isConnected ? 'Disconnect' : 'Connect'} onClick={() => void (isConnected ? disconnect() : connect())} disabled={isBusy} sx={{ p: 0.35 }}>
+      {showConnectionButton && <Tooltip title={isConnected ? t('cameraPreview.disconnect') : t('cameraPreview.connect')} arrow>
+        <span><IconButton size="small" color={isConnected ? 'error' : 'primary'} aria-label={t(isConnected ? 'cameraPreview.disconnect' : 'cameraPreview.connect')} onClick={() => void (isConnected ? disconnect() : connect())} disabled={isBusy} sx={{ p: 0.35 }}>
           {isConnected ? <LinkOffRoundedIcon sx={{ fontSize: 18 }} /> : <LinkRoundedIcon sx={{ fontSize: 18 }} />}
         </IconButton></span>
       </Tooltip>}
-      {showModeSwitcher && <Tooltip title={text(language, `تغییر به ${streamMode === 'WebRTC' ? 'HLS' : 'WebRTC'}`, `Switch to ${streamMode === 'WebRTC' ? 'HLS' : 'WebRTC'}`)} arrow>
-        <span><IconButton size="small" aria-label="Switch stream protocol" onClick={switchMode} disabled={isBusy} sx={{ p: 0.35 }}><KeyboardArrowDownRoundedIcon sx={{ fontSize: 19 }} /></IconButton></span>
+      {showModeSwitcher && <Tooltip title={t('cameraPreview.switchMode', { mode: streamMode === 'WebRTC' ? 'HLS' : 'WebRTC' })} arrow>
+        <span><IconButton size="small" aria-label={t('cameraPreview.switchMode', { mode: streamMode === 'WebRTC' ? 'HLS' : 'WebRTC' })} onClick={switchMode} disabled={isBusy} sx={{ p: 0.35 }}><KeyboardArrowDownRoundedIcon sx={{ fontSize: 19 }} /></IconButton></span>
       </Tooltip>}
-      {showRoiAction && <Tooltip title={text(language, 'تعریف ROI', 'Define ROI')} arrow><span><IconButton size="small" aria-label={text(language, 'تعریف ROI', 'Define ROI')} onClick={() => void saveRoi()} disabled={!isConnected} sx={{ p: 0.35 }}><TuneRoundedIcon sx={{ fontSize: 18 }} /></IconButton></span></Tooltip>}
+      {showRoiAction && <Tooltip title={t('cameraPreview.defineRegion')} arrow><span><IconButton size="small" aria-label={t('cameraPreview.defineRegion')} onClick={() => void saveRoi()} disabled={!isConnected} sx={{ p: 0.35 }}><TuneRoundedIcon sx={{ fontSize: 18 }} /></IconButton></span></Tooltip>}
     </Stack>}
   </Paper>;
 }

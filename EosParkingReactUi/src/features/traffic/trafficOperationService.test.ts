@@ -6,7 +6,20 @@ const input = { parkingId: 7, doorId: 8, userId: 9, plate: '12ب34567', carType:
 const openInfo = { ...input.info, DumpId: 42, EnterDateTime: '2026-11-10T08:00:00', ExitDateTime: null, ExitPermission: true };
 
 describe('traffic registration contract', () => {
+  const image = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jK1kAAAAASUVORK5CYII=';
   afterEach(() => vi.restoreAllMocks());
+  it('sends a new image through the existing image DTO for both entry and exit', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(json({ Id: 42 }))
+      .mockResolvedValueOnce(json({ DumpId: 42, ExitDateTime: '2026-11-10T10:00:00' }));
+    await trafficOperationService.enter({ ...input, trafficImage: `data:image/png;base64,${image}` });
+    await trafficOperationService.exit({ ...input, info: openInfo, trafficImage: image }, null);
+    for (const call of fetch.mock.calls) expect(JSON.parse(String(call[1]?.body)).DtoViewTrafficImages).toEqual([{ Id: 0, TrafficImage: image }]);
+  });
+  it.each([null, 'not an image', 'data:image/svg+xml;base64,PHN2Zz4='])('does not send invalid or absent image bytes: %j', async trafficImage => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({ Id: 42 }));
+    await trafficOperationService.enter({ ...input, trafficImage });
+    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body)).DtoViewTrafficImages).toEqual([]);
+  });
   it.each([1, '1'])('accepts the documented success value %j with either envelope casing', resultType => {
     expect(trafficResult({ ResponseResultType: resultType, Values: 42 })).toBe(42);
     expect(trafficResult({ responseResultType: resultType, values: 42 })).toBe(42);

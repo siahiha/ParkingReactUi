@@ -413,7 +413,7 @@ export function AnprMonitoringWorkspace({ title, pageTitle, parkingId, language 
 
   return <ManagementWorkspaceFrame title={title} pageTitle={pageTitle} language={language} loading={refreshing} onRefresh={() => { void loadRecords(true); }} headingActions={<>
     <ConnectionStatusIndicator message={liveError ? t('liveUpdates.anprFailed') : ''} />
-    <FormControl size="small" sx={{ width: 136 }}><InputLabel>{text(language, 'منبع تشخیص', 'ANPR source')}</InputLabel><Select label={text(language, 'منبع تشخیص', 'ANPR source')} value={source ? 'elmo' : 'shahab'} onChange={(event) => setSource(event.target.value === 'elmo')}><MenuItem value="shahab">{text(language, 'شهاب', 'Shahab')}</MenuItem><MenuItem value="elmo">{text(language, 'الموصنعت', 'Elmo Sanat')}</MenuItem></Select></FormControl>
+    <FormControl size="small" sx={{ width: 136 }}><InputLabel>{text(language, 'منبع تشخیص', 'ANPR source')}</InputLabel><Select label={text(language, 'منبع تشخیص', 'ANPR source')} value={source ? 'elmo' : 'shahab'} onChange={(event) => setSource(event.target.value === 'elmo')}><MenuItem value="shahab">{t('trafficLayout.plateReaderName')}</MenuItem><MenuItem value="elmo">{text(language, 'الموصنعت', 'Elmo Sanat')}</MenuItem></Select></FormControl>
     <Tooltip title={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} arrow><span><IconButton className="workspace-refresh-button" color="error" aria-label={text(language, 'حذف تصاویر قدیمی', 'Delete old pictures')} onClick={() => setConfirmOpen(true)} disabled={deleting}><DeleteSweepRoundedIcon /></IconButton></span></Tooltip>
   </>}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

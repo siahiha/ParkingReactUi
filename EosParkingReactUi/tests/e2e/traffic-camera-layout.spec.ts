@@ -19,8 +19,14 @@ async function setup(page: Page, language: 'fa' | 'en', dark: boolean, single = 
     if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'Parking' }];
     if (url.pathname.endsWith('/GetParkingDoors')) value = [{ Id: 8, Title: 'Main gate' }];
     if (url.pathname.endsWith('/GetParkingDoor')) value = {
-      Id: 8, DoorType: 2, EnteranceCamera: { Id: 17, DeviceName: 'North entry' },
-      ...(!single ? { ExitCamera: { Id: 18, DeviceName: 'North exit' } } : {}),
+      // Dedicated camera navigation properties are JsonIgnore in ParkingDoorEntity.
+      // GetParkingDoor sends them in DtoViewEquipments, including their direction.
+      Id: 8, DoorType: 2, EnteranceCameraId: 17, ExitCameraId: single ? null : 18,
+      DtoViewEquipments: [
+        { Key: { Id: 9, DeviceType: 1, DeviceName: 'Barrier' }, Value: 0 },
+        { Key: { Id: 17, DeviceType: 0, DeviceName: 'North entry' }, Value: 0 },
+        ...(!single ? [{ Key: { Id: 18, DeviceType: 0, DeviceName: 'North exit' }, Value: 1 }] : []),
+      ],
     };
     if (url.pathname.endsWith('/rtspcamera/connect')) {
       const body = route.request().postDataJSON();

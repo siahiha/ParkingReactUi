@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type Ref } from 'react';
 import { Alert, Box, Button, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AppPopup, type PopupAction } from '../../components/AppPopup';
-import { recordValue, type Language, type RecordValue } from '../../components/management/managementTypes';
+import { recordValue, type Language, type RecordValue } from '../../utils/records';
 import { formatDateTime, formatNumber } from '../../utils/formatters';
 import type { TrafficDoor } from './trafficDoorService';
 import type { trafficPaymentPolicy } from './trafficPaymentPolicy';
@@ -49,7 +49,8 @@ export function TrafficPaymentPopup({ bill, presentation, language, busy, error,
   const enteredAt = recordValue(bill, 'EnterDateTime');
   const exitedAt = recordValue(bill, 'ExitDateTime');
   const elapsed = (Date.parse(String(exitedAt)) - Date.parse(String(enteredAt))) / 60000;
-  const totalDuration = String(recordValue(bill, 'FormatedDuration') ?? '') || duration(Number.isFinite(elapsed) && elapsed >= 0 ? Math.floor(elapsed) : number('TotalDuration'));
+  // The legacy FormatedDuration is always Persian. Localize the same elapsed minutes.
+  const totalDuration = duration(Number.isFinite(elapsed) && elapsed >= 0 ? Math.floor(elapsed) : number('TotalDuration'));
   const memberCost = number('MemberCost') ?? 0;
   const memberDuration = number('MemberDuration') ?? 0;
   const commonDuration = number('CommonDuration') ?? 0;

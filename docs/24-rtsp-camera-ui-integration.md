@@ -77,7 +77,10 @@ type CameraStreamPreviewProps = {
   camera: Camera;
   language: Language;
   viewer: string;
-  size?: number | { width: number | string; height: number | string };
+  size?: number | { width: number | string; height?: number | string };
+  autoConnect?: boolean;          // پیش‌فرض false
+  compact?: boolean;              // پیش‌فرض false
+  frameCaptureRef?: React.Ref<{ capture: () => string | null }>;
   showPlaybackControls?: boolean; // پیش‌فرض false
   showStatus?: boolean;            // پیش‌فرض true
   showConnectionButton?: boolean;  // پیش‌فرض true
@@ -110,6 +113,14 @@ type CameraStreamPreviewProps = {
   showPlaybackControls
 />
 ```
+
+### گرفتن فریم برای عکس تردد
+
+**رفتار فعلی — ۲۰۲۶/۱۱/۱۳:** `frameCaptureRef` فقط یک دسترسی کنترل‌شده برای خواندن فریم ویدئو از طریق ref React ارائه می‌دهد. `capture()` Base64 خام یا `null` برمی‌گرداند؛ دوربین باید متصل، بدون خطای جاری و دارای ویدئوی آماده و در حال پخش باشد. ویدئوی متوقف، پایان‌یافته یا فاقد ابعاد/فریم معتبر و خطای خواندن رسانه، عکس قابل ثبت تولید نمی‌کنند. Canvas فقط برای خواندن پیکسل است و state ظاهری خارج از React تغییر نمی‌کند.
+
+در `TrafficCameraPanels`، `captureRef.capture('entry' | 'exit')` فقط ref دوربین همان جهت را می‌خواند؛ دوربین مقابل جایگزین نمی‌شود. `operationDirection` به‌طور پیش‌فرض تب متناظر با جهت عملیات را انتخاب می‌کند. دوربینی که پیش‌نمایش آن mount نشده یا فریم آماده ندارد، `null` می‌دهد؛ برای عکس ثبت، اتصال اضافی یا polling جدید ساخته نمی‌شود. عکس دوربین هنگام فشردن دکمه گرفته می‌شود و تنها وقتی عکس معتبرِ تشخیص همان پلاک در دسترس نباشد به‌کار می‌رود.
+
+فریم UI ممکن است تا ۵۱۲٬۰۰۰ بایت و ضلع ۱۶۰۰ پیکسل آماده شود؛ **سقف ذخیرهٔ نهایی** با helper بک‌اند زیر ۲۰٬۰۰۰ بایت و ضلع حداکثر ۶۴۰ پیکسل است. اولویت منبع، انتظار عکس تشخیص و DTO ذخیره در بخش ۳.۵.۴ [سند کنترل تردد](12-manual-traffic-control-form.md) مرجع‌اند. این رفتار تصویر زنده یا عکس‌های قبلی را با نسخهٔ فشردهٔ دیتابیس جایگزین نمی‌کند.
 
 ### رفتار فعلی اتصال و reconnect
 

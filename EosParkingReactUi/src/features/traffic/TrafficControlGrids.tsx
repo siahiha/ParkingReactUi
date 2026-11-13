@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Box, Button, IconButton, LinearProgress, Menu, MenuItem, Paper, TextField, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AppDataGrid, type AppDataGridColumn } from '../../components/AppDataGrid';
@@ -64,7 +64,7 @@ function TrafficTable({ title, rows, columns, language, emphasized, initialFocus
   </Paper>;
 }
 
-export function TrafficControlGrids({ rows, language, loading, error, updatedAt, busy = false, onExit, onPay, onCargo }: Props) {
+export const TrafficControlGrids = memo(function TrafficControlGrids({ rows, language, loading, error, updatedAt, busy = false, onExit, onPay, onCargo }: Props) {
   const { t } = useTranslation(undefined, { lng: language });
   const [search, setSearch] = useState('');
   const [cargoMenu, setCargoMenu] = useState<{ anchor: HTMLElement; row: TrafficGridRow; grid: TrafficGridId } | null>(null);
@@ -137,4 +137,4 @@ export function TrafficControlGrids({ rows, language, loading, error, updatedAt,
       <MenuItem onClick={() => chooseCargo(true)}><Box component="img" src={outboundIcon} alt="" sx={{ inlineSize: 16, blockSize: 16, marginInlineEnd: 1 }} />{t('trafficGrid.outboundCargo')}</MenuItem>
     </Menu>
   </Box>;
-}
+});

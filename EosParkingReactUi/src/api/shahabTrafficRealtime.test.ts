@@ -60,8 +60,15 @@ describe('Shahab traffic SignalR lifecycle', () => {
     expect(snapshot).toHaveBeenCalledWith(expect.objectContaining({ items: [expect.objectContaining({ plateText: '12ب34567', suppressAutomaticInput: true })] }));
     expect(detected).not.toHaveBeenCalled();
     expect(historyStatus).toHaveBeenLastCalledWith('ready');
+    expect(vi.mocked(mock.proxy.invoke).mock.calls.filter(call => call[0] === 'getPicture')).toHaveLength(0);
+    const history = snapshot.mock.calls[0][0];
+    await expect(history.loadArtifact('shahab:3:21:entry', 'PlateCrop')).resolves.toMatch(/^data:image\/png/);
+    expect(mock.proxy.invoke).toHaveBeenLastCalledWith('getPicture', 8, '21', 'PlateCrop');
+    await expect(history.loadArtifact('missing-record', 'PlateCrop')).resolves.toBeNull();
     mock.handlers.reconnected(); await vi.advanceTimersByTimeAsync(0);
     expect(snapshot).toHaveBeenCalledTimes(2);
+    feed.stop();
+    await expect(history.loadArtifact('shahab:3:21:entry', 'FullFrameRaw')).resolves.toBeNull();
   });
 
   it('rejects out-of-day snapshots and never presents them as successful history', async () => {

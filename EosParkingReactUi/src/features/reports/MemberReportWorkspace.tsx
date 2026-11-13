@@ -1,8 +1,9 @@
+import { ReportPreview } from './ReportPreview';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, MenuItem, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, MenuItem, TextField } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Viewer, Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
+import { Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
 import { memberApi } from '../../api/management';
 import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
@@ -177,17 +178,6 @@ export function MemberReportWorkspace({ title, parkingId, language, state }: Pro
     });
     return () => { current = false; };
   }, [rows, language, fa]);
-  const viewerOptions = useMemo(() => {
-    const options = new Stimulsoft.Viewer.StiViewerOptions();
-    options.width = '100%';
-    options.height = '100%';
-    options.appearance.fullScreenMode = false;
-    options.appearance.rightToLeft = fa;
-    options.toolbar.showOpenButton = false;
-    options.toolbar.showSaveButton = false;
-    options.toolbar.showSendEmailButton = false;
-    return options;
-  }, [fa]);
 
   const runReport = () => {
     if (fromDate > toDate) {
@@ -239,9 +229,6 @@ export function MemberReportWorkspace({ title, parkingId, language, state }: Pro
     {kindError && <Alert severity="warning" sx={{ mb: 2 }}>{kindError}</Alert>}
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{fa ? 'فیلترها را انتخاب کنید و نمایش گزارش را بزنید.' : 'Choose the filters and select Show report.'}</Alert>}
-    {rows !== null && <Box className="stimulsoft-member-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{fa ? `${rows.length.toLocaleString('fa-IR')} رکورد` : `${rows.length.toLocaleString('en-US')} records`}</Typography>
-      {report && <Viewer id={viewerId} report={report} options={viewerOptions} visible />}
-    </Box>}
+    {rows !== null && <ReportPreview title={title} language={language} report={report} viewerId={viewerId} count={rows.length} resultKey={rows} busy={loadingReport || renderingReport} />}
   </ManagementWorkspaceFrame>;
 }

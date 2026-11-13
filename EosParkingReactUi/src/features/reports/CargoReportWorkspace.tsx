@@ -1,11 +1,13 @@
+import { ReportPreview } from './ReportPreview';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Viewer, Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
+import { Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
 import { cargoApi, reportApi } from '../../api/management';
 import { EosDateTimePicker } from '../../components/EosDateTimePicker';
-import { IranianPlateInput } from '../../components/IranianPlateInput';
+import { IranianPlateInput, isValidIranianPlate } from '../../components/IranianPlateInput';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
@@ -95,6 +97,7 @@ async function createReport(rows: ReportRow[], language: Language, titleDescript
 }
 
 export function CargoReportWorkspace({ title, language }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const fa = language === 'fa';
   const today = useMemo(() => dateValue(new Date()), []);
   const previousMonth = useMemo(() => { const date = new Date(); date.setMonth(date.getMonth() - 1); return dateValue(date); }, []);
@@ -139,14 +142,9 @@ export function CargoReportWorkspace({ title, language }: Props) {
     return () => { current = false; };
   }, [rows, language, fromDate, toDate, withAttachments, fa]);
 
-  const viewerOptions = useMemo(() => {
-    const options = new Stimulsoft.Viewer.StiViewerOptions();
-    options.width = '100%'; options.height = '100%'; options.appearance.fullScreenMode = false; options.appearance.rightToLeft = fa;
-    options.toolbar.showOpenButton = false; options.toolbar.showSaveButton = false; options.toolbar.showSendEmailButton = false;
-    return options;
-  }, [fa]);
 
   const runReport = () => {
+    if (plate && !isValidIranianPlate(plate, carType)) { setError(t('reportFilters.invalidPlate')); return; }
     if (fromDate > toDate) { setError(fa ? 'تاریخ شروع نباید بعد از تاریخ پایان باشد.' : 'The start date cannot be after the end date.'); return; }
     setLoadingReport(true); setError(''); setRows(null);
     void reportApi.cargoDetails({ StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, Plate: plate.trim(), DriverId: driverId ? Number(driverId) : null, MerchandiseId: merchandiseId ? Number(merchandiseId) : null, OriginSectionId: originSectionId ? Number(originSectionId) : null, DestinationSectionId: destinationSectionId ? Number(destinationSectionId) : null, IsNeedAttachment: withAttachments }).then((response) => setRows(normalizeCargoRows(response))).catch((reason: unknown) => { setRows(null); setError(reason instanceof Error ? reason.message : (fa ? 'دریافت گزارش حمل بار ناموفق بود.' : 'The cargo report could not be loaded.')); }).finally(() => setLoadingReport(false));
@@ -156,7 +154,7 @@ export function CargoReportWorkspace({ title, language }: Props) {
   const toolbar = <Box className="report-filter-toolbar cargo-report-filter-toolbar">
     <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'از تاریخ' : 'From date'} value={fromDate} onChange={setFromDate} language={language} dateOnly size="small" /></Box>
     <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'تا تاریخ' : 'To date'} value={toDate} onChange={setToDate} language={language} dateOnly size="small" /></Box>
-    <Box className="cargo-report-plate"><IranianPlateInput label={fa ? 'پلاک' : 'Plate'} value={plate} carType={carType} onChange={setPlate} onCarTypeChange={setCarType} disabled={loadingReport} /></Box>
+    <Box className="report-plate-filter"><IranianPlateInput language={language} label={t('reportFilters.plate')} value={plate} carType={carType} onChange={setPlate} onCarTypeChange={setCarType} disabled={loadingReport} /></Box>
     {optionSelect(fa ? 'راننده' : 'Driver', driverId, setDriverId, drivers)}
     {optionSelect(fa ? 'کالا' : 'Merchandise', merchandiseId, setMerchandiseId, merchandises)}
     {optionSelect(fa ? 'مبدا' : 'Origin', originSectionId, setOriginSectionId, originSections)}
@@ -168,6 +166,6 @@ export function CargoReportWorkspace({ title, language }: Props) {
   return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport || renderingReport} onRefresh={runReport} toolbar={toolbar}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{fa ? 'فیلترها را انتخاب کنید و نمایش گزارش را بزنید.' : 'Choose the filters and select Show report.'}</Alert>}
-    {rows !== null && <Box className="stimulsoft-cargo-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{fa ? `${rows.length.toLocaleString('fa-IR')} رکورد` : `${rows.length.toLocaleString('en-US')} records`}</Typography>{report && <Viewer id="cargo-report-viewer" report={report} options={viewerOptions} visible />}</Box>}
+    {rows !== null && <ReportPreview title={title} language={language} report={report} viewerId={'cargo-report-viewer'} count={rows.length} resultKey={rows} busy={loadingReport || renderingReport} />}
   </ManagementWorkspaceFrame>;
 }

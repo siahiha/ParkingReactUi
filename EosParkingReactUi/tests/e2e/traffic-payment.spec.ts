@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import fa from '../../src/locales/fa';
 
 type Bill = Record<string, unknown>;
-async function setup(page: Page, billOverrides: Bill = {}, config: Bill = {}, devices = false) {
+async function setup(page: Page, billOverrides: Bill = {}, config: Bill = {}, devices = false, checkout: { commercial?: boolean; history?: boolean; invalidParkingFlag?: boolean } = {}) {
   await page.addInitScript(() => {
     sessionStorage.setItem('eos-parking-auth-session', JSON.stringify({ user: { id: 7, userName: 'operator', currentParking: 7, permissions: [], canManageDashboard: true } }));
     localStorage.setItem('locale', 'fa');
@@ -15,31 +15,38 @@ async function setup(page: Page, billOverrides: Bill = {}, config: Bill = {}, de
     PayType: 0, CommonCost: 3000, MemberCost: 7000, TotalCost: 10000, MemberDuration: 60, CommonDuration: 60,
     TaxValue: 300, TarrifTitle: 'تعرفه روزانه', ExitPermission: true, ...billOverrides,
   };
-  const state = { exits: 0, payments: 0, receipt: 'receipt-42', paymentType: 1, delayPayment: false, releasePayment: () => {}, lookups: 0 };
+  const state = { commercial: checkout.commercial ?? true, exits: 0, payments: 0, paid: false, receipt: 'receipt-42', paymentType: 1, delayPayment: false, releasePayment: () => {}, lookups: 0 };
   await page.route('**/backend/api/**', async route => {
     const url = new URL(route.request().url());
     let value: unknown = [];
     let resultType = 1;
-    if (url.pathname.endsWith('/Parking/Get')) value = [{ Id: 7, ParkingName: 'پارکینگ مرکزی' }];
+    if (url.pathname.endsWith('/Parking/Get')) value = [
+      { Id: 7, ParkingName: 'پارکینگ مرکزی', IsCommercialParking: checkout.invalidParkingFlag ? 'true' : state.commercial },
+      { Id: 9, ParkingName: 'پارکینگ دوم', IsCommercialParking: true },
+    ];
     if (url.pathname.endsWith('/GetParkingDoors')) value = [{ Id: 8, Title: 'درب اصلی' }];
     if (url.pathname.endsWith('/GetParkingDoor')) value = { Id: 8, DoorType: 2, ...(devices ? { PcPos: { Disabled: false }, HaveLcdPrice: true } : {}) };
-    if (url.pathname.endsWith('/GetTraffics')) value = [{ ...bill, ExitDateTime: state.exits ? bill.ExitDateTime : null }];
+    const row = { ...bill, ExitDateTime: state.exits ? bill.ExitDateTime : null, PayType: state.paid ? 1 : bill.PayType };
+    if (url.pathname.endsWith('/GetTraffics')) value = [row];
+    if (url.pathname.endsWith('/GetAllTraffics')) value = { Items: [row], TotalCount: 1 };
     if (url.pathname.endsWith('/GetCarTrafficInfo')) {
       state.lookups++;
       value = { ...bill, Plate: bill.CarPlate, CardNumber: url.searchParams.get('memberCard') || '1234', ExitDateTime: null };
     }
-    if (url.pathname.endsWith('/DoExitDump')) { state.exits++; value = bill; }
+    if (url.pathname.endsWith('/DoExitDump')) { state.exits++; state.paid = bill.CommonCost === 0 || bill.PayType === 1; value = bill; }
     if (url.pathname.endsWith('/PayDump')) {
       state.payments++;
       expect(url.searchParams.get('payType')).toBe('1');
       expect(url.searchParams.get('dumpId')).toBe('42');
+      expect(state.exits).toBeGreaterThan(0);
       if (state.delayPayment) await new Promise<void>(resolve => { state.releasePayment = resolve; });
       resultType = state.paymentType;
       value = state.receipt;
+      if (resultType === 1 && state.receipt.trim()) state.paid = true;
     }
     return route.fulfill({ json: { ResponseResultType: resultType, Values: value } });
   });
-  await page.goto('/home/parking/manual-traffic');
+  await page.goto(`/home/parking/${checkout.history ? 'traffic-records' : 'manual-traffic'}`);
   return state;
 }
 const payment = (page: Page) => page.getByRole('dialog', { name: fa.trafficPayment.title, exact: true });
@@ -50,6 +57,111 @@ async function exit(page: Page) {
   await page.locator('.traffic-operation-actions').getByRole('button', { name: 'خروج', exact: true }).click();
   await page.mouse.move(0, 0);
 }
+
+for (const member of [false, true]) test(`non-commercial exit settles immediately without a popup for member=${member}`, async ({ page }) => {
+  const state = await setup(page, { MemberCode: member ? '76101' : '' }, {}, false, { commercial: false });
+  state.delayPayment = true;
+  await exit(page);
+  await expect.poll(() => state.payments).toBe(1);
+  await expect(payment(page)).toHaveCount(0);
+  await expect(card(page)).toBeDisabled();
+  await expect(page.locator('.traffic-operation-actions').getByRole('button', { name: fa.trafficOperation.exit, exact: true })).toBeDisabled();
+  expect(state.exits).toBe(1);
+  state.releasePayment();
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.exitSettled })).toBeVisible();
+  await expect(card(page)).toHaveValue('');
+  await expect(card(page)).toBeEnabled();
+  await expect(payment(page)).toHaveCount(0);
+  await expect(page.locator('.traffic-split-panel').nth(1).locator('tbody tr')).toContainText(fa.trafficGrid.paymentTypes[1]);
+  expect(state.payments).toBe(1);
+});
+
+for (const history of [false, true]) test(`non-commercial failed settlement keeps exit and retries payment without another exit, history=${history}`, async ({ page }) => {
+  const state = await setup(page, {}, {}, false, { commercial: false, history });
+  state.receipt = '';
+  if (history) {
+    await card(page).fill('1234');
+    await page.getByRole('button', { name: fa.trafficOperation.lookup, exact: true }).click();
+    await page.getByRole('button', { name: fa.trafficWorkspace.calculateExit, exact: true }).click();
+    await page.mouse.move(0, 0);
+  } else await exit(page);
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.autoSettlementFailed })).toBeVisible();
+  await expect(payment(page)).toHaveCount(0);
+  expect(state.exits).toBe(1);
+  expect(state.payments).toBe(1);
+  state.receipt = 'receipt-42';
+  const grid = history ? page.locator('.traffic-records-grid') : page.locator('.traffic-split-panel').nth(1);
+  await grid.locator('tbody tr').click();
+  await grid.getByRole('button', { name: fa.trafficGrid.pay, exact: true }).click();
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.settled })).toBeVisible();
+  await expect(payment(page)).toHaveCount(0);
+  expect(state.exits).toBe(1);
+  expect(state.payments).toBe(2);
+  expect(state.paid).toBe(true);
+});
+
+test('commercial history exit preserves the bill popup without automatic payment', async ({ page }) => {
+  const state = await setup(page, {}, {}, false, { commercial: true, history: true });
+  await card(page).fill('1234');
+  await page.getByRole('button', { name: fa.trafficOperation.lookup, exact: true }).click();
+  await page.getByRole('button', { name: fa.trafficWorkspace.calculateExit, exact: true }).click();
+  await expect(payment(page)).toBeVisible();
+  await expect(payment(page).getByRole('timer')).toHaveCount(0);
+  expect(state.exits).toBe(1);
+  expect(state.payments).toBe(0);
+});
+
+test('non-commercial history exit also settles without opening the bill', async ({ page }) => {
+  const state = await setup(page, {}, {}, false, { commercial: false, history: true });
+  await card(page).fill('1234');
+  await page.getByRole('button', { name: fa.trafficOperation.lookup, exact: true }).click();
+  await page.getByRole('button', { name: fa.trafficWorkspace.calculateExit, exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.exitSettled })).toBeVisible();
+  await expect(payment(page)).toHaveCount(0);
+  expect(state.exits).toBe(1);
+  expect(state.payments).toBe(1);
+});
+
+for (const overrides of [{ CommonCost: 0 }, { CommonCost: 0, MemberCode: '' }, { PayType: 1 }]) test(`non-commercial free or already settled exit avoids a duplicate payment ${JSON.stringify(overrides)}`, async ({ page }) => {
+  const state = await setup(page, overrides, {}, false, { commercial: false });
+  await exit(page);
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.exitSettled })).toBeVisible();
+  await expect(payment(page)).toHaveCount(0);
+  expect(state.exits).toBe(1);
+  expect(state.payments).toBe(0);
+});
+
+test('uses the selected parking mode after changing from non-commercial to commercial', async ({ page }) => {
+  const state = await setup(page, {}, {}, false, { commercial: false });
+  await page.getByRole('combobox', { name: fa.home.chooseParking, exact: true }).click();
+  await page.getByRole('option', { name: 'پارکینگ دوم', exact: true }).click();
+  await exit(page);
+  await expect(payment(page)).toBeVisible();
+  expect(state.exits).toBe(1);
+  expect(state.payments).toBe(0);
+});
+
+test('reloads changed commercial settings when returning to traffic in the same session', async ({ page }) => {
+  const state = await setup(page);
+  await expect(card(page)).toBeVisible();
+  await page.getByRole('tab', { name: fa.home.menuHome, exact: true }).click();
+  state.commercial = false;
+  await page.getByRole('tab', { name: fa.homeMenu.items['manual-traffic'], exact: true }).click();
+  await exit(page);
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.exitSettled })).toBeVisible();
+  await expect(payment(page)).toHaveCount(0);
+  expect(state.payments).toBe(1);
+});
+
+test('does not commit an exit when the parking checkout mode is invalid', async ({ page }) => {
+  const state = await setup(page, {}, {}, false, { invalidParkingFlag: true });
+  await exit(page);
+  await expect(page.getByRole('alert').filter({ hasText: fa.trafficOperation.parkingSettingsUnavailable })).toBeVisible();
+  await expect(payment(page)).toHaveCount(0);
+  expect(state.exits).toBe(0);
+  expect(state.payments).toBe(0);
+});
 
 test('matches the Windows detail sequence and keeps the modal open on missing receipt or failed payment', async ({ page }, testInfo) => {
   const state = await setup(page, {}, {}, true);

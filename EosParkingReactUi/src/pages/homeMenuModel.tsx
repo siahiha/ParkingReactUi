@@ -84,8 +84,16 @@ function filterVisibleGroup(group: HomeMenuGroup, hasPart1: (bit: bigint, permis
   return { ...group, items, ...(group.subgroups ? { subgroups } : {}) };
 }
 
-export function visibleParkingGroups(user: HomeUser, groups: HomeMenuGroup[], hasPart1: (bit: bigint, permissionName?: string) => boolean, hasPart2: (bit: bigint) => boolean) {
-  return user.canManageDashboard ? groups : groups.map((group) => filterVisibleGroup(group, hasPart1, hasPart2)).filter((group): group is HomeMenuGroup => Boolean(group));
+const commercialReportKeys = new Set(['parking-income', 'monthly-parking-income', 'management-monthly-income-comparison', 'management-income-comparison', 'management-yearly-income-comparison', 'management-free-parking-income']);
+
+export function visibleParkingGroups(user: HomeUser, groups: HomeMenuGroup[], hasPart1: (bit: bigint, permissionName?: string) => boolean, hasPart2: (bit: bigint) => boolean, hasUserShifts = false, isCommercialParking = false) {
+  const filterAvailable = (entries: HomeMenuGroup[]): HomeMenuGroup[] => entries.flatMap(group => {
+    const items = group.items.filter(item => (item.key !== 'shifts' || hasUserShifts) && (!commercialReportKeys.has(item.key) || isCommercialParking));
+    const subgroups = group.subgroups ? filterAvailable(group.subgroups) : undefined;
+    return items.length || subgroups?.length ? [{ ...group, items, ...(subgroups ? { subgroups } : {}) }] : [];
+  });
+  const available = filterAvailable(groups);
+  return user.canManageDashboard ? available : available.map((group) => filterVisibleGroup(group, hasPart1, hasPart2)).filter((group): group is HomeMenuGroup => Boolean(group));
 }
 
 export function visibleManagementItems(user: HomeUser, items: Array<HomeMenuItem & { key: ManagementSection }>, hasPart1: (bit: bigint, permissionName?: string) => boolean, hasPart2: (bit: bigint) => boolean) {

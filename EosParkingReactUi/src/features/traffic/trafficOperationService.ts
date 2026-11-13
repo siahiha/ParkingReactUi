@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { apiRequest } from '../../api/client';
 import { trafficApi } from '../../api/management';
-import { recordValue, type RecordValue } from '../../components/management/managementTypes';
+import { recordValue, type RecordValue } from '../../utils/records';
 import { appConfig } from '../../config';
 import { trafficAlerts, type TrafficAlert } from './trafficPolicy';
 import type { TrafficDoorType } from './trafficDoorService';
+import { trafficImage } from './trafficImages';
 
 export class TrafficOperationError extends Error {
   constructor(public readonly userMessage = '', public readonly messageKey: TrafficAlert['key'] | 'invalidQr' | 'vehicleForbidden' | 'selectVehicle' | 'directionUnavailable' | '' = '') { super('Traffic operation failed'); }
@@ -49,6 +50,7 @@ export function hasOpenTraffic(info: RecordValue) {
 }
 
 export type TrafficOperationInput = {
+  trafficImage?: string | null;
   parkingId: number; doorId: number; doorType?: TrafficDoorType; userId?: number; plate: string; carType: number; info: RecordValue;
 };
 
@@ -65,7 +67,9 @@ async function tariffIdFor(input: TrafficOperationInput): Promise<number> {
 
 async function dumpPayload(input: TrafficOperationInput) {
   if (input.doorId <= 0 || input.parkingId <= 0) throw new TrafficOperationError();
+  const image = trafficImage(input.trafficImage);
   return {
+    DtoViewTrafficImages: image ? [{ Id: 0, TrafficImage: image.base64 }] : [],
     CardId: idOf(input.info, 'CardId') || null, MemberId: idOf(input.info, 'MemberId') || null,
     CarId: idOf(input.info, 'CarId') || null, CarPlate: input.plate, CarType: input.carType,
     TariffId: await tariffIdFor(input), SourceType: 2, IdOnDevice: 0,

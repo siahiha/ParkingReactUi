@@ -1,4 +1,4 @@
-import { recordValue, type RecordValue } from '../../components/management/managementTypes';
+import { recordValue, type RecordValue } from '../../utils/records';
 
 export type TrafficGridRow = RecordValue;
 export const trafficId = (row: TrafficGridRow) => String(recordValue(row, 'DumpId') ?? recordValue(row, 'Id'));

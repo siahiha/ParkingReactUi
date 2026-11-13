@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { apiRequest } from '../../api/client';
-import { recordValue, type RecordValue } from '../../components/management/managementTypes';
+import { recordValue, type RecordValue } from '../../utils/records';
 import { normalizeIranianPlateValue } from '../../components/IranianPlateInput';
 import { trafficResult, TrafficOperationError } from './trafficOperationService';
 import { trafficImage } from './trafficImages';

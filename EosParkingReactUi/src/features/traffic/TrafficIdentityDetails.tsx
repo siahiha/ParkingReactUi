@@ -5,7 +5,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useTranslation } from 'react-i18next';
 import { useId } from 'react';
-import { recordValue } from '../../components/management/managementTypes';
+import { recordValue } from '../../utils/records';
 import { formatDateTime, formatNumber } from '../../utils/formatters';
 import type { Language } from '../../i18n/instance';
 import { trafficBoolean } from './trafficPolicy';

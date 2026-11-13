@@ -1,8 +1,8 @@
 import type { Language } from '../../i18n/instance';
 
 export type { Language };
-export type Primitive = string | number | boolean | null | undefined;
-export type RecordValue = Record<string, Primitive>;
+import { asRows, recordValue, type Primitive, type RecordValue } from '../../utils/records';
+export { asRows, recordValue, unwrapValues, type Primitive, type RecordValue } from '../../utils/records';
 
 export type ParkingForm = {
   Id: number;
@@ -163,23 +163,6 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
     columns: [{ key: 'FloorTitle', fa: 'طبقه', en: 'Floor' }, { key: 'ParkSpaceTitle', fa: 'جای پارک', en: 'Space' }, { key: 'MemberFullName', fa: 'عضو', en: 'Member' }, { key: 'ParkSpaceId', fa: 'شناسه', en: 'ID' }],
   },
 };
-
-export function unwrapValues(input: unknown): unknown {
-  if (Array.isArray(input)) return input;
-  if (!input || typeof input !== 'object') return input;
-  const value = input as Record<string, unknown>;
-  return value.Values ?? value.values ?? value.Data ?? value.data ?? input;
-}
-
-export function asRows(input: unknown): RecordValue[] {
-  const value = unwrapValues(input);
-  if (Array.isArray(value)) return value.filter((row): row is RecordValue => Boolean(row && typeof row === 'object'));
-  return value && typeof value === 'object' ? [value as RecordValue] : [];
-}
-
-export function recordValue(row: RecordValue, key: string): Primitive {
-  return row[key] ?? row[key.charAt(0).toLowerCase() + key.slice(1)];
-}
 
 export function formatValue(value: Primitive, language: Language) {
   if (typeof value === 'boolean') return value ? (language === 'fa' ? 'بله' : 'Yes') : (language === 'fa' ? 'خیر' : 'No');

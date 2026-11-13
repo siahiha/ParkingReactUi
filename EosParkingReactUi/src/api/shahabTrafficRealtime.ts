@@ -6,7 +6,8 @@ import { trafficImage } from '../features/traffic/trafficImages';
 
 export type ShahabTrafficStatus = 'connecting' | 'connected' | 'reconnecting' | 'unavailable' | 'unauthorized' | 'forbidden' | 'notFound' | 'invalidConfiguration';
 export type ShahabHistoryStatus = 'loading' | 'ready' | 'error';
-export type ShahabHistorySnapshot = { items: HshDetectionEvent[]; serverTimeUtc: string; dayStartUtc: string; dayEndUtc: string };
+export type ShahabHistorySnapshot = { items: HshDetectionEvent[]; serverTimeUtc: string; dayStartUtc: string; dayEndUtc: string;
+  loadArtifact?: (eventId: string, kind?: string) => Promise<string | null> };
 const id = z.string().regex(/^[1-9]\d*$/);
 const envelope = z.object({ RequestId: z.string(), DoorId: z.number().int().positive() });
 const detectionSchema = envelope.extend({
@@ -131,7 +132,11 @@ export class ShahabTrafficRealtimeConnection {
       if (start > now || end <= now || end <= start || end - start > 48 * 3600000
         || reply.Items.some(item => !this.matches(item) || Date.parse(item.OccurredAtUtc) < start || Date.parse(item.OccurredAtUtc) > now)) throw new Error('Invalid history window');
       this.onHistory({ serverTimeUtc: reply.ServerTimeUtc, dayStartUtc: reply.DayStartUtc, dayEndUtc: reply.DayEndUtc,
-        items: reply.Items.map(record => ({ eventId: record.EventId, sequence: 0, eventType: 'plate.detected', occurredAtUtc: record.OccurredAtUtc,
+        loadArtifact: (eventId, kind) => {
+          const record = reply.Items.find(item => item.EventId === eventId);
+          return record ? this.picture(record.RecordId, kind ?? 'FullFrameRaw') : Promise.resolve(null);
+        },
+        items: reply.Items.map(record => ({ eventId: record.EventId, recordId: record.RecordId, sequence: 0, eventType: 'plate.detected', occurredAtUtc: record.OccurredAtUtc,
           source: { cameraId: record.CameraId, direction: record.Direction }, plateText: record.PlateText, matched: true, confidence: null,
           matchingTriggerIds: [], artifacts: [], raw: {}, suppressAutomaticInput: record.IsRepeated })) });
       this.onHistoryStatus?.('ready');
@@ -165,7 +170,7 @@ export class ShahabTrafficRealtimeConnection {
     if (!repeated) this.plates.set(plateKey, detectedAt);
     for (const [key, time] of this.plates) if (Date.parse(record.ServerTimeUtc) - time > 45000) this.plates.delete(key);
     const event: HshDetectionEvent = {
-      eventId: record.EventId, sequence: ++this.sequence, eventType: 'plate.detected', occurredAtUtc: record.OccurredAtUtc,
+      eventId: record.EventId, recordId: record.RecordId, sequence: ++this.sequence, eventType: 'plate.detected', occurredAtUtc: record.OccurredAtUtc,
       source: { cameraId: record.CameraId, direction: record.Direction }, matched: true, matchingTriggerIds: [],
       plateText: record.PlateText, confidence: null, artifacts: [], raw: canonical(payload), suppressAutomaticInput: repeated,
     };
@@ -177,13 +182,18 @@ export class ShahabTrafficRealtimeConnection {
       if (this.stopped || !this.proxy || !['FullFrameRaw', 'PlateCrop'].includes(type)) return Promise.resolve(null);
       let picture = pictures.get(type);
       if (!picture) {
-        const proxy = this.proxy;
-        picture = proxy.invoke('getPicture', this.doorId, record.RecordId, type)
-          .then(value => !this.stopped && this.proxy === proxy ? trafficImage(value)?.url ?? null : null).catch(() => null);
+        picture = this.picture(record.RecordId, type);
         pictures.set(type, picture);
       }
       return picture;
     })).catch(() => { if (!this.stopped) this.onStatus('unavailable'); });
+  }
+
+  private picture(recordId: string, type: string): Promise<string | null> {
+    const proxy = this.proxy;
+    if (this.stopped || !proxy || !['FullFrameRaw', 'PlateCrop'].includes(type)) return Promise.resolve(null);
+    return proxy.invoke('getPicture', this.doorId, recordId, type)
+      .then(value => !this.stopped && this.proxy === proxy ? trafficImage(value)?.url ?? null : null).catch(() => null);
   }
 
   private status(status: ShahabTrafficStatus) {

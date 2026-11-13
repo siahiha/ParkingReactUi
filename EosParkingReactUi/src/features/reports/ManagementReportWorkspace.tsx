@@ -1,11 +1,13 @@
+import { ReportPreview } from './ReportPreview';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, Checkbox, CircularProgress, FormControl, InputLabel, ListItemText, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { Alert, Box, Button, Checkbox, CircularProgress, FormControl, InputLabel, ListItemText, MenuItem, Select, TextField } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Viewer, Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
+import { Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
 import { parkingApi, reportApi, userApi } from '../../api/management';
 import { EosDateTimePicker } from '../../components/EosDateTimePicker';
-import { IranianPlateInput } from '../../components/IranianPlateInput';
+import { IranianPlateInput, isValidIranianPlate } from '../../components/IranianPlateInput';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
@@ -185,6 +187,7 @@ const carTypes = [
 ];
 
 export function ManagementReportWorkspace({ title, language, kind }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const fa = language === 'fa';
   const today = useMemo(() => dateValue(new Date()), []);
   const previousMonth = useMemo(() => { const date = new Date(); date.setMonth(date.getMonth() - 1); return dateValue(date); }, []);
@@ -236,14 +239,9 @@ export function ManagementReportWorkspace({ title, language, kind }: Props) {
     return () => { current = false; };
   }, [rows, kind, language, fromDate, toDate, fa]);
 
-  const viewerOptions = useMemo(() => {
-    const options = new Stimulsoft.Viewer.StiViewerOptions();
-    options.width = '100%'; options.height = '100%'; options.appearance.fullScreenMode = false; options.appearance.rightToLeft = fa;
-    options.toolbar.showOpenButton = false; options.toolbar.showSaveButton = false; options.toolbar.showSendEmailButton = false;
-    return options;
-  }, [fa]);
 
   const runReport = () => {
+    if (kind === 'free-parking-income' && plate && !isValidIranianPlate(plate, plateCarType)) { setError(t('reportFilters.invalidPlate')); return; }
     if (isIncome && selectedParkingIds.length === 0) { setError(fa ? 'حداقل یک پارکینگ را انتخاب کنید.' : 'Select at least one parking.'); return; }
     if (kind === 'free-parking-income' && selectedParkingIds.length === 0) { setError(fa ? 'هیچ پارکینگی انتخاب نشده است.' : 'No parking was selected.'); return; }
     if (fromDate > toDate && (kind === 'user-performance' || kind === 'free-parking-income')) { setError(fa ? 'تاریخ شروع نباید بعد از تاریخ پایان باشد.' : 'The start date cannot be after the end date.'); return; }
@@ -273,13 +271,13 @@ export function ManagementReportWorkspace({ title, language, kind }: Props) {
     {(kind === 'income-comparison' || kind === 'yearly-income-comparison') && <FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{fa ? 'سال‌ها' : 'Years'}</InputLabel><Select multiple value={selectedYears} label={fa ? 'سال‌ها' : 'Years'} onChange={(event) => setSelectedYears(typeof event.target.value === 'string' ? event.target.value.split(',').map(Number) : event.target.value as number[])} renderValue={() => yearSummary}>{yearOptions.map((year) => <MenuItem key={year} value={year}><Checkbox checked={selectedYears.includes(year)} /><ListItemText primary={year} /></MenuItem>)}</Select></FormControl>}
     {(kind === 'user-performance' || kind === 'free-parking-income') && <><Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'از تاریخ' : 'From date'} value={fromDate} onChange={setFromDate} language={language} dateOnly size="small" /></Box><Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'تا تاریخ' : 'To date'} value={toDate} onChange={setToDate} language={language} dateOnly size="small" /></Box></>}
     {kind === 'user-performance' && <FormControl size="small" sx={{ minWidth: 0 }}><InputLabel>{fa ? 'کاربر' : 'User'}</InputLabel><Select value={userId} label={fa ? 'کاربر' : 'User'} disabled={loadingLookups} onChange={(event) => setUserId(event.target.value)}><MenuItem value="0">{fa ? 'همه کاربران' : 'All users'}</MenuItem>{users.map((user) => <MenuItem key={user.id} value={user.id}>{user.title}</MenuItem>)}</Select></FormControl>}
-    {kind === 'free-parking-income' && <><TextField size="small" label={fa ? 'کد عضو' : 'Member code'} value={memberCode} onChange={(event) => setMemberCode(event.target.value)} /><Box className="management-report-plate"><IranianPlateInput label={fa ? 'پلاک' : 'Plate'} value={plate} carType={plateCarType} onChange={setPlate} onCarTypeChange={setPlateCarType} disabled={loadingReport} /></Box><TextField select size="small" label={fa ? 'نوع خودرو' : 'Vehicle type'} value={carType} onChange={(event) => setCarType(event.target.value)}><MenuItem value="">{fa ? 'همه' : 'All'}</MenuItem>{carTypes.map((item) => <MenuItem key={item.value} value={item.value}>{fa ? item.fa : item.en}</MenuItem>)}</TextField></>}
+    {kind === 'free-parking-income' && <><TextField size="small" label={fa ? 'کد عضو' : 'Member code'} value={memberCode} onChange={(event) => setMemberCode(event.target.value)} /><Box className="report-plate-filter"><IranianPlateInput language={language} label={t('reportFilters.plate')} value={plate} carType={plateCarType} onChange={setPlate} onCarTypeChange={setPlateCarType} disabled={loadingReport} /></Box><TextField select size="small" label={fa ? 'نوع خودرو' : 'Vehicle type'} value={carType} onChange={(event) => setCarType(event.target.value)}><MenuItem value="">{fa ? 'همه' : 'All'}</MenuItem>{carTypes.map((item) => <MenuItem key={item.value} value={item.value}>{fa ? item.fa : item.en}</MenuItem>)}</TextField></>}
     <Button variant="contained" startIcon={loadingReport ? <CircularProgress size={18} color="inherit" /> : <PlayArrowRoundedIcon />} onClick={runReport} disabled={loadingReport || loadingLookups} sx={{ minHeight: 40 }}>{fa ? 'نمایش گزارش' : 'Show report'}</Button>
   </Box>;
 
   return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport || renderingReport} onRefresh={runReport} toolbar={toolbar}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{fa ? 'فیلترها را انتخاب کنید و نمایش گزارش را بزنید.' : 'Choose the filters and select Show report.'}</Alert>}
-    {rows !== null && <Box className="stimulsoft-management-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{fa ? `${rows.length.toLocaleString('fa-IR')} رکورد` : `${rows.length.toLocaleString('en-US')} records`}</Typography>{report && <Viewer id={`management-report-viewer-${kind}`} report={report} options={viewerOptions} visible />}</Box>}
+    {rows !== null && <ReportPreview title={title} language={language} report={report} viewerId={`management-report-viewer-${kind}`} count={rows.length} resultKey={rows} busy={loadingReport || renderingReport} />}
   </ManagementWorkspaceFrame>;
 }

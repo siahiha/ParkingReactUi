@@ -4,7 +4,7 @@ import { alpha, type Theme } from '@mui/material/styles';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import { useTranslation } from 'react-i18next';
-import { recordValue } from '../../components/management/managementTypes';
+import { recordValue } from '../../utils/records';
 import { formatDateTime, formatTime } from '../../utils/formatters';
 import { hasTrafficTime } from './trafficOperationService';
 import { TrafficIdentityDetails, TrafficVehicleSelector, type TrafficIdentityDetailsProps } from './TrafficIdentityDetails';

@@ -15,6 +15,15 @@ it('has explicit payment translations in both supported languages without relyin
 });
 const bill = { DumpId: 42, CommonCost: 0, MemberCost: 7000, MemberDuration: 60, CommonDuration: 0, EnterDateTime: '2026-11-10T08:00:00', ExitDateTime: '2026-11-10T09:00:00', TarrifTitle: 'تعرفه روزانه' };
 const presentation: TrafficPaymentPresentation = { modal: false, amount: 0, timeoutSeconds: 5, door: null };
+it('renders English duration even when the legacy bill includes a Persian formatted duration', () => {
+  render(<TrafficPaymentPopup bill={{ ...bill, FormatedDuration: 'یک ساعت', TarrifTitle: 'Daily' }} presentation={{ ...presentation, timeoutSeconds: 0 }} language="en" busy={false} error="" paperRef={createRef()} onClose={vi.fn()} onPay={vi.fn()} />);
+  expect(screen.getByRole('region', { name: 'Total stay' })).toHaveTextContent('0d 1h 0m');
+  expect(screen.queryByText('یک ساعت')).toBeNull();
+});
+it('uses the numeric duration when timestamps are unavailable', () => {
+  render(<TrafficPaymentPopup bill={{ DumpId: 42, TotalDuration: 1501, FormatedDuration: 'متن قدیمی' }} presentation={{ ...presentation, timeoutSeconds: 0 }} language="en" busy={false} error="" paperRef={createRef()} onClose={vi.fn()} onPay={vi.fn()} />);
+  expect(screen.getByRole('region', { name: 'Total stay' })).toHaveTextContent('1d 1h 1m');
+});
 function setup(overrides: Partial<TrafficPaymentPresentation> = {}) {
   const close = vi.fn(); const pay = vi.fn();
   render(<TrafficPaymentPopup bill={bill} presentation={{ ...presentation, ...overrides }} language="fa" busy={false} error="" paperRef={createRef()} onClose={close} onPay={pay} />);

@@ -34,12 +34,29 @@ describe('CameraStreamPreview lifecycle', () => {
     vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
   });
 
+  it('shows a localized status tooltip instead of exposing a raw media error and updates its language', async () => {
+    let reportError!: (cause: string) => void;
+    vi.spyOn(window, 'MediaMTXWebRTCReader').mockImplementation(function (options) {
+      reportError = options.onError!;
+      return { close: vi.fn() };
+    });
+    mockedCameraApi.connect.mockResolvedValue({ status: { state: 'Connected' }, webRtcUrl: '/camera/whep' });
+    const view = render(<CameraStreamPreview camera={camera} language="en" viewer="viewer" autoConnect />);
+    await waitFor(() => expect(reportError).toBeTypeOf('function'));
+    act(() => reportError('Internal failure: rtsp://private-host/path'));
+    expect(screen.getByRole('img', { name: 'Camera connection failed.' })).toBeVisible();
+    expect(screen.queryByText(/private-host/)).toBeNull();
+    view.rerender(<CameraStreamPreview camera={camera} language="fa" viewer="viewer" autoConnect />);
+    expect(screen.getByRole('img', { name: 'ارتباط با دوربین برقرار نشد.' })).toBeVisible();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('disconnects a session that finishes connecting after the preview unmounts', async () => {
     let resolveConnect: (value: unknown) => void = () => undefined;
     mockedCameraApi.connect.mockReturnValue(new Promise((resolve) => { resolveConnect = resolve; }));
 
     const view = render(<CameraStreamPreview camera={camera} language="en" viewer="viewer-1" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect to camera' }));
     await waitFor(() => expect(mockedCameraApi.connect).toHaveBeenCalledTimes(1));
 
     view.unmount();
@@ -62,7 +79,7 @@ describe('CameraStreamPreview lifecycle', () => {
     mockedCameraApi.connect.mockRejectedValue(new ApiError(500, { ExceptionMessage: 'The camera is already registered with another RTSP URL.' }));
 
     render(<CameraStreamPreview camera={{ ...camera, rtspUrl: 'rtsp://camera/another-path' }} language="en" viewer="viewer-2" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect to camera' }));
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Disconnect' })).toBeInTheDocument());
     expect(mockedCameraApi.connect).toHaveBeenCalledTimes(1);
@@ -101,7 +118,7 @@ describe('CameraStreamPreview lifecycle', () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('#EXTM3U\n#EXTINF:1,\nsegment.ts'));
     mockedCameraApi.connect.mockResolvedValue({ status: { state: 'Connected' }, streamUrl: '/api/rtspcamera/stream/gate-1/playlist.m3u8' });
     render(<CameraStreamPreview camera={camera} language="en" viewer="viewer-1" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Switch stream protocol' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to HLS' }));
     await waitFor(() => expect(fetch).toHaveBeenCalledWith(expected, { cache: 'no-store' }));
   });
 });

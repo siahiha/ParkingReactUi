@@ -1,8 +1,9 @@
+import { ReportPreview } from './ReportPreview';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Viewer, Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
+import { Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
 import { memberApi, reportApi, userApi } from '../../api/management';
 import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
@@ -198,12 +199,6 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
     return () => { current = false; };
   }, [rows, kind, language, titleDescription, fa]);
 
-  const viewerOptions = useMemo(() => {
-    const options = new Stimulsoft.Viewer.StiViewerOptions();
-    options.width = '100%'; options.height = '100%'; options.appearance.fullScreenMode = false; options.appearance.rightToLeft = fa;
-    options.toolbar.showOpenButton = false; options.toolbar.showSaveButton = false; options.toolbar.showSendEmailButton = false;
-    return options;
-  }, [fa]);
 
   const runReport = () => {
     if (fromDate > toDate) { setError(text('financialReport.dateError')); return; }
@@ -231,6 +226,6 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
   return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport || renderingReport} onRefresh={runReport} toolbar={toolbar}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{text('financialReport.choose')}</Alert>}
-    {rows !== null && <Box className="stimulsoft-financial-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{rows.length.toLocaleString(language === 'fa' ? 'fa-IR' : 'en-US')} {text('financialReport.records')}</Typography>{report && <Viewer id={`financial-report-viewer-${kind}`} report={report} options={viewerOptions} visible />}</Box>}
+    {rows !== null && <ReportPreview title={title} language={language} report={report} viewerId={`financial-report-viewer-${kind}`} count={rows.length} resultKey={rows} busy={loadingReport || renderingReport} />}
   </ManagementWorkspaceFrame>;
 }

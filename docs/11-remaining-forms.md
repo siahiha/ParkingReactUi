@@ -83,7 +83,7 @@
 - بازه‌های جستجو و تاریخ مقصد رونوشت، تاریخِ تنها هستند و در React با `EosDateTimePicker` و `dateOnly` انتخاب می‌شوند. این workspace ورودی ساعتِ تنها ندارد؛ ساعت شروع/پایان هر شیفت از تنظیمات `ParkingEntity` می‌آید و در عنوان ستون‌ها نمایش داده می‌شود. تعریف این ساعت‌ها در تب شیفت‌های مشخصات پارکینگ با `EosTimeOnDayPicker` انجام می‌شود.
 - APIها: `UserApi.Get`، `ParkingApi.GetParkingDoors`، `UserApi.GetUserWorkShifts`، `UserApi.SaveUserWorkShifts`.
 - workflow: دریافت کاربران و درب‌ها، دریافت شیفت‌ها، انتخاب تخصیص، اعتبارسنجی تعارض و ذخیره.
-- اثر سیستم: `CurrentUser.CurrentParking` و درب/شیفت تعیین‌شده، پیش‌شرط ورود و خروج دستی است.
+- اثر سیستم در مسیر Windows: `CurrentUser.CurrentParking` و درب/شیفت تعیین‌شده در context فرم مصرف می‌شوند. در قرارداد فعلی وب، شیفت فقط با `HasUserShifts=true` پیش‌شرط است؛ خاموش‌بودن آن، منوی اختصاص شیفت و شرط تخصیص/ساعت را طبق [سند تنظیمات](03-parking-configuration.md) کنار می‌گذارد. منو و route وب در [سند Home](25-home.md) مرجع‌اند.
 - وضعیت پوشش: وابستگی به workflow تردد باید در سند تردد تکمیل شود؛ مدل تخصیص، قوانین تعارض، مجوز و status code ناقص.
 
 ## ۴. مانیتورینگ

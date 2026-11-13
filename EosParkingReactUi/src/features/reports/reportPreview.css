@@ -1,0 +1,25 @@
+.report-preview-result { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.report-preview-popup.MuiDialog-root .app-popup-paper {
+  width: 100%; max-width: none; height: 100dvh; max-height: 100dvh;
+  margin: 0; border-radius: 0; display: flex; flex-direction: column;
+}
+.report-preview-popup.MuiDialog-root .app-popup-paper > .MuiDialogTitle-root {
+  min-height: 52px; padding: 8px 12px; flex-shrink: 0;
+}
+.report-preview-popup.MuiDialog-root .app-popup-mark { display: none; }
+.report-preview-popup.MuiDialog-root .app-popup-title-text { flex: 1; min-width: 0; }
+.report-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+.report-preview-title { display: flex; flex-direction: column; min-width: 0; }
+.report-preview-heading > .MuiButton-root { flex-shrink: 0; }
+.report-preview-popup.MuiDialog-root .app-popup-paper > .MuiDialogContent-root {
+  display: flex; flex: 1 1 0; min-height: 0; min-width: 0; padding: 0; overflow: hidden;
+}
+.report-preview-viewer { position: relative; flex: 1 1 0; min-height: 0; min-width: 0; width: 100%; height: 100%; overflow: hidden; }
+.report-preview-viewer > div { width: 100%; height: 100%; min-height: 0; }
+.report-preview-viewer .stiJsViewerToolBar {
+  max-width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scrollbar-width: thin;
+}
+@media (max-width: 600px) {
+  .report-preview-popup.MuiDialog-root .app-popup-paper > .MuiDialogTitle-root { padding: 6px 8px; }
+  .report-preview-title > .MuiTypography-root { font-size: .78rem; }
+}

@@ -22,7 +22,7 @@ export function TrafficVehicleDialog({ draft, editing, language, busy, error, on
       {error && <Alert severity="error">{error}</Alert>}
       {invalid && <Alert severity="error">{t('trafficIdentity.vehicleRequired')}</Alert>}
       <Box>
-        <IranianPlateInput label={t('trafficGrid.plate')} value={form.plate} carType={String(form.carType) as VehiclePlateType} disabled={editing || busy}
+        <IranianPlateInput language={language} label={t('trafficGrid.plate')} value={form.plate} carType={String(form.carType) as VehiclePlateType} disabled={editing || busy}
           onChange={plate => setForm(previous => ({ ...previous, plate }))}
           onCarTypeChange={carType => setForm(previous => ({ ...previous, carType: Number(carType) }))} />
       </Box>

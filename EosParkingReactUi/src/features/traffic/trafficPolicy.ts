@@ -1,5 +1,5 @@
-import type { RecordValue } from '../../components/management/managementTypes';
-import { recordValue } from '../../components/management/managementTypes';
+import type { RecordValue } from '../../utils/records';
+import { recordValue } from '../../utils/records';
 
 export type TrafficDirection = 'enter' | 'exit';
 export type TrafficAlert = { key: 'inactiveMember' | 'blacklisted' | 'stolen' | 'observation' | 'exitNotApproved'; blocked: boolean; description?: string };

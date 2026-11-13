@@ -22,14 +22,21 @@
 | MainForm، permission، parking context | `03-main-form-overview.md` | `04-users-and-access.md`، `16-final-review-and-delivery-gates.md` |
 | parking، floor، section، space، zone | `03-parking-configuration.md`، `23-parking-zones.md` | `11-remaining-forms.md` |
 | user، access level | `04-1-access-level-form.md`، `04-2-users-form.md` | `04-users-and-access.md` |
+| شیفت کاربران اختیاری، HasUserShifts، شرط تخصیص/ساعت | `03-parking-configuration.md` | `25-home.md` برای منو/route؛ `04-users-and-access.md` و سند ۲۱ برای مجوز و شواهد اجرا |
 | member، membership، card | `05-members-and-cards.md` | `10-shared-ui-components.md`، `11-remaining-forms.md` |
 | traffic، payment، exit، manual traffic | `06-traffic-and-payment.md`، `12-manual-traffic-control-form.md` | `14-web-backend-requests.md` |
+| SOLID، تفکیک کنترل تردد و سوابق، resource متن تردد | بخش ۱۹ `12-manual-traffic-control-form.md` | `17-react-ui-architecture.md` و نتیجهٔ آزمون در سند ۲۱ |
 | اولویت تصویر، چیدمان دوربین و عملیات | بخش ۳.۶.۴ `12-manual-traffic-control-form.md` | بخش ۳.۶.۱ برای چینش فعلی؛ بخش ۳.۵.۲ برای دستیار پلاک‌های اخیر |
-| Shahab، شهاب، db:// | بخش ۳.۵.۱ `12-manual-traffic-control-form.md` | `24-rtsp-camera-ui-integration.md` برای تصویر زنده |
-| Hsh، Eos\|، Trigger قدیمی، cursor | `26-legacy-hsh-plate-detection.md` | `12-manual-traffic-control-form.md` برای تفاوت با مسیر هدف شهاب |
+| ذخیرهٔ عکس ورود/خروج، TrafficDumpImages، زیر ۲۰ کیلوبایت، کاهش ابعاد و فشرده‌سازی | بخش ۳.۵.۴ `12-manual-traffic-control-form.md` | اولویت عکس همان پلاک، DTO موجود، تفاوت سقف ورودی و ذخیره؛ سند ۲۴ برای فریم و سند ۲۷ برای انتشار |
+| پلاکخوان، db:// | بخش ۳.۵.۱ `12-manual-traffic-control-form.md` | `24-rtsp-camera-ui-integration.md` برای تصویر زنده |
+| قفل عکس پلاک جاری، صف تعیین‌تکلیف، بازیابی پس از قطعی | بخش ۳.۵.۳ `12-manual-traffic-control-form.md` | `06-traffic-and-payment.md` برای مرور کلی؛ سند ۲۱ برای شواهد اجرا و محدودیت‌ها |
+| Hsh، Eos\|، Trigger قدیمی، cursor | `26-legacy-hsh-plate-detection.md` | `12-manual-traffic-control-form.md` برای تفاوت با مسیر هدف پلاکخوان |
 | Publish، Release، Rebuild، IIS، Windows Service | `27-api-publish-and-hosting.md` | `Services/EosParkingApiWindowsService/Hosting/README.md` برای راهنمای فنی میزبان |
 | monitoring، equipment، RTSP، WebRTC، HLS، ROI | `07-monitoring-and-devices.md`، `24-rtsp-camera-ui-integration.md` | `11-remaining-forms.md` |
 | reports | `25-home.md`، `08-reports.md` | `11-remaining-forms.md` برای workflowهای تخصصی |
+| پنهان‌شدن گزارش درآمد پارکینگ غیرتجاری، IsCommercialParking، دسترسی مستقیم گزارش | بخش ۶ `25-home.md` | `03-parking-configuration.md` برای تنظیم؛ `08-reports.md` برای قرارداد گزارش؛ سند ۲۱ برای نتیجهٔ آزمون |
+| فیلتر پلاک گزارش، IranianPlateInput | `08-reports.md` | `10-shared-ui-components.md` برای کنترل مشترک؛ سند ۲۱ برای شواهد اجرا |
+| گزارش بریده‌شده، پیش‌نمایش تمام‌صفحه، چاپ و خروجی، ReportPreview | `08-reports.md` | `25-home.md` برای نگاشت گزارش‌ها؛ سند ۲۱ برای شواهد اجرا |
 | shared components، grid، filter، plate، money | `10-shared-ui-components.md` | `18-ui-design-system.md` |
 | خطای ارتباط زنده، Tooltip، SignalR، polling | قانون مشترک خطاهای ارتباط زنده در `00-documentation-standard.md` | `ConnectionStatusIndicator` در سند ۱۰؛ اسناد ۷، ۱۲ و ۲۵ برای مصرف‌کننده‌ها |
 | backend contract، missing endpoint، status code | `14-web-backend-requests.md` | سند تخصصی همان feature |

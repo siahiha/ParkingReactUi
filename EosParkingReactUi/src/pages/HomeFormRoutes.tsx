@@ -24,6 +24,7 @@ type Props = {
   user: HomeUser;
   labels: Labels;
   selectedParkingId: number;
+  isCommercialParking?: boolean;
   visibleManagementItems: MenuItem[];
   allManagementItems: MenuItem[];
   visibleParkingMenuItems: MenuItem[];
@@ -64,7 +65,7 @@ function ManagementPage({ language, labels, selectedParkingId, visibleManagement
   return <Paper className="home-workspace" elevation={0}><Typography variant="h6">{visibleManagementItems.find((item) => item.key === section)?.label}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{labels.placeholder}</Typography></Paper>;
 }
 
-function ParkingPage({ language, user, labels, selectedParkingId, visibleParkingMenuItems, allParkingMenuItems, hasPart1, basePath }: Props) {
+function ParkingPage({ language, user, labels, selectedParkingId, isCommercialParking, visibleParkingMenuItems, allParkingMenuItems, hasPart1, basePath }: Props) {
   const { itemKey } = useParams();
   const item = allParkingMenuItems.find((candidate) => candidate.key === itemKey);
   if (!item) return <UnknownRoute labels={labels} basePath={basePath} />;
@@ -97,6 +98,7 @@ function ParkingPage({ language, user, labels, selectedParkingId, visibleParking
     return <MemberManagementWorkspace title={item.label} pageTitle={labels.parkingManagement} parkingId={selectedParkingId} language={language} />;
   }
   return <ParkingManagementWorkspace itemKey={item.key} title={item.label} parkingId={selectedParkingId} language={language} userId={user.id}
+    isCommercialParking={isCommercialParking}
     canSearchHistory={visibleParkingMenuItems.some(menu => menu.key === 'traffic-records')}
     canEditVehicle={user.canManageDashboard || hasPart1(1n << 43n, 'ParkingManualIOEditCarInfo')} />;
 }

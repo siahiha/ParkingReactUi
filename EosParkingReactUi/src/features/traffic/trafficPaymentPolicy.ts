@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { recordValue, type RecordValue } from '../../components/management/managementTypes';
+import { recordValue, type RecordValue } from '../../utils/records';
 
 const amountSchema = z.union([z.number(), z.string().trim().min(1)]).transform(Number).pipe(z.number().finite());
 

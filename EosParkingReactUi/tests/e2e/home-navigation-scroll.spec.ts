@@ -14,7 +14,7 @@ async function prepareNavigation(page: Page, language: 'fa' | 'en', collapsed = 
     localStorage.setItem('eos-parking-sidebar-collapsed', String(collapsed));
   }, { language, collapsed });
   await page.route('**/config.json', route => route.fulfill({ json: { apiBaseUrl: '/backend' } }));
-  await page.route('**/backend/api/**', route => route.fulfill({ json: {
+  await page.route(/(?:\/backend\/api\/|localhost:3001\/api\/)/, route => route.fulfill({ json: {
     ResponseResultType: 1,
     Values: new URL(route.request().url()).pathname.endsWith('/Parking/Get')
       ? [{ Id: 7, ParkingName: 'Parking 7' }] : [],
@@ -31,6 +31,32 @@ async function wheelToBottom(page: Page, scrollArea: Locator) {
   await page.mouse.wheel(0, 10_000);
   await expect.poll(() => scrollArea.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
 }
+
+for (const scenario of [
+  { width: 1440, language: 'fa', drawer: false },
+  { width: 1440, language: 'en', drawer: false },
+  { width: 390, language: 'fa', drawer: true },
+] as const) test(`operations is a main menu without a Home item at ${scenario.width}px ${scenario.language}`, async ({ page }, testInfo) => {
+  const copy = scenario.language === 'fa' ? fa : en;
+  await page.setViewportSize({ width: scenario.width, height: 900 });
+  await prepareNavigation(page, scenario.language, true);
+  await page.goto('/home/parking/floors');
+  await expect(page.locator('.home3-shell')).toHaveAttribute('data-language', scenario.language);
+  if (scenario.drawer) await page.locator('.home3-header').getByRole('button', { name: copy.home.navigation, exact: true }).click();
+  const nav = page.locator(scenario.drawer ? '.home3-drawer .MuiDrawer-paper' : 'aside.home3-navigation');
+  await expect(nav.getByRole('button', { name: copy.home.menuHome, exact: true })).toHaveCount(0);
+  await nav.getByRole('button', { name: copy.homeMenu.groups.operations, exact: true }).click();
+  const operations = nav.getByRole('button', { name: copy.homeMenu.groups.operations, exact: true });
+  await expect(operations).toHaveClass(/home3-nav-root/);
+  await expect(operations).toHaveAttribute('aria-expanded', 'true');
+  const definitions = nav.getByRole('button', { name: copy.home.parkingDefinitions, exact: true });
+  await expect(definitions).toHaveAttribute('aria-expanded', 'false');
+  expect(await operations.evaluate(element => !element.closest('.home3-nav-nested'))).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('operations-main-menu.png') });
+  await nav.getByRole('button', { name: copy.homeMenu.items.monitoring, exact: true }).click();
+  await expect(page).toHaveURL(/\/home\/parking\/monitoring$/);
+  if (scenario.drawer) await expect(nav).not.toBeVisible();
+});
 
 for (const scenario of [
   { name: 'short desktop RTL', width: 1024, language: 'fa', drawer: false },

@@ -58,8 +58,8 @@ Splash
 | وضعیت پیاده‌سازی و سیاست Regression | تغییرات انجام‌شده، regressionهای اصلاح‌شده و الزام حفظ قابلیت‌های قبلی | [21-implementation-progress-and-regression-policy.md](21-implementation-progress-and-regression-policy.md) |
 | زون‌های پارکینگ | تطبیق کامل Windows، Backend و React؛ workflow گرید، تیک‌ها، مدل داده، API و موارد باز | [23-parking-zones.md](23-parking-zones.md) |
 | یکپارچه‌سازی UI دوربین RTSP | قرارداد WebRTC/HLS، کامپوننت `CameraStreamPreview`، وضعیت اتصال، lifecycle، viewer و ROI | [24-rtsp-camera-ui-integration.md](24-rtsp-camera-ui-integration.md) |
-| دریافت تشخیص پلاک شهاب در کنترل تردد وب | مسیر هدف محصول؛ الگوریتم، SignalR و قرارداد سورس مستند؛ تأیید نهایی روی SQL نصب‌شده باقی است | [بخش ۳.۵.۱ سند فرم](12-manual-traffic-control-form.md) |
-| مسیر قدیمی Trigger سرویس Hsh | رفتار کلاینت موجود مستند؛ قرارداد رسمی و آزمون سرویس خارجی ناقص/نیازمند تأیید؛ مستقل از شهاب | [26-legacy-hsh-plate-detection.md](26-legacy-hsh-plate-detection.md) |
+| دریافت تشخیص پلاک پلاکخوان در کنترل تردد وب | مسیر هدف محصول؛ الگوریتم، SignalR و قرارداد سورس مستند؛ تأیید نهایی روی SQL نصب‌شده باقی است | [بخش ۳.۵.۱ سند فرم](12-manual-traffic-control-form.md) |
+| مسیر قدیمی Trigger سرویس Hsh | رفتار کلاینت موجود مستند؛ قرارداد رسمی و آزمون سرویس خارجی ناقص/نیازمند تأیید؛ مستقل از پلاکخوان | [26-legacy-hsh-plate-detection.md](26-legacy-hsh-plate-detection.md) |
 | Publish بستهٔ مشترک Backend برای سرویس و IIS | رفتار فعلی؛ Publish واقعی IDE در Debug/Release و اجرای بسته در میزبان‌های آزمایشی تأیید شده است | [27-api-publish-and-hosting.md](27-api-publish-and-hosting.md) |
 
 ## Pipeline پیشنهادی محصول

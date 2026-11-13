@@ -1,7 +1,7 @@
 import { Button, SvgIcon } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import type { Language } from '../../components/management/managementTypes';
+import type { Language } from '../../utils/records';
 import type { trafficActionState } from './trafficActionState';
 
 type Props = {

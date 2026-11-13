@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useTrafficCameras } from '../../features/traffic/useTrafficCameras';
+import { useTrafficCameraDetection } from '../../features/traffic/useTrafficCameraDetection';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import type { CameraFrameCapture, TrafficCameraCapture } from '../../features/traffic/trafficImageCapture';
 import { Box, CircularProgress, IconButton, Paper, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import { ConnectionStatusIndicator } from '../ConnectionStatusIndicator';
 import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
@@ -10,21 +13,17 @@ import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import { useTranslation } from 'react-i18next';
 import { AppToast } from '../AppToast';
-import { parkingApi, type Camera } from '../../api/management';
-import {
-  HshDetectionConnection,
-  parseHshDetectionConfig,
-  type HshDetectionHandler,
-  type HshDetectionStatus,
-} from '../../api/hshDetectionRealtime';
+import type { Camera } from '../../api/management';
+import type { HshDetectionHandler } from '../../api/hshDetectionRealtime';
 import { CameraStreamPreview } from './CameraStreamPreview';
-import { parseShahabDetectionConfig } from '../../api/shahabDetectionConfig';
 import { useShahabTrafficDetection } from '../../features/traffic/useShahabTrafficDetection';
 import type { Language } from './managementTypes';
 import { formatDateTime } from '../../utils/formatters';
 import type { ShahabHistorySnapshot, ShahabHistoryStatus } from '../../api/shahabTrafficRealtime';
 
 type Props = {
+  captureRef?: Ref<TrafficCameraCapture>;
+  operationDirection?: 'entry' | 'exit';
   doorId: string;
   language: Language;
   onDetection?: HshDetectionHandler;
@@ -32,65 +31,8 @@ type Props = {
   onHistoryStatus?: (status: ShahabHistoryStatus) => void;
   historyOpen?: boolean;
 };
-type RecordValue = Record<string, unknown>;
 type CameraTab = 'entry' | 'exit';
 
-
-function unwrap(input: unknown): unknown {
-  if (!input || typeof input !== 'object') return input;
-  const value = input as RecordValue;
-  return value.Values ?? value.values ?? value.Data ?? value.data ?? input;
-}
-
-function record(input: unknown): RecordValue | null {
-  const value = unwrap(input);
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as RecordValue : null;
-}
-
-function field(row: RecordValue | null, ...keys: string[]) {
-  return keys.map((key) => row?.[key] ?? row?.[key.charAt(0).toLowerCase() + key.slice(1)]).find((value) => value !== undefined && value !== null);
-}
-
-function listFrom(input: unknown): unknown[] {
-  if (Array.isArray(input)) return input;
-  const row = record(input);
-  if (!row) return [];
-  if (field(row, 'Id', 'DeviceId', 'EquipmentId', 'CameraId', 'DeviceType') !== undefined) return [row];
-  return Object.values(row);
-}
-
-function isCamera(row: RecordValue) {
-  const type = String(field(row, 'DeviceType', 'EquipmentType', 'Type') ?? '').toLowerCase();
-  return type === '0' || type.includes('camera') || type.includes('دوربین') || field(row, 'CameraId') !== undefined;
-}
-
-function linkedCameraRows(input: unknown): Array<{ row: RecordValue; trafficType: unknown }> {
-  const root = record(input);
-  const linked = root ? field(root, 'DtoViewEquipments', 'ViewEquipments', 'Equipments') : input;
-  const rows = listFrom(linked).map((item): { row: RecordValue; trafficType: unknown } | null => {
-    const pair = record(item);
-    if (!pair) return null;
-    const row = record(field(pair, 'Key', 'Equipment', 'Device')) ?? pair;
-    return isCamera(row) ? { row, trafficType: field(pair, 'Value', 'TrafficType') as unknown } : null;
-  });
-  return rows.filter((item): item is { row: RecordValue; trafficType: unknown } => item !== null);
-}
-
-function cameraFrom(input: unknown, fallbackName: string, direction: Camera['direction']): Camera | null {
-  const initial = record(input);
-  const row = record(field(initial, 'Key', 'Equipment', 'Device')) ?? initial;
-  if (!row) return null;
-  const id = field(row, 'CameraId', 'Id', 'DeviceId', 'EquipmentId');
-  if (id === undefined || id === null || id === '') return null;
-  return {
-    cameraId: String(id),
-    name: String(field(row, 'DeviceName', 'CameraName', 'CameraTitle', 'Name') ?? fallbackName),
-    rtspUrl: String(field(row, 'RtspUrl', 'RTSPUrl', 'RTSPURL') ?? '').trim() || undefined,
-    enabled: field(row, 'Disabled') !== true && String(field(row, 'Disabled') ?? '').toLowerCase() !== 'true',
-    detectionServerAddress: String(field(row, 'DetectionServerAddress') ?? ''),
-    direction,
-  };
-}
 
 function viewerId() {
   const key = 'parking-viewer-id';
@@ -105,89 +47,27 @@ function viewerId() {
   }
 }
 
-export function TrafficCameraPanels({ doorId, language, onDetection, onHistory, onHistoryStatus, historyOpen }: Props) {
+export function TrafficCameraPanels({ doorId, language, onDetection, onHistory, onHistoryStatus, historyOpen, captureRef, operationDirection }: Props) {
   const { t } = useTranslation(undefined, { lng: language });
   const panelRef = useRef<HTMLElement>(null);
   const [enlargeError, setEnlargeError] = useState(false);
-  const [entryCamera, setEntryCamera] = useState<Camera | null>(null);
-  const [exitCamera, setExitCamera] = useState<Camera | null>(null);
+  const { entryCamera, exitCamera, loading: cameraLoading, error } = useTrafficCameras(doorId, language);
   const [activeTab, setActiveTab] = useState<CameraTab>('entry');
   const [simultaneousView, setSimultaneousView] = useState(false);
-  const [cameraLoading, setCameraLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [detectionError, setDetectionError] = useState('');
   const [viewer] = useState(viewerId);
+  const entryCapture = useRef<CameraFrameCapture>(null);
+  const exitCapture = useRef<CameraFrameCapture>(null);
+  useImperativeHandle(captureRef, () => ({
+    capture: direction => (direction === 'entry' ? entryCapture : exitCapture).current?.capture() ?? null,
+  }), [doorId]);
   const { status: shahabStatus, lastMessageAt } = useShahabTrafficDetection(doorId, entryCamera, exitCamera, onDetection, onHistory, onHistoryStatus, historyOpen);
 
+  useEffect(() => { setActiveTab(entryCamera ? 'entry' : 'exit'); }, [entryCamera, exitCamera]);
   useEffect(() => {
-    let active = true;
-    setEntryCamera(null);
-    setExitCamera(null);
-    setActiveTab('entry');
-    setError('');
-    if (!doorId) return () => { active = false; };
-    setCameraLoading(true);
-    Promise.all([parkingApi.getDoor(Number(doorId)), parkingApi.getDoorDevices(Number(doorId)).catch(() => null)]).then(([response, devicesResponse]) => {
-      const row = record(response);
-      const entryLabel = t('trafficLayout.entryCamera');
-      const exitLabel = t('trafficLayout.exitCamera');
-      const directEntry = cameraFrom(field(row, 'EnteranceCamera', 'EntranceCamera'), entryLabel, 'entry');
-      const directExit = cameraFrom(field(row, 'ExitCamera'), exitLabel, 'exit');
-      const linked = linkedCameraRows(response);
-      const devices = listFrom(devicesResponse).map((item) => record(item)).filter((item): item is RecordValue => Boolean(item && isCamera(item)));
-      const entryLinked = linked.find((item) => String(item.trafficType ?? '') === '0')?.row;
-      const exitLinked = linked.find((item) => String(item.trafficType ?? '') === '1')?.row;
-      const entry = directEntry ?? cameraFrom(entryLinked ?? devices[0], entryLabel, 'entry');
-      const exit = directExit ?? cameraFrom(exitLinked ?? devices[1], exitLabel, 'exit');
-      if (active) { setEntryCamera(entry); setExitCamera(exit); setActiveTab(entry ? 'entry' : 'exit'); }
-    }).catch(() => { if (active) setError(t('trafficLayout.cameraError')); })
-      .finally(() => { if (active) setCameraLoading(false); });
-    return () => { active = false; };
-  }, [doorId, language, t]);
-
-  useEffect(() => {
-    const cameras = [entryCamera, exitCamera].filter((camera): camera is Camera => Boolean(camera?.cameraId));
-    if (!onDetection || cameras.length === 0) return undefined;
-
-    let active = true;
-    const connections: HshDetectionConnection[] = [];
-    setDetectionError('');
-
-    const start = async () => {
-      await Promise.all(cameras.map(async (camera) => {
-        const configValue = camera.detectionServerAddress?.trim();
-        if (!configValue || camera.enabled === false || parseShahabDetectionConfig(configValue)) return;
-        const config = parseHshDetectionConfig(configValue);
-        if (!config) {
-          if (active) setDetectionError(t('trafficLayout.detectionConfigError'));
-          return;
-        }
-        const connection = new HshDetectionConnection(config, camera.cameraId);
-        connections.push(connection);
-        const handleDetection: HshDetectionHandler = (event, loadArtifact) => onDetection(
-          {
-            ...event,
-            source: { ...event.source, direction: camera.direction },
-          },
-          loadArtifact,
-        );
-        await connection.start(handleDetection, (status: HshDetectionStatus) => {
-          if (!active) return;
-          if (status.state === 'error' || status.state === 'cursor-expired') {
-            setDetectionError(t('trafficLayout.detectionError'));
-          } else if (status.state === 'connected') {
-            setDetectionError('');
-          }
-        });
-      }));
-    };
-
-    void start();
-    return () => {
-      active = false;
-      void Promise.all(connections.map((connection) => connection.stop()));
-    };
-  }, [entryCamera, exitCamera, language, onDetection, t]);
+    if (operationDirection && (operationDirection === 'entry' ? entryCamera : exitCamera)) setActiveTab(operationDirection);
+  }, [operationDirection, entryCamera, exitCamera]);
+  const detectionFailure = useTrafficCameraDetection(entryCamera, exitCamera, onDetection);
+  const detectionError = detectionFailure ? t(detectionFailure === 'configuration' ? 'trafficLayout.detectionConfigError' : 'trafficLayout.detectionError') : '';
 
   const activeCamera = activeTab === 'entry' ? entryCamera : exitCamera;
   const hasBothCameras = Boolean(entryCamera && exitCamera);
@@ -242,6 +122,7 @@ export function TrafficCameraPanels({ doorId, language, onDetection, onHistory, 
         {visibleCameras.map(camera => <Box key={`${doorId}-${camera.direction}-${camera.cameraId}`} role="group"
           aria-label={t(camera.direction === 'exit' ? 'trafficLayout.exitCamera' : 'trafficLayout.entryCamera')} sx={{ minWidth: 0, p: 0, m: 0 }}>
           <CameraStreamPreview camera={{ ...camera, name: `${t(camera.direction === 'exit' ? 'trafficLayout.exitCamera' : 'trafficLayout.entryCamera')}: ${camera.name}` }}
+            frameCaptureRef={camera.direction === 'exit' ? exitCapture : entryCapture}
             language={language} viewer={`${viewer}-${doorId}-${camera.direction}-${camera.cameraId}`}
             size={{ width: '100%', height: 210 }} showConnectionButton={false} showModeSwitcher={false} showRoiAction={false} autoConnect compact />
         </Box>)}

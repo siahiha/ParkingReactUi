@@ -77,6 +77,20 @@ describe('AnprMonitoringWorkspace', () => {
     expect(mockedAnprApi.getPictureById).toHaveBeenCalledWith('10', false);
   });
 
+  it('keeps a detection visible when its optional picture row is absent', async () => {
+    mockedAnprApi.getPictureById.mockResolvedValue({ Values: { Id: 10, Plate: '12الف345', CarPic: null, PlatePic: null } });
+    const user = userEvent.setup();
+    render(<AnprMonitoringWorkspace title="ANPR monitoring" parkingId={1} language="en" />);
+    await screen.findByText('12الف345');
+    await user.click(screen.getAllByRole('combobox')[0]);
+    await user.click(await screen.findByRole('option', { name: 'Elmo Sanat' }));
+    await waitFor(() => expect(mockedAnprApi.getPictureById).toHaveBeenCalledWith('10', true));
+    await waitFor(() => expect(screen.getAllByText('Image unavailable')).toHaveLength(2));
+    expect(screen.getByText('12الف345')).toBeInTheDocument();
+    expect(screen.queryByText('Loading image...')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('shows a camera API error when only part of the door lookup fails', async () => {
     mockedParkingApi.getDoor.mockRejectedValueOnce(new Error('door lookup failed'));
     const user = userEvent.setup();

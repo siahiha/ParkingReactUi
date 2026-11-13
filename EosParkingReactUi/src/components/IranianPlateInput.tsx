@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import type { Language } from '../i18n/instance';
 import {
   useEffect,
   useId,
@@ -68,14 +70,14 @@ export type VehiclePlateType = "0" | "1" | "2" | "3" | "4";
 
 const vehicleTypes: {
   value: VehiclePlateType;
-  title: string;
+  title: 'motorcycle' | 'trailer' | 'busTruck' | 'vanMinibus' | 'carPickup';
   Icon: typeof DirectionsCarRoundedIcon;
 }[] = [
-  { value: "1", title: "موتور", Icon: TwoWheelerRoundedIcon },
-  { value: "4", title: "تریلی", Icon: RvHookupRoundedIcon },
-  { value: "3", title: "اتوبوس - کامیون", Icon: LocalShippingRoundedIcon },
-  { value: "2", title: "ون - مینی‌بوس", Icon: AirportShuttleRoundedIcon },
-  { value: "0", title: "سواری و وانت", Icon: DirectionsCarRoundedIcon },
+  { value: "1", title: 'motorcycle', Icon: TwoWheelerRoundedIcon },
+  { value: "4", title: 'trailer', Icon: RvHookupRoundedIcon },
+  { value: "3", title: 'busTruck', Icon: LocalShippingRoundedIcon },
+  { value: "2", title: 'vanMinibus', Icon: AirportShuttleRoundedIcon },
+  { value: "0", title: 'carPickup', Icon: DirectionsCarRoundedIcon },
 ];
 
 const englishDigits = (value: string) =>
@@ -165,6 +167,7 @@ export function isValidIranianPlate(value: string, carType?: string) {
 }
 
 type Props = {
+  language?: Language;
   value: string;
   onChange: (value: string) => void;
   label: string;
@@ -178,6 +181,7 @@ type Props = {
 
 /** Iranian private-vehicle plate entry compatible with the Windows EosPlateControl value. */
 export function IranianPlateInput({
+  language,
   value,
   onChange,
   label,
@@ -188,6 +192,7 @@ export function IranianPlateInput({
   helperText,
   onComplete,
 }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const id = useId();
   const firstInputRef = useRef<HTMLInputElement>(null);
   const completeRef = useRef(onComplete);
@@ -266,7 +271,7 @@ export function IranianPlateInput({
             htmlFor={`${id}-left`}
             className="iranian-plate-title"
           >
-            {vehicleTypes.find((item) => item.value === activeType)?.title}
+            {t(`plateInput.${vehicleTypes.find((item) => item.value === activeType)?.title ?? 'carPickup'}`)}
           </Typography>
           <div className="iranian-plate-type-actions">
             {vehicleTypes.map(({ value: type, title, Icon }) => (
@@ -274,8 +279,8 @@ export function IranianPlateInput({
                 key={type}
                 size="small"
                 className={activeType === type ? "is-selected" : ""}
-                aria-label={title}
-                title={title}
+                aria-label={t(`plateInput.${title}`)}
+                title={t(`plateInput.${title}`)}
                 disabled={disabled}
                 onClick={() => {
                   onCarTypeChange(type);
@@ -316,7 +321,7 @@ export function IranianPlateInput({
                 inputProps={numericProps(
                   "motorFirst",
                   3,
-                  `${label} - سه رقم اول موتور`,
+                  t('plateInput.motorFirst', { label }),
                 )}
               />
               <InputBase
@@ -338,7 +343,7 @@ export function IranianPlateInput({
                 inputProps={numericProps(
                   "motorSecond",
                   5,
-                  `${label} - پنج رقم دوم موتور`,
+                  t('plateInput.motorSecond', { label }),
                 )}
               />
             </div>
@@ -358,7 +363,7 @@ export function IranianPlateInput({
                       letterInputRef,
                     )
                   }
-                  inputProps={numericProps("left", 2, `${label} - دو رقم اول`)}
+                  inputProps={numericProps("left", 2, t('plateInput.first', { label }))}
                 />
                 <Autocomplete
                   disabled={disabled}
@@ -398,7 +403,7 @@ export function IranianPlateInput({
                         ...params.slotProps,
                         htmlInput: {
                           ...params.slotProps.htmlInput,
-                          "aria-label": `${label} - حرف پلاک`,
+                          "aria-label": t('plateInput.letter', { label }),
                         },
                       }}
                     />
@@ -422,7 +427,7 @@ export function IranianPlateInput({
                   inputProps={numericProps(
                     "middle",
                     3,
-                    `${label} - سه رقم میانی`,
+                    t('plateInput.middle', { label }),
                   )}
                 />
               </div>
@@ -445,7 +450,7 @@ export function IranianPlateInput({
                       update("region", region),
                     )
                   }
-                  inputProps={numericProps("region", 2, `${label} - کد منطقه`)}
+                  inputProps={numericProps("region", 2, t('plateInput.region', { label }))}
                 />
               </div>
             </>

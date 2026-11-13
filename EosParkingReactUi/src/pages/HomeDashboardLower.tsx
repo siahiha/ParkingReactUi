@@ -21,7 +21,7 @@ export function HomeDashboardLower({ onNavigate }: Props) {
         <Typography component="h2" id={headingId} className="home3-panel-title">{t('home.quickActions')}</Typography>
       </Box>
       <Box className="home3-quick-actions">
-        <QuickAction tone="traffic" icon={<DirectionsCarRoundedIcon />} label={t('home.openTraffic')} onClick={() => onNavigate('/parking/traffic-records')} />
+        <QuickAction tone="traffic" icon={<DirectionsCarRoundedIcon />} label={t('home.openTraffic')} onClick={() => onNavigate('/parking/manual-traffic')} />
         <QuickAction tone="members" icon={<GroupsRoundedIcon />} label={t('home.openMembers')} onClick={() => onNavigate('/parking/members')} />
         <QuickAction tone="monitoring" icon={<MonitorHeartRoundedIcon />} label={t('home.openMonitoring')} onClick={() => onNavigate('/parking/monitoring')} />
         <QuickAction tone="reports" icon={<AssessmentRoundedIcon />} label={t('home.openReports')} onClick={() => onNavigate('/parking/traffic-reports-list')} />

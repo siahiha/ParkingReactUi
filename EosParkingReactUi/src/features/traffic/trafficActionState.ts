@@ -1,4 +1,4 @@
-import { recordValue, type RecordValue } from '../../components/management/managementTypes';
+import { recordValue, type RecordValue } from '../../utils/records';
 import { hasOpenTraffic, hasTrafficTime } from './trafficOperationService';
 import type { TrafficDoorType } from './trafficDoorService';
 

@@ -7,7 +7,7 @@ import { HomeDashboardLower } from './HomeDashboardLower';
 afterEach(cleanup);
 
 it.each([
-  ['مشاهده تردد', '/parking/traffic-records'],
+  ['کنترل ورود و خروج', '/parking/manual-traffic'],
   ['مدیریت اعضا', '/parking/members'],
   ['باز کردن مانیتورینگ', '/parking/monitoring'],
   ['گزارش‌های عملیاتی', '/parking/traffic-reports-list'],

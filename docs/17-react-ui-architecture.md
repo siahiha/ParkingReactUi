@@ -57,6 +57,7 @@ src/
     members/
     reports/
     tariffs/
+    traffic/            # کنترل زنده، سوابق، بار، صورتحساب، serviceها و hookهای مستقل
   hooks/
   i18n/, locales/
   pages/                # route، پوسته و navigation
@@ -70,6 +71,8 @@ tests/
 
 ## ۵. فرم، جدول و modal
 
+**به‌روزرسانی کنترل تردد — ۲۰۲۶/۱۱/۱۲:** دو منوی کنترل زنده و سوابق به‌ترتیب از `features/traffic/TrafficControlWorkspace.tsx` و `TrafficHistoryWorkspace.tsx` استفاده می‌کنند. فایل قبلی `components/management/TrafficRecordsWorkspace.tsx` adapter سازگاری route است. APIهای سوابق، درب، ثبت بار و انتخاب دوربین از hook به service منتقل شده‌اند؛ پرداخت و draft بار hook مستقل دارند. helperهای رکورد به `utils/records.ts` منتقل شده‌اند تا service به workspace رابط وابسته نباشد. نگاشت کامل مسئولیت‌ها و متن‌های ترجمه‌شده در بخش ۱۹ سند ۱۲ ثبت شده است؛ این تغییر ادعای بازآرایی سایر workspaceهای برنامه نیست.
+
 - state فرم با React مدیریت می‌شود و validation بسته به feature از Zod یا تابع اختصاصی می‌آید؛ فرم جدید تابع سند ۰۰ است.
 - `AppDataGrid` ردیف‌ها را از مصرف‌کننده می‌گیرد؛ فیلتر مشترک روی ردیف‌های دریافت‌شده با AND اعمال می‌شود. server-side pagination/filter/sort قابلیت عمومی خودکار این component نیست؛ هر مورد نیازمند قرارداد API خودش است.
 - پوستهٔ modalهای کسب‌وکاری `AppPopup` است؛ عنوان، footer، دکمه‌ها و busy در آن کنترل می‌شوند. محتوا، validation و mutation متعلق به feature هستند. قرارداد، استثناها و اسکرول جدول در [سند ۱۰](10-shared-ui-components.md) ثبت شده‌اند.
@@ -78,6 +81,8 @@ tests/
 ## ۶. realtime، تصویر و تجهیزات
 
 آداپتورهای realtime در `src/api` و hookهای feature قرار دارند؛ رفتار و cleanup هر صفحه باید از همان قابلیت استخراج شود. قرارداد نقشهٔ Home در سند ۲۵، مانیتورینگ در [سند ۰۷](07-monitoring-and-devices.md) و پخش دوربین در [سند ۲۴](24-rtsp-camera-ui-integration.md) است. reader جاوااسکریپتی MediaMTX استثنای ثبت‌شده در [سند ۲۱](21-implementation-progress-and-regression-policy.md) است.
+
+**عکس ثبت تردد:** `useTrafficDetectionWorkflow.capturePlateImage` منبع همان پلاک را هنگام ثبت ثابت می‌کند؛ فریم جایگزین از ref React دوربین همان جهت گرفته می‌شود. `trafficImageCapture.ts` فقط decode/خواندن پیکسل و آماده‌سازی رسانه را انجام می‌دهد و DOM ظاهری یا state کسب‌وکار را مدیریت نمی‌کند. `trafficOperationService` عکس را در DTO موجود ارسال می‌کند؛ تضمین حجم نهایی زیر ۲۰٬۰۰۰ بایت، مسئولیت helper بک‌اند در دو مسیر Repository است. سقف ورودی UI با سقف ذخیره یکی نیست. جدول مراحل، دامنهٔ عکس‌های جدید و مرز سوابق/عکس عضو در بخش ۳.۵.۴ [سند فرم](12-manual-traffic-control-form.md) مرجع‌اند.
 
 ## ۷. کیفیت و فاصله با استاندارد
 

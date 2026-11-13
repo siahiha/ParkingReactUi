@@ -1,8 +1,11 @@
+import { ReportPreview } from './ReportPreview';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, Checkbox, CircularProgress, FormControl, FormControlLabel, InputLabel, ListItemText, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { IranianPlateInput, isValidIranianPlate, type VehiclePlateType } from '../../components/IranianPlateInput';
+import { Alert, Box, Button, Checkbox, CircularProgress, FormControl, FormControlLabel, InputLabel, ListItemText, MenuItem, Select, TextField } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Viewer, Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
+import { Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
 import { parkingApi, reportApi } from '../../api/management';
 import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
@@ -121,7 +124,7 @@ async function createReport(rows: ReportRow[], kind: TrafficReportKind, language
   if (kind === 'details') {
     report.load(withImage ? trafficWithImageTemplate : trafficReportTemplate);
     patchLegacyTemplate(report, withImage
-      ? ['Text1', 'Text2', 'Text5', 'Text15', 'Text17', 'Text19', 'Text22', 'Text23', 'Text6']
+      ? ['Text1', 'Text2', 'Text5', 'Text15', 'Text17', 'Text19', 'Text22', 'Text23', 'Text6', 'Image1']
       : ['Text1', 'Text2', 'Text5', 'Text15', 'Text17', 'Text19', 'Text20', 'Text21', 'Text6']);
     for (const componentName of withImage ? ['Text23'] : ['Text21']) {
       const component = report.getComponentByName(componentName) as { text?: string } | null;
@@ -154,12 +157,14 @@ const carTypes = [
 ];
 
 export function TrafficReportWorkspace({ title, parkingId, language, kind }: Props) {
+  const { t } = useTranslation(undefined, { lng: language });
   const fa = language === 'fa';
   const today = useMemo(() => dateValue(new Date()), []);
   const previousMonth = useMemo(() => { const date = new Date(); date.setMonth(date.getMonth() - 1); return dateValue(date); }, []);
   const [fromDate, setFromDate] = useState(previousMonth);
   const [toDate, setToDate] = useState(today);
   const [plate, setPlate] = useState('');
+  const [plateCarType, setPlateCarType] = useState<VehiclePlateType>('0');
   const [memberCode, setMemberCode] = useState('');
   const [carType, setCarType] = useState('');
   const [onlyPresence, setOnlyPresence] = useState(false);
@@ -204,14 +209,9 @@ export function TrafficReportWorkspace({ title, parkingId, language, kind }: Pro
     return () => { current = false; };
   }, [rows, kind, language, withImage, fa]);
 
-  const viewerOptions = useMemo(() => {
-    const options = new Stimulsoft.Viewer.StiViewerOptions();
-    options.width = '100%'; options.height = '100%'; options.appearance.fullScreenMode = false; options.appearance.rightToLeft = fa;
-    options.toolbar.showOpenButton = false; options.toolbar.showSaveButton = false; options.toolbar.showSendEmailButton = false;
-    return options;
-  }, [fa]);
 
   const runReport = () => {
+    if (kind === 'details' && plate && !isValidIranianPlate(plate, plateCarType)) { setError(t('reportFilters.invalidPlate')); return; }
     if (fromDate > toDate) { setError(fa ? 'تاریخ شروع نباید بعد از تاریخ پایان باشد.' : 'The start date cannot be after the end date.'); return; }
     setLoadingReport(true); setError(''); setRows(null);
     const page = { Filters: { StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingId: parkingId, Plate: plate.trim(), MemberCode: memberCode.trim(), WithImage: withImage, OnlyPresence: onlyPresence, CarType: carType === '' ? null : Number(carType), ParkingIds: [parkingId], DoorIds: selectedDoorIds }, PageNumber: 1, PageSize: 1000000, GridFilters: [] };
@@ -229,7 +229,7 @@ export function TrafficReportWorkspace({ title, parkingId, language, kind }: Pro
     <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'از تاریخ' : 'From date'} value={fromDate} onChange={setFromDate} language={language} dateOnly size="small" /></Box>
     <Box sx={{ minWidth: 0 }}><EosDateTimePicker label={fa ? 'تا تاریخ' : 'To date'} value={toDate} onChange={setToDate} language={language} dateOnly size="small" /></Box>
     {kind === 'details' && <>
-      <TextField size="small" label={fa ? 'پلاک' : 'Plate'} value={plate} onChange={(event) => setPlate(event.target.value)} sx={{ minWidth: 0 }} />
+      <Box className="report-plate-filter"><IranianPlateInput language={language} label={t('reportFilters.plate')} value={plate} carType={plateCarType} onChange={setPlate} onCarTypeChange={setPlateCarType} disabled={loadingReport} /></Box>
       <TextField size="small" label={fa ? 'کد عضو' : 'Member code'} value={memberCode} onChange={(event) => setMemberCode(event.target.value)} sx={{ minWidth: 0 }} />
       <TextField select size="small" label={fa ? 'نوع خودرو' : 'Vehicle type'} value={carType} onChange={(event) => setCarType(event.target.value)} sx={{ minWidth: 0 }}><MenuItem value="">{fa ? 'همه' : 'All'}</MenuItem>{carTypes.map((item) => <MenuItem key={item.value} value={item.value}>{fa ? item.fa : item.en}</MenuItem>)}</TextField>
       <FormControlLabel control={<Checkbox checked={onlyPresence} onChange={(event) => setOnlyPresence(event.target.checked)} />} label={fa ? 'فقط حاضرین' : 'Only present'} />
@@ -242,6 +242,6 @@ export function TrafficReportWorkspace({ title, parkingId, language, kind }: Pro
   return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport || renderingReport} onRefresh={runReport} toolbar={toolbar}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{fa ? 'فیلترها را انتخاب کنید و نمایش گزارش را بزنید.' : 'Choose the filters and select Show report.'}</Alert>}
-    {rows !== null && <Box className="stimulsoft-traffic-report-viewer" sx={{ height: 'min(760px, calc(100vh - 330px))', minHeight: 520, width: '100%', overflow: 'hidden' }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{fa ? `${rows.length.toLocaleString('fa-IR')} رکورد` : `${rows.length.toLocaleString('en-US')} records`}</Typography>{report && <Viewer id={`traffic-report-viewer-${kind}`} report={report} options={viewerOptions} visible />}</Box>}
+    {rows !== null && <ReportPreview title={title} language={language} report={report} viewerId={`traffic-report-viewer-${kind}`} count={rows.length} resultKey={rows} busy={loadingReport || renderingReport} />}
   </ManagementWorkspaceFrame>;
 }
