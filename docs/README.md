@@ -42,7 +42,7 @@ Splash
 | تعریف سطح دسترسی | مستندات جزئی فرم | [04-1-access-level-form.md](04-1-access-level-form.md) |
 | مدیریت کاربران | مستندات جزئی فرم | [04-2-users-form.md](04-2-users-form.md) |
 | اعضا و کارت‌ها | فرم کارت با Grid و عملیات بالای صفحه؛ API ناقص | [05-members-and-cards.md](05-members-and-cards.md) |
-| ورود، خروج و پرداخت | تحلیل اولیه | [06-traffic-and-payment.md](06-traffic-and-payment.md) |
+| ورود، خروج و پرداخت | ثبت عکس، پیش‌نیاز هفت روش شناسایی در UI و بازخورد پلاک‌های اخیر مستند؛ رفتار کامل در سند ۱۲ و محدودیت‌های API در سند تخصصی | [06-traffic-and-payment.md](06-traffic-and-payment.md)، [12-manual-traffic-control-form.md](12-manual-traffic-control-form.md) |
 | مانیتورینگ و تجهیزات | تحلیل اولیه | [07-monitoring-and-devices.md](07-monitoring-and-devices.md) |
 | استاندارد عمومی گزارش‌ها | قواعد فیلتر، خروجی و API؛ فهرست Home در سند ۲۵ | [08-reports.md](08-reports.md) |
 | اجزای مشترک UI | تحلیل اولیه | [10-shared-ui-components.md](10-shared-ui-components.md) |

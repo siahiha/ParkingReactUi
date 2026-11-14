@@ -25,6 +25,8 @@
 | شیفت کاربران اختیاری، HasUserShifts، شرط تخصیص/ساعت | `03-parking-configuration.md` | `25-home.md` برای منو/route؛ `04-users-and-access.md` و سند ۲۱ برای مجوز و شواهد اجرا |
 | member، membership، card | `05-members-and-cards.md` | `10-shared-ui-components.md`، `11-remaining-forms.md` |
 | traffic، payment، exit، manual traffic | `06-traffic-and-payment.md`، `12-manual-traffic-control-form.md` | `14-web-backend-requests.md` |
+| روش مجوز تردد، EntryAuthorizaitionType، کارت و عکس، کارت و پلاک، کارت یا پلاک، QR | بخش ۳.۶.۲ `12-manual-traffic-control-form.md` | `trafficAuthorization.ts` برای کنترل ورودی؛ سند ۶ برای عکس و سند ۲۱ برای نتیجهٔ آزمون |
+| پلاک‌های اخیر، نبض دریافت جدید/تکراری، گوشهٔ دکمه، reduced motion | بخش ۳.۵.۲ `12-manual-traffic-control-form.md` | `FloatingPlateHistory.tsx` و `plateDetectionHistory.css`؛ سند ۲۱ برای شواهد و حدود اعتبارسنجی |
 | SOLID، تفکیک کنترل تردد و سوابق، resource متن تردد | بخش ۱۹ `12-manual-traffic-control-form.md` | `17-react-ui-architecture.md` و نتیجهٔ آزمون در سند ۲۱ |
 | اولویت تصویر، چیدمان دوربین و عملیات | بخش ۳.۶.۴ `12-manual-traffic-control-form.md` | بخش ۳.۶.۱ برای چینش فعلی؛ بخش ۳.۵.۲ برای دستیار پلاک‌های اخیر |
 | ذخیرهٔ عکس ورود/خروج، TrafficDumpImages، زیر ۲۰ کیلوبایت، کاهش ابعاد و فشرده‌سازی | بخش ۳.۵.۴ `12-manual-traffic-control-form.md` | اولویت عکس همان پلاک، DTO موجود، تفاوت سقف ورودی و ذخیره؛ سند ۲۴ برای فریم و سند ۲۷ برای انتشار |

@@ -191,7 +191,7 @@ test('requires the complementary card or plate, navigates backwards and keeps id
   await cancel.click();
   await member.fill('76101');
   await member.press('Enter');
-  await expect(enter).toBeFocused();
-  expect(state.lookups).toBe(3);
+  await expect(card).toBeFocused();
+  expect(state.lookups).toBe(2);
   expect(state.registrations).toBe(0);
 });

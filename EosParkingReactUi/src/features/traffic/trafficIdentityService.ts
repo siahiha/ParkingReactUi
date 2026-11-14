@@ -4,7 +4,7 @@ import { recordValue, type RecordValue } from '../../utils/records';
 import { normalizeIranianPlateValue } from '../../components/IranianPlateInput';
 import { trafficResult, TrafficOperationError } from './trafficOperationService';
 import { trafficImage } from './trafficImages';
-import { normalizeCard, parseTrafficQr } from './trafficQr';
+import { normalizeCard, parseTrafficQr, type TrafficQr } from './trafficQr';
 
 const objectSchema = z.record(z.string(), z.unknown());
 const scalarSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -26,6 +26,7 @@ export type TrafficVehicle = z.infer<typeof carSchema>;
 export type TrafficCredit = z.infer<typeof creditSchema>;
 export type VehicleDraft = { plate: string; name: string; carType: number; color: string; model: string };
 export type TrafficIdentity = {
+  qr?: TrafficQr;
   info: RecordValue; cars: TrafficVehicle[]; credits: TrafficCredit[]; creditError: boolean;
   personalPhoto: string | null; entranceImage: string | null;
 };
@@ -59,6 +60,7 @@ export const trafficIdentityService = {
   async lookup(parkingId: number, plate: string, cardInput: string, memberCode: string, signal?: AbortSignal): Promise<TrafficIdentity> {
     let card = normalizeCard(cardInput);
     let qrDumpId: number | null = null;
+    let verifiedQr: TrafficQr | undefined;
     if (card.includes('!@^')) {
       const qr = parseTrafficQr(card);
       if (!qr) throw new TrafficOperationError('', 'invalidQr');
@@ -67,6 +69,7 @@ export const trafficIdentityService = {
       if (Number(bill.DumpId) !== qr.dumpId || Number(bill.PayType) !== 0
         || normalizeIranianPlateValue(String(bill.AbsolutCarPlate ?? bill.CarPlate ?? '')) !== qr.plate) throw new TrafficOperationError('', 'invalidQr');
       qrDumpId = qr.dumpId;
+      verifiedQr = qr;
       plate = qr.plate;
       card = qr.cardNumber;
       memberCode = qr.memberCode;
@@ -83,7 +86,7 @@ export const trafficIdentityService = {
         credits = z.array(z.unknown()).parse(values ?? []).map(item => creditSchema.parse(canonicalFields(item)));
       } catch { creditError = true; }
     }
-    return { ...identity, credits, creditError };
+    return { ...identity, credits, creditError, ...(verifiedQr ? { qr: verifiedQr } : {}) };
   },
   async saveVehicle(memberId: number, draft: VehicleDraft) {
     if (!Number.isSafeInteger(memberId) || memberId < 0) throw new TrafficOperationError();

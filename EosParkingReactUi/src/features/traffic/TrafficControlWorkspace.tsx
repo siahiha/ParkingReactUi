@@ -39,6 +39,8 @@ import { ManagementWorkspaceFrame } from "../../components/management/Management
 import { TrafficCameraPanels } from "../../components/management/TrafficCameraPanels";
 import { recordValue, type RecordValue } from "../../utils/records";
 import type { TrafficCameraCapture } from './trafficImageCapture';
+import { trafficAuthorizationIssue, trafficAuthorizationSubmitIssue, type TrafficAuthorizationInput } from './trafficAuthorization';
+import { parseTrafficQr } from './trafficQr';
 type TrafficRow = RecordValue;
 type OperationMode = "idle" | "enter" | "exit";
 const valueOf = (row: RecordValue, key: string) => recordValue(row, key);
@@ -169,7 +171,11 @@ export function TrafficControlWorkspace({
   const loadError = doorsError ? t('trafficWorkspace.loadError') : '';
   const applyIdentity = (details: TrafficIdentity) => {
     const info = details.info;
-    identity.setDetails(details);
+    const previousQr = identity.details?.qr;
+    const sameQrTraffic = previousQr && numberOf(valueOf(info, 'DumpId')) === previousQr.dumpId
+      && normalizeIranianPlateValue(String(valueOf(info, 'Plate') ?? '')) === previousQr.plate;
+    const qr = details.qr ?? (sameQrTraffic ? previousQr : undefined);
+    identity.setDetails({ ...details, ...(qr ? { qr } : {}) });
     setCarInfo(info);
     setPlate(normalizeIranianPlateValue(String(valueOf(info, 'Plate') ?? plate)));
     setCardNumber(String(valueOf(info, 'CardNumber') ?? cardNumber));
@@ -181,21 +187,22 @@ export function TrafficControlWorkspace({
     keyboard.requestFocus(needsSelection ? 'vehicle' : 'actions');
   };
   const operationError = (cause: unknown, fallback: string) => cause instanceof TrafficOperationError ? cause.messageKey ? t(`trafficIdentity.${cause.messageKey}`) : cause.userMessage || fallback : fallback;
+  const authorizationInput = (values: Partial<TrafficAuthorizationInput> = {}): TrafficAuthorizationInput => ({
+    authorizationType: trafficDoor.door?.authorizationType, plate, carType, card: cardNumber, qr: identity.details?.qr, ...values,
+  });
+  const checkAuthorization = (input = authorizationInput(), image?: string | null, report = false) => {
+    const issue = image === undefined ? trafficAuthorizationIssue(input) : trafficAuthorizationSubmitIssue(input, image);
+    if (!issue) return true;
+    keyboard.requestFocus(issue.focus);
+    if (report || image !== undefined || issue.key === 'invalidQr') setError(t(`trafficIdentity.${issue.key}`));
+    return false;
+  };
   const lookupCar = async (force = false, source?: 'plate' | 'card' | 'member') => {
     // Moving focus to Register must not launch a second lookup and disable the click.
-    if (lookupInFlight.current || working || billBlocksInput || vehicleBusy || !force && carInfo && operationMode !== 'idle' || !plate && !cardNumber && !memberCode) return;
+    if (lookupInFlight.current || working || billBlocksInput || vehicleBusy || trafficDoor.loading || !force && carInfo && operationMode !== 'idle' || !plate && !cardNumber && !memberCode) return;
     if (source === 'plate' && !isValidIranianPlate(plate, carType)) return;
     if (source === 'card' && !cardNumber.trim() || source === 'member' && !memberCode.trim()) return;
-    if (source && source !== 'member' && trafficDoor.door?.authorizationType === 3) {
-      if (!cardNumber.trim()) {
-        keyboard.requestFocus('card');
-        return;
-      }
-      if (!isValidIranianPlate(plate, carType)) {
-        keyboard.requestFocus('plate');
-        return;
-      }
-    }
+    if (!checkAuthorization()) return;
     const requestId = ++lookupSequence.current;
     lookupInFlight.current = true;
     setLookupLoading(true);
@@ -219,6 +226,7 @@ export function TrafficControlWorkspace({
   };
   const selectVehicle = async (nextPlate: string) => {
     if (working || billBlocksInput || lookupInFlight.current || vehicleBusy) return;
+    if (!checkAuthorization(authorizationInput({ plate: nextPlate }))) return;
     const requestId = ++lookupSequence.current;
     lookupInFlight.current = true;
     setLookupLoading(true);
@@ -235,6 +243,10 @@ export function TrafficControlWorkspace({
       if (requestId === lookupSequence.current) setLookupLoading(false);
     }
   };
+  useEffect(() => {
+    // Windows processes a completed scanner frame without requiring Enter or blur.
+    if (parseTrafficQr(cardNumber)) void lookupCar(false, 'card');
+  }, [cardNumber, trafficDoor.loading]);
   useEffect(() => {
     if (!historyPlateLookup) return;
     // Run the normal plate validation after React applies the explicit history selection.
@@ -274,6 +286,7 @@ export function TrafficControlWorkspace({
       setCarType(String(draft.carType) as VehiclePlateType);
       setCardNumber('');
       setMemberCode('');
+      if (!checkAuthorization(authorizationInput({ plate: draft.plate, carType: String(draft.carType), card: '', qr: null }))) return;
       const details = await identity.lookup(draft.plate, '', '');
       if (requestId !== lookupSequence.current) return;
       if (numberOf(valueOf(details.info, 'CarId')) !== savedCarId || numberOf(valueOf(details.info, 'MemberId')) !== memberId) throw new TrafficOperationError();
@@ -292,7 +305,9 @@ export function TrafficControlWorkspace({
   const registerTraffic = async () => {
     if (submissionLocked.current || working || operations.pending) return;
     setNotice('');
-    if (!isValidIranianPlate(plate, carType) || !entryDoorId) {
+    if (!entryDoorId || trafficDoor.loading || !trafficDoor.door) return;
+    if (!checkAuthorization(authorizationInput(), undefined, true)) return;
+    if (trafficDoor.door.authorizationType === undefined && !isValidIranianPlate(plate, carType)) {
       setError(t('trafficWorkspace.liveRequired'));
       return;
     }
@@ -305,6 +320,7 @@ export function TrafficControlWorkspace({
       if (needsVehicle) throw new TrafficOperationError('', 'selectVehicle');
       const image = await capturePlateImage(plate, 'entry', cameraCaptureRef.current?.capture('entry') ?? null);
       if (requestId !== lookupSequence.current) return;
+      if (!checkAuthorization(authorizationInput(), image)) return;
       await operations.enter({
         trafficImage: image,
         parkingId,
@@ -363,14 +379,17 @@ export function TrafficControlWorkspace({
     const rowPlate = normalizeIranianPlateValue(String(valueOf(row, "AbsolutCarPlate") ?? valueOf(row, "CarPlate") ?? valueOf(row, "Plate") ?? valueOf(row, "CarPlateReversed") ?? ""));
     const rowCard = String(valueOf(row, "CardNumber") ?? "");
     const rowMember = String(valueOf(row, "MemberCode") ?? "");
+    const rowCarType = String(valueOf(row, 'CarType') ?? (/^\d{8}$/.test(rowPlate) ? '1' : '0')) as VehiclePlateType;
     setPlate(rowPlate);
     setCardNumber(rowCard);
     setMemberCode(rowMember);
-    setCarInfo(row);
+    setCarType(rowCarType);
+    setCarInfo(null);
     identity.setDetails(null);
     setOperationMode("exit");
-    setLookupLoading(true);
     setError("");
+    if (trafficDoor.loading || !checkAuthorization(authorizationInput({ plate: rowPlate, carType: rowCarType, card: rowCard, qr: null }))) return;
+    setLookupLoading(true);
     try {
       const details = await identity.lookup(rowPlate, rowCard, rowMember);
       if (requestId !== lookupSequence.current) return;
@@ -398,6 +417,7 @@ export function TrafficControlWorkspace({
   };
   const registerExit = async () => {
     if (submissionLocked.current || working || operations.pending) return;
+    if (trafficDoor.loading || !trafficDoor.door || !checkAuthorization(authorizationInput(), undefined, true)) return;
     if (isCommercialParking === undefined) {
       setError(t('trafficOperation.parkingSettingsUnavailable'));
       return;
@@ -420,6 +440,7 @@ export function TrafficControlWorkspace({
       if (!actionState.canExit) throw new TrafficOperationError('', 'directionUnavailable');
       const image = await capturePlateImage(plate, 'exit', cameraCaptureRef.current?.capture('exit') ?? null);
       if (requestId !== lookupSequence.current) return;
+      if (!checkAuthorization(authorizationInput(), image)) return;
       // Like entry, operational exit uses the server clock; detection time remains display/history data.
       const result = await operations.completeExit({
         trafficImage: image,

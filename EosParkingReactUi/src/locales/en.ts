@@ -182,6 +182,11 @@ const en = {
     enlargeError: 'Image enlargement is unavailable in this browser.',
   },
   trafficIdentity: {
+    cardRequired: 'A card number is required.',
+    plateRequired: 'A complete, valid plate is required.',
+    cardOrPlateRequired: 'Enter a card number or a complete plate.',
+    qrRequired: 'Scan the QR code into the card number field.',
+    trafficImageRequired: 'No vehicle image was received. An image is required to register traffic.',
     guest: 'Guest', vehicleDetails: 'Vehicle details', validFrom: 'From', validUntil: 'Until',
     doorError: 'Door information could not be loaded. Refresh the page.', directionUnavailable: 'This operation is not allowed for the current door and traffic state.',
     noEntry: 'No entry is recorded.', alreadyEntered: 'This vehicle already has an open entry.',

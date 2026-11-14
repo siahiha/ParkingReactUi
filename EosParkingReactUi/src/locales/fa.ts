@@ -180,6 +180,11 @@ const fa = {
     enlargeError: 'بزرگ‌نمایی تصویر در مرورگر در دسترس نیست.',
   },
   trafficIdentity: {
+    cardRequired: 'شماره کارت الزامی است.',
+    plateRequired: 'پلاک کامل و معتبر الزامی است.',
+    cardOrPlateRequired: 'شماره کارت یا پلاک کامل را وارد کنید.',
+    qrRequired: 'کد QR را در فیلد شماره کارت بخوانید.',
+    trafficImageRequired: 'تصویر خودرو دریافت نشد؛ تصویر برای ثبت تردد الزامی است.',
     guest: 'مهمان', vehicleDetails: 'مشخصات خودرو', validFrom: 'شروع', validUntil: 'پایان',
     doorError: 'اطلاعات درب دریافت نشد؛ صفحه را به‌روزرسانی کنید.', directionUnavailable: 'این عملیات برای درب و وضعیت تردد جاری مجاز نیست.',
     noEntry: 'ورودی ثبت نشده است.', alreadyEntered: 'برای این خودرو ورود باز وجود دارد.',

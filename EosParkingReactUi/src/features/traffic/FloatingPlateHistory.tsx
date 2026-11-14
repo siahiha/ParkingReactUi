@@ -51,6 +51,8 @@ export function FloatingPlateHistory({ items, status, language, busy, hasCurrent
   const { position, viewport, dragging, moved, dragHandlers } = useFloatingHistoryPosition(anchorRef, language);
   const latest = items[0];
   const freshness = plateHistoryFreshness(latest, now);
+  const receiving = Boolean(latest && now - latest.receivedAt < 5000);
+  const activityTone = latest?.repeated ? 'error' : 'success';
   const panelWidth = Math.min(340, viewport.width - 16);
   const gap = 6;
   const above = position.y - gap - 8;
@@ -67,7 +69,6 @@ export function FloatingPlateHistory({ items, status, language, busy, hasCurrent
     : Math.max(8, Math.min(position.x, viewport.width - panelWidth - 8));
   const panelY = horizontal ? Math.max(8, Math.min(position.y, viewport.height - panelHeight - 8))
     : side === 'above' ? position.y - panelHeight - gap : position.y + historyHandleHeight + gap;
-  const docked = position.x === (language === 'fa' ? 0 : viewport.width - historyHandleWidth);
   const clearTimers = () => {
     if (openTimer.current !== null) clearTimeout(openTimer.current);
     if (closeTimer.current !== null) clearTimeout(closeTimer.current);
@@ -152,6 +153,7 @@ export function FloatingPlateHistory({ items, status, language, busy, hasCurrent
     <Tooltip describeChild title={dragging ? '' : t('plateHistory.title')} placement={side === 'above' ? 'bottom' : 'top'} enterDelay={100} disableInteractive>
     <Paper ref={headerRef} component="div" role="button" tabIndex={0} aria-label={t('plateHistory.title')}
       aria-description={t('plateHistory.moveHint')} aria-expanded={open} aria-controls={open ? panelId : undefined}
+      data-activity={receiving ? latest?.repeated ? 'repeated' : 'new' : 'idle'}
       variant="outlined" className="plate-history-handle" {...dragHandlers}
       onPointerDown={event => { clearTimers(); dragHandlers.onPointerDown(event); }}
       onClick={() => { if (!moved.current) { dismissed.current = open; setOpen(value => !value); } }}
@@ -160,8 +162,8 @@ export function FloatingPlateHistory({ items, status, language, busy, hasCurrent
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); dismissed.current = open; setOpen(value => !value); }
       }}
       sx={theme => ({
-        height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden',
-        borderStartEndRadius: docked ? 0 : undefined, borderEndEndRadius: docked ? 0 : undefined,
+        height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+        borderRadius: 1,
         color: tone ? theme.palette[tone][theme.palette.mode === 'dark' ? 'light' : 'main'] : theme.palette.text.secondary,
         bgcolor: theme.palette.background.paper,
         borderColor: tone ? alpha(theme.palette[tone][theme.palette.mode === 'dark' ? 'light' : 'main'], 0.45) : theme.palette.divider,
@@ -169,8 +171,9 @@ export function FloatingPlateHistory({ items, status, language, busy, hasCurrent
         '&:hover': { borderColor: tone ? theme.palette[tone].main : theme.palette.text.secondary, boxShadow: 2 },
         '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 },
       })}>
-      {latest && now - latest.receivedAt < 1600 && <Box key={latest.id} className="plate-history-arrival" sx={{ bgcolor: 'info.main' }} />}
-      <ListAltRoundedIcon sx={{ fontSize: 21 }} />
+      {receiving && <Box aria-hidden className="plate-history-activity" sx={{ bgcolor: `${activityTone}.main` }} />}
+      {latest && now - latest.receivedAt < 1600 && <Box aria-hidden key={latest.id} className="plate-history-arrival" sx={{ borderColor: `${activityTone}.main` }} />}
+      <ListAltRoundedIcon sx={{ fontSize: 21, position: 'relative' }} />
       {latest && <Box className="plate-history-freshness-dot" sx={{ position: 'absolute', bottom: 7, insetInlineEnd: 5,
         width: 5, height: 5, borderRadius: '50%', bgcolor: 'currentColor', border: 1, borderColor: 'background.paper' }} />}
     </Paper>

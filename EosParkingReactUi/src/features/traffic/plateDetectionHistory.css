@@ -1,11 +1,13 @@
 .plate-history-handle { cursor: grab; touch-action: none; user-select: none; box-sizing: border-box; transition: border-color 140ms ease, box-shadow 140ms ease; }
 .plate-history-floating.is-dragging .plate-history-handle { cursor: grabbing; }
-.plate-history-arrival { position: absolute; inset: 0; opacity: 0; pointer-events: none; animation: plate-history-arrival 1.6s ease-out both; }
+.plate-history-arrival { position: absolute; inset: -2px; border: 2px solid; border-radius: inherit; opacity: 0; pointer-events: none; animation: plate-history-arrival 1.2s ease-out both; }
+.plate-history-activity { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0.1; animation: plate-history-activity 1.6s ease-in-out infinite; }
 .plate-history-panel { animation: plate-history-open 120ms ease-out both; }
 .plate-history-grid .app-data-grid-wrapper { scrollbar-width: thin; }
-@keyframes plate-history-arrival { from { opacity: 0.22; } to { opacity: 0; } }
+@keyframes plate-history-arrival { from { opacity: 0.85; transform: scale(1); } to { opacity: 0; transform: scale(1.3); } }
+@keyframes plate-history-activity { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.3; } }
 @keyframes plate-history-open { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .plate-history-arrival, .plate-history-panel { animation: none; }
+  .plate-history-arrival, .plate-history-activity, .plate-history-panel { animation: none; }
   .plate-history-handle { transition: none; }
 }
