@@ -25,6 +25,7 @@
 | شیفت کاربران اختیاری، HasUserShifts، شرط تخصیص/ساعت | `03-parking-configuration.md` | `25-home.md` برای منو/route؛ `04-users-and-access.md` و سند ۲۱ برای مجوز و شواهد اجرا |
 | member، membership، card | `05-members-and-cards.md` | `10-shared-ui-components.md`، `11-remaining-forms.md` |
 | traffic، payment، exit، manual traffic | `06-traffic-and-payment.md`، `12-manual-traffic-control-form.md` | `14-web-backend-requests.md` |
+| وضعیت لحظه‌ای تجهیزات درب، SignalR `deviceEventsHub`، ورود خودکار کارتخوان | بخش ۳.۸.۱ `12-manual-traffic-control-form.md` | `DeviceEventsHub.cs` و `deviceStatusRealtime.ts`؛ مجوزها و تازگی status در همان بخش |
 | روش مجوز تردد، EntryAuthorizaitionType، کارت و عکس، کارت و پلاک، کارت یا پلاک، QR | بخش ۳.۶.۲ `12-manual-traffic-control-form.md` | `trafficAuthorization.ts` برای کنترل ورودی؛ سند ۶ برای عکس و سند ۲۱ برای نتیجهٔ آزمون |
 | پلاک‌های اخیر، نبض دریافت جدید/تکراری، گوشهٔ دکمه، reduced motion | بخش ۳.۵.۲ `12-manual-traffic-control-form.md` | `FloatingPlateHistory.tsx` و `plateDetectionHistory.css`؛ سند ۲۱ برای شواهد و حدود اعتبارسنجی |
 | SOLID، تفکیک کنترل تردد و سوابق، resource متن تردد | بخش ۱۹ `12-manual-traffic-control-form.md` | `17-react-ui-architecture.md` و نتیجهٔ آزمون در سند ۲۱ |

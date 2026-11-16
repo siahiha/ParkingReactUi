@@ -130,7 +130,7 @@ publish/
 <add key="ProcessDeviceRecordsLocally" value="false" />
 ```
 
-سرویس ویندوزی دستگاه‌ها را مدیریت و رویداد رکورد/QR و موفقیت فرمان راهبند را از outbox محلی به API IIS ارسال می‌کند؛ IIS رویداد را به مشترکین مجاز `DeviceEventsHub` می‌رساند. در این حالت کلاینت فقط به API/SignalR IIS متصل می‌شود. `Enable<DeviceType>Devices` هم نوع تجهیزات تحت مدیریت Device Manager را جداگانه روشن/خاموش می‌کند. شرح جزئیات و قواعد retry در راهنمای [`EosParkingApiWindowsService/Hosting`](../../Services/EosParkingApiWindowsService/Hosting/README.md) است.
+سرویس ویندوزی دستگاه‌ها را مدیریت و رویداد رکورد/QR، وضعیت اتصال تجهیزات و موفقیت فرمان راهبند را از outbox محلی به API IIS ارسال می‌کند؛ IIS رویدادهای رکورد/QR/فرمان را با `deviceEventReceived` و وضعیت‌ها را با `deviceStatusUpdated` به مشترکین مجاز `DeviceEventsHub` می‌رساند. در این حالت کلاینت فقط به API/SignalR IIS متصل می‌شود. `Enable<DeviceType>Devices` هم نوع تجهیزات تحت مدیریت Device Manager را جداگانه روشن/خاموش می‌کند. شرح جزئیات و قواعد retry در راهنمای [`EosParkingApiWindowsService/Hosting`](../../Services/EosParkingApiWindowsService/Hosting/README.md) است.
 
 IIS همان `/signalr` را روی آدرس سایت میزبانی می‌کند؛ تنظیم listener سرویس، Binding سایت IIS را تعیین نمی‌کند. برای پلاکخوان، `EnableBackgroundWorkers=true` لازم است. در UI، `anprSignalRUrl` خالی از آدرس پایهٔ API به‌اضافهٔ `/signalr` استفاده می‌کند؛ listener مستقل Windows Service آدرس صریح خودش را لازم دارد. جزئیات نصب سرویس، pool و دسترسی‌ها در `Services/EosParkingApiWindowsService/Hosting/README.md` آمده‌اند.
 

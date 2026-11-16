@@ -84,6 +84,8 @@
 | `additionalInfoLabel` | پیام تکمیلی | اعتبار عضو، پیام‌های دستگاه یا وضعیت جانبی |
 | `enterDateLabel` | زمان ورود | نمایش زمان ورود ثبت‌شده یا خطای نبود ورود |
 
+**چیدمان فعلی وب — ۲۰۲۶/۱۱/۱۶:** در `TrafficControlWorkspace`، ردیف شناسایی دو ستون دارد: قاب پلاک با عرض ثابت `190px` و ستون ورودی کارت/کد عضو با عرض باقیمانده. ورودی پلاک در ترتیب بصری جلوتر است؛ ورودی کارت و کد عضو زیر هم قرار می‌گیرند و حداقل عرض inline آن‌ها صفر است تا ستون دوم از قاب خارج نشود. منابع: `features/traffic/trafficWorkspace.css` و `TrafficControlWorkspace.tsx`.
+
 ### الزام نسخهٔ وب برای ورود پلاک
 
 **اندازهٔ ثابت کنترل مشترک — ۲۰۲۶/۱۱/۱۳:** قاب `IranianPlateInput` در کنترل ورود و خروج نیز مانند گزارش‌ها، اندازهٔ پیش‌فرض ۱۹۰×۵۶ پیکسل دارد. کشش به عرض والد در ناحیهٔ شناسایی و breakpoint موبایل حذف شده است؛ بازچینی ستون‌ها اندازهٔ خود کنترل را تغییر نمی‌دهد. قرارداد مشترک در [سند اجزای UI](10-shared-ui-components.md) مرجع است.
@@ -629,6 +631,26 @@ GET api/traffic/GetTraffics?doorId={currentDoor.Id}
 
 دکمه‌های عملیاتی Grid عبارت‌اند از: `payRepositoryGridButton` برای پرداخت، `exitRepositoryGridButton` برای انتقال یک تردد باز به فرم کنترل، `cargoRepositoryGridButton` برای ثبت بار و `syncTimeDeviceRepositoryButtonEdit` برای تنظیم ساعت یا تست تجهیزات.
 
+### ۳.۸.۱ وضعیت تجهیزات و دریافت کارت در نسخهٔ وب
+
+**رفتار فعلی وب:** کنار انتخاب‌گر درب، دکمهٔ «وضعیت تجهیزات» یک Dialog باز می‌کند. Dialog نام تجهیز (در نبود نام، نوع یا شناسه)، نوع، زمان آخرین وضعیت به وقت محلی و یکی از سه حالت «متصل»، «قطع» یا «نامشخص» را نشان می‌دهد. وضعیت `null` یا نبود زمان معتبر نامشخص است؛ دوربین‌ها در snapshot این Hub فهرست نمی‌شوند. حالت‌های خالی، بارگذاری و خطای دریافت نیز داخل Dialog نمایش داده می‌شوند. باز و بسته‌کردن Dialog اتصال را شروع یا متوقف نمی‌کند؛ اتصال برای تمام مدت workspace و درب انتخاب‌شده فعال می‌ماند.
+
+هنگام هر بار بازکردن Dialog، فهرست نمایشی در حافظه خالی می‌شود، اما اتصال از قبل برقرار است و بازکردن Dialog spinner را دوباره فعال نمی‌کند؛ بنابراین تا رسیدن snapshot دوره‌ای بعدی ممکن است متن حالت خالی به‌طور موقت دیده شود.
+
+کلاینت از SignalR 2 موجود در UI و آدرس `${apiBaseUrl}/signalr` با cookie نشست استفاده می‌کند و به proxy با نام `deviceEventsHub` متصل می‌شود. پس از اتصال، `subscribe(doorId)` اجرا و `getDeviceStatuses(doorId)` برای snapshot فراخوانی می‌شود؛ snapshot سپس هر ۵ ثانیه تازه می‌شود و `deviceStatusUpdated` تغییرها را فوری می‌فرستد. با reconnect، subscribe و snapshot تکرار می‌شوند؛ پس از disconnect یا خطای اتصال، reconnect با مکث ۲ ثانیه زمان‌بندی می‌شود. هنگام تغییر درب یا خروج از صفحه، polling متوقف، `unsubscribe(doorId)` best-effort اجرا و اتصال آزاد می‌شود. خطای اولیه/پایدار با پیام عمومی در Dialog نشان داده می‌شود؛ callbackهای صرفاً `reconnecting` و `disconnected` Alert نمی‌سازند و UI وضعیت مستقلی برای stale بودن snapshot ندارد.
+
+| قرارداد SignalR مشاهده‌شده | ورودی/خروجی یا اثر | وضعیت پوشش |
+|---|---|---|
+| Hub در `/signalr`، نام `deviceEventsHub` | اتصال با اعتبارسنجی نشست؛ subscription گروهی بر اساس درب | از `DeviceEventsHub` و مصرف React بررسی شده؛ قرارداد versioned/OpenAPI ندارد |
+| `subscribe(doorId)` / `unsubscribe(doorId)` | عضویت و حذف از گروه همان درب | `subscribe` و `getDeviceStatuses` دسترسی را بررسی می‌کنند؛ `unsubscribe` فقط عضویت را حذف می‌کند |
+| `getDeviceStatuses(doorId)` | آرایهٔ `{ EquipmentId, DeviceName, DeviceType, Connected, UpdatedAtUtc }` | وضعیت از تجهیزات لینک‌شده یا تخصیص‌یافته به درب ساخته می‌شود؛ دوربین حذف می‌شود؛ `Connected` و `UpdatedAtUtc` nullable هستند |
+| رویداد `deviceStatusUpdated` | همان DTO وضعیت برای یک تجهیز | آخرین وضعیت در حافظهٔ فرایند IIS نگهداری می‌شود؛ snapshot آن را نامعتبر/نامشخص می‌کند اگر زمان گزارش بیش از ۴۵ ثانیه قدیمی باشد |
+| رویداد `deviceEventReceived` | مصرف UI: `EventId`, `DeviceId`, `EventType`, `Identifier`, `OccurredAt` | React payload را normalize می‌کند و `EventId` تکراری را در پنجرهٔ اخیر حداکثر ۵۱۲ شناسه نادیده می‌گیرد |
+
+سرویس تجهیزات وضعیت را در چرخهٔ تقریبی ۳ ثانیه بررسی می‌کند؛ گزارش وضعیت تکراری را اگر تغییر نکرده باشد تا ۳۰ ثانیه محدود می‌کند. بنابراین «متصل» گزارش سرویس است، نه آزمون مستقل سخت‌افزار از مرورگر. مجوز سمت Hub نیز دوباره کنترل می‌شود: نشست معتبر، کاربر غیرراننده با `ParkingManualIO` یا `DashbordManaging` و، در پارکینگ شیفتی، حضور کاربر در شیفت جاری. مجوز پنهان‌کردن دکمه در UI جایگزین کنترل Backend نیست.
+
+**ورود کارت زنده:** فقط `deviceEventReceived` از نوع `record.detected` با شناسهٔ غیرخالی در این UI پردازش می‌شود. مقدار شناسه پس از trim، فیلدهای پلاک و کد عضو را پاک می‌کند، در فیلد کارت قرار می‌گیرد و همان lookup دستی کارت را اجرا می‌کند. رویدادهای QR و نتیجهٔ فرمان راهبند در قرارداد سرویس وجود دارند اما در این مسیر React مصرف نمی‌شوند؛ این‌ها به‌تنهایی lookup کارت را اجرا نمی‌کنند. منابع: `src/api/deviceStatusRealtime.ts`، `TrafficControlWorkspace.tsx`، `DeviceEventsHub.cs`، `DeviceEventsController.cs`، `DeviceConnectionStatusDto.cs` و `DeviceManagementThread.cs`.
+
 ### ۳.۹ کنترل قبض اولیه و انتخاب خودرو
 
 - `BillCheckerControl`: دریافت و بررسی شناسه‌های قبض اولیه پیش از خروج.
@@ -930,13 +952,13 @@ Backend باید مرجع اصلی این موارد باشد:
 
 **رفتار فعلی پیاده‌سازی‌شده در `EosParkingApiWindowsService`:** پروژه هم ورودی Windows Service و هم ورودی IIS دارد. میزبان Windows Service می‌تواند با `EnableWindowsServiceApiHost=false` listener عمومی خودش را خاموش کند و در عین حال با `RunDeviceManager=true` اتصال تجهیزات کنترل‌شده از سرور را نگه دارد. IIS میزبان API و SignalR است. قفل‌های نقش‌محور در `App_Data` مالکیت listener، Device Manager و background workerها را جدا می‌کنند تا API IIS و Device Manager سرویس ویندوزی هم‌زمان اجرا شوند.
 
-در حالت split، `EnableIisBackgroundWorkers=true` و `RunDeviceManagerInIis=false` می‌مانند؛ برای Windows Service، `EnableBackgroundWorkers=false` و `RunDeviceManager=true` تنظیم می‌شوند. `EnableDeviceEventRelay=true` رویدادهای رکورد و QR و نتیجهٔ موفق فرمان راهبند را در outbox دیسکی ذخیره و به `DeviceEventApiUrl` در IIS می‌فرستد. IIS با `DeviceEventSharedSecret` احراز هویت سرویس را بررسی می‌کند، درب‌های مرتبط با `DeviceId` را از دیتابیس می‌یابد و رویداد `deviceEventReceived` را در `DeviceEventsHub` به مشترکین مجاز همان درب می‌رساند. صف در زمان قطعی IIS حفظ می‌شود و تحویل at-least-once است؛ گیرنده باید EventId تکراری را نادیده بگیرد.
+در حالت split، `EnableIisBackgroundWorkers=true` و `RunDeviceManagerInIis=false` می‌مانند؛ برای Windows Service، `EnableBackgroundWorkers=false` و `RunDeviceManager=true` تنظیم می‌شوند. `EnableDeviceEventRelay=true` رویدادهای رکورد، QR، وضعیت اتصال تجهیزات و نتیجهٔ موفق فرمان راهبند را در outbox دیسکی ذخیره و به `DeviceEventApiUrl` در IIS می‌فرستد. IIS با `DeviceEventSharedSecret` احراز هویت سرویس را بررسی می‌کند، درب‌های مرتبط با `DeviceId` را از دیتابیس می‌یابد و رویدادهای رکورد/QR/فرمان را با `deviceEventReceived` و وضعیت اتصال را با `deviceStatusUpdated` در `DeviceEventsHub` به مشترکین مجاز همان درب می‌رساند. صف در زمان قطعی IIS حفظ می‌شود و تحویل at-least-once است؛ گیرنده باید EventId تکراری را نادیده بگیرد.
 
 `ProcessDeviceRecordsLocally=false` در این حالت، پردازش قدیمی تردد را در سرویس ویندوزی متوقف می‌کند تا رویداد فقط به API برسد. فیلترهای `Enable<DeviceType>Devices` نوع تجهیزات تحت مدیریت Device Manager را جداگانه کنترل می‌کنند و مقدار پیش‌فرض آن‌ها برای سازگاری `true` است.
 
 تجهیزات با `ControlByServer=true` طبق نقش سرویس مدیریت می‌شوند. تجهیزات با `ControlByServer=false` فقط زمانی به Device Manager اضافه می‌شوند که یک فرم مجاز کنترل ورود و خروج برای درب مرتبط به `DeviceEventsHub` متصل باشد. IIS فهرست تجهیزات درخواست‌شده را با کلید relay به Windows Service می‌دهد؛ سرویس هر سه ثانیه آن را بررسی و با تغییر فهرست، Device Manager را بیدار می‌کند. با بسته‌شدن آخرین فرم مشترک برای آن درب، تجهیزات کاربرمحور از Device Manager حذف و اتصالشان بسته می‌شود. تغییرات تجهیزات در دیتابیس نیز بدون راه‌اندازی مجدد سرویس و در چرخهٔ refresh بعدی دریافت می‌شوند.
 
-**محدودهٔ قرارداد فعلی:** رویدادهای رکورد تجهیزات، QR و موفقیت فرمان راهبند از مسیر بالا ارسال می‌شوند؛ خطای فرمان راهبند و نتیجهٔ POS هنوز رویداد جداگانه ندارند. مسیر فعلی SQL/Device Manager برای درخواست راهبند حفظ شده است. فرم کنترل ورود و خروج کلاینت دسکتاپ به `/signalr` مشترک می‌شود؛ رویداد کارت/QR را از مسیر اعتبارسنجی فعلی فرم عبور می‌دهد و موفقیت فرمان راهبند را در نوار وضعیت نشان می‌دهد.
+**محدودهٔ قرارداد فعلی:** رویدادهای رکورد تجهیزات، QR، وضعیت اتصال و موفقیت فرمان راهبند از مسیر بالا ارسال می‌شوند؛ خطای فرمان راهبند و نتیجهٔ POS هنوز رویداد جداگانه ندارند. مسیر فعلی SQL/Device Manager برای درخواست راهبند حفظ شده است. فرم کنترل ورود و خروج کلاینت دسکتاپ به `/signalr` مشترک می‌شود؛ رویداد کارت/QR را از مسیر اعتبارسنجی فعلی فرم عبور می‌دهد و موفقیت فرمان راهبند را در نوار وضعیت نشان می‌دهد. رفتار نسخهٔ وب، از جمله نمایش وضعیت تجهیزات و lookup خودکار کارت برای `record.detected`، در بخش ۳.۸.۱ آمده است.
 
 ## ۱۳. قرارداد پیشنهادی API وب
 
