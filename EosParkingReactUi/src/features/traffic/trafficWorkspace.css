@@ -69,10 +69,12 @@
 }
 .traffic-control-workspace .traffic-entry-panel { padding: 8px; min-height: 0; block-size: auto; border: 0; border-radius: 0; }
 .traffic-control-workspace .traffic-entry-identity { flex: 0 0 auto; border-block-end: 1px solid var(--app-divider); }
-.traffic-control-workspace .traffic-vehicle-identification-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); direction: inherit; gap: 8px; align-items: center; }
+.traffic-control-workspace .traffic-vehicle-identification-grid { grid-template-columns: 190px minmax(0, 1fr); direction: inherit; gap: 8px; align-items: center; }
 .traffic-control-workspace .traffic-vehicle-identification-grid > .MuiTypography-root { grid-column: 1 / -1; }
 .traffic-control-workspace .traffic-plate-field { order: -1; }
 .traffic-control-workspace .traffic-card-member-fields { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; direction: inherit; }
+.traffic-control-workspace .traffic-card-member-fields,
+.traffic-control-workspace .traffic-card-member-fields .MuiFormControl-root { min-inline-size: 0; }
 .traffic-control-workspace .traffic-card-member-fields .MuiInputBase-root { block-size: 32px; }
 .traffic-control-workspace .traffic-entry-operation { flex: 1 1 0; overflow: hidden; direction: inherit; }
 .traffic-control-workspace .traffic-operation-tall { grid-row: auto; }

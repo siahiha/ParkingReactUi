@@ -112,7 +112,25 @@ publish/
 | Windows Service | کل بسته را کپی و EXE ریشه را به‌عنوان سرویس نصب و Start کنید؛ نام ثبت‌شدهٔ سرویس `EosParkingApi` است. بازکردن عادی EXE، ویرایشگر تنظیمات موجود را اجرا می‌کند. | تنظیمات listener از جمله `ServiceBaseUrl`، `ServiceHttpPort` و `AnprSignalRAddress` از تنظیم سرویس خوانده می‌شوند. |
 | IIS | کل بسته را کپی و Physical Path سایت/application را روی **ریشهٔ پوشه** قرار دهید، نه `bin`. | میزبان ASP.NET 4.x با pool از نوع Integrated، CLR v4.0 و `Enable 32-Bit Applications=False`؛ آدرس و پورت از Binding سایت می‌آیند. |
 
-وابستگی‌های native موجود به فرایند ۶۴ بیتی نیاز دارند. تنظیمات اتصال دیتابیس و برنامه در دو فایل مشترک ویرایش می‌شوند. حساب اجرایی هر میزبان باید مجوزهای لازم دیتابیس/شبکه و نوشتن پوشه‌های runtime را داشته باشد. در هر نصب یک میزبان مالک کارهای پس‌زمینه و تجهیزات باشد؛ اجرای هم‌زمان دو نسخه برای یک نصب روش استفاده از این بسته نیست.
+وابستگی‌های native موجود به فرایند ۶۴ بیتی نیاز دارند. تنظیمات اتصال دیتابیس و برنامه در دو فایل مشترک ویرایش می‌شوند. حساب اجرایی هر میزبان باید مجوزهای لازم دیتابیس/شبکه و نوشتن پوشه‌های runtime را داشته باشد. اجرای هم‌زمان Windows Service و IIS برای **یک نقش** مجاز نیست؛ اجرای split-role پشتیبانی می‌شود تا IIS مالک API/background workerها و Windows Service مالک اتصال تجهیزات باشد. قفل‌های مستقل در `App_Data` از مالکیت تکراری هر نقش جلوگیری می‌کنند.
+
+### اجرای API روی IIS همراه Device Manager در Windows Service
+
+برای این شیوه، هر دو میزبان از همان پوشهٔ package و تنظیمات مشترک استفاده کنند. در `appSettings.config` این مقادیر را تنظیم کنید:
+
+```xml
+<add key="EnableWindowsServiceApiHost" value="false" />
+<add key="RunDeviceManager" value="true" />
+<add key="RunDeviceManagerInIis" value="false" />
+<add key="EnableBackgroundWorkers" value="false" />
+<add key="EnableIisBackgroundWorkers" value="true" />
+<add key="EnableDeviceEventRelay" value="true" />
+<add key="DeviceEventApiUrl" value="https://parking.example/api/DeviceEvents/Ingest" />
+<add key="DeviceEventSharedSecret" value="یک-راز-خصوصی-یکسان-در-هر-دو-میزبان" />
+<add key="ProcessDeviceRecordsLocally" value="false" />
+```
+
+سرویس ویندوزی دستگاه‌ها را مدیریت و رویداد رکورد/QR و موفقیت فرمان راهبند را از outbox محلی به API IIS ارسال می‌کند؛ IIS رویداد را به مشترکین مجاز `DeviceEventsHub` می‌رساند. در این حالت کلاینت فقط به API/SignalR IIS متصل می‌شود. `Enable<DeviceType>Devices` هم نوع تجهیزات تحت مدیریت Device Manager را جداگانه روشن/خاموش می‌کند. شرح جزئیات و قواعد retry در راهنمای [`EosParkingApiWindowsService/Hosting`](../../Services/EosParkingApiWindowsService/Hosting/README.md) است.
 
 IIS همان `/signalr` را روی آدرس سایت میزبانی می‌کند؛ تنظیم listener سرویس، Binding سایت IIS را تعیین نمی‌کند. برای پلاکخوان، `EnableBackgroundWorkers=true` لازم است. در UI، `anprSignalRUrl` خالی از آدرس پایهٔ API به‌اضافهٔ `/signalr` استفاده می‌کند؛ listener مستقل Windows Service آدرس صریح خودش را لازم دارد. جزئیات نصب سرویس، pool و دسترسی‌ها در `Services/EosParkingApiWindowsService/Hosting/README.md` آمده‌اند.
 

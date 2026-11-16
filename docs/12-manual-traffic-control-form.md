@@ -926,6 +926,18 @@ Backend باید مرجع اصلی این موارد باشد:
 
 کد WinForms موجود ارتباط مستقیم با بخشی از تجهیزات را نشان می‌دهد؛ بررسی Controller و Repository در بخش ۹، قرارداد HTTP موجود را مشخص می‌کند و به‌معنای تکمیل قرارداد فرمان همهٔ تجهیزات نیست. **تصمیم محصول:** Browser مستقیم به تجهیز وصل نمی‌شود؛ قرارداد عملیاتی POS، چاپ و راهبند وب باید توسط Backend/Windows Service تکمیل شود. مسیرهای پیاده‌شدهٔ تصویر و پلاکخوان در اسناد تخصصی خود شرح داده شده‌اند. UI فقط API و event تأییدشده را مصرف می‌کند.
 
+### ۱۲.۶ اجرای API روی IIS و مالکیت تجهیزات در Windows Service
+
+**رفتار فعلی پیاده‌سازی‌شده در `EosParkingApiWindowsService`:** پروژه هم ورودی Windows Service و هم ورودی IIS دارد. میزبان Windows Service می‌تواند با `EnableWindowsServiceApiHost=false` listener عمومی خودش را خاموش کند و در عین حال با `RunDeviceManager=true` اتصال تجهیزات کنترل‌شده از سرور را نگه دارد. IIS میزبان API و SignalR است. قفل‌های نقش‌محور در `App_Data` مالکیت listener، Device Manager و background workerها را جدا می‌کنند تا API IIS و Device Manager سرویس ویندوزی هم‌زمان اجرا شوند.
+
+در حالت split، `EnableIisBackgroundWorkers=true` و `RunDeviceManagerInIis=false` می‌مانند؛ برای Windows Service، `EnableBackgroundWorkers=false` و `RunDeviceManager=true` تنظیم می‌شوند. `EnableDeviceEventRelay=true` رویدادهای رکورد و QR و نتیجهٔ موفق فرمان راهبند را در outbox دیسکی ذخیره و به `DeviceEventApiUrl` در IIS می‌فرستد. IIS با `DeviceEventSharedSecret` احراز هویت سرویس را بررسی می‌کند، درب‌های مرتبط با `DeviceId` را از دیتابیس می‌یابد و رویداد `deviceEventReceived` را در `DeviceEventsHub` به مشترکین مجاز همان درب می‌رساند. صف در زمان قطعی IIS حفظ می‌شود و تحویل at-least-once است؛ گیرنده باید EventId تکراری را نادیده بگیرد.
+
+`ProcessDeviceRecordsLocally=false` در این حالت، پردازش قدیمی تردد را در سرویس ویندوزی متوقف می‌کند تا رویداد فقط به API برسد. فیلترهای `Enable<DeviceType>Devices` نوع تجهیزات تحت مدیریت Device Manager را جداگانه کنترل می‌کنند و مقدار پیش‌فرض آن‌ها برای سازگاری `true` است.
+
+تجهیزات با `ControlByServer=true` طبق نقش سرویس مدیریت می‌شوند. تجهیزات با `ControlByServer=false` فقط زمانی به Device Manager اضافه می‌شوند که یک فرم مجاز کنترل ورود و خروج برای درب مرتبط به `DeviceEventsHub` متصل باشد. IIS فهرست تجهیزات درخواست‌شده را با کلید relay به Windows Service می‌دهد؛ سرویس هر سه ثانیه آن را بررسی و با تغییر فهرست، Device Manager را بیدار می‌کند. با بسته‌شدن آخرین فرم مشترک برای آن درب، تجهیزات کاربرمحور از Device Manager حذف و اتصالشان بسته می‌شود. تغییرات تجهیزات در دیتابیس نیز بدون راه‌اندازی مجدد سرویس و در چرخهٔ refresh بعدی دریافت می‌شوند.
+
+**محدودهٔ قرارداد فعلی:** رویدادهای رکورد تجهیزات، QR و موفقیت فرمان راهبند از مسیر بالا ارسال می‌شوند؛ خطای فرمان راهبند و نتیجهٔ POS هنوز رویداد جداگانه ندارند. مسیر فعلی SQL/Device Manager برای درخواست راهبند حفظ شده است. فرم کنترل ورود و خروج کلاینت دسکتاپ به `/signalr` مشترک می‌شود؛ رویداد کارت/QR را از مسیر اعتبارسنجی فعلی فرم عبور می‌دهد و موفقیت فرمان راهبند را در نوار وضعیت نشان می‌دهد.
+
 ## ۱۳. قرارداد پیشنهادی API وب
 
 ### context

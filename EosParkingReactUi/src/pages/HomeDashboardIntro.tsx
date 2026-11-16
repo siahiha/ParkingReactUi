@@ -17,7 +17,7 @@ export function HomeDashboardIntro({ language, selectedParkingName, connectionEr
     <Box className="home3-intro-copy">
       <Box className="home3-intro-text-block">
         <Typography className="home3-overline">{t('home.smartInfrastructure')}</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Box className="home3-intro-title-row">
           <Typography component="h1" className="home3-title"><Box component="span" className="home3-title-name">{selectedParkingName}</Box></Typography>
           <ConnectionStatusIndicator message={connectionError ? t('home.parkingInfoLoadError') : ''} />
         </Box>

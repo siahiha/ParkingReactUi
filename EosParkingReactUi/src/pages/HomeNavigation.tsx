@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Drawer, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Drawer, IconButton, Tooltip } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
-import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
-import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import LocalParkingRoundedIcon from '@mui/icons-material/LocalParkingRounded';
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
@@ -70,10 +68,6 @@ export function HomeNavigation({ appName, direction, basePath, systemMenu, curre
     {reportsGroup && <Tooltip title={reportsSectionTitle} placement={direction === 'rtl' ? 'left' : 'right'}><IconButton className={activeReport ? 'is-active' : ''} onClick={() => { onCollapsedChange(false); setExpandedRoot('reports'); }} aria-label={reportsSectionTitle}><AssessmentRoundedIcon /></IconButton></Tooltip>}
   </Box>;
   const content = (isDrawer: boolean) => <Box className={`home3-navigation-content ${isDrawer ? 'is-drawer' : ''}`} dir={direction}>
-    <Box className="home3-nav-heading">
-      <Typography>{t('home.navigation')}</Typography>
-      {!isDrawer && <IconButton onClick={() => onCollapsedChange(!collapsed)} aria-label={collapsed ? t('home.expand') : t('home.collapse')} size="small">{collapsed ? direction === 'rtl' ? <ChevronLeftRoundedIcon /> : <ChevronRightRoundedIcon /> : direction === 'rtl' ? <ChevronRightRoundedIcon /> : <ChevronLeftRoundedIcon />}</IconButton>}
-    </Box>
     <Box component="nav" className="home3-nav-scroll" aria-label={t('home.navigation')}>
       {isDrawer || !collapsed ? renderFull() : renderCompact()}
     </Box>

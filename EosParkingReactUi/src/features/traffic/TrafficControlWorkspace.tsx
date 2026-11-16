@@ -30,7 +30,11 @@ import { hasOpenTraffic, hasTrafficTime, TrafficOperationError } from "./traffic
 import { useTranslation } from 'react-i18next';
 import { AppPopup } from "../../components/AppPopup";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Alert, Box, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
+import LanRoundedIcon from '@mui/icons-material/LanRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
+import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import { useEventCallback } from '@mui/material/utils';
 import type { HshDetectionHandler } from "../../api/hshDetectionRealtime";
 import type { ShahabHistorySnapshot } from '../../api/shahabTrafficRealtime';
@@ -41,6 +45,7 @@ import { recordValue, type RecordValue } from "../../utils/records";
 import type { TrafficCameraCapture } from './trafficImageCapture';
 import { trafficAuthorizationIssue, trafficAuthorizationSubmitIssue, type TrafficAuthorizationInput } from './trafficAuthorization';
 import { parseTrafficQr } from './trafficQr';
+import { DeviceStatusRealtimeConnection, type DeviceConnectionStatus, type DeviceRecordEvent } from '../../api/deviceStatusRealtime';
 type TrafficRow = RecordValue;
 type OperationMode = "idle" | "enter" | "exit";
 const valueOf = (row: RecordValue, key: string) => recordValue(row, key);
@@ -66,6 +71,11 @@ export function TrafficControlWorkspace({
   const submissionLocked = useRef(false);
   const plateFieldRef = useRef<HTMLDivElement>(null);
   const [topHeight, setTopHeight] = useState<number | null>(null);
+  const [deviceStatusOpen, setDeviceStatusOpen] = useState(false);
+  const [deviceStatuses, setDeviceStatuses] = useState<DeviceConnectionStatus[]>([]);
+  const [deviceStatusLoading, setDeviceStatusLoading] = useState(false);
+  const [deviceStatusError, setDeviceStatusError] = useState('');
+  const [deviceCardScan, setDeviceCardScan] = useState<DeviceRecordEvent | null>(null);
   const operations = useTrafficOperations();
   const lookupSequence = useRef(0);
   const [plate, setPlate] = useState('');
@@ -91,6 +101,49 @@ export function TrafficControlWorkspace({
     plate: string;
   } | null>(null);
   const trafficDoor = useTrafficDoor(Number(entryDoorId), true);
+  useEffect(() => {
+    const selectedDoorId = Number(entryDoorId);
+    if (!selectedDoorId) {
+      setDeviceStatuses([]);
+      setDeviceStatusLoading(false);
+      setDeviceStatusError('');
+      return undefined;
+    }
+
+    // Keep the service subscription for the lifetime of this traffic-control
+    // workspace and the selected door. The status dialog only displays the
+    // current state; opening or closing it must not start/stop device sessions.
+    const realtime = new DeviceStatusRealtimeConnection();
+    setDeviceStatuses([]);
+    setDeviceStatusLoading(true);
+    setDeviceStatusError('');
+    void realtime.start(selectedDoorId, statuses => {
+      setDeviceStatuses(statuses);
+      setDeviceStatusLoading(false);
+      setDeviceStatusError('');
+    }, status => {
+      setDeviceStatuses(current => {
+        const index = current.findIndex(item => item.equipmentId === status.equipmentId);
+        if (index < 0) return [...current, status];
+        const next = [...current];
+        next[index] = { ...next[index], ...status };
+        return next;
+      });
+    }, error => {
+      setDeviceStatusLoading(false);
+      if (String(error).includes('reconnecting') || String(error).includes('disconnected')) return;
+      setDeviceStatusError(t('trafficWorkspace.deviceStatusError'));
+    }, event => {
+      const scannedCard = event.identifier.trim();
+      if (event.eventType !== 'record.detected' || !scannedCard) return;
+      clearLookup();
+      setPlate('');
+      setMemberCode('');
+      setCardNumber(scannedCard);
+      setDeviceCardScan(event);
+    });
+    return () => realtime.stop();
+  }, [entryDoorId, t]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyBusy, setHistoryBusy] = useState(false);
   const identity = useTrafficIdentity(parkingId, entryDoorId, canEditVehicle);
@@ -224,6 +277,13 @@ export function TrafficControlWorkspace({
       if (requestId === lookupSequence.current) setLookupLoading(false);
     }
   };
+  useEffect(() => {
+    if (!deviceCardScan) return;
+    const scannedCard = deviceCardScan.identifier.trim();
+    if (!scannedCard || cardNumber.trim() !== scannedCard) return;
+    void lookupCar(false, 'card');
+    setDeviceCardScan(null);
+  }, [deviceCardScan, cardNumber]);
   const selectVehicle = async (nextPlate: string) => {
     if (working || billBlocksInput || lookupInFlight.current || vehicleBusy) return;
     if (!checkAuthorization(authorizationInput({ plate: nextPlate }))) return;
@@ -506,6 +566,12 @@ export function TrafficControlWorkspace({
         })[trafficDoor.door.type] : t('trafficLayout.doorUnknown')}
       </Typography>
     </Box>}
+    <Button size="small" variant="outlined" startIcon={<LanRoundedIcon />} disabled={!entryDoorId || working} onClick={() => {
+      setDeviceStatuses([]);
+      setDeviceStatusOpen(true);
+    }}>
+      {t('trafficWorkspace.deviceStatus')}
+    </Button>
     </>;
   const operationTitle = t('trafficOperation.title');
   const policyAlerts = trafficAlerts(carInfo, actionState.direction === 'exit' ? 'exit' : 'enter', appConfig.trafficRequireExitPermission);
@@ -563,6 +629,32 @@ export function TrafficControlWorkspace({
     void load();
     if (trafficDoor.error) trafficDoor.refresh();
   }} headingActions={doorSelector}>
+      <Dialog open={deviceStatusOpen} onClose={() => setDeviceStatusOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{t('trafficWorkspace.deviceStatusTitle')}</DialogTitle>
+        <DialogContent dividers>
+          {deviceStatusError && <Alert severity="error" sx={{ mb: 1.5 }}>{deviceStatusError}</Alert>}
+          {deviceStatusLoading && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}><CircularProgress size={18} /><Typography variant="body2">{t('trafficWorkspace.deviceStatusLoading')}</Typography></Box>}
+          {!deviceStatusLoading && !deviceStatusError && deviceStatuses.length === 0 && <Typography variant="body2" color="text.secondary">{t('trafficWorkspace.deviceStatusEmpty')}</Typography>}
+          <Box sx={{ display: 'grid', gap: 1 }}>
+            {deviceStatuses.map(status => {
+              const connected = status.connected === true;
+              const disconnected = status.connected === false;
+              const StatusIcon = connected ? CheckCircleRoundedIcon : disconnected ? CancelRoundedIcon : HelpOutlineRoundedIcon;
+              return <Box key={status.equipmentId} sx={{ display: 'flex', alignItems: 'center', gap: 1.25, p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                <StatusIcon color={connected ? 'success' : disconnected ? 'error' : 'disabled'} />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{status.deviceName || status.deviceType || `#${status.equipmentId}`}</Typography>
+                  <Typography variant="caption" color="text.secondary">{status.deviceType}{status.updatedAtUtc ? ` · ${new Date(status.updatedAtUtc).toLocaleTimeString(language === 'fa' ? 'fa-IR' : 'en-US')}` : ''}</Typography>
+                </Box>
+                <Typography variant="body2" color={connected ? 'success.main' : disconnected ? 'error.main' : 'text.secondary'}>
+                  {t(connected ? 'trafficWorkspace.deviceConnected' : disconnected ? 'trafficWorkspace.deviceDisconnected' : 'trafficWorkspace.deviceUnknown')}
+                </Typography>
+              </Box>;
+            })}
+          </Box>
+        </DialogContent>
+        <DialogActions><Button onClick={() => setDeviceStatusOpen(false)}>{t('trafficWorkspace.cancel')}</Button></DialogActions>
+      </Dialog>
       {<AppToast message={error || loadError || notice} severity={error || loadError ? 'error' : 'success'} onClose={() => {
       setError('');
       setNotice('');
