@@ -47,7 +47,7 @@ export function appPopupStyles(theme: Theme) {
       '&::before': { top: 7, insetInlineStart: 7, opacity: .4 },
       '&::after': { top: 11, insetInlineStart: 11, bgcolor: mix(primary.main, 8, surface) },
     },
-    '& .app-popup-title-text': { minWidth: 0, overflowWrap: 'anywhere' },
+    '& .app-popup-title-text': { flex: 1, minWidth: 0, overflowWrap: 'anywhere' },
     '& .app-popup-paper > .MuiDialogContent-root': {
       px: { xs: 2, sm: 2.5 }, py: 2.5, bgcolor: surface, overflowWrap: 'anywhere',
       scrollbarWidth: 'thin', scrollbarColor: `${mix(primary.main, 35, divider)} ${surface}`,

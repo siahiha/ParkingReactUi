@@ -1,6 +1,8 @@
 import reportViewerEngine from './reportViewer/fa';
+import help from './help/fa';
 
 const fa = {
+  help,
   reportFilters: { plate: 'پلاک', invalidPlate: 'پلاک را کامل وارد کنید یا برای نمایش همهٔ پلاک‌ها خالی بگذارید.' },
   reportViewerEngine,
   cameraPreview: {

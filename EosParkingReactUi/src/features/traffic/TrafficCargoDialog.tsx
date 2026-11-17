@@ -11,7 +11,7 @@ export function TrafficCargoDialog({ language, cargo }: Props) {
   const fieldId = useId();
   const isPersian = language === 'fa';
   const error = cargo.error ? t(`trafficCargo.${cargo.error}`) : '';
-  return (<AppPopup dir={isPersian ? "rtl" : "ltr"} open={cargo.isOpen} onClose={() => {
+  return (<AppPopup helpTopicId="cargo" dir={isPersian ? "rtl" : "ltr"} open={cargo.isOpen} onClose={() => {
           if (!cargo.busy) cargo.close();
         }} maxWidth="md" busy={cargo.busy} title={cargo.outbound
             ? t('trafficCargo.outboundTitle')

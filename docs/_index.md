@@ -13,6 +13,7 @@
 | طراحی بصری، RTL، responsive و accessibility | `18-ui-design-system.md` | تغییر UI مشترک یا feature جدید |
 | تست و regression | `20-ai-testing-standard.md`، `21-implementation-progress-and-regression-policy.md` | تغییر کد یا تست |
 | Home وب، منو، route، داشبورد و permission | `25-home.md` | هر تغییر در Home، navigation یا permission |
+| راهنمای داخل برنامه و جستجوی فارسی/انگلیسی | بخش ۱۴ `25-home.md` | تغییر محتوای آموزش، فیلدهای فرم، موضوعات مجاز یا رتبه‌بندی جستجو |
 
 ## نگاشت حوزه به سند
 

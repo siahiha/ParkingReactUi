@@ -66,7 +66,7 @@ export function TrafficPaymentPopup({ bill, presentation, language, busy, error,
     // The Windows POS/LCD are local devices. No web transaction/display contract exists yet.
     ...(presentation.door?.posConfigured ? [{ id: 'pos', label: t('trafficPayment.posPay'), tooltip: t('trafficPayment.posUnavailable'), onClick: () => {}, disabled: true, variant: 'outlined' as const }] : []),
   ];
-  return <AppPopup open title={<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, width: '100%' }}>
+  return <AppPopup open helpTopicId="payment" title={<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, width: '100%' }}>
     <Box component="span" sx={{ display: 'flex', flexDirection: 'column' }}>
       <span>{t('trafficPayment.title')}</span>
       {remaining !== null && !stopped && <Typography component="span" variant="caption" role="timer" sx={{ fontSize: '.62rem', fontWeight: 400 }}>

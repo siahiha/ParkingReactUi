@@ -5,7 +5,7 @@ import type { PasswordDialogProps } from './homeProfileTypes';
 
 export function ChangePasswordDialog({ open, labels, values, setValues, message, messageSeverity, saving, onSave, onClose }: PasswordDialogProps) {
   return (
-    <AppPopup open={open} onClose={onClose} maxWidth="xs" busy={saving} title={labels.changePassword}
+    <AppPopup helpTopicId="home" open={open} onClose={onClose} maxWidth="xs" busy={saving} title={labels.changePassword}
       actions={[
         { id: 'cancel', label: labels.close, testId: 'close-password-dialog', onClick: onClose },
         { id: 'save', label: saving ? labels.saving : labels.save, testId: 'save-password', variant: 'contained', onClick: onSave },

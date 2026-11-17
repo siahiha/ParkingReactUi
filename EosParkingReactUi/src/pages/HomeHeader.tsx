@@ -15,6 +15,7 @@ import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import { ChangePasswordDialog } from '../components/ChangePasswordDialog';
 import { ThemeSettingsDialog } from '../components/ThemeSettingsDialog';
 import { ParkingControlLogo } from '../components/ParkingControlLogo';
+import { HelpButton } from '../features/help/HelpContext';
 import type { PaletteName } from '../components/homeProfileTypes';
 import { useChangePassword } from '../hooks/useChangePassword';
 import type { HomeUser, ThemeMode } from './homeTypes';
@@ -69,6 +70,7 @@ export function HomeHeader({ user, direction, themeMode, lightPalette, darkPalet
       <Divider orientation="vertical" flexItem className="home3-header-divider" />
       <Box className="home3-context"><Typography className="home3-context-label">{t('home.currentParking')}</Typography><FormControl size="small" className="home3-parking-select"><Select value={parkingOptions.some((parking) => parking.id === selectedParkingId) ? selectedParkingId : ''} onChange={(event) => onParkingChange(Number(event.target.value))} displayEmpty disabled={parkingOptions.length === 0} inputProps={{ 'aria-label': t('home.chooseParking') }}><MenuItem value="" disabled>{t('home.chooseParking')}</MenuItem>{parkingOptions.map((parking) => <MenuItem key={parking.id} value={parking.id}>{parking.name}</MenuItem>)}</Select></FormControl>{selectedParking && <Typography className="home3-parking-code" dir="ltr">P-{String(selectedParking.id).padStart(2, '0')}</Typography>}</Box>
       <Box className="home3-header-spacer" />
+      <HelpButton className="home3-action" />
       <Tooltip title={labels.home} arrow><IconButton className="home3-action" onClick={onHome} aria-label={labels.home}><HomeRoundedIcon /></IconButton></Tooltip>
       {themeSettingsEnabled && <Tooltip title={themeMode === 'light' ? labels.nightMode : labels.dayMode} arrow><IconButton className="home3-action" onClick={onThemeToggle} aria-label={themeMode === 'light' ? labels.nightMode : labels.dayMode}>{themeMode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}</IconButton></Tooltip>}
       <Tooltip title={`${labels.user}: ${user.userName}`} arrow><IconButton className="home3-profile" onClick={(event) => setUserMenuAnchor(event.currentTarget)} aria-label={`${labels.user}: ${user.userName}`} aria-controls={userMenuAnchor ? 'home3-profile-menu' : undefined} aria-haspopup="true" aria-expanded={userMenuAnchor ? 'true' : undefined}><Avatar><AccountCircleRoundedIcon /></Avatar></IconButton></Tooltip>

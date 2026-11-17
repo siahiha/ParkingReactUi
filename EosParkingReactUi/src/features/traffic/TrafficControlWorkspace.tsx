@@ -30,7 +30,7 @@ import { hasOpenTraffic, hasTrafficTime, TrafficOperationError } from "./traffic
 import { useTranslation } from 'react-i18next';
 import { AppPopup } from "../../components/AppPopup";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import LanRoundedIcon from '@mui/icons-material/LanRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
@@ -629,9 +629,7 @@ export function TrafficControlWorkspace({
     void load();
     if (trafficDoor.error) trafficDoor.refresh();
   }} headingActions={doorSelector}>
-      <Dialog open={deviceStatusOpen} onClose={() => setDeviceStatusOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{t('trafficWorkspace.deviceStatusTitle')}</DialogTitle>
-        <DialogContent dividers>
+      <AppPopup helpTopicId="traffic" open={deviceStatusOpen} onClose={() => setDeviceStatusOpen(false)} maxWidth="sm" title={t('trafficWorkspace.deviceStatusTitle')} cancelLabel={t('trafficWorkspace.cancel')}>
           {deviceStatusError && <Alert severity="error" sx={{ mb: 1.5 }}>{deviceStatusError}</Alert>}
           {deviceStatusLoading && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}><CircularProgress size={18} /><Typography variant="body2">{t('trafficWorkspace.deviceStatusLoading')}</Typography></Box>}
           {!deviceStatusLoading && !deviceStatusError && deviceStatuses.length === 0 && <Typography variant="body2" color="text.secondary">{t('trafficWorkspace.deviceStatusEmpty')}</Typography>}
@@ -652,9 +650,7 @@ export function TrafficControlWorkspace({
               </Box>;
             })}
           </Box>
-        </DialogContent>
-        <DialogActions><Button onClick={() => setDeviceStatusOpen(false)}>{t('trafficWorkspace.cancel')}</Button></DialogActions>
-      </Dialog>
+      </AppPopup>
       {<AppToast message={error || loadError || notice} severity={error || loadError ? 'error' : 'success'} onClose={() => {
       setError('');
       setNotice('');
@@ -727,7 +723,7 @@ export function TrafficControlWorkspace({
       {<TrafficWorkspaceSplitter panelRef={topPanelRef} onResize={setTopHeight} language={language} />}
       {<TrafficControlGrids key={`${parkingId}:${entryDoorId}`} rows={rows} language={language} loading={doorTraffics.loading} error={doorTraffics.error} updatedAt={doorTraffics.updatedAt} busy={identityBusy || cargo.busy || Boolean(vehicleDraft)} onExit={openExit} onPay={openPay} onCargo={openCargo} />}
       {<TrafficVehicleDialog draft={vehicleDraft} editing={vehicleEditing} language={language} busy={vehicleBusy} error={vehicleError} onClose={() => setVehicleDraft(null)} onSave={draft => void saveVehicle(draft)} />}
-      {historyOpen && carInfo && <AppPopup open title={t('homeMenu.items.traffic-records')} onClose={closeHistory} busy={historyBusy} maxWidth="xl" cancelLabel={t('trafficIdentity.close')}>
+      {historyOpen && carInfo && <AppPopup helpTopicId="history" open title={t('homeMenu.items.traffic-records')} onClose={closeHistory} busy={historyBusy} maxWidth="xl" cancelLabel={t('trafficIdentity.close')}>
         <TrafficHistoryWorkspace title={t('trafficOperation.search')} parkingId={parkingId} isCommercialParking={isCommercialParking} language={language} initialIdentity={{
         plate,
         card: cardNumber,

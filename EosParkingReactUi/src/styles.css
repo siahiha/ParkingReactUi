@@ -6717,6 +6717,13 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   }
 }
 @media (max-width: 680px) {
+  /* Keep the parking selector and every header action reachable on narrow screens. */
+  .home3-toolbar { gap: 4px; padding-inline: 8px !important; }
+  .home3-brand { min-width: 0; }
+  .home3-brand > div { display: none; }
+  .home3-context { flex: 1 1 0; min-width: 0; }
+  .home3-parking-select { width: 100%; min-width: 0; }
+  .home3-header-spacer { display: none; }
   .home3-brand-logo {
     width: 34px;
     height: 34px;

@@ -60,7 +60,7 @@ export function ThemeSettingsDialog({ open, lightPalette, darkPalette, onLightPa
   );
 
   return (
-    <AppPopup open={open} onClose={handleCancel} onConfirm={handleApply} maxWidth="xs"
+    <AppPopup helpTopicId="home" open={open} onClose={handleCancel} onConfirm={handleApply} maxWidth="xs"
       title={t('theme.settings')} cancelLabel={t('theme.cancel')} confirmLabel={t('theme.apply')}>
         <Box className="theme-settings-content">
           <Box className="theme-settings-section">

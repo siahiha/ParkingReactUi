@@ -1,8 +1,10 @@
 import type fa from './fa';
 import type { LocaleShape } from './types';
 import reportViewerEngine from './reportViewer/en';
+import help from './help/en';
 
 const en = {
+  help,
   reportFilters: { plate: 'Plate', invalidPlate: 'Enter a complete plate or leave it empty to include all plates.' },
   reportViewerEngine,
   cameraPreview: {

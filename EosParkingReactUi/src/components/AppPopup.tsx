@@ -2,6 +2,8 @@ import { useId, type ReactNode, type Ref } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Portal, Tooltip, useTheme, type ButtonProps, type DialogProps } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { appPopupStyles } from './appPopupStyles';
+import { HelpButton, useHelp } from '../features/help/HelpContext';
+import type { HelpTopicId } from '../features/help/helpTypes';
 
 export type PopupAction = {
   id: string;
@@ -38,21 +40,24 @@ export type AppPopupProps = {
   paperRef?: Ref<HTMLDivElement>;
   onInteract?: () => void;
   footerDirection?: 'ltr' | 'rtl';
+  helpTopicId?: HelpTopicId;
+  helpEnabled?: boolean;
 };
 
 /** The only application dialog shell. Feature components own content and workflow, not presentation. */
 export function AppPopup({ open, title, children, onClose, onConfirm, cancelLabel, confirmLabel, confirmColor = 'primary', confirmDisabled, actions, busy = false, dir, maxWidth = 'md', fullScreen = false,
-  modal = true, compact = false, width, className, ariaLabel, paperRef, onInteract, footerDirection }: AppPopupProps) {
+  modal = true, compact = false, width, className, ariaLabel, paperRef, onInteract, footerDirection, helpTopicId, helpEnabled = true }: AppPopupProps) {
   const { t } = useTranslation();
   const theme = useTheme();
   const titleId = useId();
+  const help = useHelp();
   const buttons: readonly PopupAction[] = actions ?? [
     { id: 'cancel', label: cancelLabel ?? t('popup.cancel'), onClick: onClose },
     ...(onConfirm ? [{ id: 'confirm', label: confirmLabel ?? t('popup.confirm'), onClick: onConfirm, color: confirmColor, variant: 'contained' as const, disabled: confirmDisabled }] : []),
   ];
 
   const content = <>
-    <DialogTitle id={titleId}><span className="app-popup-mark" aria-hidden="true" /><span className="app-popup-title-text">{title}</span></DialogTitle>
+    <DialogTitle id={`${titleId}-heading`}><span className="app-popup-mark" aria-hidden="true" /><span id={titleId} className="app-popup-title-text">{title}</span>{helpEnabled && <HelpButton topicId={helpTopicId} disabled={busy} />}</DialogTitle>
     <DialogContent>{children}</DialogContent>
     {buttons.length > 0 && <DialogActions dir={footerDirection}>{buttons.map(action => {
       const button = <Button key={action.id} type="button" dir={dir ?? theme.direction}
@@ -84,12 +89,13 @@ export function AppPopup({ open, title, children, onClose, onConfirm, cancelLabe
     width: width ?? 440, maxWidth: 'calc(100vw - 32px)', mx: 'auto',
   }]}>
     <Paper {...paperProps} role="dialog" aria-label={ariaLabel} aria-labelledby={ariaLabel ? undefined : titleId} tabIndex={-1}
-      onKeyDown={event => { if (event.key === 'Escape' && !busy) { event.stopPropagation(); onClose(); } }}
+      onKeyDown={event => { if (event.key === 'Escape' && !busy && !help?.isOpen) { event.stopPropagation(); onClose(); } }}
       sx={{ display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 32px)', borderRadius: 'var(--app-popup-radius, 5px)' }}>
       {content}
     </Paper>
   </Box></Portal> : null;
-  return <Dialog open={open} onClose={busy ? undefined : onClose} className={className}
+  return <Dialog open={open} onClose={busy ? undefined : () => { if (!help?.isOpen) onClose(); }} className={className}
+    disableEnforceFocus={help?.isOpen}
     dir={dir ?? theme.direction} fullWidth maxWidth={maxWidth} fullScreen={fullScreen} aria-labelledby={titleId}
     slotProps={{ paper: paperProps }} sx={styles}>{content}</Dialog>;
 }
