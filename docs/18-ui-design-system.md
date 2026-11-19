@@ -32,6 +32,7 @@
 | `--app-chrome` / `--app-on-chrome` | رنگ زیرین هدر و متن/اکشن‌های آن؛ رنگ زیرین روز از `primary.dark` و شب از ترکیب ۲۲٪ primary با paper می‌آید؛ ظاهر نهایی با گرادیانت ردیف بعد ساخته می‌شود |
 | `--app-header-height` | ارتفاع کل هدر Home برابر ۵۶ پیکسل؛ مرجع offset دراور و ارتفاع ناحیهٔ زیر هدر |
 | `--app-header-start/middle/end` | گرادیانت هدر؛ روز از hover با عمق ۴۵٪، رنگ اصلی و hover با کنترل کنتراست، شب ترکیب ۸/۳۰/۱۶٪ رنگ اصلی با paper |
+| `--app-tabs-separator-start/middle/end` | استثنای مصوب کاربر: گرادیانت قبلی مرجانی/بنفش/طلایی مشترک روی خط سه‌پیکسلی بالای زبانه‌ها، منوی دسکتاپ و Drawer؛ مستقل از خانوادهٔ پالت و دارای نسخهٔ روز/شب در `tabSeparatorColors` |
 | `--app-nav-glow` / `--app-nav-surface` / `--app-nav-end` | سه توقف گرادیانت ۱۵۵ درجهٔ منوی دسکتاپ و Drawer؛ سهم primary در روز ۱۸/۱۰/۳٪ و شب ۲۴/۱۵/۶٪ است |
 | `--app-nav-item-height` / `--app-nav-group-height` / `--app-nav-touch-height` | حداقل ارتفاع گزینه ۳۰، گروه ۳۴ و هدف اشاره‌گر لمسی ۴۰ پیکسل |
 | `--app-nav-selection-start/middle/end` | انتخاب فعال با گرادیانت ۱۱۰ درجه در توقف‌های ۰/۵۸/۱۰۰٪؛ ابتدا hover دارای عمق ۵۵٪ با کنترل کنتراست، سپس primary و hover |

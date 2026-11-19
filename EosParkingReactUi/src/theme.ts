@@ -27,6 +27,12 @@ export const themeTextColors = {
   dark: { primary: '#f3f5f7', secondary: '#b7c1ca' },
 };
 
+// Restore the original tab separator as a small brand accent, independent of the active palette.
+const tabSeparatorColors = {
+  light: { start: '#d55c50', middle: '#4b3c96', end: '#ffb15c' },
+  dark: { start: '#ff8b77', middle: '#8f82d8', end: '#ffd17f' },
+};
+
 export const paletteTokens: Record<ThemeMode, Record<PaletteName, PaletteTokenSet>> = {
   light: {
     blue: { primary: '#1d4ed8', hover: '#1e40af', soft: '#eaf1ff', surface: '#ffffff', shell: '#f2f5fb', border: '#d5deed', input: '#f8faff' },
@@ -145,6 +151,9 @@ export function getThemeSurfaceVariables(theme: Theme) {
     '--app-header-start': mode === 'dark' ? mix(8) : getContrastRatio(onChrome, headerDepth) >= 4.5 ? headerDepth : primary.dark,
     '--app-header-middle': mode === 'dark' ? mix(30) : getContrastRatio(onChrome, primary.main) >= 4.5 ? primary.main : primary.dark,
     '--app-header-end': mode === 'dark' ? mix(16) : primary.dark,
+    '--app-tabs-separator-start': tabSeparatorColors[mode].start,
+    '--app-tabs-separator-middle': tabSeparatorColors[mode].middle,
+    '--app-tabs-separator-end': tabSeparatorColors[mode].end,
     '--app-nav-surface': mix(mode === 'dark' ? 15 : 10),
     '--app-nav-glow': mix(mode === 'dark' ? 24 : 18),
     '--app-nav-end': mix(mode === 'dark' ? 6 : 3),

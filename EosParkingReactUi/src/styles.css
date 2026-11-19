@@ -1153,7 +1153,7 @@ body {
   inset-block-start: 0;
   inset-inline: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--home3-icon-accent), var(--home3-menu-accent), var(--home3-icon-highlight));
+  background: linear-gradient(90deg, var(--app-tabs-separator-start), var(--app-tabs-separator-middle), var(--app-tabs-separator-end));
   opacity: .9;
   pointer-events: none;
   z-index: 2;
@@ -5982,7 +5982,7 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   background:
     linear-gradient(155deg, var(--app-nav-glow), var(--app-nav-surface) 45%, var(--app-nav-end));
 }
-.home3-drawer-surface::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: 0; height: 3px; background: linear-gradient(90deg, var(--home3-icon-accent), var(--home3-menu-accent), var(--home3-icon-highlight)); opacity: .9; }
+.home3-drawer-surface::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: 0; height: 3px; background: linear-gradient(90deg, var(--app-tabs-separator-start), var(--app-tabs-separator-middle), var(--app-tabs-separator-end)); opacity: .9; }
 .home3-drawer .home3-navigation-content { position: relative; z-index: 1; padding: 20px 12px 18px; }
 .home3-drawer .home3-nav-heading { margin-block-end: 8px; padding-inline: 10px; border-block-end: 1px solid color-mix(in srgb, var(--home3-line) 80%, transparent); }
 .home3-drawer .home3-nav-heading p { color: var(--home3-menu-accent); }
@@ -6017,14 +6017,15 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   background:
     linear-gradient(155deg, var(--app-nav-glow), var(--app-nav-surface) 45%, var(--app-nav-end));
 }
-.home3-shell[dir='rtl'] .home3-navigation::before {
+.home3-navigation::before {
   content: '';
   position: absolute;
   inset-block-start: 0;
   inset-inline: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--home3-icon-highlight), var(--home3-icon-accent), var(--home3-menu-accent));
-  opacity: .92;
+  background: linear-gradient(90deg, var(--app-tabs-separator-start), var(--app-tabs-separator-middle), var(--app-tabs-separator-end));
+  opacity: .9;
+  pointer-events: none;
 }
 .home3-shell[dir='rtl'] .home3-navigation-content { position: relative; z-index: 1; padding: 20px 12px 18px; }
 .home3-shell[dir='rtl'] .home3-nav-heading {

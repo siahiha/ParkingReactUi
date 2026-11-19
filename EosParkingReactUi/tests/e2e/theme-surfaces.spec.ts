@@ -13,9 +13,9 @@ function contrast(first: number[], second: number[]) {
   const a = luminance(first); const b = luminance(second);
   return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
 }
-async function colors(locator: Locator) {
-  return locator.evaluate(element => {
-    const style = getComputedStyle(element);
+async function colors(locator: Locator, pseudo?: string) {
+  return locator.evaluate((element, pseudo) => {
+    const style = getComputedStyle(element, pseudo);
     const canvas = document.createElement('canvas').getContext('2d')!;
     const rgb = (color: string) => {
       canvas.clearRect(0, 0, 1, 1); canvas.fillStyle = color; canvas.fillRect(0, 0, 1, 1);
@@ -25,10 +25,11 @@ async function colors(locator: Locator) {
       text: rgb(style.color), background: rgb(style.backgroundColor), image: style.backgroundImage,
       primary: rgb(style.getPropertyValue('--app-primary')),
       headerStops: ['--app-header-start', '--app-header-middle', '--app-header-end'].map(key => rgb(style.getPropertyValue(key))),
+      separatorStops: ['--app-tabs-separator-start', '--app-tabs-separator-middle', '--app-tabs-separator-end'].map(key => rgb(style.getPropertyValue(key))),
       selectionStops: ['--app-nav-selection-start', '--app-nav-selection-middle', '--app-nav-selection-end'].map(key => rgb(style.getPropertyValue(key))),
       stops: ['--app-nav-glow', '--app-nav-surface', '--app-nav-end'].map(key => rgb(style.getPropertyValue(key))),
     };
-  });
+  }, pseudo);
 }
 
 async function setup(page: Page, language: 'fa' | 'en', mode: string) {
@@ -54,6 +55,7 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
     const labels = language === 'fa' ? fa : en;
     await setup(page, language, mode);
     const headers: string[] = []; const gradients: string[] = []; const tableHeads: string[] = []; const papers: string[] = [];
+    const separators: string[] = [];
     for (const name of ['blue', 'green', 'violet', 'amber', 'rose', 'slate']) {
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.goto('/home/parking/equipment');
@@ -83,8 +85,13 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       tableHeads.push(table.background.join(','));
       const tab = await colors(page.locator('.home3-tabs .Mui-selected'));
       expect(contrast(tab.text, tab.background), `${name} selected tab`).toBeGreaterThanOrEqual(4.5);
+      const separator = await colors(page.locator('.home3-tabs'), '::before');
+      expect(separator.image).toContain('linear-gradient');
+      expect(separator.separatorStops[1], `${name} separator differs from the theme`).not.toEqual(separator.primary);
+      separators.push(separator.image);
       const nav = page.locator('aside.home3-navigation');
       const side = await colors(nav);
+      expect((await colors(nav, '::before')).image, `${name} sidebar separator matches tabs`).toBe(separator.image);
       expect(side.image).toContain('linear-gradient'); gradients.push(side.image);
       const active = await colors(nav.locator('.home3-nav-leaf.is-active'));
       expect(contrast(active.text, active.background), `${name} selected menu`).toBeGreaterThanOrEqual(4.5);
@@ -116,6 +123,7 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
         return Math.abs(language === 'fa' ? bounds.x + bounds.width - 390 : bounds.x);
       }).toBeLessThanOrEqual(1);
       const mobile = await colors(drawer);
+      expect((await colors(drawer, '::before')).image, `${name} drawer separator matches tabs`).toBe(separator.image);
       const headerBounds = (await page.locator('.home3-header').boundingBox())!;
       const drawerBounds = (await drawer.boundingBox())!;
       expect(drawerBounds.y).toBe(headerBounds.y + headerBounds.height);
@@ -132,6 +140,7 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       if (name === 'green') await page.screenshot({ path: testInfo.outputPath(`${language}-${mode}-drawer.png`), animations: 'disabled' });
     }
     expect(new Set(headers).size).toBe(6);
+    expect(new Set(separators).size).toBe(1);
     expect(new Set(gradients).size).toBe(6);
     expect(new Set(tableHeads).size).toBe(6);
     if (mode === 'dark') expect(new Set(papers).size).toBe(6);
