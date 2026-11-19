@@ -27,6 +27,8 @@ async function colors(locator: Locator, pseudo?: string) {
       headerStops: ['--app-header-start', '--app-header-middle', '--app-header-end'].map(key => rgb(style.getPropertyValue(key))),
       separatorStops: ['--app-tabs-separator-start', '--app-tabs-separator-middle', '--app-tabs-separator-end'].map(key => rgb(style.getPropertyValue(key))),
       selectionStops: ['--app-nav-selection-start', '--app-nav-selection-middle', '--app-nav-selection-end'].map(key => rgb(style.getPropertyValue(key))),
+      gridHeadStops: ['--app-grid-head-start', '--app-grid-head-end'].map(key => rgb(style.getPropertyValue(key))),
+      gridSelectionStops: ['--app-grid-selection-start', '--app-grid-selection-end'].map(key => rgb(style.getPropertyValue(key))),
       stops: ['--app-nav-glow', '--app-nav-surface', '--app-nav-end'].map(key => rgb(style.getPropertyValue(key))),
     };
   }, pseudo);
@@ -47,6 +49,21 @@ async function setup(page: Page, language: 'fa' | 'en', mode: string) {
     if (path.endsWith('/GetParkingEquipments')) Values = [{ Id: 42, ParkingId: 7, DeviceName: 'Entry gate', DeviceType: 1, ConnectionType: 1, Ip: '192.0.2.10', Port: 1001, Disabled: false }];
     return route.fulfill({ json: { ResponseResultType: 1, Values } });
   });
+}
+
+async function separatorPixels(page: Page) {
+  const bounds = (await page.locator('.home3-header').boundingBox())!;
+  const screenshot = await page.screenshot({ clip: { x: bounds.x, y: bounds.y + bounds.height - 3, width: bounds.width, height: 3 }, animations: 'allow', scale: 'css' });
+  return page.evaluate(async encoded => {
+    const frame = new Image();
+    frame.src = `data:image/png;base64,${encoded}`;
+    await frame.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = frame.width; canvas.height = frame.height;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(frame, 0, 0);
+    return [.15, .5, .85].flatMap(position => [...context.getImageData(Math.floor(frame.width * position), 1, 1, 1).data].slice(0, 3));
+  }, screenshot.toString('base64'));
 }
 
 for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark']) {
@@ -82,16 +99,23 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       expect(contrast((await colors(title)).text, heading.background), `${name} form title`).toBeGreaterThanOrEqual(4.5);
       const table = await colors(page.locator('.app-data-grid thead th').first());
       expect(contrast(table.text, table.background), `${name} table heading`).toBeGreaterThanOrEqual(4.5);
+      for (const stop of table.gridHeadStops) expect(contrast(table.text, stop), `${name} grid heading gradient`).toBeGreaterThanOrEqual(4.5);
       tableHeads.push(table.background.join(','));
       const tab = await colors(page.locator('.home3-tabs .Mui-selected'));
       expect(contrast(tab.text, tab.background), `${name} selected tab`).toBeGreaterThanOrEqual(4.5);
-      const separator = await colors(page.locator('.home3-tabs'), '::before');
+      const separator = await colors(page.locator('.home3-header'), '::after');
       expect(separator.image).toContain('linear-gradient');
       expect(separator.separatorStops[1], `${name} separator differs from the theme`).not.toEqual(separator.primary);
       separators.push(separator.image);
+      const lineBounds = await page.locator('.home3-header').evaluate(element => {
+        const style = getComputedStyle(element, '::after');
+        return { width: parseFloat(style.width), height: parseFloat(style.height) };
+      });
+      expect(lineBounds).toEqual({ width: 1280, height: 3 });
+      expect((await colors(page.locator('.home3-tabs'), '::before')).image).toBe('none');
       const nav = page.locator('aside.home3-navigation');
       const side = await colors(nav);
-      expect((await colors(nav, '::before')).image, `${name} sidebar separator matches tabs`).toBe(separator.image);
+      expect((await colors(nav, '::before')).image, `${name} no duplicate sidebar separator`).toBe('none');
       expect(side.image).toContain('linear-gradient'); gradients.push(side.image);
       const active = await colors(nav.locator('.home3-nav-leaf.is-active'));
       expect(contrast(active.text, active.background), `${name} selected menu`).toBeGreaterThanOrEqual(4.5);
@@ -104,7 +128,13 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       const leaf = await colors(nav.locator('.home3-nav-leaf:not(.is-active)').first());
       for (const stop of side.stops) expect(contrast(leaf.text, stop), `${name} menu on gradient`).toBeGreaterThanOrEqual(4.5);
       if (name === 'green') await page.screenshot({ path: testInfo.outputPath(`${language}-${mode}-desktop.png`), animations: 'disabled' });
+      if (name === 'green') {
+        const initialPixels = await separatorPixels(page);
+        await expect.poll(async () => Math.max(...(await separatorPixels(page)).map((value, index) => Math.abs(value - initialPixels[index]))), { timeout: 8_000 }).toBeGreaterThanOrEqual(30);
+      }
       await page.getByRole('row').filter({ hasText: 'Entry gate' }).click();
+      const selectedCell = await colors(page.locator('.app-data-grid tbody tr.Mui-selected td').nth(1));
+      for (const stop of selectedCell.gridSelectionStops) expect(contrast(selectedCell.text, stop), `${name} grid selection gradient`).toBeGreaterThanOrEqual(4.5);
       await page.getByRole('button', { name: labels.equipment.edit, exact: true }).click();
       const dialog = page.getByRole('dialog');
       const group = await colors(dialog.locator('.app-group-box').first());
@@ -123,7 +153,8 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
         return Math.abs(language === 'fa' ? bounds.x + bounds.width - 390 : bounds.x);
       }).toBeLessThanOrEqual(1);
       const mobile = await colors(drawer);
-      expect((await colors(drawer, '::before')).image, `${name} drawer separator matches tabs`).toBe(separator.image);
+      expect((await colors(drawer, '::before')).image, `${name} no duplicate drawer separator`).toBe('none');
+      expect(await page.locator('.home3-header').evaluate(element => parseFloat(getComputedStyle(element, '::after').width))).toBe(390);
       const headerBounds = (await page.locator('.home3-header').boundingBox())!;
       const drawerBounds = (await drawer.boundingBox())!;
       expect(drawerBounds.y).toBe(headerBounds.y + headerBounds.height);
@@ -137,6 +168,17 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       const mobileLeaf = await colors(drawer.locator('.home3-nav-leaf:not(.is-active)').first());
       for (const stop of mobile.stops) expect(contrast(mobileLeaf.text, stop), `${name} drawer text`).toBeGreaterThanOrEqual(4.5);
       expect(await drawer.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);
+      if (name === 'green') {
+        const headerLine = page.locator('.home3-header');
+        expect(await headerLine.evaluate(element => getComputedStyle(element, '::after').animationDirection)).toBe('alternate');
+        const wavePosition = () => headerLine.evaluate(element => getComputedStyle(element, '::after').backgroundPosition);
+        const initialPosition = await wavePosition();
+        await expect.poll(wavePosition, { timeout: 8_000 }).not.toBe(initialPosition);
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await expect.poll(() => headerLine.evaluate(element => getComputedStyle(element, '::after').animationName)).toBe('none');
+        expect((await colors(headerLine, '::after')).image).toContain('linear-gradient');
+        await page.emulateMedia({ reducedMotion: 'no-preference' });
+      }
       if (name === 'green') await page.screenshot({ path: testInfo.outputPath(`${language}-${mode}-drawer.png`), animations: 'disabled' });
     }
     expect(new Set(headers).size).toBe(6);

@@ -27,7 +27,7 @@ export const themeTextColors = {
   dark: { primary: '#f3f5f7', secondary: '#b7c1ca' },
 };
 
-// Restore the original tab separator as a small brand accent, independent of the active palette.
+// The shared header separator retains the original brand accent, independent of the active palette.
 const tabSeparatorColors = {
   light: { start: '#d55c50', middle: '#4b3c96', end: '#ffb15c' },
   dark: { start: '#ff8b77', middle: '#8f82d8', end: '#ffd17f' },
@@ -154,6 +154,7 @@ export function getThemeSurfaceVariables(theme: Theme) {
     '--app-tabs-separator-start': tabSeparatorColors[mode].start,
     '--app-tabs-separator-middle': tabSeparatorColors[mode].middle,
     '--app-tabs-separator-end': tabSeparatorColors[mode].end,
+    '--app-tabs-separator-duration': '4s',
     '--app-nav-surface': mix(mode === 'dark' ? 15 : 10),
     '--app-nav-glow': mix(mode === 'dark' ? 24 : 18),
     '--app-nav-end': mix(mode === 'dark' ? 6 : 3),
@@ -166,6 +167,15 @@ export function getThemeSurfaceVariables(theme: Theme) {
     '--app-nav-open-start': mix(mode === 'dark' ? 32 : 28),
     '--app-section-surface': mix(mode === 'dark' ? 12 : 8),
     '--app-table-head': mix(mode === 'dark' ? 16 : 12),
+    '--app-grid-head-start': mix(mode === 'dark' ? 25 : 18),
+    '--app-grid-head-end': mix(mode === 'dark' ? 10 : 5),
+    '--app-grid-row-line': alpha(text.primary, mode === 'dark' ? .11 : .09),
+    '--app-grid-column-line': alpha(text.primary, mode === 'dark' ? .06 : .045),
+    '--app-grid-stripe': mix(mode === 'dark' ? 5 : 2),
+    '--app-grid-hover': mix(mode === 'dark' ? 18 : 8),
+    '--app-grid-selection-start': mix(mode === 'dark' ? 34 : 20),
+    '--app-grid-selection-end': mix(mode === 'dark' ? 16 : 7),
+    '--app-grid-shadow': `0 2px 8px ${alpha(text.primary, .06)}`,
   };
 }
 
