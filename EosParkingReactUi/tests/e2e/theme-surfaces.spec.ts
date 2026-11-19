@@ -24,6 +24,8 @@ async function colors(locator: Locator) {
     return {
       text: rgb(style.color), background: rgb(style.backgroundColor), image: style.backgroundImage,
       primary: rgb(style.getPropertyValue('--app-primary')),
+      headerStops: ['--app-header-start', '--app-header-middle', '--app-header-end'].map(key => rgb(style.getPropertyValue(key))),
+      selectionStops: ['--app-nav-selection-start', '--app-nav-selection-middle', '--app-nav-selection-end'].map(key => rgb(style.getPropertyValue(key))),
       stops: ['--app-nav-glow', '--app-nav-surface', '--app-nav-end'].map(key => rgb(style.getPropertyValue(key))),
     };
   });
@@ -62,8 +64,12 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       await expect(page.getByRole('row').filter({ hasText: 'Entry gate' })).toBeVisible();
       const header = await colors(page.locator('.home3-header'));
       expect(contrast(header.text, header.background), `${name} header`).toBeGreaterThanOrEqual(4.5);
+      expect(header.image).toContain('linear-gradient');
+      expect((await page.locator('.home3-header').boundingBox())!.height).toBe(56);
+      for (const stop of header.headerStops) expect(contrast(header.text, stop), `${name} header gradient`).toBeGreaterThanOrEqual(4.5);
       for (const selector of ['.home3-brand-title', '.home3-brand-kicker', '.home3-context-label']) {
-        expect(contrast((await colors(page.locator(selector))).text, header.background), `${name} ${selector}`).toBeGreaterThanOrEqual(4.5);
+        const label = await colors(page.locator(selector));
+        for (const stop of header.headerStops) expect(contrast(label.text, stop), `${name} ${selector}`).toBeGreaterThanOrEqual(4.5);
       }
       headers.push(header.background.join(','));
       const avatar = await colors(page.locator('.home3-profile .MuiAvatar-root'));
@@ -82,6 +88,12 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       expect(side.image).toContain('linear-gradient'); gradients.push(side.image);
       const active = await colors(nav.locator('.home3-nav-leaf.is-active'));
       expect(contrast(active.text, active.background), `${name} selected menu`).toBeGreaterThanOrEqual(4.5);
+      expect(active.image).toContain('linear-gradient');
+      for (const stop of active.selectionStops) expect(contrast(active.text, stop), `${name} selected menu gradient`).toBeGreaterThanOrEqual(4.5);
+      // Distinct tones must remain visible, rather than passing with nearly identical stops.
+      expect(Math.max(...active.selectionStops[0].map((value, index) => Math.abs(value - active.selectionStops[1][index]))), `${name} visible selection gradient`).toBeGreaterThanOrEqual(25);
+      expect((await nav.locator('.home3-nav-leaf.is-active').boundingBox())!.height).toBeLessThanOrEqual(30);
+      expect((await nav.locator('.home3-nav-root').first().boundingBox())!.height).toBeLessThanOrEqual(34);
       const leaf = await colors(nav.locator('.home3-nav-leaf:not(.is-active)').first());
       for (const stop of side.stops) expect(contrast(leaf.text, stop), `${name} menu on gradient`).toBeGreaterThanOrEqual(4.5);
       if (name === 'green') await page.screenshot({ path: testInfo.outputPath(`${language}-${mode}-desktop.png`), animations: 'disabled' });
@@ -94,6 +106,8 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
       await dialog.getByRole('button', { name: labels.equipment.cancel, exact: true }).click();
       await expect(dialog).not.toBeVisible();
       await page.setViewportSize({ width: 390, height: 844 });
+      for (const button of await page.locator('.home3-header').getByRole('button').all()) await expect(button).toBeInViewport({ ratio: 1 });
+      await expect(page.locator('.home3-header').getByRole('combobox')).toBeInViewport({ ratio: 1 });
       await page.locator('.home3-header').getByRole('button', { name: labels.home.navigation, exact: true }).click();
       const drawer = page.locator('.home3-drawer-surface');
       await expect(drawer).toBeVisible();
@@ -102,10 +116,16 @@ for (const language of ['fa', 'en'] as const) for (const mode of ['light', 'dark
         return Math.abs(language === 'fa' ? bounds.x + bounds.width - 390 : bounds.x);
       }).toBeLessThanOrEqual(1);
       const mobile = await colors(drawer);
+      const headerBounds = (await page.locator('.home3-header').boundingBox())!;
+      const drawerBounds = (await drawer.boundingBox())!;
+      expect(drawerBounds.y).toBe(headerBounds.y + headerBounds.height);
+      expect(drawerBounds.y + drawerBounds.height).toBeLessThanOrEqual(844);
       expect(mobile.primary).toEqual(header.primary);
       expect(mobile.image).toBe(side.image);
       const mobileActive = await colors(drawer.locator('.home3-nav-leaf.is-active'));
       expect(contrast(mobileActive.text, mobileActive.background), `${name} drawer selection`).toBeGreaterThanOrEqual(4.5);
+      expect(mobileActive.image).toContain('linear-gradient');
+      for (const stop of mobileActive.selectionStops) expect(contrast(mobileActive.text, stop), `${name} drawer gradient`).toBeGreaterThanOrEqual(4.5);
       const mobileLeaf = await colors(drawer.locator('.home3-nav-leaf:not(.is-active)').first());
       for (const stop of mobile.stops) expect(contrast(mobileLeaf.text, stop), `${name} drawer text`).toBeGreaterThanOrEqual(4.5);
       expect(await drawer.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);

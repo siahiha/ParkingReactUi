@@ -1335,7 +1335,11 @@ body {
   --home3-menu-ink: var(--app-on-chrome);
   --home3-icon-accent: var(--app-on-chrome);
   color: var(--app-on-chrome) !important;
-  background: var(--app-chrome) !important;
+  height: var(--app-header-height);
+  box-sizing: border-box;
+  background: linear-gradient(110deg, var(--app-header-start), var(--app-header-middle) 58%, var(--app-header-end)) var(--app-chrome) !important;
+  border-block-end-color: color-mix(in srgb, var(--app-on-chrome) 22%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--app-on-chrome) 16%, transparent), 0 2px 6px color-mix(in srgb, var(--app-primary) 10%, transparent);
   backdrop-filter: blur(14px) saturate(125%);
   -webkit-backdrop-filter: blur(14px) saturate(125%);
 }
@@ -6129,6 +6133,114 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   padding-block-end: 2px;
 }
 
+/* A lighter, denser menu shared by the persistent navigation and portal drawer. */
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf) {
+  position: relative;
+  overflow: hidden;
+  padding-block: 3px !important;
+  line-height: 1.7 !important;
+  font-weight: 400 !important;
+  border: 1px solid transparent;
+  transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-branch {
+  min-height: var(--app-nav-group-height) !important;
+}
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-root { font-weight: 700 !important; }
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-leaf {
+  min-height: var(--app-nav-item-height) !important;
+}
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-section {
+  margin-block-start: 4px;
+  padding-block-start: 4px;
+}
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-nested {
+  gap: 2px;
+  margin-block: 2px 4px;
+  margin-inline: 8px;
+  padding-inline-start: 8px;
+  border-inline-start-color: color-mix(in srgb, var(--app-primary) 18%, transparent);
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf) .MuiButton-startIcon {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  margin-inline-end: 6px;
+  border-radius: 4px;
+  border-color: transparent;
+  background: color-mix(in srgb, var(--app-primary) 5%, transparent);
+  transform: none;
+}
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-leaf .MuiButton-startIcon {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+}
+:is(.home3-shell[dir], .home3-drawer) .MuiButton-startIcon .MuiSvgIcon-root { font-size: 17px; }
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf):hover {
+  transform: none;
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf):hover .MuiButton-startIcon {
+  transform: none;
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-leaf).is-active {
+  color: var(--app-on-primary) !important;
+  background: linear-gradient(110deg, var(--app-nav-selection-start) 0%, var(--app-nav-selection-middle) 58%, var(--app-nav-selection-end) 100%) var(--app-primary) !important;
+  border-color: color-mix(in srgb, var(--app-on-primary) 16%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--app-on-primary) 18%, transparent), 0 2px 5px color-mix(in srgb, var(--app-primary) 14%, transparent);
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-leaf).is-active .MuiButton-startIcon {
+  color: var(--app-on-primary);
+  background: color-mix(in srgb, var(--app-on-primary) 10%, transparent);
+  border-color: transparent;
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-leaf).is-active::before,
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-branch.is-open::before {
+  content: '';
+  position: absolute;
+  inset-block-start: -20px;
+  inset-inline-end: -12px;
+  width: 64px;
+  height: 64px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px color-mix(in srgb, currentColor 8%, transparent);
+  opacity: .15;
+  pointer-events: none;
+}
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-branch.is-open {
+  background: linear-gradient(110deg, var(--app-nav-open-start), var(--app-primary-soft) 72%, var(--app-nav-surface)) var(--app-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--app-primary) 12%, transparent);
+  box-shadow: none;
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf)::after {
+  content: '';
+  position: absolute;
+  inset-block: 6px;
+  inset-inline-start: 3px;
+  inset-inline-end: auto;
+  width: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0;
+  transform: none;
+  pointer-events: none;
+  transition: opacity .16s ease;
+}
+:is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-leaf).is-active::after { opacity: .75; }
+:is(.home3-shell[dir], .home3-drawer) .home3-nav-branch.is-open::after { opacity: .35; }
+@media (pointer: coarse) {
+  :is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-branch, .home3-nav-leaf) {
+    min-height: var(--app-nav-touch-height) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf),
+  :is(.home3-shell[dir], .home3-drawer) :is(.home3-nav-home, .home3-nav-branch, .home3-nav-leaf)::after {
+    transition: none !important;
+  }
+}
+
 .home3-layout:has(.home3-navigation.is-collapsed) {
   grid-template-columns: 76px minmax(0, 1fr);
 }
@@ -6294,11 +6406,31 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   grid-template-columns: 76px minmax(0, 1fr);
 }
 
-/* Revert the latest Home3 rail-brand and header-height change. */
-.home3-toolbar { min-height: 74px !important; }
-.home3-layout { min-height: calc(100vh - 122px); }
-.home3-main { min-height: calc(100vh - 122px); }
-.home3-navigation-content { height: calc(100dvh - 74px); min-height: 0; box-sizing: border-box; }
+/* Header geometry also positions the menu and bounds the workspace. */
+.home3-toolbar { min-height: calc(var(--app-header-height) - 1px) !important; height: calc(var(--app-header-height) - 1px); gap: 12px; }
+.home3-header .home3-action { width: 36px; height: 36px; padding: 6px; }
+.home3-header .home3-action .MuiSvgIcon-root { font-size: 20px; }
+.home3-header .home3-profile { width: 36px; height: 36px; }
+.home3-header .home3-profile .MuiAvatar-root { width: 28px; height: 28px; }
+.home3-header .home3-parking-select .MuiOutlinedInput-root { min-height: 32px; }
+.home3-header .home3-parking-select .MuiSelect-select { padding-block: 5px; }
+.home3-header .home3-brand-title { font-weight: 700 !important; }
+.home3-header-spacer { position: relative; align-self: stretch; overflow: hidden; }
+.home3-header-spacer::before {
+  content: '';
+  position: absolute;
+  inset-block-start: -155px;
+  inset-inline-start: 16%;
+  width: 180px;
+  height: 180px;
+  border: 1px solid color-mix(in srgb, var(--app-on-chrome) 16%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--app-on-chrome) 4%, transparent);
+  pointer-events: none;
+}
+.home3-layout { min-height: calc(100dvh - var(--app-header-height) - 48px); }
+.home3-main { min-height: calc(100dvh - var(--app-header-height) - 48px); }
+.home3-navigation-content { height: calc(100dvh - var(--app-header-height)); min-height: 0; box-sizing: border-box; }
 .home3-navigation.is-collapsed .home3-navigation-content { padding-inline: 8px; }
 .home3-nav-heading { flex: 0 0 auto; }
 .home3-nav-scroll {
@@ -6312,14 +6444,14 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   scrollbar-gutter: stable;
 }
 .home3-drawer-surface { height: 100%; min-height: 0; overflow: hidden; }
-.home3-drawer .MuiDrawer-paper { top: 74px; height: calc(100% - 74px); }
+.home3-drawer .MuiDrawer-paper { top: var(--app-header-height); height: calc(100% - var(--app-header-height)); }
 
 @media (max-width: 900px) {
-  .home3-main { min-height: calc(100vh - 122px); }
+  .home3-main { min-height: calc(100dvh - var(--app-header-height) - 48px); }
 }
 
 @media (min-width: 901px) and (max-height: 920px) {
-  .home3-layout { height: calc(100vh - 74px); }
+  .home3-layout { height: calc(100dvh - var(--app-header-height)); }
 }
 
 /* Restore the Home3 dashboard rows so the overview and door status remain visible. */
@@ -6446,8 +6578,8 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
 }
 .home3-brand-logo {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
 
@@ -6738,7 +6870,10 @@ html:has(.app-root.app-theme-dark) .home-sidebar-drawer-surface {
   .home3-parking-select { width: 100%; min-width: 0; }
   .home3-header-spacer { display: none; }
   .home3-brand-logo {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
+}
+@media (pointer: coarse) {
+  .home3-header :is(.home3-action, .home3-profile) { width: 40px; height: 40px; }
 }

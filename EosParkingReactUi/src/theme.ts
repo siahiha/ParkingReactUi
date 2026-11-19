@@ -1,4 +1,4 @@
-import { alpha, createTheme, getContrastRatio, type Theme } from '@mui/material/styles';
+import { alpha, createTheme, darken, getContrastRatio, lighten, type Theme } from '@mui/material/styles';
 import type { PaletteName } from './components/homeProfileTypes';
 
 export type AppDirection = 'rtl' | 'ltr';
@@ -121,6 +121,11 @@ export function getPaletteTokens(mode: ThemeMode, name: PaletteName, overrides: 
 export function getThemeSurfaceVariables(theme: Theme) {
   const { primary, background, text, divider, mode, success, warning, info } = theme.palette;
   const mix = (percent: number) => `color-mix(in srgb, ${primary.main} ${percent}%, ${background.paper})`;
+  const selectionDepth = mode === 'dark' ? lighten(primary.dark, .55) : darken(primary.dark, .55);
+  // A visibly different stop, without sacrificing text contrast for custom palettes.
+  const selectionEnd = getContrastRatio(primary.contrastText, selectionDepth) >= 4.5 ? selectionDepth : primary.main;
+  const onChrome = mode === 'dark' ? text.primary : theme.palette.getContrastText(primary.dark);
+  const headerDepth = darken(primary.dark, .45);
   return {
     '--app-primary': primary.main,
     '--app-primary-hover': primary.dark,
@@ -135,10 +140,21 @@ export function getThemeSurfaceVariables(theme: Theme) {
     '--app-warning': warning.main,
     '--app-info': info.main,
     '--app-chrome': mode === 'dark' ? mix(22) : primary.dark,
-    '--app-on-chrome': mode === 'dark' ? text.primary : theme.palette.getContrastText(primary.dark),
+    '--app-on-chrome': onChrome,
+    '--app-header-height': '56px',
+    '--app-header-start': mode === 'dark' ? mix(8) : getContrastRatio(onChrome, headerDepth) >= 4.5 ? headerDepth : primary.dark,
+    '--app-header-middle': mode === 'dark' ? mix(30) : getContrastRatio(onChrome, primary.main) >= 4.5 ? primary.main : primary.dark,
+    '--app-header-end': mode === 'dark' ? mix(16) : primary.dark,
     '--app-nav-surface': mix(mode === 'dark' ? 15 : 10),
     '--app-nav-glow': mix(mode === 'dark' ? 24 : 18),
     '--app-nav-end': mix(mode === 'dark' ? 6 : 3),
+    '--app-nav-item-height': '30px',
+    '--app-nav-group-height': '34px',
+    '--app-nav-touch-height': '40px',
+    '--app-nav-selection-start': selectionEnd,
+    '--app-nav-selection-middle': primary.main,
+    '--app-nav-selection-end': primary.dark,
+    '--app-nav-open-start': mix(mode === 'dark' ? 32 : 28),
     '--app-section-surface': mix(mode === 'dark' ? 12 : 8),
     '--app-table-head': mix(mode === 'dark' ? 16 : 12),
   };

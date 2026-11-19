@@ -73,7 +73,7 @@ export function HomeNavigation({ appName, direction, basePath, systemMenu, curre
       {isDrawer || !collapsed ? renderFull() : renderCompact()}
     </Box>
   </Box>;
-  return <><Box component="aside" className={`home3-navigation ${collapsed ? 'is-collapsed' : ''}`} aria-label={appName}>{content(false)}</Box><Drawer className="home3-drawer" dir={direction} anchor={direction === 'rtl' ? 'right' : 'left'} open={mobileOpen} onClose={onMobileClose} sx={{ '& .MuiDrawer-paper': { insetInlineStart: 0, insetInlineEnd: 'auto' } }}><Box className="home3-drawer-surface" sx={(theme) => getThemeSurfaceVariables(theme)}>{content(true)}</Box></Drawer></>;
+  return <><Box component="aside" className={`home3-navigation ${collapsed ? 'is-collapsed' : ''}`} aria-label={appName}>{content(false)}</Box><Drawer className="home3-drawer" dir={direction} anchor={direction === 'rtl' ? 'right' : 'left'} open={mobileOpen} onClose={onMobileClose} sx={(theme) => ({ ...getThemeSurfaceVariables(theme), '& .MuiDrawer-paper': { insetInlineStart: 0, insetInlineEnd: 'auto' } })}><Box className="home3-drawer-surface">{content(true)}</Box></Drawer></>;
 }
 
 

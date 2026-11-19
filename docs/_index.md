@@ -20,6 +20,7 @@
 | کلیدواژه/حوزه | سند اصلی | منابع تکمیلی |
 |---|---|---|
 | login، session، Home وب | `01-authentication.md`، `25-home.md` | `02-dashboard-and-navigation.md` برای Dashboard ویندوز |
+| هدر فشرده، دراور، ارتفاع آیتم، گرادیانت انتخاب و افکت نوری | بخش ۳ `25-home.md` | بخش ۲ `18-ui-design-system.md` برای توکن‌ها؛ ابتدای سند ۲۱ برای نتایج آزمون و کامیت‌های بازگشت |
 | هلپ، Help، HelpTopicId، آموزش فیلد، مترادف، غلط تایپی | بخش ۱۴ `25-home.md` | ۱۴.۳ نگاشت ۳۱ موضوع؛ ۱۴.۴ منابع محتوا؛ ۱۴.۵ جستجو؛ ۱۴.۷ روش افزودن/اصلاح؛ ۱۴.۸ وضعیت تأیید |
 | MainForm، permission، parking context | `03-main-form-overview.md` | `04-users-and-access.md`، `16-final-review-and-delivery-gates.md` |
 | parking، floor، section، space، zone | `03-parking-configuration.md`، `23-parking-zones.md` | `11-remaining-forms.md` |
