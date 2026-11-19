@@ -65,11 +65,12 @@ function readApiMessage(body: unknown) {
 export type ApiRequestOptions = RequestInit & {
   /** Prevent an operation from hanging forever when the network is unavailable. */
   timeoutMs?: number;
+  responseType?: 'json' | 'blob';
 };
 
 export async function apiRequest<T>(path: string, init: ApiRequestOptions = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set('Accept', 'application/json');
+  if (!headers.has('Accept')) headers.set('Accept', init.responseType === 'blob' ? 'application/octet-stream' : 'application/json');
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
 
   const controller = new AbortController();
@@ -101,6 +102,7 @@ export async function apiRequest<T>(path: string, init: ApiRequestOptions = {}):
       throw new ApiError(response.status, body);
     }
     if (response.status === 204) return undefined as T;
+    if (init.responseType === 'blob') return (await response.blob()) as T;
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.includes('json')) return (await response.text()) as T;
     const body = await response.json() as unknown;

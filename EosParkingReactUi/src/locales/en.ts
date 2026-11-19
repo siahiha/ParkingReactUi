@@ -1,12 +1,22 @@
+import equipment from './equipmentEn';
 import type fa from './fa';
 import type { LocaleShape } from './types';
-import reportViewerEngine from './reportViewer/en';
 import help from './help/en';
 
 const en = {
   help,
+  equipment,
+  equipmentTest: {
+    title: 'Device connection', start: 'Test connection', cancel: 'Cancel test',
+    idle: 'Ready to check the connection', checking: 'Checking the device connection',
+    connected: 'The device connection test succeeded.', disconnected: 'Could not connect to the device.',
+    timeout: 'The connection test timed out.', error: 'Could not run the connection test. Try again.',
+    forbidden: 'You do not have permission to test equipment.', cancelled: 'Connection test cancelled.',
+    unsupported: 'Connection testing is not yet supported for this device type.',
+    'invalid-config': 'The device connection settings are invalid.', busy: 'The service is testing other devices. Try again.',
+    unavailable: 'The equipment test service is unavailable.',
+  },
   reportFilters: { plate: 'Plate', invalidPlate: 'Enter a complete plate or leave it empty to include all plates.' },
-  reportViewerEngine,
   cameraPreview: {
     "connectionFailed": "Camera connection failed.",
     "alreadyRegistered": "The camera is active in another connection. Disconnect it and try again.",
@@ -281,11 +291,14 @@ const en = {
   theme: {
     settings: 'Appearance settings',
     colors: 'Color palette',
-    lightPalette: 'Light mode palette',
-    darkPalette: 'Dark mode palette',
-    bluePalette: 'Enterprise blue',
-    greenPalette: 'Operations green',
-    slatePalette: 'Industrial slate',
+    palette: 'Application palette',
+    automaticNight: 'Choose one color; its matching night palette is applied automatically.',
+    bluePalette: 'Blue',
+    greenPalette: 'Emerald',
+    violetPalette: 'Violet',
+    amberPalette: 'Amber',
+    rosePalette: 'Rose',
+    slatePalette: 'Slate',
     shape: 'Corner rounding',
     controlRadius: 'Control rounding',
     buttonRadius: 'Button rounding',
@@ -327,7 +340,7 @@ const en = {
 brandKicker: 'EOS / OPERATIONS', brandTitle: 'Parking Management System', online: 'System online', healthy: 'All services are stable', currentParking: 'Active parking', chooseParking: 'Choose parking', navigation: 'Navigation', collapse: 'Collapse navigation', expand: 'Expand navigation', language: 'Change language', appearance: 'Change appearance', profile: 'User profile', changePassword: 'Change password', theme: 'Appearance settings', logout: 'Sign out', commandCenter: 'Command center', managementPrefix: 'Management', commandSubtitle: 'Live operations and key parking indicators', liveOverview: 'Live overview', operationalPulse: 'Operational pulse', lastSync: 'Last sync just now', capacity: 'Total capacity', occupied: 'Occupied', available: 'Available', trafficVolume: "Today's traffic", trafficToday: "Today's traffic", lastTraffic: 'Last traffic', gateStatus: 'Gate status', doorCount: 'Door count', serverTime: 'Server time', deviceInfo: 'Device information', deviceInfoUnavailable: 'No information recorded', parkingInfoLoadError: 'Updating parking information failed.', refresh: 'Refresh parking information', allGatesReady: 'All gates are ready', openGates: 'Active gate', spaceMap: 'Parking bay map', freeSpace: 'Available bay', occupiedSpace: 'Occupied bay', selectedSpace: 'Selected bay', selectedBay: 'Selected bay', quickActions: 'Quick actions', openTraffic: 'Entry and exit control', openMembers: 'Manage members', openMonitoring: 'Open monitoring', openReports: 'Operational reports', today: 'Today', comparedToYesterday: 'Compared with yesterday', increase: 'Increase', entry: 'Entry', exit: 'Exit', peakHour: 'Peak hour', activity: 'Recent activity', activityOne: 'New traffic recorded at north gate', activityTwo: 'A vehicle membership was renewed', activityThree: 'Daily report is ready to view', justNow: 'Just now', minutesAgo: 'minutes ago', hourAgo: 'One hour ago', viewAllActivity: 'View all activity', tabs: 'Open tabs', closeTab: 'Close tab', home: 'Dashboard', systemStatus: 'System status', commandCode: 'COMMAND / 02', mapLegend: 'Map legend', gateNorth: 'North gate', gateSouth: 'South gate', stable: 'Stable', attention: 'Needs review', noParking: 'No parking is available to display.', parkingLoadError: 'Loading the parking list failed.', retry: 'Retry', selectAction: 'Choose an operation', occupancyRate: 'Occupancy rate', freeCount: 'Bays remaining', totalTraffic: 'Total traffic', monitoring: 'Monitoring', systemMenu: 'System management', parkingDefinitions: 'Parking definitions', reports: 'Reports', menuHome: 'Home', modeTabs: 'Tabbed mode', modeClassic: 'Classic mode',
     smartInfrastructure: 'Smart Traffic and Parking Infrastructure', parkingManagement: 'Parking management', placeholder: 'There is no data to display in this section.', accessDeniedTitle: 'Access denied', accessDeniedMessage: 'You do not have access to this section. Contact the system administrator if you need access.', unknownRouteTitle: 'Route not found', unknownRouteMessage: 'The requested route is not defined in the application.', backHome: 'Back to home', noAccess: 'No active menu is assigned to this account. Ask the system administrator to assign a parking, shift, or access level.',
   },
-  reportPreview: { title: 'Report preview: {{name}}', records: '{{value}} records', reopen: 'Reopen report', close: 'Close report' },
+  reportPreview: { viewerMode: 'Report viewer', stimulsoftView: 'Stimulsoft viewer', pdfView: 'PDF view', title: 'Report preview: {{name}}', records: '{{value}} records', reopen: 'Reopen report', close: 'Close report', format: 'Export format', download: 'Download', print: 'Print', openFile: 'Open file', tools: 'Report tools', pages: '{{count}} pages', retry: 'Retry', loading: 'Loading report…', printFallback: 'Open the file and use its Print button.' },
   homeMenu: {
     groups: { definitions: 'Parking definitions and settings', operations: 'Parking operations', integrations: 'System integrations', reports: 'Reports', 'member-reports': 'Member reports', 'traffic-reports': 'Traffic reports', 'financial-reports': 'Financial reports', 'other-reports': 'Other', 'management-reports': 'Management reports' },
     items: { list: 'Parkings', users: 'Users and access', access: 'Access levels', exit: 'Exit permission', 'parking-details': 'Parking details', equipment: 'Equipment', 'space-types': 'Parking space types', floors: 'Floors and divisions', zones: 'Parking zones', doors: 'Parking doors', 'member-kinds': 'Membership types', tariffs: 'Tariffs', cards: 'Card management', members: 'Membership and registration', monitoring: 'Monitoring', shifts: 'Assign shift', 'manual-traffic': 'Entry and exit control', 'traffic-records': 'Manage entries and exits', 'anpr-monitoring': 'ANPR monitoring', 'integration-settings': 'Integration settings', 'ets-import': 'Update members from ETS', 'excel-import': 'Import personnel from Excel', 'member-report': 'Member report', 'active-member-report': 'Members with active membership', 'inactive-member-report': 'Members without active membership', 'member-register-history': 'Member membership history', 'traffic-reports-list': 'Vehicle entry and exit', 'door-traffic-reports': 'Daily door traffic', 'average-parking-time': 'Average vehicle parking time', 'parking-income': 'Parking income', 'monthly-parking-income': 'Monthly parking income comparison', 'member-cash': 'Member cash flow', 'user-performance': 'User financial performance', 'membership-income': 'Membership sales income details', 'cargo-details': 'Cargo details report', 'management-monthly-income-comparison': 'Monthly parking income comparison', 'management-income-comparison': 'Parking income comparison', 'management-yearly-income-comparison': 'Yearly parking income comparison', 'management-user-performance': 'User financial performance', 'management-free-parking-income': 'Free-parking income details' },

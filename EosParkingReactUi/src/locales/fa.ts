@@ -1,10 +1,20 @@
-import reportViewerEngine from './reportViewer/fa';
+import equipment from './equipmentFa';
 import help from './help/fa';
 
 const fa = {
   help,
+  equipment,
+  equipmentTest: {
+    title: 'اتصال دستگاه', start: 'تست اتصال', cancel: 'لغو تست',
+    idle: 'آمادهٔ بررسی اتصال', checking: 'در حال بررسی اتصال دستگاه',
+    connected: 'تست اتصال دستگاه موفق بود.', disconnected: 'اتصال به دستگاه برقرار نشد.',
+    timeout: 'مهلت تست اتصال به پایان رسید.', error: 'اجرای تست اتصال ناموفق بود. دوباره تلاش کنید.',
+    forbidden: 'مجوز تست تجهیزات را ندارید.', cancelled: 'تست اتصال لغو شد.',
+    unsupported: 'تست اتصال این نوع دستگاه هنوز پشتیبانی نمی‌شود.',
+    'invalid-config': 'اطلاعات ارتباطی دستگاه معتبر نیست.', busy: 'سرویس در حال تست دستگاه‌های دیگر است. دوباره تلاش کنید.',
+    unavailable: 'سرویس تست تجهیزات در دسترس نیست.',
+  },
   reportFilters: { plate: 'پلاک', invalidPlate: 'پلاک را کامل وارد کنید یا برای نمایش همهٔ پلاک‌ها خالی بگذارید.' },
-  reportViewerEngine,
   cameraPreview: {
     "connectionFailed": "ارتباط با دوربین برقرار نشد.",
     "alreadyRegistered": "دوربین در اتصال دیگری فعال است. اتصال قبلی را قطع و دوباره تلاش کنید.",
@@ -280,11 +290,14 @@ const fa = {
   theme: {
     settings: 'تنظیمات ظاهر',
     colors: 'رنگ‌بندی',
-    lightPalette: 'رنگ‌بندی حالت روشن',
-    darkPalette: 'رنگ‌بندی حالت تاریک',
-    bluePalette: 'آبی سازمانی',
-    greenPalette: 'سبز عملیاتی',
-    slatePalette: 'خاکستری صنعتی',
+    palette: 'رنگ‌بندی برنامه',
+    automaticNight: 'یک رنگ انتخاب کنید؛ نسخهٔ هماهنگ شب به‌صورت خودکار اعمال می‌شود.',
+    bluePalette: 'آبی',
+    greenPalette: 'سبز زمردی',
+    violetPalette: 'بنفش',
+    amberPalette: 'کهربایی',
+    rosePalette: 'رز',
+    slatePalette: 'خاکستری',
     shape: 'گردی گوشه‌ها',
     controlRadius: 'گردی کنترل‌ها',
     buttonRadius: 'گردی دکمه‌ها',
@@ -326,7 +339,7 @@ const fa = {
 brandKicker: 'EOS / OPERATIONS', brandTitle: 'سیستم مدیریت پارکینگ', online: 'سامانه آنلاین', healthy: 'تمام سرویس‌ها پایدار هستند', currentParking: 'پارکینگ فعال', chooseParking: 'انتخاب پارکینگ', navigation: 'ناوبری', collapse: 'جمع کردن ناوبری', expand: 'باز کردن ناوبری', language: 'تغییر زبان', appearance: 'تغییر حالت نمایش', profile: 'پروفایل کاربر', changePassword: 'تغییر رمز عبور', theme: 'تنظیمات ظاهر', logout: 'خروج', commandCenter: 'مرکز فرمان', managementPrefix: 'مدیریت', commandSubtitle: 'تصویر زنده‌ی عملیات و شاخص‌های کلیدی پارکینگ', liveOverview: 'نمای زنده', operationalPulse: 'نبض عملیات', lastSync: 'آخرین همگام‌سازی همین حالا', capacity: 'ظرفیت کل', occupied: 'اشغال‌شده', available: 'آزاد', trafficVolume: 'تردد امروز', trafficToday: 'تردد امروز', lastTraffic: 'آخرین تردد', gateStatus: 'وضعیت درب‌ها', doorCount: 'تعداد درب‌ها', serverTime: 'زمان سرور', deviceInfo: 'اطلاعات دستگاه', deviceInfoUnavailable: 'اطلاعاتی ثبت نشده است', parkingInfoLoadError: 'به‌روزرسانی اطلاعات پارکینگ ناموفق بود.', refresh: 'به‌روزرسانی اطلاعات', allGatesReady: 'همه درب‌ها آماده‌به‌کار', openGates: 'درب فعال', spaceMap: 'نقشه جایگاه‌ها', freeSpace: 'جایگاه آزاد', occupiedSpace: 'جایگاه اشغال‌شده', selectedSpace: 'جایگاه انتخاب‌شده', selectedBay: 'جایگاه انتخابی', quickActions: 'عملیات سریع', openTraffic: 'کنترل ورود و خروج', openMembers: 'مدیریت اعضا', openMonitoring: 'باز کردن مانیتورینگ', openReports: 'گزارش‌های عملیاتی', today: 'امروز', comparedToYesterday: 'نسبت به دیروز', increase: 'افزایش', entry: 'ورود', exit: 'خروج', peakHour: 'ساعت اوج', activity: 'فعالیت اخیر', activityOne: 'ثبت تردد جدید در درب شمالی', activityTwo: 'عضویت یک خودرو تمدید شد', activityThree: 'گزارش روزانه آماده دریافت است', justNow: 'همین حالا', minutesAgo: 'دقیقه پیش', hourAgo: 'یک ساعت پیش', viewAllActivity: 'مشاهده همه فعالیت‌ها', tabs: 'تب‌های باز', closeTab: 'بستن تب', home: 'داشبورد', systemStatus: 'وضعیت سامانه', commandCode: 'COMMAND / 02', mapLegend: 'راهنمای نقشه', gateNorth: 'درب شمالی', gateSouth: 'درب جنوبی', stable: 'پایدار', attention: 'نیازمند بررسی', noParking: 'پارکینگی برای نمایش وجود ندارد.', parkingLoadError: 'دریافت فهرست پارکینگ‌ها ناموفق بود.', retry: 'تلاش مجدد', selectAction: 'انتخاب عملیات', occupancyRate: 'نرخ اشغال', freeCount: 'جایگاه باقی‌مانده', totalTraffic: 'مجموع تردد', monitoring: 'مانیتورینگ', systemMenu: 'مدیریت سامانه', parkingDefinitions: 'تعاریف پارکینگ', reports: 'گزارش‌ها', menuHome: 'خانه', modeTabs: 'حالت تب‌ها', modeClassic: 'حالت کلاسیک',
     smartInfrastructure: 'زیرساخت هوشمند تردد و پارکینگ', parkingManagement: 'مدیریت پارکینگ‌ها', placeholder: 'داده‌ای برای نمایش در این بخش وجود ندارد.', accessDeniedTitle: 'دسترسی به این بخش مجاز نیست', accessDeniedMessage: 'شما به این قسمت دسترسی ندارید. در صورت نیاز با مدیر سامانه هماهنگ کنید.', unknownRouteTitle: 'این مسیر وجود ندارد', unknownRouteMessage: 'مسیر درخواستی در سامانه تعریف نشده است.', backHome: 'بازگشت به خانه', noAccess: 'برای این حساب منوی فعالی تعریف نشده است. با مدیر سامانه برای تخصیص پارکینگ، شیفت یا سطح دسترسی مناسب هماهنگ کنید.',
   },
-  reportPreview: { title: 'پیش‌نمایش گزارش: {{name}}', records: '{{value}} رکورد', reopen: 'نمایش دوباره گزارش', close: 'بستن گزارش' },
+  reportPreview: { viewerMode: 'نوع نمایش گزارش', stimulsoftView: 'نمایشگر Stimulsoft', pdfView: 'نمایش PDF', title: 'پیش‌نمایش گزارش: {{name}}', records: '{{value}} رکورد', reopen: 'نمایش دوباره گزارش', close: 'بستن گزارش', format: 'فرمت خروجی', download: 'دریافت فایل', print: 'چاپ', openFile: 'بازکردن فایل', tools: 'ابزارهای گزارش', pages: '{{count}} صفحه', retry: 'تلاش مجدد', loading: 'در حال دریافت گزارش…', printFallback: 'برای چاپ، فایل را باز کنید و دکمهٔ چاپ را بزنید.' },
   homeMenu: {
     groups: { definitions: 'تعاریف و تنظیمات پارکینگ', operations: 'عملیات پارکینگ', integrations: 'یکپارچه‌سازی سامانه‌ها', reports: 'گزارش‌ها', 'member-reports': 'گزارش اعضا', 'traffic-reports': 'گزارش تردد', 'financial-reports': 'گزارش‌های مالی', 'other-reports': 'سایر', 'management-reports': 'گزارش‌های مدیریتی' },
     items: { list: 'پارکینگ‌ها', users: 'کاربران و دسترسی', access: 'سطوح دسترسی', exit: 'مجوز خروج', 'parking-details': 'مشخصات پارکینگ', equipment: 'تجهیزات', 'space-types': 'انواع جای پارک', floors: 'طبقات و تقسیمات', zones: 'زون‌های پارکینگ', doors: 'درب‌های پارکینگ', 'member-kinds': 'انواع عضویت', tariffs: 'تعرفه', cards: 'مدیریت کارت‌ها', members: 'عضویت و ثبت‌نام', monitoring: 'مانیتورینگ', shifts: 'اختصاص شیفت', 'manual-traffic': 'کنترل ورود و خروج', 'traffic-records': 'مدیریت ورودها و خروج‌ها', 'anpr-monitoring': 'مانیتورینگ تشخیص پلاک', 'integration-settings': 'تنظیم ارتباط با سیستم‌ها', 'ets-import': 'به‌روزرسانی اعضا از ETS', 'excel-import': 'دریافت اطلاعات پرسنلی از Excel', 'member-report': 'گزارش اعضا', 'active-member-report': 'گزارش اعضای دارای عضویت فعال', 'inactive-member-report': 'گزارش اعضای فاقد عضویت فعال', 'member-register-history': 'سابقه عضویت اعضا', 'traffic-reports-list': 'ورود و خروج خودروها', 'door-traffic-reports': 'تعداد تردد روزانه درب‌ها', 'average-parking-time': 'متوسط مدت پارک خودرو', 'parking-income': 'درآمد پارکینگ', 'monthly-parking-income': 'مقایسه درآمد ماهیانه پارکینگ', 'member-cash': 'گردش مالی اعضا', 'user-performance': 'عملکرد مالی کاربران', 'membership-income': 'ریز درآمد فروش حق عضویت', 'cargo-details': 'گزارش جزئیات حمل بار', 'management-monthly-income-comparison': 'مقایسه درآمد ماهانه پارکینگ‌ها', 'management-income-comparison': 'مقایسه درآمد پارکینگ‌ها', 'management-yearly-income-comparison': 'مقایسه درآمد سالانه پارکینگ‌ها', 'management-user-performance': 'عملکرد مالی کاربران', 'management-free-parking-income': 'ریز درآمد پارک آزاد خودروها' },

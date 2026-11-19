@@ -31,7 +31,7 @@ export type AppConfig = {
 };
 
 const compileTimeConfig: AppConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8050/',
   anprSignalRUrl: import.meta.env.VITE_ANPR_SIGNALR_URL || '',
   hshDetectionApiKey: import.meta.env.VITE_HSH_DETECTION_API_KEY || '',
   parkingServiceUrl: (import.meta.env.VITE_PARKING_SERVICE_URL || '').trim(),

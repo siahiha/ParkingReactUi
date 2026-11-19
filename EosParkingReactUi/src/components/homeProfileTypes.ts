@@ -2,11 +2,10 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { ThemeShapeSettings } from '../theme';
 
 export type PasswordValues = { current: string; next: string; confirm: string };
-export type PaletteName = 'blue' | 'green' | 'slate';
+export type PaletteName = 'blue' | 'green' | 'violet' | 'amber' | 'rose' | 'slate';
 export type ProfileDialogLabels = {
   changePassword: string; themeTitle: string; themeSettings: string; close: string; save: string; saving: string;
   currentPassword: string; newPassword: string; confirmPassword: string; passwordMismatch: string;
-  lightPalette: string; darkPalette: string; bluePalette: string; greenPalette: string; slatePalette: string;
   themeColors?: string; themeShape?: string; controlRadius?: string; buttonRadius?: string; popupRadius?: string;
   radiusCompact?: string; radiusStandard?: string; radiusSoft?: string;
 };
@@ -23,10 +22,8 @@ export type PasswordDialogProps = {
 };
 export type ThemeDialogProps = {
   open: boolean;
-  lightPalette: PaletteName;
-  darkPalette: PaletteName;
-  onLightPaletteChange: (palette: PaletteName) => void;
-  onDarkPaletteChange: (palette: PaletteName) => void;
+  palette: PaletteName;
+  onPaletteChange: (palette: PaletteName) => void;
   shapeSettings: ThemeShapeSettings;
   onShapeSettingsChange: (settings: ThemeShapeSettings) => void;
   onClose: () => void;

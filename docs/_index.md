@@ -13,13 +13,14 @@
 | طراحی بصری، RTL، responsive و accessibility | `18-ui-design-system.md` | تغییر UI مشترک یا feature جدید |
 | تست و regression | `20-ai-testing-standard.md`، `21-implementation-progress-and-regression-policy.md` | تغییر کد یا تست |
 | Home وب، منو، route، داشبورد و permission | `25-home.md` | هر تغییر در Home، navigation یا permission |
-| راهنمای داخل برنامه و جستجوی فارسی/انگلیسی | بخش ۱۴ `25-home.md` | تغییر محتوای آموزش، فیلدهای فرم، موضوعات مجاز یا رتبه‌بندی جستجو |
+| راهنمای داخل برنامه و جستجوی فارسی/انگلیسی | بخش ۱۴ `25-home.md` | تغییر محتوای آموزش، فیلدهای فرم، موضوعات مجاز یا رتبه‌بندی جستجو؛ اتصال Popup در سند ۱۰، معماری در ۱۷ و ظاهر در ۱۸ |
 
 ## نگاشت حوزه به سند
 
 | کلیدواژه/حوزه | سند اصلی | منابع تکمیلی |
 |---|---|---|
 | login، session، Home وب | `01-authentication.md`، `25-home.md` | `02-dashboard-and-navigation.md` برای Dashboard ویندوز |
+| هلپ، Help، HelpTopicId، آموزش فیلد، مترادف، غلط تایپی | بخش ۱۴ `25-home.md` | ۱۴.۳ نگاشت ۳۱ موضوع؛ ۱۴.۴ منابع محتوا؛ ۱۴.۵ جستجو؛ ۱۴.۷ روش افزودن/اصلاح؛ ۱۴.۸ وضعیت تأیید |
 | MainForm، permission، parking context | `03-main-form-overview.md` | `04-users-and-access.md`، `16-final-review-and-delivery-gates.md` |
 | parking، floor، section، space، zone | `03-parking-configuration.md`، `23-parking-zones.md` | `11-remaining-forms.md` |
 | user، access level | `04-1-access-level-form.md`، `04-2-users-form.md` | `04-users-and-access.md` |
@@ -36,8 +37,12 @@
 | قفل عکس پلاک جاری، صف تعیین‌تکلیف، بازیابی پس از قطعی | بخش ۳.۵.۳ `12-manual-traffic-control-form.md` | `06-traffic-and-payment.md` برای مرور کلی؛ سند ۲۱ برای شواهد اجرا و محدودیت‌ها |
 | Hsh، Eos\|، Trigger قدیمی، cursor | `26-legacy-hsh-plate-detection.md` | `12-manual-traffic-control-form.md` برای تفاوت با مسیر هدف پلاکخوان |
 | Publish، Release، Rebuild، IIS، Windows Service | `27-api-publish-and-hosting.md` | `Services/EosParkingApiWindowsService/Hosting/README.md` برای راهنمای فنی میزبان |
-| monitoring، equipment، RTSP، WebRTC، HLS، ROI | `07-monitoring-and-devices.md`، `24-rtsp-camera-ui-integration.md` | `11-remaining-forms.md` |
+| تعریف تجهیزات، CRUD، تست اتصال سرویس و انواع فاقد درایور | `28-parking-equipment.md` | بخش EquipmentForm سند ۳ برای Windows؛ قرارداد مستقل `POST api/Equipment/TestConnection` در سند ۲۸ |
+| monitoring، RTSP، WebRTC، HLS، ROI | `07-monitoring-and-devices.md`، `24-rtsp-camera-ui-integration.md` | `11-remaining-forms.md` |
 | reports | `25-home.md`، `08-reports.md` | `11-remaining-forms.md` برای workflowهای تخصصی |
+| Stimulsoft، StiWebViewer، نمایش پیش‌فرض، Prepare/Viewer/Export، انتخاب PDF | بخش ۴ `08-reports.md` | سند ۱۰ برای قرارداد component، سند ۱۷ برای مرز React/API/IIS، سند ۱۸ برای ظاهر و سند ۲۷ برای استقرار |
+| لایسنس Windows، DLL محلی ۲۰۱۸، قالب MRT، رندر سمت API | بخش ۱ `08-reports.md` | قالب جاسازی‌شده، کلید مشترک، مجوز و نگهداری نتیجه؛ Reports.JS و کلید مرورگر استفاده نمی‌شوند |
+| خطای 0x80131045، Shadow Copy، shadowCopyBinAssemblies، قفل DLL | بخش تشخیص تاریخی `08-reports.md` و بخش ۶ `27-api-publish-and-hosting.md` | تأیید کاربر دربارهٔ رفع خطای PDF پس از تغییر config؛ نتیجهٔ ویور بومی جدا ثبت می‌شود |
 | پنهان‌شدن گزارش درآمد پارکینگ غیرتجاری، IsCommercialParking، دسترسی مستقیم گزارش | بخش ۶ `25-home.md` | `03-parking-configuration.md` برای تنظیم؛ `08-reports.md` برای قرارداد گزارش؛ سند ۲۱ برای نتیجهٔ آزمون |
 | فیلتر پلاک گزارش، IranianPlateInput | `08-reports.md` | `10-shared-ui-components.md` برای کنترل مشترک؛ سند ۲۱ برای شواهد اجرا |
 | گزارش بریده‌شده، پیش‌نمایش تمام‌صفحه، چاپ و خروجی، ReportPreview | `08-reports.md` | `25-home.md` برای نگاشت گزارش‌ها؛ سند ۲۱ برای شواهد اجرا |
@@ -49,7 +54,7 @@
 ## وضعیت منابع
 
 - `00` مرجع قواعد است، نه شرح یک feature.
-- `25` تنها مرجع قرارداد Home وب، منوها، routeها، داشبورد، گزارش‌های Home، permission و APIهای مرتبط است.
+- `25` تنها مرجع قرارداد Home وب، منوها، routeها، داشبورد، گزارش‌های Home، راهنمای داخل برنامه، permission و APIهای مرتبط است. بخش ۱۴ قرارداد محتوا، محدودهٔ منو، جستجو، نگهداری و موارد باز راهنما را نگه می‌دارد.
 - `21` مرجع خلاصه‌ی وضعیت پیاده‌سازی UI و موارد باز است و قرارداد Home را تکرار نمی‌کند.
 - `23` و `24` اسناد تطبیق تخصصیِ به‌روز برای زون و دوربین هستند.
 - `27` راهنمای انتشار بستهٔ مشترک Backend است؛ ساخت UI React را توصیف نمی‌کند.

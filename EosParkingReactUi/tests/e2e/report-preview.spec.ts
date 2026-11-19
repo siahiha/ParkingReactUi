@@ -11,17 +11,17 @@ async function prepare(page: Page, language: 'fa' | 'en' = 'fa') {
   let requests = 0;
   let fail = false;
   await page.route('**/config.json', route => route.fulfill({ json: { apiBaseUrl: '/backend' } }));
+  await page.route('**/Reports/Viewer.aspx?*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body>Prepared viewer fixture</body></html>' }));
   await page.route(/(?:\/backend\/api\/|localhost:3001\/api\/)/, route => {
     const path = new URL(route.request().url()).pathname;
-    if (/\/Report\//i.test(path)) {
+    if (path.endsWith('/Report/Viewer')) return route.fulfill({ json: { ResponseResultType: 1, Values: { Path: '/Reports/Viewer.aspx?id=prepared-report' } } });
+    if (path.endsWith('/Report/Export')) return route.fulfill({ contentType: 'application/pdf', body: Buffer.from('JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA1OTUgODQyXSAvUmVzb3VyY2VzIDw8ID4+IC9Db250ZW50cyA0IDAgUiA+PgplbmRvYmoKNCAwIG9iago8PCAvTGVuZ3RoIDAgPj4Kc3RyZWFtCgplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDIxOSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDUgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjI2OAolJUVPRgo=', 'base64') });
+    if (path.endsWith('/Report/Prepare')) {
       requests++;
       if (fail) return route.fulfill({ status: 500, json: { Message: 'Report test failure' } });
-      const rows = path.endsWith('/GetMemberReport') ? Array.from({ length: 160 }, (_, index) => ({
-        Id: index + 1, Code: String(index + 1), Name: 'عضو', Family: `آزمایشی ${index + 1}`, ParkingId: 7, IsActive: true, CardNumber: `900${index + 1}`,
-      })) : [];
-      return route.fulfill({ json: { ResponseResultType: 1, Values: rows } });
+      return route.fulfill({ json: { ResponseResultType: 1, Values: { Id: 'prepared-report', Count: 160, PageCount: 6, ExpiresAt: '2099-01-01T00:00:00Z' } } });
     }
-    const values = path.endsWith('/Parking/Get') ? [{ Id: 7, ParkingName: 'پارکینگ آزمایش' }] : [];
+    const values = path.endsWith('/Parking/Get') ? [{ Id: 7, ParkingName: 'پارکینگ آزمایش', IsCommercialParking: true }] : [];
     return route.fulfill({ json: { ResponseResultType: 1, Values: values } });
   });
   return { requests: () => requests, fail: () => { fail = true; } };
@@ -55,45 +55,25 @@ for (const scenario of cases) test(`full-screen ${scenario.key} ${scenario.width
   expect(bounds.x).toBeCloseTo(0, 0); expect(bounds.y).toBeCloseTo(0, 0);
   expect(bounds.width).toBe(scenario.width); expect(bounds.height).toBe(scenario.height);
   const viewer = dialog.locator('.report-preview-viewer');
-  await expect.poll(() => viewer.locator('.stiJsViewerPageShadow').count()).toBeGreaterThan(0);
+  await expect(viewer.locator('iframe')).toHaveAttribute('src', /\/Reports\/Viewer\.aspx\?id=prepared-report$/);
+  await expect(viewer.getByRole('button', { name: copy.reportPreview.stimulsoftView, exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await viewer.getByRole('button', { name: copy.reportPreview.pdfView, exact: true }).click();
+  await expect(viewer.locator('iframe')).toHaveAttribute('src', /^blob:/);
   const viewerBounds = (await viewer.boundingBox())!;
   expect(viewerBounds.y + viewerBounds.height).toBeLessThanOrEqual(scenario.height + 1);
-  if (scenario.key === 'member-report' && scenario.width === 1280 && scenario.language === 'fa') {
-    const currentPage = viewer.getByRole('textbox');
-    await currentPage.fill('6');
-    await currentPage.press('Enter');
-    await expect(viewer.getByText('آزمایشی 160', { exact: true })).toBeVisible();
-    await viewer.getByText('آزمایشی 160', { exact: true }).scrollIntoViewIfNeeded();
-    await expect(viewer.getByText('آزمایشی 160', { exact: true })).toBeInViewport();
-  }
   await page.screenshot({ path: testInfo.outputPath('full-screen-report.png') });
   await expect(dialog.getByRole('button', { name: copy.reportPreview.close, exact: true })).toBeInViewport();
-  if (scenario.key === 'member-report') {
-    const print = viewer.getByText(copy.reportViewerEngine.A_WebViewer.PrintReport, { exact: true }).filter({ visible: true });
-    await print.scrollIntoViewIfNeeded();
-    await expect(print).toBeInViewport();
-    const save = viewer.getByText(copy.reportViewerEngine.A_WebViewer.SaveReport, { exact: true }).filter({ visible: true });
-    await save.scrollIntoViewIfNeeded();
-    await expect(save).toBeInViewport();
-    await save.click();
-    await expect(viewer.getByText(/PDF/).filter({ visible: true }).first()).toBeVisible();
-    if (scenario.language === 'fa') {
-      await expect(viewer.getByText('Print', { exact: true }).filter({ visible: true })).toHaveCount(0);
-      await expect(viewer.getByText('Save', { exact: true }).filter({ visible: true })).toHaveCount(0);
-    }
-    await viewer.getByText(/PDF/).filter({ visible: true }).first().click();
-    await expect(viewer.getByText(copy.reportViewerEngine.Export.Settings, { exact: true }).filter({ visible: true })).toBeVisible();
-    await expect(viewer.getByText(copy.reportViewerEngine.Report.RangeAll, { exact: true }).filter({ visible: true })).toBeVisible();
-    await expect(viewer.locator('.stiJsViewerForm').filter({ visible: true })).toHaveCSS('opacity', '1');
-    await page.screenshot({ path: testInfo.outputPath('report-export-options.png') });
-  }
+  await expect(viewer.getByRole('button', { name: copy.reportPreview.print, exact: true })).toBeInViewport();
+  await expect(viewer.getByRole('button', { name: copy.reportPreview.download, exact: true })).toBeInViewport();
   const requested = state.requests();
   await dialog.getByRole('button', { name: copy.reportPreview.close, exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(show).toBeVisible();
   await page.getByRole('button', { name: copy.reportPreview.reopen, exact: true }).click();
   await expect(dialog).toBeVisible();
-  await expect.poll(() => dialog.locator('.report-preview-viewer .stiJsViewerPageShadow').count()).toBeGreaterThan(0);
+  await expect(dialog.locator('iframe')).toHaveAttribute('src', /\/Reports\/Viewer\.aspx\?id=prepared-report$/);
+  await dialog.getByRole('button', { name: copy.reportPreview.pdfView, exact: true }).click();
+  await expect(dialog.locator('iframe')).toHaveAttribute('src', /^blob:/);
   expect(state.requests()).toBe(requested);
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
@@ -118,7 +98,7 @@ test('a report request error keeps the filters available without opening a previ
   state.fail();
   await page.goto('/home/parking/member-report');
   await page.getByRole('button', { name: 'نمایش گزارش', exact: true }).click();
-  await expect(page.getByRole('alert').filter({ hasText: 'API request failed with status 500' })).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'دریافت گزارش ناموفق بود' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'نمایش گزارش', exact: true })).toBeEnabled();
 });

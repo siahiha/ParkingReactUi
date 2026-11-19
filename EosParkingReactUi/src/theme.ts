@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+import { alpha, createTheme, getContrastRatio, type Theme } from '@mui/material/styles';
 import type { PaletteName } from './components/homeProfileTypes';
 
 export type AppDirection = 'rtl' | 'ltr';
@@ -22,18 +22,36 @@ type PaletteTokenSet = {
 
 export const defaultThemeShape: ThemeShapeSettings = { controlRadius: 4, buttonRadius: 3, popupRadius: 5 };
 
+export const themeTextColors = {
+  light: { primary: '#18212b', secondary: '#5b6674' },
+  dark: { primary: '#f3f5f7', secondary: '#b7c1ca' },
+};
+
 export const paletteTokens: Record<ThemeMode, Record<PaletteName, PaletteTokenSet>> = {
   light: {
-    blue: { primary: '#234b78', hover: '#193a60', soft: '#edf2f7', surface: '#ffffff', shell: '#f3f5f7', border: '#d7dce2', input: '#fbfcfd' },
-    green: { primary: '#286b5a', hover: '#1d5144', soft: '#eaf4f0', surface: '#fbfefc', shell: '#eef7f3', border: '#cadfd6', input: '#f7fcfa' },
-    slate: { primary: '#4b5563', hover: '#374151', soft: '#eef0f2', surface: '#fafbfc', shell: '#eef1f4', border: '#d0d6dc', input: '#f7f8fa' },
+    blue: { primary: '#1d4ed8', hover: '#1e40af', soft: '#eaf1ff', surface: '#ffffff', shell: '#f2f5fb', border: '#d5deed', input: '#f8faff' },
+    green: { primary: '#047857', hover: '#065f46', soft: '#e4f5ed', surface: '#ffffff', shell: '#f1f7f4', border: '#cbded5', input: '#f7fcf9' },
+    violet: { primary: '#6d28d9', hover: '#5b21b6', soft: '#f1eaff', surface: '#ffffff', shell: '#f6f3fb', border: '#ddd4ed', input: '#fbf9ff' },
+    amber: { primary: '#a94b08', hover: '#92400e', soft: '#fff1d6', surface: '#fffefd', shell: '#faf6ef', border: '#e6d9c4', input: '#fffbf5' },
+    rose: { primary: '#be123c', hover: '#9f1239', soft: '#ffe9ef', surface: '#ffffff', shell: '#fbf3f5', border: '#ead2da', input: '#fff8fa' },
+    slate: { primary: '#475569', hover: '#334155', soft: '#e9eef4', surface: '#ffffff', shell: '#f2f4f7', border: '#d4dce5', input: '#f8fafc' },
   },
   dark: {
-    blue: { primary: '#8aa4bd', hover: '#b2c8da', soft: '#304252', surface: '#29333d', shell: '#202830', border: '#3d4b58', input: '#202b35' },
-    green: { primary: '#79b9a5', hover: '#9bd1bf', soft: '#29453d', surface: '#293b36', shell: '#202f2b', border: '#3d584f', input: '#22332d' },
-    slate: { primary: '#b2bcc8', hover: '#d4dbe3', soft: '#39434d', surface: '#303841', shell: '#242a31', border: '#47515b', input: '#272f37' },
+    blue: { primary: '#93c5fd', hover: '#bfdbfe', soft: '#243853', surface: '#1c2736', shell: '#111827', border: '#3d5068', input: '#162131' },
+    green: { primary: '#6ee7b7', hover: '#a7f3d0', soft: '#203f35', surface: '#1a2b25', shell: '#10211b', border: '#385c4b', input: '#14251e' },
+    violet: { primary: '#c4b5fd', hover: '#ddd6fe', soft: '#35294e', surface: '#282137', shell: '#1b1628', border: '#514465', input: '#211b30' },
+    amber: { primary: '#fcd34d', hover: '#fde68a', soft: '#44341b', surface: '#2e261b', shell: '#211a10', border: '#635135', input: '#271f14' },
+    rose: { primary: '#fda4af', hover: '#fecdd3', soft: '#492a35', surface: '#30222a', shell: '#21161d', border: '#65404e', input: '#281c23' },
+    slate: { primary: '#cbd5e1', hover: '#e2e8f0', soft: '#303e4d', surface: '#25303c', shell: '#17212b', border: '#47596b', input: '#1d2834' },
   },
 };
+
+export const paletteNames = Object.keys(paletteTokens.light) as PaletteName[];
+
+export function readPaletteName(value: unknown): PaletteName | undefined {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(paletteTokens.light, value)
+    ? value as PaletteName : undefined;
+}
 
 function colorValue(source: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
@@ -72,9 +90,8 @@ export function resolveThemeColorOverrides(raw: unknown, mode: ThemeMode): Theme
 }
 
 export function resolvePaletteNames(raw: unknown): { light?: PaletteName; dark?: PaletteName } {
-  const known = new Set<PaletteName>(['blue', 'green', 'slate']);
   const result: { light?: PaletteName; dark?: PaletteName } = {};
-  const read = (value: unknown) => typeof value === 'string' && known.has(value as PaletteName) ? value as PaletteName : undefined;
+  const read = readPaletteName;
   if (typeof raw === 'string') {
     const palette = read(raw);
     if (palette) return { light: palette, dark: palette };
@@ -100,21 +117,49 @@ export function getPaletteTokens(mode: ThemeMode, name: PaletteName, overrides: 
   return tokens;
 }
 
+/** Shared surfaces also travel with MUI portals, which cannot inherit the app root's CSS variables. */
+export function getThemeSurfaceVariables(theme: Theme) {
+  const { primary, background, text, divider, mode, success, warning, info } = theme.palette;
+  const mix = (percent: number) => `color-mix(in srgb, ${primary.main} ${percent}%, ${background.paper})`;
+  return {
+    '--app-primary': primary.main,
+    '--app-primary-hover': primary.dark,
+    '--app-primary-soft': mix(mode === 'dark' ? 12 : 8),
+    '--app-on-primary': primary.contrastText,
+    '--app-surface': background.paper,
+    '--app-shell': background.default,
+    '--app-text': text.primary,
+    '--app-muted-text': text.secondary,
+    '--app-divider': divider,
+    '--app-success': success.main,
+    '--app-warning': warning.main,
+    '--app-info': info.main,
+    '--app-chrome': mode === 'dark' ? mix(22) : primary.dark,
+    '--app-on-chrome': mode === 'dark' ? text.primary : theme.palette.getContrastText(primary.dark),
+    '--app-nav-surface': mix(mode === 'dark' ? 15 : 10),
+    '--app-nav-glow': mix(mode === 'dark' ? 24 : 18),
+    '--app-nav-end': mix(mode === 'dark' ? 6 : 3),
+    '--app-section-surface': mix(mode === 'dark' ? 12 : 8),
+    '--app-table-head': mix(mode === 'dark' ? 16 : 12),
+  };
+}
+
 export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode = 'light', paletteName: PaletteName = 'blue', shape: ThemeShapeSettings = defaultThemeShape, overrides: ThemeColorOverrides = {}) {
   const tokens = getPaletteTokens(mode, paletteName, overrides);
   return createTheme({
   direction,
   palette: {
     mode,
-    primary: { main: tokens.primary, dark: tokens.hover, contrastText: '#ffffff' },
-    secondary: { main: overrides.secondary ?? '#687482' },
-    success: { main: '#2e7d32' },
-    warning: { main: '#a86600' },
-    error: { main: '#c62828' },
-    info: { main: '#28658a' },
+    contrastThreshold: 4.5,
+    primary: { main: tokens.primary, dark: tokens.hover, contrastText: getContrastRatio(tokens.primary, '#ffffff') >= 4.5 ? '#ffffff' : '#101827' },
+    secondary: { main: overrides.secondary ?? (mode === 'dark' ? '#b6c2d0' : '#687482') },
+    success: { main: mode === 'dark' ? '#81c995' : '#2e7d32' },
+    warning: { main: mode === 'dark' ? '#f5c66d' : '#a86600' },
+    error: { main: mode === 'dark' ? '#f28b82' : '#c62828' },
+    info: { main: mode === 'dark' ? '#8ab4f8' : '#28658a' },
     background: { default: overrides.background ?? tokens.shell, paper: overrides.paper ?? tokens.surface },
     divider: overrides.border ?? tokens.border,
-    text: { primary: overrides.text ?? (mode === 'dark' ? '#f3f5f7' : '#18212b'), secondary: overrides.mutedText ?? (mode === 'dark' ? '#b7c1ca' : '#687482') },
+    text: { primary: overrides.text ?? themeTextColors[mode].primary, secondary: overrides.mutedText ?? themeTextColors[mode].secondary },
   },
   shape: { borderRadius: shape.controlRadius },
   typography: {
@@ -143,14 +188,14 @@ export function createAppTheme(direction: AppDirection = 'rtl', mode: ThemeMode 
       defaultProps: { fullWidth: true, variant: 'outlined', size: 'small' },
       styleOverrides: {
         root: {
-          backgroundColor: '#fbfcfd',
+          backgroundColor: tokens.input,
           '& .MuiOutlinedInput-root': {
             minHeight: 34,
             transition: 'background-color 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
           },
           '& .MuiOutlinedInput-root.Mui-focused': {
-            backgroundColor: '#ffffff',
-            boxShadow: '0 0 0 3px rgba(35, 75, 120, .10)',
+            backgroundColor: tokens.surface,
+            boxShadow: `0 0 0 3px ${alpha(tokens.primary, .12)}`,
           },
           '& .MuiInputLabel-root': {
             fontSize: '0.68rem',

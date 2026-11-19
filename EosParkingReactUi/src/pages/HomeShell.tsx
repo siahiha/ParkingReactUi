@@ -20,14 +20,12 @@ type Props = {
   user: HomeUser;
   direction: 'rtl' | 'ltr';
   themeMode: ThemeMode;
-  lightPalette: PaletteName;
-  darkPalette: PaletteName;
+  palette: PaletteName;
   shapeSettings: ThemeShapeSettings;
   themeSettingsEnabled: boolean;
   onShapeSettingsChange: (settings: ThemeShapeSettings) => void;
   onThemeToggle: () => void;
-  onLightPaletteChange: (palette: PaletteName) => void;
-  onDarkPaletteChange: (palette: PaletteName) => void;
+  onPaletteChange: (palette: PaletteName) => void;
   onLogout: () => void;
   onToggleLanguage: () => void;
   parkingOptions: Array<{ id: number; name: string }>;
@@ -55,12 +53,12 @@ type Props = {
   onMobileNavigationClose: () => void;
 };
 
-export function HomeShell({ children, isLoading, language, user, direction, themeMode, lightPalette, darkPalette, shapeSettings, themeSettingsEnabled, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, openTabs, activePath, homePath, navigationMode, onNavigationModeChange, onHome, onNavigate, onCloseTab, onNavigationOpen, onNavigationToggle, basePath, visibleManagementItems, visibleParkingMenuGroups, activeParkingMenu, managementSection, canManageDashboard, sidebarCollapsed, onSidebarCollapsedChange, mobileNavigationOpen, onMobileNavigationClose }: Props) {
+export function HomeShell({ children, isLoading, language, user, direction, themeMode, palette, shapeSettings, themeSettingsEnabled, onShapeSettingsChange, onThemeToggle, onPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, openTabs, activePath, homePath, navigationMode, onNavigationModeChange, onHome, onNavigate, onCloseTab, onNavigationOpen, onNavigationToggle, basePath, visibleManagementItems, visibleParkingMenuGroups, activeParkingMenu, managementSection, canManageDashboard, sidebarCollapsed, onSidebarCollapsedChange, mobileNavigationOpen, onMobileNavigationClose }: Props) {
   const { t } = useTranslation();
   const navigationModeLabel = navigationMode === 'tabs' ? t('home.modeClassic') : t('home.modeTabs');
   const helpMenuKeys = [...visibleManagementItems.map(item => `management/${item.key}`), ...flattenParkingMenuItems(visibleParkingMenuGroups).map(item => `parking/${item.key}`)];
   return <HelpProvider activePath={activePath} menuKeys={helpMenuKeys} parkingId={selectedParkingId}><Box className={`home3-shell ${sidebarCollapsed ? 'home3-shell-sidebar-collapsed' : ''}`} dir={direction} data-language={language}>
-    <HomeHeader user={user} direction={direction} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={themeSettingsEnabled} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={onParkingChange} onHome={onHome} onNavigationOpen={onNavigationOpen} onNavigationToggle={onNavigationToggle} isNavigationCollapsed={sidebarCollapsed} navigationMode={navigationMode} navigationModeLabel={navigationModeLabel} onNavigationModeChange={onNavigationModeChange} />
+    <HomeHeader user={user} direction={direction} themeMode={themeMode} palette={palette} shapeSettings={shapeSettings} themeSettingsEnabled={themeSettingsEnabled} onShapeSettingsChange={onShapeSettingsChange} onThemeToggle={onThemeToggle} onPaletteChange={onPaletteChange} onLogout={onLogout} onToggleLanguage={onToggleLanguage} parkingOptions={parkingOptions} selectedParkingId={selectedParkingId} onParkingChange={onParkingChange} onHome={onHome} onNavigationOpen={onNavigationOpen} onNavigationToggle={onNavigationToggle} isNavigationCollapsed={sidebarCollapsed} navigationMode={navigationMode} navigationModeLabel={navigationModeLabel} onNavigationModeChange={onNavigationModeChange} />
     <Box className="home3-layout">
       <HomeNavigation appName={t('home.brandTitle')} direction={direction} basePath={basePath} systemMenu={t('home.systemMenu')} currentParkingSectionTitle={t('home.parkingDefinitions')} reportsSectionTitle={t('home.reports')} visibleManagementItems={visibleManagementItems} visibleParkingMenuGroups={visibleParkingMenuGroups} activeParkingMenu={activeParkingMenu} managementSection={managementSection} canManageDashboard={canManageDashboard} collapsed={sidebarCollapsed} onCollapsedChange={onSidebarCollapsedChange} mobileOpen={mobileNavigationOpen} onMobileClose={onMobileNavigationClose} onNavigate={onNavigate} />
       <Box component="main" className="home3-main" aria-busy={isLoading}>

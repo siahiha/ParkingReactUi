@@ -27,7 +27,7 @@ export const parkingApi = {
   listAvailableParkSpaces: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingParkSpacesById?parkingId=${parkingId}`),
   getEquipments: (parkingId: number) => apiRequest<unknown>(`api/Parking/GetParkingEquipments?parkingId=${parkingId}`),
   saveEquipment: (payload: ApiPayload) => apiRequest<unknown>('api/Parking/SaveParkingEquipment', { method: 'POST', body: JSON.stringify(payload) }),
-  deleteEquipment: (equipmentId: number) => apiRequest<unknown>(`api/Parking/DeleteEquipmentById?id=${equipmentId}`),
+  deleteEquipment: (equipmentId: number) => apiRequest<unknown>(`api/Parking/DeleteEquipmentById?equipmentId=${equipmentId}`),
 };
 
 /** ANPR operations mirrored from MonitoringAnprForm. The response DTO is still

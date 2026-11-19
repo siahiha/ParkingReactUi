@@ -11,7 +11,7 @@ import 'dayjs/locale/fa';
 import { prefixer } from 'stylis';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import type { Language } from './i18n/instance';
-import { parseAuthSession, resolveCanManageDashboard, type SsoUserPreferences } from './api/contracts';
+import { parseAuthSession, resolveCanManageDashboard } from './api/contracts';
 import { apiRequest, registerSessionInvalidationHandler } from './api/client';
 import { Home } from './pages/Home';
 import type { HomeUser } from './pages/homeTypes';
@@ -22,11 +22,12 @@ import type { LoginResult } from './features/auth/authService';
 import { isSsoEnabled } from './config';
 import { useNavigationGuard } from './pages/NavigationGuardContext';
 import i18n from './i18n/instance';
-import { createAppTheme, defaultThemeShape, getPaletteTokens, resolvePaletteNames, resolveThemeColorOverrides, type ThemeMode, type ThemeShapeSettings } from './theme';
+import { createAppTheme, defaultThemeShape, getPaletteTokens, getThemeSurfaceVariables, readPaletteName, resolvePaletteNames, resolveThemeColorOverrides, type ThemeMode, type ThemeShapeSettings } from './theme';
+import type { PaletteName } from './components/homeProfileTypes';
 
-type PaletteName = 'blue' | 'green' | 'slate';
 const themeStorageKey = 'eos-parking-theme';
 const authSessionStorageKey = 'eos-parking-auth-session';
+const paletteStorageKey = 'eos-parking-palette';
 const lightPaletteStorageKey = 'eos-parking-light-palette';
 const darkPaletteStorageKey = 'eos-parking-dark-palette';
 const shapeStorageKey = 'eos-parking-theme-shape';
@@ -86,8 +87,13 @@ export function App() {
     if (isSsoEnabled) return 'light';
     return normalizeThemeMode(window.localStorage.getItem(themeStorageKey)) ?? 'light';
   });
-  const [lightPalette, setLightPalette] = useState<PaletteName>(() => hasSsoThemeCache || !isSsoEnabled ? (window.localStorage.getItem(lightPaletteStorageKey) as PaletteName | null) ?? 'blue' : 'blue');
-  const [darkPalette, setDarkPalette] = useState<PaletteName>(() => hasSsoThemeCache || !isSsoEnabled ? (window.localStorage.getItem(darkPaletteStorageKey) as PaletteName | null) ?? 'blue' : 'blue');
+  const [palette, setPalette] = useState<PaletteName>(() => {
+    if (isSsoEnabled && !hasSsoThemeCache) return 'blue';
+    // The previous day selection becomes the shared palette; ignore its separate night choice.
+    return readPaletteName(window.localStorage.getItem(paletteStorageKey))
+      ?? readPaletteName(window.localStorage.getItem(lightPaletteStorageKey))
+      ?? readPaletteName(window.localStorage.getItem(darkPaletteStorageKey)) ?? 'blue';
+  });
   const [themeColors, setThemeColors] = useState<unknown>(() => hasSsoThemeCache ? readJsonStorage(ssoThemeColorsStorageKey) : undefined);
   const [shapeSettings, setShapeSettings] = useState<ThemeShapeSettings>(() => {
     try { const stored = JSON.parse(window.localStorage.getItem(shapeStorageKey) ?? 'null'); return stored && typeof stored === 'object' ? { ...defaultThemeShape, ...stored } : defaultThemeShape; } catch { return defaultThemeShape; }
@@ -98,8 +104,9 @@ export function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const { requestNavigation } = useNavigationGuard();
-    const direction = language === 'fa' ? 'rtl' : 'ltr';
-  const activePalette = themeMode === 'light' ? lightPalette : darkPalette;
+  const direction = language === 'fa' ? 'rtl' : 'ltr';
+  const centralPalettes = isSsoEnabled ? resolvePaletteNames(themeColors) : {};
+  const activePalette = (themeMode === 'light' ? centralPalettes.light : centralPalettes.dark) ?? palette;
   const activeThemeColors = isSsoEnabled ? resolveThemeColorOverrides(themeColors, themeMode) : {};
   const activeTokens = getPaletteTokens(themeMode, activePalette, activeThemeColors);
   const theme = useMemo(() => createAppTheme(direction, themeMode, activePalette, shapeSettings, activeThemeColors), [direction, themeMode, activePalette, shapeSettings, activeThemeColors]);
@@ -113,8 +120,7 @@ export function App() {
     window.localStorage.setItem(shapeStorageKey, JSON.stringify(shapeSettings));
     if (isSsoEnabled) {
       if (authenticated) {
-        window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
-        window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
+        window.localStorage.setItem(paletteStorageKey, palette);
         window.localStorage.setItem(ssoLocaleStorageKey, language);
         window.localStorage.setItem(ssoThemeStorageKey, themeMode);
         if (themeColors === undefined) window.localStorage.removeItem(ssoThemeColorsStorageKey);
@@ -123,18 +129,18 @@ export function App() {
         window.localStorage.removeItem(ssoThemeStorageKey);
         window.localStorage.removeItem(ssoThemeColorsStorageKey);
         window.localStorage.removeItem(ssoLocaleStorageKey);
-        window.localStorage.removeItem(lightPaletteStorageKey);
-        window.localStorage.removeItem(darkPaletteStorageKey);
+        window.localStorage.removeItem(paletteStorageKey);
       }
     } else {
-      window.localStorage.setItem(lightPaletteStorageKey, lightPalette);
-      window.localStorage.setItem(darkPaletteStorageKey, darkPalette);
+      window.localStorage.setItem(paletteStorageKey, palette);
       window.localStorage.setItem(ssoLocaleStorageKey, language);
       window.localStorage.setItem(themeStorageKey, themeMode);
       window.localStorage.removeItem(ssoThemeStorageKey);
       window.localStorage.removeItem(ssoThemeColorsStorageKey);
     }
-  }, [authenticated, themeMode, lightPalette, darkPalette, shapeSettings, language, themeColors]);
+    window.localStorage.removeItem(lightPaletteStorageKey);
+    window.localStorage.removeItem(darkPaletteStorageKey);
+  }, [authenticated, themeMode, palette, shapeSettings, language, themeColors]);
   const clearLocalSession = () => {
     sessionInvalidationHandled.current = true;
     setAuthenticated(false);
@@ -142,13 +148,13 @@ export function App() {
     window.sessionStorage.removeItem(authSessionStorageKey);
     if (isSsoEnabled) {
       setThemeMode('light');
-      setLightPalette('blue');
-      setDarkPalette('blue');
+      setPalette('blue');
       setThemeColors(undefined);
       setLanguage('fa');
       window.localStorage.removeItem(ssoThemeStorageKey);
       window.localStorage.removeItem(ssoThemeColorsStorageKey);
       window.localStorage.removeItem(ssoLocaleStorageKey);
+      window.localStorage.removeItem(paletteStorageKey);
       window.localStorage.removeItem(lightPaletteStorageKey);
       window.localStorage.removeItem(darkPaletteStorageKey);
     }
@@ -166,13 +172,11 @@ export function App() {
       if (nextLanguage) setLanguage(nextLanguage);
       if (preferences?.themeColors === undefined) {
         setThemeColors(undefined);
-        setLightPalette('blue');
-        setDarkPalette('blue');
+        setPalette('blue');
       } else {
         setThemeColors(preferences.themeColors);
         const palettes = resolvePaletteNames(preferences.themeColors);
-        setLightPalette(palettes.light ?? 'blue');
-        setDarkPalette(palettes.dark ?? 'blue');
+        setPalette(palettes.light ?? palettes.dark ?? 'blue');
       }
     }
     // The token is set by the Backend as an HttpOnly cookie. Only the
@@ -196,15 +200,13 @@ export function App() {
   });
   const toggleLanguage = () => setLanguage((current) => current === 'fa' ? 'en' : 'fa');
 
-  const themeVars = themeMode === 'dark'
-    ? { surface: activeThemeColors.surface ?? activeTokens.surface, shell: activeThemeColors.shell ?? activeTokens.shell, text: activeThemeColors.text ?? '#f3f5f7', mutedText: activeThemeColors.mutedText ?? '#b7c1ca', border: activeThemeColors.border ?? activeTokens.border, input: activeThemeColors.input ?? activeTokens.input }
-    : { surface: activeThemeColors.surface ?? activeTokens.surface, shell: activeThemeColors.shell ?? activeTokens.shell, text: activeThemeColors.text ?? '#18212b', mutedText: activeThemeColors.mutedText ?? '#687482', border: activeThemeColors.border ?? activeTokens.border, input: activeThemeColors.input ?? activeTokens.input };
+  const themeVars = { surface: activeTokens.surface, shell: activeTokens.shell, text: theme.palette.text.primary, mutedText: theme.palette.text.secondary, border: activeTokens.border, input: activeTokens.input };
   const homeElement = (options: { basePath?: '/home'; unknownRoute?: boolean } = {}) => {
     const basePath = options.basePath ?? '/home';
     const isOutsideHomeRoutes = location.pathname !== '/' && location.pathname !== '/sso/callback' && !location.pathname.startsWith(basePath);
-    return authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} themeSettingsEnabled={!isSsoEnabled} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onLightPaletteChange={setLightPalette} onDarkPaletteChange={setDarkPalette} onLogout={logout} onToggleLanguage={toggleLanguage} basePath={basePath} unknownRoute={options.unknownRoute || isOutsideHomeRoutes} /> : <Navigate to="/" replace />;
+    return authenticated && homeUser ? <Home language={language} user={homeUser} themeMode={themeMode} palette={palette} shapeSettings={shapeSettings} themeSettingsEnabled={!isSsoEnabled} onShapeSettingsChange={setShapeSettings} onThemeToggle={() => setThemeMode((mode) => mode === 'light' ? 'dark' : 'light')} onPaletteChange={setPalette} onLogout={logout} onToggleLanguage={toggleLanguage} basePath={basePath} unknownRoute={options.unknownRoute || isOutsideHomeRoutes} /> : <Navigate to="/" replace />;
   };
-  return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-on-primary': theme.palette.primary.contrastText, '--app-success': theme.palette.success.main, '--app-warning': theme.palette.warning.main, '--app-info': theme.palette.info.main, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language} localeText={pickerLocaleText}><CssBaseline /><Routes>
+  return <Box className={`app-root app-theme-${themeMode}`} data-theme-mode={themeMode} data-palette={`${themeMode}-${activePalette}`} dir={direction} lang={language} sx={{ ...getThemeSurfaceVariables(theme), '--app-primary': activeTokens.primary, '--app-primary-hover': activeTokens.hover, '--app-primary-soft': activeTokens.soft, '--app-surface': themeVars.surface, '--app-shell': themeVars.shell, '--app-text': themeVars.text, '--app-muted-text': themeVars.mutedText, '--app-divider': themeVars.border, '--app-input': themeVars.input, '--app-on-primary': theme.palette.primary.contrastText, '--app-success': theme.palette.success.main, '--app-warning': theme.palette.warning.main, '--app-info': theme.palette.info.main, '--app-control-radius': `${shapeSettings.controlRadius}px`, '--app-button-radius': `${shapeSettings.buttonRadius}px`, '--app-popup-radius': `${shapeSettings.popupRadius}px` } as CSSProperties}><RTL locale={language}><ThemeProvider theme={theme}><LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language} localeText={pickerLocaleText}><CssBaseline /><Routes>
     <Route path="/home/*" element={homeElement({ basePath: '/home' })} />
     <Route path="/sso/callback" element={<SsoCallbackPage language={language} onAuthenticated={authenticate} />} />
     <Route path="/login2" element={<LoginPage language={language} toggleLanguage={toggleLanguage} onAuthenticated={authenticate} />} />

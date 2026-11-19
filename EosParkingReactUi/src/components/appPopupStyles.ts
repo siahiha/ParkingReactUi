@@ -1,4 +1,5 @@
 import type { Theme } from '@mui/material/styles';
+import { getThemeSurfaceVariables } from '../theme';
 
 /** One visual language for every application popup, including content hosted in a portal. */
 export function appPopupStyles(theme: Theme) {
@@ -14,6 +15,7 @@ export function appPopupStyles(theme: Theme) {
       backdropFilter: 'blur(4px)',
     },
     '& .app-popup-paper': {
+      ...getThemeSurfaceVariables(theme),
       position: 'relative', overflow: 'hidden', isolation: 'isolate',
       border: '1px solid', borderColor: mix(primary.main, 24, divider),
       bgcolor: surface, color: text.primary,
@@ -61,8 +63,8 @@ export function appPopupStyles(theme: Theme) {
         '&:not(.Mui-disabled):hover': { backgroundColor: mix(primary.main, 4, surface) },
         '&.Mui-focused': { backgroundColor: surface, boxShadow: `0 0 0 3px ${mix(primary.main, 10, 'transparent')}` },
       },
-      '& .app-group-box': { background: field, borderColor: divider },
-      '& .app-group-box-title': { background: field, color: text.secondary },
+      '& .app-group-box': { background: 'var(--app-section-surface)', borderColor: divider },
+      '& .app-group-box-title': { background: 'var(--app-section-surface)', color: text.primary },
     },
     '& .app-popup-paper > .MuiDialogActions-root': {
       position: 'relative', flexShrink: 0, px: { xs: 2, sm: 2.5 }, py: 1.5,

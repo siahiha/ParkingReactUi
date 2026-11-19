@@ -92,6 +92,7 @@ Desktop.ini
 **/packages/
 **/dist/
 **/test-results/
+/EosParkingReactUi/_verification/
 **/playwright-report/
 **/coverage/
 **/bin/

@@ -3,22 +3,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Stimulsoft } from 'stimulsoft-reports-js-react/viewer';
-import { memberApi, reportApi, userApi } from '../../api/management';
+import { usePreparedReport } from './usePreparedReport';
+import { memberApi, userApi } from '../../api/management';
 import { EosDateTimePicker } from '../../components/EosDateTimePicker';
 import { ManagementWorkspaceFrame } from '../../components/management/ManagementWorkspaceFrame';
 import type { Language } from '../../components/management/managementTypes';
 import { asRows } from '../../components/management/managementTypes';
-import parkingIncomeTemplate from '../../assets/report-templates/ParkingIncomingChartReport - Copy.mrt?raw';
-import monthlyIncomeTemplate from '../../assets/report-templates/ParkingMonthlyIncomingChartReport.mrt?raw';
-import memberCashTemplate from '../../assets/report-templates/MemberCashReport.mrt?raw';
-import userCashTemplate from '../../assets/report-templates/UserCashReport.mrt?raw';
-import membershipIncomeTemplate from '../../assets/report-templates/MembershipInfoIncomingDetailsReport.mrt?raw';
 import i18n from '../../i18n/instance';
 
 type FinancialReportKind = 'parking-income' | 'monthly-income' | 'member-cash' | 'user-performance' | 'membership-income';
 type Props = { title: string; parkingId: number; language: Language; kind: FinancialReportKind };
-type ReportRow = Record<string, unknown>;
 type Member = { code: string; title: string };
 type User = { id: number; title: string };
 type RegisterKind = { id: number; title: string };
@@ -44,107 +38,6 @@ function responseValues(input: unknown): unknown[] {
   return asRows(valueOf(response, 'Values') ?? valueOf(response, 'Data') ?? input);
 }
 
-function normalizeStatistics(input: unknown): ReportRow[] {
-  return responseValues(input).map((item) => {
-    const row = recordOf(item);
-    return {
-      Amount: numberOf(valueOf(row, 'Amount')),
-      Lable: textOf(valueOf(row, 'Lable') ?? valueOf(row, 'Label')),
-      TariffTitle: textOf(valueOf(row, 'TariffTitle')),
-      MemberRegisterTitle: textOf(valueOf(row, 'MemberRegisterTitle')),
-      TaxValue: numberOf(valueOf(row, 'TaxValue')),
-      RoundingValue: numberOf(valueOf(row, 'RoundingValue')),
-      Number: numberOf(valueOf(row, 'Number')),
-      ParkingTitle: textOf(valueOf(row, 'ParkingTitle')),
-      SolarPersistOn: textOf(valueOf(row, 'SolarPersistOn') ?? valueOf(row, 'PersistOn')),
-      PersistOn: valueOf(row, 'PersistOn') ?? null,
-    };
-  });
-}
-
-function normalizeCash(input: unknown): ReportRow[] {
-  return responseValues(input).map((item) => {
-    const row = recordOf(item);
-    const cashDateTime = valueOf(row, 'CashDateTime');
-    return {
-      MemberName: textOf(valueOf(row, 'MemberName')),
-      MemberCode: textOf(valueOf(row, 'MemberCode')),
-      Plate: textOf(valueOf(row, 'Plate')),
-      Title: textOf(valueOf(row, 'Title')),
-      CashDateTime: cashDateTime,
-      SolarCashDateTime: textOf(valueOf(row, 'SolarCashDateTime') ?? cashDateTime),
-      Amount: numberOf(valueOf(row, 'Amount')),
-      CashType: numberOf(valueOf(row, 'CashType')),
-      Description: textOf(valueOf(row, 'Description')),
-    };
-  });
-}
-
-function normalizeMembership(input: unknown): ReportRow[] {
-  return responseValues(input).map((item) => {
-    const row = recordOf(item);
-    const date = valueOf(row, 'Date');
-    return {
-      Code: textOf(valueOf(row, 'Code')),
-      Name: textOf(valueOf(row, 'Name')),
-      Family: textOf(valueOf(row, 'Family')),
-      MemberRegisterKindTitle: textOf(valueOf(row, 'MemberRegisterKindTitle')),
-      Amount: numberOf(valueOf(row, 'Amount')),
-      Date: date,
-      SolarDate: textOf(valueOf(row, 'SolarDate') ?? date),
-    };
-  });
-}
-
-function patchLegacyTemplate(report: Stimulsoft.Report.StiReport, componentNames: string[]) {
-  let sourceName = 'MainTable';
-  try {
-    if (report.dictionary.dataSources.getByName('MainTable2')) sourceName = 'MainTable2';
-  } catch {
-    sourceName = 'MainTable';
-  }
-  const dataBand = report.getComponentByName('DataBand1') as { dataSourceName?: string } | null;
-  if (dataBand) dataBand.dataSourceName = sourceName;
-  for (const componentName of componentNames) {
-    const component = report.getComponentByName(componentName) as unknown as Record<string, unknown> | null;
-    if (!component) continue;
-    for (const property of ['text', 'condition', 'beforePrintEvent', 'dataColumn', 'argumentDataColumn', 'valueDataColumn']) {
-      const current = component[property];
-      if (typeof current === 'string' && sourceName === 'MainTable2') component[property] = current.replace(/MainTable\.(?!2\.)/g, 'MainTable2.');
-    }
-  }
-}
-
-async function createReport(rows: ReportRow[], kind: FinancialReportKind, language: Language, titleDescription: string) {
-  const licenseKey = import.meta.env.VITE_STIMULSOFT_LICENSE;
-  if (licenseKey) Stimulsoft.Base.StiLicense.key = licenseKey;
-  const dataSet = new Stimulsoft.System.Data.DataSet('DB');
-  dataSet.readJson(JSON.stringify({ MainTable: rows }));
-  const report = new Stimulsoft.Report.StiReport();
-  report.regData('DB', 'DB', dataSet);
-  report.dictionary.synchronize();
-  if (kind === 'parking-income') {
-    report.load(parkingIncomeTemplate);
-    patchLegacyTemplate(report, ['Chart2', 'Chart3', 'DataBand1', 'Text1', 'Text2', 'Text5', 'Text6', 'Text7', 'Text8', 'Text14']);
-  } else if (kind === 'monthly-income') {
-    report.load(monthlyIncomeTemplate);
-    patchLegacyTemplate(report, ['Chart2', 'DataBand1', 'Text8']);
-  } else if (kind === 'member-cash') {
-    report.load(memberCashTemplate);
-    patchLegacyTemplate(report, ['DataBand1', 'Text1', 'Text2', 'Text5', 'Text6', 'Text7', 'Text14', 'Text15', 'Text16', 'Text17', 'Text19']);
-  } else if (kind === 'user-performance') {
-    report.load(userCashTemplate);
-    patchLegacyTemplate(report, ['DataBand1', 'Text1', 'Text2', 'Text5', 'Text6', 'Text15', 'Text19']);
-  } else {
-    report.load(membershipIncomeTemplate);
-    patchLegacyTemplate(report, ['GroupHeaderBand1', 'DataBand1', 'Text1', 'Text2', 'Text5', 'Text6', 'Text7', 'Text8', 'Text9', 'Text10', 'Text12', 'Text15', 'Text16', 'Text17', 'Text20', 'Text22']);
-    report.setVariable('TitleDescription', titleDescription);
-  }
-  report.setVariable('ReportDateTime', new Date().toLocaleString(language === 'fa' ? 'fa-IR' : 'en-US'));
-  await report.renderAsync2();
-  return report;
-}
-
 export function FinancialReportWorkspace({ title, parkingId, language, kind }: Props) {
   const fa = language === 'fa';
   const text = i18n.getFixedT(language);
@@ -159,11 +52,7 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
   const [users, setUsers] = useState<User[]>([]);
   const [registerKinds, setRegisterKinds] = useState<RegisterKind[]>([]);
   const [loadingLookups, setLoadingLookups] = useState(false);
-  const [loadingReport, setLoadingReport] = useState(false);
-  const [renderingReport, setRenderingReport] = useState(false);
-  const [rows, setRows] = useState<ReportRow[] | null>(null);
-  const [report, setReport] = useState<Stimulsoft.Report.StiReport | null>(null);
-  const [error, setError] = useState('');
+  const { report, loadingReport, error, setError, run } = usePreparedReport(`${parkingId}:${kind}`, language);
 
   useEffect(() => {
     let current = true;
@@ -190,28 +79,18 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
     return () => { current = false; };
   }, [kind, parkingId, fa]);
 
-  const titleDescription = useMemo(() => `${text('financialReport.from')} ${fromDate} ${text('financialReport.to')} ${toDate}`, [fromDate, toDate, text]);
-  useEffect(() => {
-    let current = true;
-    if (rows === null) { setReport(null); setRenderingReport(false); return () => { current = false; }; }
-    setReport(null); setRenderingReport(true);
-    void createReport(rows, kind, language, titleDescription).then((renderedReport) => { if (current) setReport(renderedReport); }).catch((reason: unknown) => { if (current) setError(reason instanceof Error ? reason.message : text('financialReport.renderError')); }).finally(() => { if (current) setRenderingReport(false); });
-    return () => { current = false; };
-  }, [rows, kind, language, titleDescription, fa]);
 
 
   const runReport = () => {
     if (fromDate > toDate) { setError(text('financialReport.dateError')); return; }
     if (kind === 'member-cash' && !memberCode) { setError(text('financialReport.memberRequired')); return; }
-    setLoadingReport(true); setError(''); setRows(null);
-    const statisticPage = { Filters: { StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingIds: [parkingId], DoorIds: [], SolarYears: [] }, GridFilters: [], PageNumber: 1, PageSize: 1000000 };
-    let request: Promise<unknown>;
-    if (kind === 'parking-income') request = reportApi.parkingDailyIncome(statisticPage);
-    else if (kind === 'monthly-income') request = reportApi.parkingMonthlyIncome(statisticPage);
-    else if (kind === 'member-cash') request = reportApi.memberCash({ Filters: { StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingId: parkingId, MemberCode: memberCode }, GridFilters: [], PageNumber: 1, PageSize: 1000000 });
-    else if (kind === 'user-performance') request = reportApi.userActivity(fromDate, toDate, Number(userId));
-    else request = reportApi.membershipIncome({ StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59`, ParkingId: parkingId, MemberCode: memberCode, MemberRegisterKindId: Number(memberRegisterKindId || 0) });
-    void request.then((response) => setRows(kind === 'parking-income' || kind === 'monthly-income' ? normalizeStatistics(response) : kind === 'membership-income' ? normalizeMembership(response) : normalizeCash(response))).catch((reason: unknown) => { setRows(null); setError(reason instanceof Error ? reason.message : text('financialReport.loadError')); }).finally(() => setLoadingReport(false));
+    const dates = { StartDateTime: `${fromDate}T00:00:00`, EndDateTime: `${toDate}T23:59:59` };
+    const statisticPage = { Filters: { ...dates, ParkingIds: [parkingId], DoorIds: [], SolarYears: [] } };
+    const parameters = kind === 'parking-income' || kind === 'monthly-income' ? statisticPage
+      : kind === 'member-cash' ? { Filters: { ...dates, ParkingId: parkingId, MemberCode: memberCode } }
+      : kind === 'user-performance' ? { ...dates, UserId: Number(userId) }
+      : { ...dates, ParkingId: parkingId, MemberCode: memberCode, MemberRegisterKindId: Number(memberRegisterKindId || 0) };
+    run(kind, parameters);
   };
 
   const toolbar = <Box className="report-filter-toolbar">
@@ -223,9 +102,9 @@ export function FinancialReportWorkspace({ title, parkingId, language, kind }: P
     <Button variant="contained" startIcon={loadingReport ? <CircularProgress size={18} color="inherit" /> : <PlayArrowRoundedIcon />} onClick={runReport} disabled={loadingReport || loadingLookups} sx={{ minHeight: 40 }}>{text('financialReport.show')}</Button>
   </Box>;
 
-  return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport || renderingReport} onRefresh={runReport} toolbar={toolbar}>
+  return <ManagementWorkspaceFrame title={title} language={language} loading={loadingReport} onRefresh={runReport} toolbar={toolbar}>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-    {rows === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{text('financialReport.choose')}</Alert>}
-    {rows !== null && <ReportPreview title={title} language={language} report={report} viewerId={`financial-report-viewer-${kind}`} count={rows.length} resultKey={rows} busy={loadingReport || renderingReport} />}
+    {report === null && !error && <Alert severity="info" icon={<AssessmentRoundedIcon />}>{text('financialReport.choose')}</Alert>}
+    {report !== null && <ReportPreview title={title} language={language} report={report} viewerId={`financial-report-viewer-${kind}`} count={report.Count} resultKey={report} busy={loadingReport} />}
   </ManagementWorkspaceFrame>;
 }

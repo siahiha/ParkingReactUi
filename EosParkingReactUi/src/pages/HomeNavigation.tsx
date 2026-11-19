@@ -10,6 +10,7 @@ import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import TrafficRoundedIcon from '@mui/icons-material/TrafficRounded';
 import { useTranslation } from 'react-i18next';
 import type { HomeMenuGroup, HomeMenuItem, ManagementSection } from './homeMenuModel';
+import { getThemeSurfaceVariables } from '../theme';
 
 type Props = { appName: string; direction: 'rtl' | 'ltr'; basePath: '/home' | '/home'; systemMenu: string; currentParkingSectionTitle: string; reportsSectionTitle: string; visibleManagementItems: Array<HomeMenuItem & { key: ManagementSection }>; visibleParkingMenuGroups: HomeMenuGroup[]; activeParkingMenu: string | null; managementSection?: ManagementSection; canManageDashboard: boolean; collapsed: boolean; onCollapsedChange: (collapsed: boolean) => void; mobileOpen: boolean; onMobileClose: () => void; onNavigate: (path: string) => void };
 const groupIcons = { definitions: <SettingsRoundedIcon />, operations: <TrafficRoundedIcon />, integrations: <SyncRoundedIcon />, reports: <AssessmentRoundedIcon />, 'member-reports': <PeopleAltRoundedIcon />, 'traffic-reports': <TrafficRoundedIcon />, 'financial-reports': <ReceiptLongRoundedIcon />, 'other-reports': <AssessmentRoundedIcon />, 'management-reports': <AssessmentRoundedIcon /> };
@@ -72,7 +73,7 @@ export function HomeNavigation({ appName, direction, basePath, systemMenu, curre
       {isDrawer || !collapsed ? renderFull() : renderCompact()}
     </Box>
   </Box>;
-  return <><Box component="aside" className={`home3-navigation ${collapsed ? 'is-collapsed' : ''}`} aria-label={appName}>{content(false)}</Box><Drawer className="home3-drawer" anchor={direction === 'rtl' ? 'right' : 'left'} open={mobileOpen} onClose={onMobileClose}><Box className="home3-drawer-surface">{content(true)}</Box></Drawer></>;
+  return <><Box component="aside" className={`home3-navigation ${collapsed ? 'is-collapsed' : ''}`} aria-label={appName}>{content(false)}</Box><Drawer className="home3-drawer" dir={direction} anchor={direction === 'rtl' ? 'right' : 'left'} open={mobileOpen} onClose={onMobileClose} sx={{ '& .MuiDrawer-paper': { insetInlineStart: 0, insetInlineEnd: 'auto' } }}><Box className="home3-drawer-surface" sx={(theme) => getThemeSurfaceVariables(theme)}>{content(true)}</Box></Drawer></>;
 }
 
 

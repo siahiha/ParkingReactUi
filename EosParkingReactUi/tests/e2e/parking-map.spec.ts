@@ -192,7 +192,7 @@ test('empty parking shows an explicitly illustrative 20-bay diagram without real
 for (const mode of ['light', 'dark']) {
   test(`parking map theme ${mode}`, async ({ page }, testInfo) => {
     const accents: number[][] = [];
-    for (const palette of ['blue', 'green', 'slate']) {
+    for (const palette of ['blue', 'green', 'violet', 'amber', 'rose', 'slate']) {
       await page.goto(`/tests/fixtures/parking-map-preview.html?palette=${palette}&dark=${mode === 'dark' ? 1 : 0}`);
       const map = page.locator('.home3-space-map');
       await expect(map.locator('.home3-space-tile')).toHaveCount(20);
@@ -210,7 +210,7 @@ for (const mode of ['light', 'dark']) {
       }
       await map.screenshot({ path: testInfo.outputPath(`${mode}-${palette}-map.png`) });
     }
-    expect(new Set(accents.map(color => color.join(','))).size).toBe(3);
+    expect(new Set(accents.map(color => color.join(','))).size).toBe(6);
   });
 }
 

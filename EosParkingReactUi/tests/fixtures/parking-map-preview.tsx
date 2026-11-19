@@ -7,7 +7,7 @@ import rtlPlugin from 'stylis-plugin-rtl';
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 import '../../src/i18n/instance';
 import i18n from '../../src/i18n/instance';
-import { createAppTheme, defaultThemeShape, type ThemeMode } from '../../src/theme';
+import { createAppTheme, defaultThemeShape, getThemeSurfaceVariables, readPaletteName, type ThemeMode } from '../../src/theme';
 import type { PaletteName } from '../../src/components/homeProfileTypes';
 import { HomeDashboard } from '../../src/pages/HomeDashboard';
 import { HomeShell } from '../../src/pages/HomeShell';
@@ -25,12 +25,12 @@ const parkingName = language === 'fa' ? 'پارکینگ مرکزی' : 'Central P
 
 function ParkingMapPreview() {
   const [mode, setMode] = useState<ThemeMode>(params.get('dark') === '1' ? 'dark' : 'light');
-  const [palette, setPalette] = useState<PaletteName>(params.get('palette') === 'green' ? 'green' : params.get('palette') === 'slate' ? 'slate' : 'blue');
+  const [palette, setPalette] = useState<PaletteName>(readPaletteName(params.get('palette')) ?? 'blue');
   const theme = createAppTheme(direction, mode, palette);
 
   return <CacheProvider value={cache}><ThemeProvider theme={theme}><CssBaseline />
   <Box className={`app-root app-theme-${mode}`} data-theme-mode={mode} lang={language} sx={{
-    '--app-primary': theme.palette.primary.main, '--app-primary-hover': theme.palette.primary.dark,
+    ...getThemeSurfaceVariables(theme), '--app-primary': theme.palette.primary.main, '--app-primary-hover': theme.palette.primary.dark,
     '--app-primary-soft': theme.palette.action.hover, '--app-surface': theme.palette.background.paper,
     '--app-shell': theme.palette.background.default, '--app-text': theme.palette.text.primary,
     '--app-muted-text': theme.palette.text.secondary, '--app-divider': theme.palette.divider,
@@ -38,8 +38,8 @@ function ParkingMapPreview() {
     '--app-success': theme.palette.success.main, '--app-warning': theme.palette.warning.main, '--app-info': theme.palette.info.main,
   }}><HomeShell isLoading={false} language={language} direction={direction} themeMode={mode}
     user={{ id: 1, userName: 'Operator', currentParking: 7, permissions: [], canManageDashboard: true }}
-    lightPalette={palette} darkPalette={palette} shapeSettings={defaultThemeShape} themeSettingsEnabled={true}
-    onShapeSettingsChange={noop} onThemeToggle={() => setMode(current => current === 'light' ? 'dark' : 'light')} onLightPaletteChange={setPalette} onDarkPaletteChange={setPalette}
+    palette={palette} shapeSettings={defaultThemeShape} themeSettingsEnabled={true}
+    onShapeSettingsChange={noop} onThemeToggle={() => setMode(current => current === 'light' ? 'dark' : 'light')} onPaletteChange={setPalette}
     onLogout={noop} onToggleLanguage={noop} parkingOptions={[{ id: 7, name: parkingName }]}
     selectedParkingId={7} onParkingChange={noop} openTabs={[{ path: '/home', label: 'Home' }]}
     activePath="/home" homePath="/home" navigationMode={params.get('classic') === '1' ? 'classic' : 'tabs'}

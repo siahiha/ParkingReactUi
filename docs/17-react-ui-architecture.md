@@ -1,6 +1,6 @@
 # معماری فعلی UI React
 
-**وضعیت:** تطبیق با کد موجود در `EosParkingReactUi` در 2026-11-04؛ جایگزین پیشنهاد اولیهٔ معماری.
+**وضعیت:** تطبیق پایه با کد موجود در `EosParkingReactUi` در 2026-11-04؛ قرارداد معماری راهنما و نمایش دوگانهٔ گزارش در ۲۰۲۶/۱۱/۱۷ تکمیل شد. این سند جایگزین پیشنهاد اولیهٔ معماری است؛ تاریخ اخیر به معنی ممیزی مجدد همهٔ featureها نیست.
 **مرجع الزام‌آور:** [استاندارد مستندسازی و React](00-documentation-standard.md). توصیف رفتار فعلی، تأیید انطباق کامل کد با استاندارد نیست.
 
 ## ۱. پشتهٔ موجود
@@ -17,11 +17,21 @@
 | تاریخ و ساعت | MUI X Date Pickers و dayjs با کنترل‌های مشترک | `EosDateTimePicker.tsx`، `EosTimeOnDayPicker.tsx` |
 | ترجمه | i18next و react-i18next با منابع مستقل فارسی/انگلیسی | `src/i18n/instance.ts`، `src/locales` |
 | modal | `AppPopup` و adapterهای `CrudDialog` و `ConfirmDialog` | [سند ۱۰](10-shared-ui-components.md) |
+| گزارش | ساخت و رندر .NET در API؛ پیش‌فرض ویور HTML5 Stimulsoft میزبانی‌شده در IIS و انتخاب PDF آماده در React | `usePreparedReport`، `preparedReportApi`، `PreparedReportViewer`، `PreparedPdfReportViewer` و صفحهٔ میزبان وب؛ [سند ۰۸](08-reports.md) |
+| راهنمای کاربر | Context محلی، Drawer مشترک، منابع i18next و جستجوی رتبه‌بندی‌شده در مرورگر | `src/features/help`، `src/locales/help`؛ بخش ۱۴ [سند ۲۵](25-home.md) |
 | تست | Vitest، Testing Library و Playwright؛ fixture و mock مرز شبکه | `package.json`، `src/**/*.test.*`، `tests/e2e` |
 
 **رفتار فعلی:** TanStack Query، React Hook Form، Zustand، Redux، Axios، MSW و `@mui/x-data-grid` در `package.json` dependency نیستند. پیشنهادهای قبلی دربارهٔ QueryClient، React Query cache، React Hook Form و MUI Data Grid Community توصیف این برنامه نیستند و مبنای پیاده‌سازی محسوب نمی‌شوند. افزودن dependency تابع سند ۰۰ است.
 
 `noUncheckedIndexedAccess` و `noImplicitOverride` در `tsconfig.app.json` فعلی تنظیم نشده‌اند؛ نمونهٔ پیشنهادی قبلی پیکربندی فعال نبود.
+
+### ۱.۱. مرز گزارش React، API و IIS
+
+**رفتار فعلی:** workspace فقط فیلتر و زبان را به Prepare می‌دهد. Core/Controllers داده و قالب را رندر و سند آماده را با عمر محدود نگه می‌دارند. `PreparedReportViewer` در React نمایش پیش‌فرض Stimulsoft یا انتخاب PDF را مدیریت می‌کند؛ انتخاب نمایشگر دادهٔ گزارش را دوباره query نمی‌کند.
+
+ویور بومی، `StiWebViewer` از DLL وب .NET موجود است و در `Hosting/PreparedReportViewerPage.cs` و `Reports/Viewer.aspx` زیر IIS اجرا می‌شود. React فقط مسیر مجاز همان API را در iframe باز می‌کند؛ HTML/JavaScript کنترل از میزبان SDK می‌آید. هیچ بستهٔ Reports.JS، کلید مرورگر، MRT یا رندر کلاینتی به React بازنگشته است. به افزودن MVC به Router برنامه نیاز نبوده؛ این ورودی از نوع صفحهٔ ASP.NET است و کنترلرهای داده همچنان Web API هستند.
+
+در self-host سرویس، Prepare/Export باقی‌اند و صفحهٔ ASP.NET وجود ندارد؛ گزینهٔ PDF مسیر قابل انتخاب است. نگهداری نتیجه در حافظهٔ process، لزوم همان instance و اثر recycle بر هر دو نمایشگر یکسان است. قرارداد API، حالت‌ها، خطا و منابع در [سند ۰۸](08-reports.md) و پیش‌نیازهای بسته در [سند ۲۷](27-api-publish-and-hosting.md) مرجع هستند.
 
 ## ۲. راه‌اندازی، پوسته و state
 
@@ -32,6 +42,8 @@
 - قرارداد route، permission، tabs/classic و داشبورد فقط در [سند ۲۵](25-home.md) نگهداری می‌شود.
 
 ## ۳. داده، API و قرارداد Backend
+
+**تنظیم اتصال محلی — ۲۰۲۶/۱۱/۱۷:** بنا به درخواست کاربر، `public/config.json` آدرس API را مستقیماً `http://localhost:8050/` تعیین می‌کند. fallback کد، `.env.example` و تنظیم محلی build نیز با همین آدرس هماهنگ‌اند. درخواست‌های عادی API از مسیر `/backend` عبور نمی‌کنند؛ پراکسی موجود Vite برای تنظیمات سازگار قبلی باقی است. `config.json` در شروع برنامه دریافت می‌شود و روی مقدار build تقدم دارد؛ پس از تغییر آن باید صفحه دوباره بارگذاری شود. دسترسی مستقیم از UI روی ۵۱۷۳ به تنظیم CORS با origin دقیق و credentials در API وابسته است.
 
 **رفتار فعلی:** `src/api/client.ts` مسئول base URL، fetch، cookie با مقدار پیش‌فرض `credentials: include`، timeout، cancellation و parse پاسخ است. ابطال نشست برای HTTP 401 و `ResponseResultType = 11` به handler ثبت‌شده اعلام می‌شود. parserها در `src/api/contracts.ts` و سرویس‌های feature قرار دارند؛ وجود آن‌ها به‌معنای اعتبارسنجی یکسان همهٔ پاسخ‌ها نیست.
 
@@ -53,6 +65,7 @@ src/
   features/
     auth/
     home/
+    help/               # زمینه، پنل، نمایش مقاله، نگاشت موضوع و جستجوی محلی
     home3/              # پوشهٔ موجود؛ به‌معنای route مستقل نیست
     members/
     reports/
@@ -68,6 +81,14 @@ tests/
 ```
 
 پوشه‌های `app/`، `layouts/`، `shared/` و `mocks/` در نمودار پیشنهادی قبلی ساختار فعلی نیستند. معماری موجود ترکیبی از featureها و workspaceهای `components/management` است؛ انتقال کامل به معماری feature-based انجام‌شده تلقی نمی‌شود.
+
+### ۴.۱. مرز feature راهنما
+
+**رفتار فعلی:** `HelpProvider` در `HomeShell` زمینهٔ مسیر، پارکینگ و کلید منوهای قابل مشاهده را دریافت می‌کند. state بازشدن و trigger در provider، عبارت/محدوده/نتایج در `HelpCenter` و نمایش و فوکوس بخش مقاله در `HelpArticleView` قرار دارند. `helpCatalog` مالک نگاشت موضوع به منو و موضوع مرتبط است؛ `helpTypes` مدل محتوا و محل نتیجه را تعریف می‌کند. `helpSearch` تابع‌های مستقل index و رتبه‌بندی دارد و به API فرم‌ها وابسته نیست.
+
+متن پنل و مقاله‌ها زیر `help` در همان resourceهای i18next ثبت می‌شوند؛ `locales/help` خانواده‌های دو زبان و واژه‌نامهٔ مشترک را نگه می‌دارد. هیچ parser برای خواندن مستقیم Markdown، service شبکه، مدل زبانی یا storage جدیدی برای راهنما وجود ندارد. اجزای shared از `HelpButton`/`useHelp` و نوع `HelpTopicId` استفاده می‌کنند؛ پنل راهنما خودش `AppPopup` را مصرف نمی‌کند. قرارداد این اتصال در [سند ۱۰](10-shared-ui-components.md) است.
+
+حذف فوکوس اجباری پنجرهٔ مبدأ در زمان نمایش راهنما و بازگرداندن فوکوس در context هماهنگ می‌شوند. دسترسی مستقیم از طریق ref فقط برای focus/scroll مقاله یا برگشت به trigger است؛ state، ظاهر و مقادیر فرم با DOM تغییر داده نمی‌شوند. منبع واحد نگاشت منو، ساختار مقاله، پارامترهای جستجو و محدودیت‌ها بخش ۱۴ [سند ۲۵](25-home.md) است؛ فهرست ۳۱ موضوع اینجا تکرار نمی‌شود.
 
 ## ۵. فرم، جدول و modal
 

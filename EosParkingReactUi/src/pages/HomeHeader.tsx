@@ -26,14 +26,12 @@ type Props = {
   user: HomeUser;
   direction: 'rtl' | 'ltr';
   themeMode: ThemeMode;
-  lightPalette: PaletteName;
-  darkPalette: PaletteName;
+  palette: PaletteName;
   shapeSettings: ThemeShapeSettings;
   themeSettingsEnabled: boolean;
   onShapeSettingsChange: (settings: ThemeShapeSettings) => void;
   onThemeToggle: () => void;
-  onLightPaletteChange: (palette: PaletteName) => void;
-  onDarkPaletteChange: (palette: PaletteName) => void;
+  onPaletteChange: (palette: PaletteName) => void;
   onLogout: () => void;
   onToggleLanguage: () => void;
   parkingOptions: Array<{ id: number; name: string }>;
@@ -49,14 +47,14 @@ type Props = {
 };
 type HomeLabels = ProfileDialogLabels & { app: string; home: string; user: string; nightMode: string; dayMode: string; changeLanguage: string; logout: string; passwordRequired: string; passwordError: string; passwordChanged: string };
 
-export function HomeHeader({ user, direction, themeMode, lightPalette, darkPalette, shapeSettings, themeSettingsEnabled, onShapeSettingsChange, onThemeToggle, onLightPaletteChange, onDarkPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, onHome, onNavigationOpen, onNavigationToggle, isNavigationCollapsed, navigationMode, navigationModeLabel, onNavigationModeChange }: Props) {
+export function HomeHeader({ user, direction, themeMode, palette, shapeSettings, themeSettingsEnabled, onShapeSettingsChange, onThemeToggle, onPaletteChange, onLogout, onToggleLanguage, parkingOptions, selectedParkingId, onParkingChange, onHome, onNavigationOpen, onNavigationToggle, isNavigationCollapsed, navigationMode, navigationModeLabel, onNavigationModeChange }: Props) {
   const { t } = useTranslation();
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [profileDialog, setProfileDialog] = useState<'password' | 'theme' | null>(null);
   const isMobile = useMediaQuery('(max-width:899px)');
   const labels: HomeLabels = {
     app: t('home.brandTitle'), home: t('home.menuHome'), user: t('home.profile'), nightMode: t('theme.nightMode'), dayMode: t('theme.dayMode'), changeLanguage: t('home.language'), logout: t('home.logout'),
-    changePassword: t('profile.changePassword'), themeTitle: t('theme.settings'), themeSettings: t('theme.settings'), close: t('common.close'), save: t('common.save'), saving: t('profile.saving'), currentPassword: t('profile.currentPassword'), newPassword: t('profile.newPassword'), confirmPassword: t('profile.confirmPassword'), passwordMismatch: t('profile.passwordMismatch'), passwordRequired: t('profile.passwordRequired'), passwordError: t('profile.passwordError'), passwordChanged: t('profile.passwordChanged'), lightPalette: t('theme.lightPalette'), darkPalette: t('theme.darkPalette'), bluePalette: t('theme.bluePalette'), greenPalette: t('theme.greenPalette'), slatePalette: t('theme.slatePalette'),
+    changePassword: t('profile.changePassword'), themeTitle: t('theme.settings'), themeSettings: t('theme.settings'), close: t('common.close'), save: t('common.save'), saving: t('profile.saving'), currentPassword: t('profile.currentPassword'), newPassword: t('profile.newPassword'), confirmPassword: t('profile.confirmPassword'), passwordMismatch: t('profile.passwordMismatch'), passwordRequired: t('profile.passwordRequired'), passwordError: t('profile.passwordError'), passwordChanged: t('profile.passwordChanged'),
   };
   const { values, setValues, message, messageSeverity, saving, save, resetMessage } = useChangePassword(user, labels);
   const selectedParking = parkingOptions.find((parking) => parking.id === selectedParkingId);
@@ -83,7 +81,7 @@ export function HomeHeader({ user, direction, themeMode, lightPalette, darkPalet
         <MenuItem onClick={() => { setUserMenuAnchor(null); onLogout(); }}><ListItemIcon><LogoutRoundedIcon fontSize="small" /></ListItemIcon>{labels.logout}</MenuItem>
       </Menu>
       <ChangePasswordDialog open={profileDialog === 'password'} labels={labels} values={values} setValues={setValues} message={message} messageSeverity={messageSeverity} saving={saving} onSave={() => void save()} onClose={() => setProfileDialog(null)} />
-      <ThemeSettingsDialog open={themeSettingsEnabled && profileDialog === 'theme'} lightPalette={lightPalette} darkPalette={darkPalette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onLightPaletteChange={onLightPaletteChange} onDarkPaletteChange={onDarkPaletteChange} onClose={() => setProfileDialog(null)} />
+      <ThemeSettingsDialog open={themeSettingsEnabled && profileDialog === 'theme'} palette={palette} shapeSettings={shapeSettings} onShapeSettingsChange={onShapeSettingsChange} onPaletteChange={onPaletteChange} onClose={() => setProfileDialog(null)} />
     </Toolbar>
   </AppBar>;
 }
